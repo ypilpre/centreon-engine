@@ -79,7 +79,7 @@ void applier::connector::add_object(
     macros,
     obj->connector_line().c_str(),
     &command_line,
-    0);
+    RECURSIVE_MACRO_EVALUATION);
   std::string processed_cmd(command_line);
   delete [] command_line;
 
@@ -151,7 +151,7 @@ void applier::connector::modify_object(
     macros,
     obj->connector_line().c_str(),
     &command_line,
-    0);
+    RECURSIVE_MACRO_EVALUATION);
   std::string processed_cmd(command_line);
   delete [] command_line;
 

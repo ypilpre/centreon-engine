@@ -542,13 +542,13 @@ int grab_standard_hostgroup_macro_r(
       mac,
       *output,
       &temp_buffer,
-      URL_ENCODE_MACRO_CHARS);
+      URL_ENCODE_MACRO_CHARS | RECURSIVE_MACRO_EVALUATION);
     delete[] *output;
     *output = temp_buffer;
     break;
 
   case MACRO_HOSTGROUPNOTES:
-    process_macros_r(mac, *output, &temp_buffer, 0);
+    process_macros_r(mac, *output, &temp_buffer, RECURSIVE_MACRO_EVALUATION);
     delete[] *output;
     *output = temp_buffer;
     break;

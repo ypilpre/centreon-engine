@@ -26,15 +26,16 @@
 using namespace com::centreon::engine;
 using namespace com::centreon::engine::logging;
 
-/*
- * replace macros in notification commands with their values,
- * the thread-safe version
+/**
+ *  Replace macros in commands with their values,
+ *  the centreon version.
  */
-int process_macros_r(
-      nagios_macros* mac,
-      char const* input_buffer,
-      char** output_buffer,
-      int options) {
+static int process_macros_r_centreon(
+             nagios_macros* mac,
+             centreon_macros* cent,
+             char const* input_buffer,
+             char** output_buffer,
+             int options) {
   char* temp_buffer = NULL;
   char* save_buffer = NULL;
   char* buf_ptr = NULL;
@@ -43,6 +44,7 @@ int process_macros_r(
   char* selected_macro = NULL;
   char* original_macro = NULL;
   char const* cleaned_macro = NULL;
+  char* recursive_macro = NULL;
   int clean_macro = false;
   int result = OK;
   int clean_options = 0;
@@ -61,6 +63,17 @@ int process_macros_r(
     return (ERROR);
 
   in_macro = false;
+
+  if (cent == NULL)
+    return (ERROR);
+
+  /* Manage recursion number */
+  if (++cent->recursion_number > MAX_RECURSIVE_MACRO_DEPTH) {
+    logger(log_runtime_error, more)
+      << "  Max recursion number reached for macro '" << input_buffer << "'";
+    --cent->recursion_number;
+    return (ERROR);
+  }
 
   logger(dbg_macros, more)
     << "**** BEGIN MACRO PROCESSING ***********\n"
@@ -158,7 +171,7 @@ int process_macros_r(
          strcat(*output_buffer,"$");
          strcat(*output_buffer,temp_buffer);
          strcat(*output_buffer,"$");
-	*/
+  */
       }
 
       /* insert macro */
@@ -185,6 +198,26 @@ int process_macros_r(
             original_macro = NULL;
           }
           free_macro = true;
+        }
+
+        // If the macro needs to be solved recursively and contains
+        // at least two $, solve it.
+        if (macro_options & RECURSIVE_MACRO_EVALUATION) {
+          char const* first_dollar = ::strchr(cleaned_macro, '$');
+          char const* end_dollar = ::strrchr(cleaned_macro, '$');
+          if (first_dollar != NULL
+              && end_dollar != NULL
+              && first_dollar != end_dollar) {
+            logger(dbg_macros, basic)
+              << "  Recursive macro detected. Resolving '"
+              << cleaned_macro << "'";
+            if (process_macros_r(mac, cleaned_macro, &recursive_macro, options) == OK) {
+              if (free_macro)
+                delete [] selected_macro;
+              selected_macro = recursive_macro;
+              free_macro = true;
+            }
+          }
         }
 
         /* some macros are cleaned... */
@@ -243,6 +276,9 @@ int process_macros_r(
     }
   }
 
+  /* Manage recursion number */
+  --cent->recursion_number;
+
   /* free copy of input buffer */
   delete[] save_buffer;
 
@@ -250,6 +286,25 @@ int process_macros_r(
     << "  Done.  Final output: '" << *output_buffer << "'\n"
     "**** END MACRO PROCESSING *************";
   return (OK);
+}
+
+/*
+ * replace macros in notification commands with their values,
+ * the thread-safe version
+ */
+int process_macros_r(
+      nagios_macros* mac,
+      char const* input_buffer,
+      char** output_buffer,
+      int options) {
+  centreon_macros cent;
+  ::memset(&cent, 0, sizeof(cent));
+  return (process_macros_r_centreon(
+            mac,
+            &cent,
+            input_buffer,
+            output_buffer,
+            options));
 }
 
 int process_macros(

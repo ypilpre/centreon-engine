@@ -156,7 +156,11 @@ commands::command& commands::command::operator=(commands::command const& right) 
  */
 std::string commands::command::process_cmd(nagios_macros* macros) const {
   char* command_line = NULL;
-  process_macros_r(macros, _command_line.c_str(), &command_line, 0);
+  process_macros_r(
+                   macros,
+                   _command_line.c_str(),
+                   &command_line,
+                   RECURSIVE_MACRO_EVALUATION);
   std::string processed_cmd(command_line);
   delete[] command_line;
   return (processed_cmd);

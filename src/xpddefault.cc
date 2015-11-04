@@ -274,7 +274,10 @@ int xpddefault_run_service_performance_data_command(
   int early_timeout(false);
   double exectime;
   int result(OK);
-  int macro_options(STRIP_ILLEGAL_MACRO_CHARS | ESCAPE_MACRO_CHARS);
+  int macro_options =
+        STRIP_ILLEGAL_MACRO_CHARS
+        | ESCAPE_MACRO_CHARS
+        | RECURSIVE_MACRO_EVALUATION;
 
   logger(dbg_functions, basic)
     << "run_service_performance_data_command()";
@@ -354,7 +357,10 @@ int xpddefault_run_host_performance_data_command(
   int early_timeout(false);
   double exectime;
   int result(OK);
-  int macro_options(STRIP_ILLEGAL_MACRO_CHARS | ESCAPE_MACRO_CHARS);
+  int macro_options =
+        STRIP_ILLEGAL_MACRO_CHARS
+        | ESCAPE_MACRO_CHARS
+        | RECURSIVE_MACRO_EVALUATION;
 
   logger(dbg_functions, basic)
     << "run_host_performance_data_command()";
@@ -573,7 +579,7 @@ int xpddefault_update_service_performance_data_file(
     << "Raw service performance data file output: " << raw_output;
 
   // process any macros in the raw output line.
-  process_macros_r(mac, raw_output, &processed_output, 0);
+  process_macros_r(mac, raw_output, &processed_output, RECURSIVE_MACRO_EVALUATION);
   if (processed_output == NULL)
     return (ERROR);
 
@@ -621,7 +627,7 @@ int xpddefault_update_host_performance_data_file(
     << "Raw host performance file output: " << raw_output;
 
   // process any macros in the raw output.
-  process_macros_r(mac, raw_output, &processed_output, 0);
+  process_macros_r(mac, raw_output, &processed_output, RECURSIVE_MACRO_EVALUATION);
   if (processed_output == NULL)
     return (ERROR);
 
@@ -650,7 +656,10 @@ int xpddefault_process_host_perfdata_file() {
   int early_timeout(false);
   double exectime(0.0);
   int result(OK);
-  int macro_options(STRIP_ILLEGAL_MACRO_CHARS | ESCAPE_MACRO_CHARS);
+  int macro_options =
+        STRIP_ILLEGAL_MACRO_CHARS
+        | ESCAPE_MACRO_CHARS
+        | RECURSIVE_MACRO_EVALUATION;
   nagios_macros mac;
 
   logger(dbg_functions, basic)
@@ -741,7 +750,10 @@ int xpddefault_process_service_perfdata_file() {
   int early_timeout(false);
   double exectime(0.0);
   int result(OK);
-  int macro_options(STRIP_ILLEGAL_MACRO_CHARS | ESCAPE_MACRO_CHARS);
+  int macro_options =
+        STRIP_ILLEGAL_MACRO_CHARS
+        | ESCAPE_MACRO_CHARS
+        | RECURSIVE_MACRO_EVALUATION;
   nagios_macros mac;
 
   logger(dbg_functions, basic)

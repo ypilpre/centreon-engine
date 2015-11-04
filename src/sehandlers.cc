@@ -45,7 +45,10 @@ int obsessive_compulsive_service_check_processor(service* svc) {
   host* temp_host = NULL;
   int early_timeout = false;
   double exectime = 0.0;
-  int macro_options = STRIP_ILLEGAL_MACRO_CHARS | ESCAPE_MACRO_CHARS;
+  int macro_options =
+        STRIP_ILLEGAL_MACRO_CHARS
+        | ESCAPE_MACRO_CHARS
+        | RECURSIVE_MACRO_EVALUATION;
   nagios_macros mac;
 
   logger(dbg_functions, basic)
@@ -142,7 +145,10 @@ int obsessive_compulsive_host_check_processor(host* hst) {
   char* processed_command = NULL;
   int early_timeout = false;
   double exectime = 0.0;
-  int macro_options = STRIP_ILLEGAL_MACRO_CHARS | ESCAPE_MACRO_CHARS;
+  int macro_options =
+        STRIP_ILLEGAL_MACRO_CHARS
+        | ESCAPE_MACRO_CHARS
+        | RECURSIVE_MACRO_EVALUATION;
   nagios_macros mac;
 
   logger(dbg_functions, basic)
@@ -303,7 +309,10 @@ int run_global_service_event_handler(nagios_macros* mac, service* svc) {
   struct timeval start_time;
   struct timeval end_time;
   int neb_result = OK;
-  int macro_options = STRIP_ILLEGAL_MACRO_CHARS | ESCAPE_MACRO_CHARS;
+  int macro_options =
+        STRIP_ILLEGAL_MACRO_CHARS
+        | ESCAPE_MACRO_CHARS
+        | RECURSIVE_MACRO_EVALUATION;
 
   logger(dbg_functions, basic)
     << "run_global_service_event_handler()";
@@ -463,7 +472,10 @@ int run_service_event_handler(nagios_macros* mac, service* svc) {
   struct timeval start_time;
   struct timeval end_time;
   int neb_result = OK;
-  int macro_options = STRIP_ILLEGAL_MACRO_CHARS | ESCAPE_MACRO_CHARS;
+  int macro_options =
+        STRIP_ILLEGAL_MACRO_CHARS
+        | ESCAPE_MACRO_CHARS
+        | RECURSIVE_MACRO_EVALUATION;
 
 
   logger(dbg_functions, basic)
@@ -680,7 +692,10 @@ int run_global_host_event_handler(nagios_macros* mac, host* hst) {
   struct timeval start_time;
   struct timeval end_time;
   int neb_result = OK;
-  int macro_options = STRIP_ILLEGAL_MACRO_CHARS | ESCAPE_MACRO_CHARS;
+  int macro_options =
+        STRIP_ILLEGAL_MACRO_CHARS
+        | ESCAPE_MACRO_CHARS
+        | RECURSIVE_MACRO_EVALUATION;
 
   logger(dbg_functions, basic)
     << "run_global_host_event_handler()";
@@ -839,7 +854,10 @@ int run_host_event_handler(nagios_macros* mac, host* hst) {
   struct timeval start_time;
   struct timeval end_time;
   int neb_result = OK;
-  int macro_options = STRIP_ILLEGAL_MACRO_CHARS | ESCAPE_MACRO_CHARS;
+  int macro_options =
+        STRIP_ILLEGAL_MACRO_CHARS
+        | ESCAPE_MACRO_CHARS
+        | RECURSIVE_MACRO_EVALUATION;
 
   logger(dbg_functions, basic)
     << "run_host_event_handler()";

@@ -197,6 +197,10 @@
 # define STRIP_ILLEGAL_MACRO_CHARS              1
 # define ESCAPE_MACRO_CHARS                     2
 # define URL_ENCODE_MACRO_CHARS                 4
+# define RECURSIVE_MACRO_EVALUATION             8
+
+// Macro Max Recursion Depth
+#define MAX_RECURSIVE_MACRO_DEPTH               32
 
 // NAGIOS_MACROS structure
 struct                   nagios_macros {
@@ -216,5 +220,10 @@ struct                   nagios_macros {
 };
 
 typedef struct nagios_macros nagios_macros;
+
+// Parameters introduced by centreon engine.
+struct                   centreon_macros {
+  unsigned char          recursion_number;
+};
 
 #endif /* !CCE_MACROS_DEFINES_HH_ */

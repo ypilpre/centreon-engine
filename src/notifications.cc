@@ -870,7 +870,10 @@ int notify_contact_of_service(
   double exectime;
   struct timeval start_time, end_time;
   struct timeval method_start_time, method_end_time;
-  int macro_options = STRIP_ILLEGAL_MACRO_CHARS | ESCAPE_MACRO_CHARS;
+  int macro_options =
+        STRIP_ILLEGAL_MACRO_CHARS
+        | ESCAPE_MACRO_CHARS
+        | RECURSIVE_MACRO_EVALUATION;
   int neb_result;
 
   logger(dbg_functions, basic)
@@ -2055,7 +2058,10 @@ int notify_contact_of_host(
   struct timeval end_time;
   struct timeval method_start_time;
   struct timeval method_end_time;
-  int macro_options = STRIP_ILLEGAL_MACRO_CHARS | ESCAPE_MACRO_CHARS;
+  int macro_options =
+        STRIP_ILLEGAL_MACRO_CHARS
+        | ESCAPE_MACRO_CHARS
+        | RECURSIVE_MACRO_EVALUATION;
   int neb_result;
 
   logger(dbg_functions, basic)
