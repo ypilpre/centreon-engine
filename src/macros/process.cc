@@ -203,15 +203,15 @@ static int process_macros_r_centreon(
         // If the macro needs to be solved recursively and contains
         // at least two $, solve it.
         if (macro_options & RECURSIVE_MACRO_EVALUATION) {
-          char const* first_dollar = ::strchr(cleaned_macro, '$');
-          char const* end_dollar = ::strrchr(cleaned_macro, '$');
+          char const* first_dollar = ::strchr(selected_macro, '$');
+          char const* end_dollar = ::strrchr(selected_macro, '$');
           if (first_dollar != NULL
               && end_dollar != NULL
               && first_dollar != end_dollar) {
             logger(dbg_macros, basic)
               << "  Recursive macro detected. Resolving '"
               << cleaned_macro << "'";
-            if (process_macros_r(mac, cleaned_macro, &recursive_macro, options) == OK) {
+            if (process_macros_r(mac, selected_macro, &recursive_macro, options) == OK) {
               if (free_macro)
                 delete [] selected_macro;
               selected_macro = recursive_macro;

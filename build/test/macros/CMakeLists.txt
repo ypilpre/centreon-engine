@@ -40,3 +40,12 @@ add_executable(
 )
 target_link_libraries("${TEST_NAME}" "cce_core")
 add_test("${TEST_NAME}" "${TEST_NAME}")
+# Grab recursive macro.
+set(TEST_NAME "macros_grab_recursive_macro")
+add_executable(
+  "${TEST_NAME}"
+  "${TEST_DIR}/grab_recursive_macro.cc"
+  "${TEST_DIR}/minimal_setup.cc"
+  "${TEST_DIR}/minimal_setup.hh"
+)
+target_link_libraries("${TEST_NAME}" "cce_core")
