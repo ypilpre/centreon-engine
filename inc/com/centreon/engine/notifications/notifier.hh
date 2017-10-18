@@ -20,7 +20,8 @@
 #ifndef CCE_NOTIFICATIONS_NOTIFIER_HH
 #  define CCE_NOTIFICATIONS_NOTIFIER_HH
 
-#  include "com/centreon/engine/checks/checkable"
+#  include <ctime>
+#  include "com/centreon/engine/checks/checkable.hh"
 
 CCE_BEGIN()
 
@@ -31,26 +32,49 @@ namespace           notifications {
    *  @brief Object validating notifications and sending them if needed.
    *
    */
-  class             notifier : public checkable {
+  class               notifier : public checks::checkable {
    public:
-    enum            notification_type {
-                    PROBLEM,
-                    RECOVERY,
-                    ACKNOWLEDGEMENT,
-                    FLAPPINGSTART,
-                    FLAPPINGSTOP,
-                    FLAPPINGDISABLED,
-                    DOWNTIMESTART,
-                    DOWNTIMESTOP,
-                    DOWNTIMECANCELLED
-    }
-                    notifier();
-                    notifier(notifier const& other);
-                    ~notifier();
-    notifier&       operator=(notifier const& other);
-    bool            in_downtime();
-    bool            notifications_enabled();
-    void            notify(notification_type type);
+    typedef bool (notifier::* notifier_filter)();
+
+    enum              notification_type {
+                      NONE,
+                      PROBLEM,
+                      RECOVERY,
+                      ACKNOWLEDGEMENT,
+                      FLAPPINGSTART,
+                      FLAPPINGSTOP,
+                      FLAPPINGDISABLED,
+                      DOWNTIMESTART,
+                      DOWNTIMESTOP,
+                      DOWNTIMECANCELLED
+    };
+                      notifier();
+                      notifier(notifier const& other);
+                      ~notifier();
+    notifier&         operator=(notifier const& other);
+    bool              enabled() const;
+    bool              state_notification_enabled(int state) const;
+    void              notify(notification_type type);
+    void              enable_state_notification(int state);
+
+   private:
+    static notifier_filter
+                      _filter[];
+
+    notifier_filter   _get_filter(notification_type type) const;
+    bool              _problem_filter();
+    bool              _recovery_filter();
+    int               _get_notification_number() const;
+    long              _get_notification_interval() const;
+    long              _get_last_notification_date() const;
+
+    int               _type;
+    int               _notification_number;
+    long              _notification_interval;
+    int               _notified_states;
+
+   protected:
+    time_t            _last_notification_date;
   };
 }
 

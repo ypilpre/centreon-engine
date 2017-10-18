@@ -709,7 +709,6 @@ set(
   "${INC_DIR}/com/centreon/engine/nebmodules.hh"
   "${INC_DIR}/com/centreon/engine/nebstructs.hh"
   "${INC_DIR}/com/centreon/engine/notifications.hh"
-  "${INC_DIR}/com/centreon/engine/notifications/notifier.hh"
   "${INC_DIR}/com/centreon/engine/opt.hh"
   "${INC_DIR}/com/centreon/engine/perfdata.hh"
   "${INC_DIR}/com/centreon/engine/sehandlers.hh"
@@ -740,6 +739,7 @@ add_subdirectory("events")
 add_subdirectory("logging")
 add_subdirectory("macros")
 add_subdirectory("modules")
+add_subdirectory("notifications")
 add_subdirectory("objects")
 add_subdirectory("retention")
 
