@@ -27,11 +27,13 @@ set(
   ${FILES}
 
   # Sources.
+  "${SRC_DIR}/checkable.cc"
   "${SRC_DIR}/checker.cc"
   "${SRC_DIR}/stats.cc"
   "${SRC_DIR}/viability_failure.cc"
 
   # Headers.
+  "${INC_DIR}/checkable.hh"
   "${INC_DIR}/checker.hh"
   "${INC_DIR}/stats.hh"
   "${INC_DIR}/viability_failure.hh"

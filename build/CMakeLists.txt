@@ -691,7 +691,6 @@ set(
   # Headers.
   "${INC_DIR}/com/centreon/engine/broker.hh"
   "${INC_DIR}/com/centreon/engine/checks.hh"
-  "${INC_DIR}/com/centreon/engine/checks/checkable.hh"
   "${INC_DIR}/com/centreon/engine/circular_buffer.hh"
   "${INC_DIR}/com/centreon/engine/common.hh"
   "${INC_DIR}/com/centreon/engine/config.hh"
@@ -730,10 +729,10 @@ set(
 # Subdirectories with core features.
 add_subdirectory("broker")
 add_subdirectory("checks")
-add_subdirectory("conf")
-add_subdirectory("configuration")
 add_subdirectory("commands")
 add_subdirectory("compatibility")
+add_subdirectory("conf")
+add_subdirectory("configuration")
 add_subdirectory("deleter")
 add_subdirectory("events")
 add_subdirectory("logging")

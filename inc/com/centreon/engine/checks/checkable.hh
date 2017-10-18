@@ -20,6 +20,8 @@
 #ifndef CCE_CHECKS_CHECKABLE_HH
 #  define CCE_CHECKS_CHECKABLE_HH
 
+#  include "com/centreon/engine/namespace.hh"
+
 CCE_BEGIN()
 
 namespace           checks {
@@ -35,12 +37,17 @@ namespace           checks {
                     checkable(checkable const& other);
                     ~checkable();
     checkable&      operator=(checkable const& other);
-    bool            is_flapping();
-    int             get_state();
-    int             get_last_state();
-    int             get_last_hard_state();
-  };
+    bool            is_flapping() const;
+    bool            in_downtime() const;
+    int             get_state() const;
+    int             get_last_state() const;
+    int             get_last_hard_state() const;
 
+   protected:
+    bool            _in_downtime;
+    bool            _is_flapping;
+    int             _state;
+  };
 }
 
 CCE_END()
