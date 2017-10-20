@@ -1,6 +1,6 @@
 /*
-** Copyright 2000-2008      Ethan Galstad
-** Copyright 2011-2013,2016 Centreon
+** Copyright 2000-2008           Ethan Galstad
+** Copyright 2011-2013,2016,2017 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -22,8 +22,8 @@
 #  define CCE_OBJECTS_DOWTIME_HH
 
 #  include <time.h>
-#  include "com/centreon/engine/objects/host.hh"
-#  include "com/centreon/engine/objects/service.hh"
+#  include "com/centreon/engine/host.hh"
+#  include "com/centreon/engine/service.hh"
 
 typedef struct                      scheduled_downtime_struct {
   int                               type;

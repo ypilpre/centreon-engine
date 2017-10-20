@@ -20,6 +20,8 @@
 #ifndef CCE_CHECKS_CHECKABLE_HH
 #  define CCE_CHECKS_CHECKABLE_HH
 
+#  include "com/centreon/engine/namespace.hh"
+
 CCE_BEGIN()
 
 namespace           checks {

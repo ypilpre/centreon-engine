@@ -1,5 +1,5 @@
 ##
-## Copyright 2011-2013 Merethis
+## Copyright 2011-2013,2017 Centreon
 ##
 ## This file is part of Centreon Engine.
 ##
@@ -64,7 +64,6 @@ set(
   "${INC_DIR}/nebmodules.h"
   "${INC_DIR}/nebstructs.h"
   "${INC_DIR}/netutils.h"
-  "${INC_DIR}/objects.h"
   "${INC_DIR}/perfdata.h"
   "${INC_DIR}/protoapi.h"
   "${INC_DIR}/shared.h"

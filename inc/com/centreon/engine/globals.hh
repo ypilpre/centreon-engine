@@ -33,7 +33,6 @@
 #  include "com/centreon/engine/events/timed_event.hh"
 #  include "com/centreon/engine/nebmods.hh"
 #  include "com/centreon/engine/notifications.hh"
-#  include "com/centreon/engine/objects.hh"
 #  include "com/centreon/engine/utils.hh"
 #  include "skiplist.h"
 

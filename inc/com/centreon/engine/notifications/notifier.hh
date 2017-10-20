@@ -20,7 +20,7 @@
 #ifndef CCE_NOTIFICATIONS_NOTIFIER_HH
 #  define CCE_NOTIFICATIONS_NOTIFIER_HH
 
-#  include "com/centreon/engine/checks/checkable"
+#  include "com/centreon/engine/checks/checkable.hh"
 
 CCE_BEGIN()
 

@@ -1,7 +1,7 @@
 /*
-** Copyright 1999-2008 Ethan Galstad
-** Copyright 2009-2010 Nagios Core Development Team and Community Contributors
-** Copyright 2011-2013 Merethis
+** Copyright 1999-2008      Ethan Galstad
+** Copyright 2009-2010      Nagios Core Development Team and Community Contributors
+** Copyright 2011-2013,2017 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -23,12 +23,12 @@
 #  define CCE_NOTIFICATIONS_HH
 
 #  include <sys/time.h>
+#  include "com/centreon/engine/host.hh"
 #  include "com/centreon/engine/macros/defines.hh"
 #  include "com/centreon/engine/objects/contact.hh"
-#  include "com/centreon/engine/objects/host.hh"
 #  include "com/centreon/engine/objects/hostescalation.hh"
-#  include "com/centreon/engine/objects/service.hh"
 #  include "com/centreon/engine/objects/serviceescalation.hh"
+#  include "com/centreon/engine/service.hh"
 
 // Notification Types
 #  define HOST_NOTIFICATION               0

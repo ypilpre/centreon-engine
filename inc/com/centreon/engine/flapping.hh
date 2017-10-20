@@ -1,6 +1,6 @@
 /*
-** Copyright 2002-2006 Ethan Galstad
-** Copyright 2011-2013 Merethis
+** Copyright 2002-2006      Ethan Galstad
+** Copyright 2011-2013,2017 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -21,8 +21,8 @@
 #ifndef CCE_FLAPPING_HH
 #  define CCE_FLAPPING_HH
 
-#  include "com/centreon/engine/objects/host.hh"
-#  include "com/centreon/engine/objects/service.hh"
+#  include "com/centreon/engine/host.hh"
+#  include "com/centreon/engine/service.hh"
 
 // Flapping Types
 #  define HOST_FLAPPING    0

@@ -1,6 +1,6 @@
 /*
-** Copyright 2003-2007 Ethan Galstad
-** Copyright 2011-2013 Merethis
+** Copyright 2003-2007      Ethan Galstad
+** Copyright 2011-2013,2017 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -21,10 +21,10 @@
 #ifndef CCE_NEBSTRUCTS_HH
 #  define CCE_NEBSTRUCTS_HH
 
+#  include "com/centreon/engine/host.hh"
 #  include "com/centreon/engine/objects/command.hh"
 #  include "com/centreon/engine/objects/customvariablesmember.hh"
-#  include "com/centreon/engine/objects/host.hh"
-#  include "com/centreon/engine/objects/service.hh"
+#  include "com/centreon/engine/service.hh"
 
 /* Acknowledgement structure. */
 typedef struct   nebstruct_acknowledgement_struct {
