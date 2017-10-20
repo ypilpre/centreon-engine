@@ -34,11 +34,11 @@ typedef struct   nebstruct_acknowledgement_struct {
   struct timeval timestamp;
 
   int            acknowledgement_type;
-  char*          host_name;
-  char*          service_description;
+  char const*    host_name;
+  char const*    service_description;
   int            state;
-  char*          author_name;
-  char*          comment_data;
+  char const*    author_name;
+  char const*    comment_data;
   int            is_sticky;
   int            persistent_comment;
   int            notify_contacts;
@@ -189,14 +189,14 @@ typedef struct   nebstruct_contact_notification_struct {
   int            notification_type;
   struct timeval start_time;
   struct timeval end_time;
-  char*          host_name;
-  char*          service_description;
-  char*          contact_name;
+  char const*    host_name;
+  char const*    service_description;
+  char const*    contact_name;
   int            reason_type;
   int            state;
-  char*          output;
-  char*          ack_author;
-  char*          ack_data;
+  char const*    output;
+  char const*    ack_author;
+  char const*    ack_data;
   int            escalated;
 
   void*          object_ptr;
@@ -213,16 +213,16 @@ typedef struct   nebstruct_contact_notification_method_struct {
   int            notification_type;
   struct timeval start_time;
   struct timeval end_time;
-  char*          host_name;
-  char*          service_description;
-  char*          contact_name;
-  char*          command_name;
-  char*          command_args;
+  char const*    host_name;
+  char const*    service_description;
+  char const*    contact_name;
+  char const*    command_name;
+  char const*    command_args;
   int            reason_type;
   int            state;
-  char*          output;
-  char*          ack_author;
-  char*          ack_data;
+  char const*    output;
+  char const*    ack_author;
+  char const*    ack_data;
   int            escalated;
 
   void*          object_ptr;
@@ -246,8 +246,8 @@ typedef struct           nebstruct_custom_variable_struct {
   int                    attr;
   struct timeval         timestamp;
 
-  char*                  var_name;
-  char*                  var_value;
+  char const*            var_name;
+  char const*            var_value;
 
   void*                  object_ptr;
 }                        nebstruct_custom_variable_data;
@@ -283,20 +283,20 @@ typedef struct   nebstruct_event_handler_struct {
   struct timeval timestamp;
 
   int            eventhandler_type;
-  char*          host_name;
-  char*          service_description;
+  char const*    host_name;
+  char const*    service_description;
   int            state_type;
   int            state;
   int            timeout;
-  char*          command_name;
-  char*          command_args;
-  char*          command_line;
+  char const*    command_name;
+  char const*    command_args;
+  char const*    command_line;
   struct timeval start_time;
   struct timeval end_time;
   int            early_timeout;
   double         execution_time;
   int            return_code;
-  char*          output;
+  char const*    output;
 
   void*          object_ptr;
 }                nebstruct_event_handler_data;
@@ -310,8 +310,8 @@ typedef struct   nebstruct_external_command_struct {
 
   int            command_type;
   time_t         entry_time;
-  char*          command_string;
-  char*          command_args;
+  char const*    command_string;
+  char const*    command_args;
 }                nebstruct_external_command_data;
 
 /* Flapping data structure. */
@@ -322,8 +322,8 @@ typedef struct   nebstruct_flapping_struct {
   struct timeval timestamp;
 
   int            flapping_type;
-  char*          host_name;
-  char*          service_description;
+  char const*    host_name;
+  char const*    service_description;
   double         percent_change;
   double         high_threshold;
   double         low_threshold;
@@ -360,25 +360,25 @@ typedef struct   nebstruct_host_check_struct {
   int            attr;
   struct timeval timestamp;
 
-  char*          host_name;
+  char const*    host_name;
   int            current_attempt;
   int            check_type;
   int            max_attempts;
   int            state_type;
   int            state;
   int            timeout;
-  char*          command_name;
-  char*          command_args;
-  char*          command_line;
+  char const*    command_name;
+  char const*    command_args;
+  char const*    command_line;
   struct timeval start_time;
   struct timeval end_time;
   int            early_timeout;
   double         execution_time;
   double         latency;
   int            return_code;
-  char*          output;
-  char*          long_output;
-  char*          perf_data;
+  char const*    output;
+  char const*    long_output;
+  char const*    perf_data;
 
   void*          object_ptr;
 }                nebstruct_host_check_data;
@@ -402,7 +402,7 @@ typedef struct   nebstruct_log_struct {
 
   time_t         entry_time;
   int            data_type;
-  char*          data;
+  char const*    data;
 }                nebstruct_log_data;
 
 /* Module data structure. */
@@ -412,8 +412,8 @@ typedef struct   nebstruct_module_struct {
   int            attr;
   struct timeval timestamp;
 
-  char*          module;
-  char*          args;
+  char const*    module;
+  char const*    args;
 }                nebstruct_module_data;
 
 /* Notification data structure. */
@@ -426,13 +426,13 @@ typedef struct   nebstruct_notification_struct {
   int            notification_type;
   struct timeval start_time;
   struct timeval end_time;
-  char*          host_name;
-  char*          service_description;
+  char const*    host_name;
+  char const*    service_description;
   int            reason_type;
   int            state;
-  char*          output;
-  char*          ack_author;
-  char*          ack_data;
+  char const*    output;
+  char const*    ack_author;
+  char const*    ack_data;
   int            escalated;
   int            contacts_notified;
 
@@ -504,26 +504,26 @@ typedef struct   nebstruct_service_check_struct {
   int            attr;
   struct timeval timestamp;
 
-  char*          host_name;
-  char*          service_description;
+  char const*    host_name;
+  char const*    service_description;
   int            check_type;
   int            current_attempt;
   int            max_attempts;
   int            state_type;
   int            state;
   int            timeout;
-  char*          command_name;
-  char*          command_args;
-  char*           command_line;
+  char const*    command_name;
+  char const*    command_args;
+  char const*     command_line;
   struct timeval start_time;
   struct timeval end_time;
   int            early_timeout;
   double         execution_time;
   double         latency;
   int            return_code;
-  char*          output;
-  char*          long_output;
-  char*          perf_data;
+  char const*    output;
+  char const*    long_output;
+  char const*    perf_data;
 
   void*          object_ptr;
 }                nebstruct_service_check_data;
@@ -546,13 +546,13 @@ typedef struct   nebstruct_statechange_struct {
   struct timeval timestamp;
 
   int            statechange_type;
-  char*          host_name;
-  char*          service_description;
+  char const*    host_name;
+  char const*    service_description;
   int            state;
   int            state_type;
   int            current_attempt;
   int            max_attempts;
-  char*          output;
+  char const*    output;
 
   void*          object_ptr;
 }                nebstruct_statechange_data;
@@ -567,11 +567,11 @@ typedef struct   nebstruct_system_command_struct {
   struct timeval start_time;
   struct timeval end_time;
   int            timeout;
-  char*          command_line;
+  char const*    command_line;
   int            early_timeout;
   double         execution_time;
   int            return_code;
-  char*          output;
+  char const*    output;
 }                nebstruct_system_command_data;
 
 /* Timed event data structure. */

@@ -24,23 +24,29 @@
 
 CCE_BEGIN()
 
-namespace           checks {
+namespace              checks {
 
   /**
    *  @class checkable checkable.hh "com/centreon/engine/checks/checkable.hh"
    *  @brief Object executing checks.
    *
    */
-  class             checkable {
+  class                checkable {
    public:
-                    checkable();
-                    checkable(checkable const& other);
-                    ~checkable();
-    checkable&      operator=(checkable const& other);
-    bool            is_flapping();
-    int             get_state();
-    int             get_last_state();
-    int             get_last_hard_state();
+                       checkable();
+                       checkable(checkable const& other);
+    virtual            ~checkable();
+    checkable&         operator=(checkable const& other);
+    int                get_current_attempt() const;
+    int                get_current_state() const;
+    int                get_last_state() const;
+    int                get_last_hard_state() const;
+    std::string const& get_long_output() const;
+    int                get_max_attempts() const;
+    std::string const& get_output() const;
+    std::string const& get_perfdata() const;
+    int                get_state_type() const;
+    bool               is_flapping() const;
   };
 
 }

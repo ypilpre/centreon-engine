@@ -695,6 +695,7 @@ set(
   "${INC_DIR}/com/centreon/engine/host.hh"
   "${INC_DIR}/com/centreon/engine/logging.hh"
   "${INC_DIR}/com/centreon/engine/macros.hh"
+  "${INC_DIR}/com/centreon/engine/monitorable.hh"
   "${INC_DIR}/com/centreon/engine/nebcallbacks.hh"
   "${INC_DIR}/com/centreon/engine/neberrors.hh"
   "${INC_DIR}/com/centreon/engine/nebmods.hh"

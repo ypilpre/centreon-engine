@@ -48,7 +48,7 @@ namespace           notifications {
 
                     notifier();
                     notifier(notifier const& other);
-                    ~notifier();
+    virtual         ~notifier();
     notifier&       operator=(notifier const& other);
     bool            in_downtime();
     bool            notifications_enabled();

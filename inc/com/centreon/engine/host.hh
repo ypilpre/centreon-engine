@@ -20,8 +20,8 @@
 #ifndef CCE_HOST_HH
 #  define CCE_HOST_HH
 
+#  include "com/centreon/engine/monitorable.hh"
 #  include "com/centreon/engine/namespace.hh"
-#  include "com/centreon/engine/notifications/notifier.hh"
 
 CCE_BEGIN()
 
@@ -31,7 +31,7 @@ CCE_BEGIN()
  *
  *  A host is checkable and also a notifier.
  */
-class               host : public notifications::notifier {
+class               host : public monitorable {
  public:
                     host();
                     host(host const& other);

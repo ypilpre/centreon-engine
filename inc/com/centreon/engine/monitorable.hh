@@ -20,6 +20,7 @@
 #ifndef CCE_MONITORABLE_HH
 #  define CCE_MONITORABLE_HH
 
+#  include <string>
 #  include "com/centreon/engine/namespace.hh"
 #  include "com/centreon/engine/notifications/notifier.hh"
 
@@ -31,12 +32,13 @@ CCE_BEGIN()
  *
  *  Monitorable nodes are checked and notified of problems.
  */
-class          monitorable : public notifications::notifier {
+class                monitorable : public notifications::notifier {
  public:
-               monitorable();
-               monitorable(monitorable const& other);
-  virtual      ~monitorable();
-  monitorable& operator=(monitorable const& other);
+                     monitorable();
+                     monitorable(monitorable const& other);
+  virtual            ~monitorable();
+  monitorable&       operator=(monitorable const& other);
+  std::string const& get_host_name() const;
 };
 
 CCE_END()

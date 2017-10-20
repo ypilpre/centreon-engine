@@ -1,7 +1,7 @@
 /*
-** Copyright 2002-2010 Ethan Galstad
-** Copyright 2010      Nagios Core Development Team
-** Copyright 2011-2013 Merethis
+** Copyright 2002-2010      Ethan Galstad
+** Copyright 2010           Nagios Core Development Team
+** Copyright 2011-2013,2017 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -74,15 +74,15 @@ void broker_acknowledgement_data(
   ds.acknowledgement_type = acknowledgement_type;
   if (acknowledgement_type == SERVICE_ACKNOWLEDGEMENT) {
     temp_service = (service*)data;
-    ds.host_name = temp_service->host_name;
-    ds.service_description = temp_service->description;
-    ds.state = temp_service->current_state;
+    ds.host_name = temp_service->get_host_name().c_str();
+    ds.service_description = temp_service->get_description().c_str();
+    ds.state = temp_service->get_current_state();
   }
   else {
     temp_host = (host*)data;
-    ds.host_name = temp_host->name;
+    ds.host_name = temp_host->get_host_name().c_str();
     ds.service_description = NULL;
-    ds.state = temp_host->current_state;
+    ds.state = temp_host->get_current_state();
   }
   ds.object_ptr = data;
   ds.author_name = ack_author;
@@ -551,17 +551,17 @@ int broker_contact_notification_data(
   ds.contact_name = cntct->name;
   if (notification_type == SERVICE_NOTIFICATION) {
     temp_service = (service*)data;
-    ds.host_name = temp_service->host_name;
-    ds.service_description = temp_service->description;
-    ds.state = temp_service->current_state;
-    ds.output = temp_service->plugin_output;
+    ds.host_name = temp_service->get_host_name().c_str();
+    ds.service_description = temp_service->get_description().c_str();
+    ds.state = temp_service->get_current_state();
+    ds.output = temp_service->get_output().c_str();
   }
   else {
     temp_host = (host*)data;
-    ds.host_name = temp_host->name;
+    ds.host_name = temp_host->get_host_name().c_str();
     ds.service_description = NULL;
-    ds.state = temp_host->current_state;
-    ds.output = temp_host->plugin_output;
+    ds.state = temp_host->get_current_state();
+    ds.output = temp_host->get_output().c_str();
   }
   ds.object_ptr = data;
   ds.contact_ptr = cntct;
@@ -641,17 +641,17 @@ int broker_contact_notification_method_data(
   ds.command_args = command_args;
   if (notification_type == SERVICE_NOTIFICATION) {
     temp_service = (service*)data;
-    ds.host_name = temp_service->host_name;
-    ds.service_description = temp_service->description;
-    ds.state = temp_service->current_state;
-    ds.output = temp_service->plugin_output;
+    ds.host_name = temp_service->get_host_name().c_str();
+    ds.service_description = temp_service->get_description().c_str();
+    ds.state = temp_service->get_current_state();
+    ds.output = temp_service->get_output().c_str();
   }
   else {
     temp_host = (host*)data;
-    ds.host_name = temp_host->name;
+    ds.host_name = temp_host->get_host_name().c_str();
     ds.service_description = NULL;
-    ds.state = temp_host->current_state;
-    ds.output = temp_host->plugin_output;
+    ds.state = temp_host->get_current_state();
+    ds.output = temp_host->get_output().c_str();
   }
   ds.object_ptr = data;
   ds.contact_ptr = cntct;
@@ -877,12 +877,12 @@ int broker_event_handler(
   if ((eventhandler_type == SERVICE_EVENTHANDLER)
       || (eventhandler_type == GLOBAL_SERVICE_EVENTHANDLER)) {
     temp_service = (service*)data;
-    ds.host_name = temp_service->host_name;
-    ds.service_description = temp_service->description;
+    ds.host_name = temp_service->get_host_name().c_str();
+    ds.service_description = temp_service->get_description().c_str();
   }
   else {
     temp_host = (host*)data;
-    ds.host_name = temp_host->name;
+    ds.host_name = temp_host->get_host_name().c_str();
     ds.service_description = NULL;
   }
   ds.object_ptr = data;
@@ -990,15 +990,15 @@ void broker_flapping_data(
   ds.flapping_type = flapping_type;
   if (flapping_type == SERVICE_FLAPPING) {
     temp_service = (service*)data;
-    ds.host_name = temp_service->host_name;
-    ds.service_description = temp_service->description;
-    ds.comment_id = temp_service->flapping_comment_id;
+    ds.host_name = temp_service->get_host_name().c_str();
+    ds.service_description = temp_service->get_description().c_str();
+    // XXX ds.comment_id = temp_service->flapping_comment_id;
   }
   else {
     temp_host = (host*)data;
-    ds.host_name = temp_host->name;
+    ds.host_name = temp_host->get_host_name().c_str();
     ds.service_description = NULL;
-    ds.comment_id = temp_host->flapping_comment_id;
+    // XXX ds.comment_id = temp_host->flapping_comment_id;
   }
   ds.object_ptr = data;
   ds.percent_change = percent_change;
@@ -1148,11 +1148,11 @@ int broker_host_check(
   ds.flags = flags;
   ds.attr = attr;
   ds.timestamp = get_broker_timestamp(timestamp);
-  ds.host_name = hst->name;
+  ds.host_name = hst->get_host_name().c_str();
   ds.object_ptr = hst;
   ds.check_type = check_type;
-  ds.current_attempt = hst->current_attempt;
-  ds.max_attempts = hst->max_attempts;
+  ds.current_attempt = hst->get_current_attempt();
+  ds.max_attempts = hst->get_max_attempts();
   ds.state = state;
   ds.state_type = state_type;
   ds.timeout = timeout;
@@ -1338,17 +1338,17 @@ int broker_notification_data(
   ds.reason_type = reason_type;
   if (notification_type == SERVICE_NOTIFICATION) {
     temp_service = (service*)data;
-    ds.host_name = temp_service->host_name;
-    ds.service_description = temp_service->description;
-    ds.state = temp_service->current_state;
-    ds.output = temp_service->plugin_output;
+    ds.host_name = temp_service->get_host_name().c_str();
+    ds.service_description = temp_service->get_description().c_str();
+    ds.state = temp_service->get_current_state();
+    ds.output = temp_service->get_output().c_str();
   }
   else {
     temp_host = (host*)data;
-    ds.host_name = temp_host->name;
+    ds.host_name = temp_host->get_host_name().c_str();
     ds.service_description = NULL;
-    ds.state = temp_host->current_state;
-    ds.output = temp_host->plugin_output;
+    ds.state = temp_host->get_current_state();
+    ds.output = temp_host->get_output().c_str();
   }
   ds.object_ptr = data;
   ds.ack_author = ack_author;
@@ -1578,14 +1578,14 @@ int broker_service_check(
   ds.flags = flags;
   ds.attr = attr;
   ds.timestamp = get_broker_timestamp(timestamp);
-  ds.host_name = svc->host_name;
-  ds.service_description = svc->description;
+  ds.host_name = svc->get_host_name().c_str();
+  ds.service_description = svc->get_description().c_str();
   ds.object_ptr = svc;
   ds.check_type = check_type;
-  ds.current_attempt = svc->current_attempt;
-  ds.max_attempts = svc->max_attempts;
-  ds.state = svc->current_state;
-  ds.state_type = svc->state_type;
+  ds.current_attempt = svc->get_current_attempt();
+  ds.max_attempts = svc->get_max_attempts();
+  ds.state = svc->get_current_state();
+  ds.state_type = svc->get_state_type();
   ds.timeout = timeout;
   ds.command_name = command_name;
   ds.command_args = command_args;
@@ -1596,9 +1596,9 @@ int broker_service_check(
   ds.execution_time = exectime;
   ds.latency = latency;
   ds.return_code = retcode;
-  ds.output = svc->plugin_output;
-  ds.long_output = svc->long_plugin_output;
-  ds.perf_data = svc->perf_data;
+  ds.output = svc->get_output().c_str();
+  ds.long_output = svc->get_long_output().c_str();
+  ds.perf_data = svc->get_perfdata().c_str();
 
   // Make callbacks.
   int return_code;
@@ -1683,15 +1683,15 @@ void broker_statechange_data(
   ds.statechange_type = statechange_type;
   if (statechange_type == SERVICE_STATECHANGE) {
     temp_service = (service*)data;
-    ds.host_name = temp_service->host_name;
-    ds.service_description = temp_service->description;
-    ds.output = temp_service->plugin_output;
+    ds.host_name = temp_service->get_host_name().c_str();
+    ds.service_description = temp_service->get_description().c_str();
+    ds.output = temp_service->get_output().c_str();
   }
   else {
     temp_host = (host*)data;
-    ds.host_name = temp_host->name;
+    ds.host_name = temp_host->get_host_name().c_str();
     ds.service_description = NULL;
-    ds.output = temp_host->plugin_output;
+    ds.output = temp_host->get_output().c_str();
   }
   ds.object_ptr = data;
   ds.state = state;

@@ -20,8 +20,9 @@
 #ifndef CCE_SERVICE_HH
 #  define CCE_SERVICE_HH
 
+#  include <string>
+#  include "com/centreon/engine/monitorable.hh"
 #  include "com/centreon/engine/namespace.hh"
-#  include "com/centreon/engine/notifications/notifier.hh"
 
 CCE_BEGIN()
 
@@ -31,12 +32,13 @@ CCE_BEGIN()
  *
  *  This class represents a service. It is checkable and also a notifier.
  */
-class               service : public notifications::notifier {
+class                service : public monitorable {
  public:
-                    service();
-                    service(service const& other);
-                    ~service();
-  service&          operator=(service const& other);
+                     service();
+                     service(service const& other);
+                     ~service();
+  service&           operator=(service const& other);
+  std::string const& get_description() const;
 };
 
 CCE_END()
