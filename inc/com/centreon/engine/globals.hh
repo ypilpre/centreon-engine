@@ -33,6 +33,10 @@
 #  include "com/centreon/engine/events/timed_event.hh"
 #  include "com/centreon/engine/nebmods.hh"
 #  include "com/centreon/engine/notifications.hh"
+#  include "com/centreon/engine/objects/comment.hh"
+#  include "com/centreon/engine/objects/downtime.hh"
+#  include "com/centreon/engine/objects/hostdependency.hh"
+#  include "com/centreon/engine/objects/servicedependency.hh"
 #  include "com/centreon/engine/utils.hh"
 #  include "skiplist.h"
 
@@ -99,21 +103,16 @@ extern int                       embedded_perl_initialized;
 
 extern host*                     host_list;
 extern host*                     host_list_tail;
-extern std::map<std::string, host_other_properties> host_other_props;
 extern service*                  service_list;
 extern service*                  service_list_tail;
-extern std::map<std::pair<std::string, std::string>, service_other_properties> service_other_props;
 extern contact*                  contact_list;
 extern contact*                  contact_list_tail;
-extern std::map<std::string, contact_other_properties> contact_other_props;
 extern contactgroup*             contactgroup_list;
 extern contactgroup*             contactgroup_list_tail;
 extern hostgroup*                hostgroup_list;
 extern hostgroup*                hostgroup_list_tail;
-extern std::map<std::string, hostgroup_other_properties> hostgroup_other_props;
 extern servicegroup*             servicegroup_list;
 extern servicegroup*             servicegroup_list_tail;
-extern std::map<std::string, servicegroup_other_properties> servicegroup_other_props;
 extern command*                  command_list;
 extern command*                  command_list_tail;
 extern timeperiod*               timeperiod_list;

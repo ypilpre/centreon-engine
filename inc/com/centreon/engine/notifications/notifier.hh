@@ -21,6 +21,7 @@
 #  define CCE_NOTIFICATIONS_NOTIFIER_HH
 
 #  include "com/centreon/engine/checks/checkable.hh"
+#  include "com/centreon/engine/namespace.hh"
 
 CCE_BEGIN()
 
@@ -31,7 +32,7 @@ namespace           notifications {
    *  @brief Object validating notifications and sending them if needed.
    *
    */
-  class             notifier : public checkable {
+  class             notifier : public com::centreon::engine::checks::checkable {
    public:
     enum            notification_type {
                     PROBLEM,
@@ -43,7 +44,8 @@ namespace           notifications {
                     DOWNTIMESTART,
                     DOWNTIMESTOP,
                     DOWNTIMECANCELLED
-    }
+    };
+
                     notifier();
                     notifier(notifier const& other);
                     ~notifier();

@@ -17,8 +17,8 @@
 ** <http://www.gnu.org/licenses/>.
 */
 
-#ifndef CCE_SERVICE_HH
-#  define CCE_SERVICE_HH
+#ifndef CCE_MONITORABLE_HH
+#  define CCE_MONITORABLE_HH
 
 #  include "com/centreon/engine/namespace.hh"
 #  include "com/centreon/engine/notifications/notifier.hh"
@@ -26,21 +26,19 @@
 CCE_BEGIN()
 
 /**
- *  @class service service.hh "com/centreon/engine/service.hh"
- *  @brief Service as a host's service.
+ *  @class monitorable monitorable.hh "com/centreon/engine/monitorable.hh"
+ *  @brief Monitorable node.
  *
- *  This class represents a service. It is checkable and also a notifier.
+ *  Monitorable nodes are checked and notified of problems.
  */
-class               service : public notifications::notifier {
+class          monitorable : public notifications::notifier {
  public:
-                    service();
-                    service(service const& other);
-                    ~service();
-  service&          operator=(service const& other);
+               monitorable();
+               monitorable(monitorable const& other);
+  virtual      ~monitorable();
+  monitorable& operator=(monitorable const& other);
 };
 
 CCE_END()
 
-using com::centreon::engine::service;
-
-#endif // !CCE_SERVICE_HH
+#endif // !CCE_MONITORABLE_HH
