@@ -23,5 +23,8 @@ using namespace com::centreon::engine::notifications;
 
 class test_notifier : public notifier {
  public:
-
+  void set_in_downtime(bool downtime);
+  void set_is_flapping(bool flapping);
+  long get_last_notification_date();
+  void set_state(int state);
 };
