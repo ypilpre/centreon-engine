@@ -657,7 +657,7 @@ set(
   # Sources.
   "${SRC_DIR}/broker.cc"
   "${SRC_DIR}/checks.cc"
-  "${SRC_DIR}/config.cc"
+  # "${SRC_DIR}/config.cc"
   "${SRC_DIR}/diagnostic.cc"
   "${SRC_DIR}/downtime_finder.cc"
   "${SRC_DIR}/error.cc"
@@ -686,7 +686,7 @@ set(
   "${INC_DIR}/com/centreon/engine/checks/checkable.hh"
   "${INC_DIR}/com/centreon/engine/circular_buffer.hh"
   "${INC_DIR}/com/centreon/engine/common.hh"
-  "${INC_DIR}/com/centreon/engine/config.hh"
+  # "${INC_DIR}/com/centreon/engine/config.hh"
   "${INC_DIR}/com/centreon/engine/diagnostic.hh"
   "${INC_DIR}/com/centreon/engine/downtime_finder.hh"
   "${INC_DIR}/com/centreon/engine/error.hh"
