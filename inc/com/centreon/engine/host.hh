@@ -20,6 +20,7 @@
 #ifndef CCE_HOST_HH
 #  define CCE_HOST_HH
 
+#  include <list>
 #  include "com/centreon/engine/monitorable.hh"
 #  include "com/centreon/engine/namespace.hh"
 
@@ -31,16 +32,27 @@ CCE_BEGIN()
  *
  *  A host is checkable and also a notifier.
  */
-class               host : public monitorable {
+class                     host : public monitorable {
  public:
-                    host();
-                    host(host const& other);
-                    ~host();
-  host&             operator=(host const& other);
+                          host();
+                          host(host const& other);
+                          ~host();
+  host&                   operator=(host const& other);
+  bool                    get_accept_passive_host_checks() const;
+  std::list<host*> const& get_children() const;
+  std::list<host*> const& get_parents() const;
+  bool                    get_stalk_on_down() const;
+  bool                    get_stalk_on_unreachable() const;
+  bool                    get_stalk_on_up() const;
+  bool                    get_should_reschedule_current_check() const;
+  void                    set_should_reschedule_current_check(
+                            bool reschedule);
 };
 
 CCE_END()
 
 using com::centreon::engine::host;
+
+typedef std::list<host*> host_set;
 
 #endif // !CCE_HOST_HH

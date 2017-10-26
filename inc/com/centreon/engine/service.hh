@@ -20,11 +20,15 @@
 #ifndef CCE_SERVICE_HH
 #  define CCE_SERVICE_HH
 
+#  include <list>
 #  include <string>
 #  include "com/centreon/engine/monitorable.hh"
 #  include "com/centreon/engine/namespace.hh"
 
 CCE_BEGIN()
+
+// Forward declaration.
+class host;
 
 /**
  *  @class service service.hh "com/centreon/engine/service.hh"
@@ -39,10 +43,25 @@ class                service : public monitorable {
                      ~service();
   service&           operator=(service const& other);
   std::string const& get_description() const;
+  host*              get_host();
+  bool               get_stalk_on_critical() const;
+  bool               get_stalk_on_ok() const;
+  bool               get_stalk_on_unknown() const;
+  bool               get_stalk_on_warning() const;
+  bool               is_volatile() const;
+  void               set_last_time_critical(time_t last_critical);
+  void               set_last_time_ok(time_t last_ok);
+  void               set_last_time_unknown(time_t last_unknown);
+  void               set_last_time_warning(time_t last_warning);
+  void               set_notified_on_critical(bool notified);
+  void               set_notified_on_unknown(bool notified);
+  void               set_notified_on_warning(bool notified);
 };
 
 CCE_END()
 
 using com::centreon::engine::service;
+
+typedef std::list<service*> service_set;
 
 #endif // !CCE_SERVICE_HH

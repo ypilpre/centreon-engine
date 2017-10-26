@@ -26,6 +26,7 @@
 #  include "com/centreon/engine/commands/command.hh"
 #  include "com/centreon/engine/commands/command_listener.hh"
 #  include "com/centreon/engine/commands/result.hh"
+#  include "com/centreon/engine/common.hh"
 #  include "com/centreon/engine/host.hh"
 #  include "com/centreon/engine/namespace.hh"
 #  include "com/centreon/engine/service.hh"

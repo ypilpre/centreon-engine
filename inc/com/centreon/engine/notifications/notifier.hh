@@ -50,9 +50,21 @@ namespace           notifications {
                     notifier(notifier const& other);
     virtual         ~notifier();
     notifier&       operator=(notifier const& other);
-    bool            in_downtime();
+    void            get_acknowledged() const;
+    int             get_acknowledgement_type() const;
+    int             get_pending_flex_downtime() const;
+    bool            get_recovery_been_sent() const;
+    bool            in_downtime() const;
     bool            notifications_enabled();
     void            notify(notification_type type);
+    void            set_acknowledged(bool acked);
+    void            set_acknowledgement_type(int type);
+    void            set_current_notification_number(int number);
+    void            set_initial_notif_time(time_t initial);
+    void            set_last_notification(time_t last_notification);
+    void            set_next_notification(time_t next_notification);
+    void            set_no_more_notifications(bool no_more);
+    void            set_recovery_been_sent(bool sent);
   };
 }
 

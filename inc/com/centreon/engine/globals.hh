@@ -101,10 +101,8 @@ extern time_t                    event_start;
 
 extern int                       embedded_perl_initialized;
 
-extern host*                     host_list;
-extern host*                     host_list_tail;
-extern service*                  service_list;
-extern service*                  service_list_tail;
+extern host_set                  host_list;
+extern service_set               service_list;
 extern contact*                  contact_list;
 extern contact*                  contact_list_tail;
 extern contactgroup*             contactgroup_list;

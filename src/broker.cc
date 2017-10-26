@@ -1121,10 +1121,10 @@ int broker_host_check(
       int timeout,
       int early_timeout,
       int retcode,
-      char* cmdline,
-      char* output,
-      char* long_output,
-      char* perfdata,
+      char const* cmdline,
+      char const* output,
+      char const* long_output,
+      char const* perfdata,
       struct timeval const* timestamp) {
   // Config check.
   if (!(config->event_broker_options() & BROKER_HOST_CHECKS))
