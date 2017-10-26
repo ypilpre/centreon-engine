@@ -122,10 +122,8 @@ int                 add_service_downtime(
                       unsigned long duration,
                       unsigned long downtime_id);
 int                 check_for_expired_downtime();
-int                 check_pending_flex_host_downtime(
-                      host_struct* hst);
-int                 check_pending_flex_service_downtime(
-                      service* svc);
+int                 check_pending_flex_host_downtime(host* hst);
+int                 check_pending_flex_service_downtime(service* svc);
 int                 delete_downtime(
                       int type,
                       unsigned long downtime_id);
