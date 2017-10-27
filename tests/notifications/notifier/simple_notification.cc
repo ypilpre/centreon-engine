@@ -22,15 +22,21 @@
 #include "../../timeperiod/utils.hh"
 #include "../test_notifier.hh"
 #include "com/centreon/engine/notifications/notifier.hh"
+#include "com/centreon/engine/configuration/state.hh"
 
 using namespace com::centreon::engine;
 using namespace com::centreon::engine::notifications;
+
+extern configuration::state* config;
 
 class SimpleNotification : public ::testing::Test {
  public:
   void SetUp() {
     set_time(20);
     _notifier.reset(new test_notifier());
+    if (config == NULL) {
+      config = new configuration::state;
+    }
   }
 
  protected:
@@ -43,10 +49,10 @@ class SimpleNotification : public ::testing::Test {
 TEST_F(SimpleNotification, ProblemWithDowntime) {
 
   _notifier->set_in_downtime(true);
-  long last_notification = _notifier->get_last_notification_date();
+  long last_notification = _notifier->get_last_notification();
   // When
   _notifier->notify(notifier::PROBLEM);
-  ASSERT_EQ(last_notification, _notifier->get_last_notification_date());
+  ASSERT_EQ(last_notification, _notifier->get_last_notification());
 }
 
 // Given a flapping notifier
@@ -55,10 +61,10 @@ TEST_F(SimpleNotification, ProblemWithDowntime) {
 TEST_F(SimpleNotification, ProblemDuringFlapping) {
 
   _notifier->set_is_flapping(true);
-  long last_notification = _notifier->get_last_notification_date();
+  long last_notification = _notifier->get_last_notification();
   // When
   _notifier->notify(notifier::PROBLEM);
-  ASSERT_EQ(last_notification, _notifier->get_last_notification_date());
+  ASSERT_EQ(last_notification, _notifier->get_last_notification());
 }
 
 // Given a notifier that notifies on any state.
@@ -66,27 +72,46 @@ TEST_F(SimpleNotification, ProblemDuringFlapping) {
 // Then the filter method returns false and no notification is sent.
 TEST_F(SimpleNotification, ProblemWithUnnotifiedState) {
 
-  _notifier->set_state(1);
-  long last_notification = _notifier->get_last_notification_date();
+  _notifier->set_current_state(1);
+  long last_notification = _notifier->get_last_notification();
   // When
   _notifier->notify(notifier::PROBLEM);
-  ASSERT_EQ(last_notification, _notifier->get_last_notification_date());
+  ASSERT_EQ(last_notification, _notifier->get_last_notification());
 }
 
 // Given a notifier with state 1.
 // When notification is enabled on state 1
 // And the notify method is called with PROBLEM type for state 1
 // Then a notification is sent.
-TEST_F(SimpleNotification, ProblemWithState1) {
+TEST_F(SimpleNotification, SimpleNotification) {
 
-  _notifier->set_state(1);
-  long last_notification = _notifier->get_last_notification_date();
-  time_t now;
-  time(&now);
-  ASSERT_TRUE(now > 0);
-  std::cout << "time: " << now << std::endl;
+  _notifier->set_current_state(1);
+  time_t last_notification = _notifier->get_last_notification();
   // When
+  time_t now = last_notification + 20;
+  set_time(now);
   _notifier->enable_state_notification(1);
   _notifier->notify(notifier::PROBLEM);
-  ASSERT_TRUE(_notifier->get_last_notification_date() >= now);
+  ASSERT_TRUE(_notifier->get_last_notification() >= now);
+}
+
+// Given a notifier with state 1.
+// When notification is enabled on state 1
+// And the notify method is called with PROBLEM type for state 1
+// Then a notification is sent.
+TEST_F(SimpleNotification, TooEarlyNewNotification) {
+
+  _notifier->set_current_state(1);
+  _notifier->set_current_notification_type(notifier::PROBLEM);
+  _notifier->set_current_notification_number(1);
+  _notifier->enable_state_notification(1);
+  time_t last_notification = 20;
+  _notifier->set_last_notification(last_notification);
+  _notifier->set_notification_interval(60);
+  time_t now = last_notification + 10;
+  set_time(now);
+  // When
+  _notifier->set_current_state(1);
+  _notifier->notify(notifier::PROBLEM);
+  ASSERT_TRUE(_notifier->get_last_notification() < now);
 }
