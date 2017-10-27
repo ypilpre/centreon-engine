@@ -1,6 +1,6 @@
 /*
-** Copyright 2000-2008 Ethan Galstad
-** Copyright 2011-2013 Merethis
+** Copyright 2000-2008      Ethan Galstad
+** Copyright 2011-2013,2017 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -30,8 +30,8 @@
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/macros.hh"
 #include "com/centreon/engine/objects/command.hh"
-#include "com/centreon/engine/objects/host.hh"
-#include "com/centreon/engine/objects/service.hh"
+#include "com/centreon/engine/host.hh"
+#include "com/centreon/engine/service.hh"
 #include "com/centreon/engine/string.hh"
 #include "com/centreon/engine/xpddefault.hh"
 #include "find.hh"
@@ -195,7 +195,7 @@ int xpddefault_update_service_performance_data(service* svc) {
    * bail early if we've got nothing to do so we don't spend a lot
    * of time calculating macros that never get used
    */
-  if (!svc || !svc->perf_data || !*svc->perf_data)
+  if (!svc || svc->get_perfdata().empty())
     return (OK);
   if ((!xpddefault_service_perfdata_fp
        || !xpddefault_service_perfdata_file_template)
@@ -207,7 +207,7 @@ int xpddefault_update_service_performance_data(service* svc) {
    * macros and get busy
    */
   memset(&mac, 0, sizeof(mac));
-  hst = find_host(svc->host_name);
+  hst = svc->get_host();
   grab_host_macros_r(&mac, hst);
   grab_service_macros_r(&mac, svc);
 
@@ -235,7 +235,7 @@ int xpddefault_update_host_performance_data(host* hst) {
    * bail early if we've got nothing to do so we don't spend a lot
    * of time calculating macros that never get used
    */
-  if (!hst || !hst->perf_data || !*hst->perf_data)
+  if (!hst || hst->get_perfdata().empty())
     return (OK);
   if ((!xpddefault_host_perfdata_fp
        || !xpddefault_host_perfdata_file_template)
@@ -334,8 +334,8 @@ int xpddefault_run_service_performance_data_command(
     logger(log_runtime_warning, basic)
       << "Warning: Service performance data command '"
       << processed_command_line << "' for service '"
-      << svc->description << "' on host '"
-      << svc->host_name << "' timed out after "
+      << svc->get_description() << "' on host '"
+      << svc->get_host_name() << "' timed out after "
       << config->perfdata_timeout() << " seconds";
 
   // free memory.
@@ -413,7 +413,7 @@ int xpddefault_run_host_performance_data_command(
   if (early_timeout == true)
     logger(log_runtime_warning, basic)
       << "Warning: Host performance data command '"
-      << processed_command_line << "' for host '" << hst->name
+      << processed_command_line << "' for host '" << hst->get_host_name()
       << "' timed out after " << config->perfdata_timeout()
       << " seconds";
 
