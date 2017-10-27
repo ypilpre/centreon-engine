@@ -40,6 +40,9 @@ class                     host : public monitorable {
   host&                   operator=(host const& other);
   bool                    get_accept_passive_host_checks() const;
   std::list<host*> const& get_children() const;
+  time_t                  get_last_time_down() const;
+  time_t                  get_last_time_unreachable() const;
+  time_t                  get_last_time_up() const;
   std::list<host*> const& get_parents() const;
   bool                    get_stalk_on_down() const;
   bool                    get_stalk_on_unreachable() const;

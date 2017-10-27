@@ -39,12 +39,12 @@ namespace              checks {
                        checkable(checkable const& other);
     virtual            ~checkable();
     checkable&         operator=(checkable const& other);
+    bool               are_checks_enabled() const;
     bool               get_accept_passive_service_checks() const;
     command*           get_check_command() const;
     bool               get_check_freshness() const;
     timeperiod*        get_check_period() const;
     int                get_check_type() const;
-    bool               get_checks_enabled() const;
     int                get_current_attempt() const;
     int                get_current_event_id() const;
     int                get_current_problem_id() const;
@@ -54,9 +54,11 @@ namespace              checks {
     int                get_freshness_threshold() const;
     int                get_initial_state() const;
     time_t             get_last_check() const;
+    int                get_last_event_id() const;
     int                get_last_state() const;
     int                get_last_hard_state() const;
     time_t             get_last_hard_state_change() const;
+    int                get_last_problem_id() const;
     time_t             get_last_state_change() const;
     double             get_latency() const;
     std::string const& get_long_output() const;
@@ -64,6 +66,7 @@ namespace              checks {
     time_t             get_next_check() const;
     int                get_normal_check_interval() const;
     std::string const& get_output() const;
+    double             get_percent_state_change() const;
     std::string const& get_perfdata() const;
     bool               get_process_perfdata() const;
     int                get_retry_check_interval() const;
@@ -75,6 +78,7 @@ namespace              checks {
     bool               is_being_freshened() const;
     bool               is_event_handler_enabled() const;
     bool               is_executing() const;
+    bool               is_flap_detection_enabled() const;
     bool               is_flapping() const;
     bool               is_obsessed_over() const;
     void               set_being_freshened(bool freshened);

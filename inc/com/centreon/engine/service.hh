@@ -44,6 +44,10 @@ class                service : public monitorable {
   service&           operator=(service const& other);
   std::string const& get_description() const;
   host*              get_host();
+  time_t             get_last_time_critical() const;
+  time_t             get_last_time_ok() const;
+  time_t             get_last_time_unknown() const;
+  time_t             get_last_time_warning() const;
   bool               get_stalk_on_critical() const;
   bool               get_stalk_on_ok() const;
   bool               get_stalk_on_unknown() const;

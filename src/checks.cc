@@ -1123,7 +1123,7 @@ int handle_async_service_check_result(
       temp_service->set_should_be_scheduled(false);
 
     /* services with active checks disabled do not get rescheduled */
-    if (!temp_service->get_checks_enabled())
+    if (!temp_service->are_checks_enabled())
       temp_service->set_should_be_scheduled(false);
 
     /* schedule a non-forced check if we can */
@@ -1180,7 +1180,7 @@ int handle_async_service_check_result(
   if (!(reschedule_check == true
 	&& temp_service->get_should_be_scheduled()
 	&& temp_service->has_been_checked())
-      || !temp_service->get_checks_enabled()) {
+      || !temp_service->are_checks_enabled()) {
     /* set the checked flag */
     temp_service->set_checked(true);
     /* update the current service status log */
@@ -1253,7 +1253,7 @@ void schedule_service_check(service* svc, time_t check_time, int options) {
 
   // Don't schedule a check if active checks
   // of this service are disabled.
-  if (!svc->get_checks_enabled()
+  if (!svc->are_checks_enabled()
       && !(options & CHECK_OPTION_FORCE_EXECUTION)) {
     logger(dbg_checks, basic)
       << "Active checks of this service are disabled.";
@@ -1404,7 +1404,7 @@ int check_service_check_viability(
   if (!(check_options & CHECK_OPTION_FORCE_EXECUTION)) {
 
     /* if checks of the service are currently disabled... */
-    if (!svc->get_checks_enabled()) {
+    if (!svc->are_checks_enabled()) {
       preferred_time = current_time + check_interval;
       perform_check = false;
 
@@ -1618,7 +1618,7 @@ void check_service_result_freshness() {
       continue;
 
     /* skip services that have both active and passive checks disabled */
-    if (!temp_service->get_checks_enabled()
+    if (!temp_service->are_checks_enabled()
         && !temp_service->get_accept_passive_service_checks())
       continue ;
 
@@ -1705,7 +1705,7 @@ int is_service_result_fresh(
   /* CHANGED 06/19/07 EG - Per Ton's suggestion (and user requests), only use program start time over last check if no specific threshold has been set by user.  Otheriwse use it.  Problems can occur if Engine is restarted more frequently that freshness threshold intervals (services never go stale). */
   /* CHANGED 10/07/07 EG - Only match next condition for services that have active checks enabled... */
   /* CHANGED 10/07/07 EG - Added max_service_check_spread to expiration time as suggested by Altinity */
-  else if (temp_service->get_checks_enabled()
+  else if (temp_service->are_checks_enabled()
            && event_start > temp_service->get_last_check()
            && temp_service->get_freshness_threshold() == 0)
     expiration_time
@@ -1821,7 +1821,7 @@ void schedule_host_check(host* hst, time_t check_time, int options) {
     << my_ctime(&check_time);
 
   /* don't schedule a check if active checks of this host are disabled */
-  if (!hst->get_checks_enabled()
+  if (!hst->are_checks_enabled()
       && !(options & CHECK_OPTION_FORCE_EXECUTION)) {
     logger(dbg_checks, basic)
       << "Active checks are disabled for this host.";
@@ -2107,7 +2107,7 @@ void check_host_result_freshness() {
       continue ;
 
     /* skip hosts that have both active and passive checks disabled */
-    if (!temp_host->get_checks_enabled()
+    if (!temp_host->are_checks_enabled()
         && !temp_host->get_accept_passive_host_checks())
       continue ;
 
@@ -2189,7 +2189,7 @@ int is_host_result_fresh(
     expiration_time = (time_t)(event_start + freshness_threshold);
   /* CHANGED 06/19/07 EG - Per Ton's suggestion (and user requests), only use program start time over last check if no specific threshold has been set by user.  Otheriwse use it.  Problems can occur if Engine is restarted more frequently that freshness threshold intervals (hosts never go stale). */
   /* CHANGED 10/07/07 EG - Added max_host_check_spread to expiration time as suggested by Altinity */
-  else if (temp_host->get_checks_enabled()
+  else if (temp_host->are_checks_enabled()
            && event_start > temp_host->get_last_check()
            && temp_host->get_freshness_threshold() == 0)
     expiration_time
@@ -3290,7 +3290,7 @@ int process_host_check_result_3x(
       hst->set_should_be_scheduled(false);
 
     /* host with active checks disabled do not get rescheduled */
-    if (!hst->get_checks_enabled())
+    if (!hst->are_checks_enabled())
       hst->set_should_be_scheduled(false);
 
     /* schedule a non-forced check if we can */
@@ -3379,7 +3379,7 @@ int check_host_check_viability_3x(
   if (!(check_options & CHECK_OPTION_FORCE_EXECUTION)) {
 
     /* if checks of the host are currently disabled... */
-    if (!hst->get_checks_enabled()) {
+    if (!hst->are_checks_enabled()) {
       preferred_time = current_time + check_interval;
       perform_check = false;
     }

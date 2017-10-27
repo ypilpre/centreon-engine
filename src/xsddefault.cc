@@ -1,7 +1,7 @@
 /*
-** Copyright 2000-2009      Ethan Galstad
-** Copyright 2009           Nagios Core Development Team and Community Contributors
-** Copyright 2011-2013,2015 Merethis
+** Copyright 2000-2009           Ethan Galstad
+** Copyright 2009                Nagios Core Development Team and Community Contributors
+** Copyright 2011-2013,2015,2017 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -29,6 +29,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include "com/centreon/engine/common.hh"
+#include "com/centreon/engine/configuration/applier/state.hh"
 #include "com/centreon/engine/globals.hh"
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/macros.hh"
@@ -36,7 +37,6 @@
 #include "com/centreon/engine/objects/downtime.hh"
 #include "com/centreon/engine/statusdata.hh"
 #include "com/centreon/engine/xsddefault.hh"
-#include "skiplist.h"
 
 using namespace com::centreon::engine;
 
@@ -209,134 +209,148 @@ int xsddefault_save_status_data() {
        "\t}\n\n";
 
   /* save host status data */
-  for (host* hst = host_list; hst; hst = hst->next) {
+  for (umap<std::string, com::centreon::shared_ptr<::host> >::const_iterator
+         it(configuration::applier::state::instance().hosts().begin()),
+         end(configuration::applier::state::instance().hosts().end());
+       it != end;
+       ++it) {
+    host* hst(it->second.get());
     stream
       << "hoststatus {\n"
-         "\thost_name=" << hst->name << "\n"
-         "\tmodified_attributes=" << hst->modified_attributes << "\n"
-         "\tcheck_command=" << (hst->host_check_command ? hst->host_check_command : "") << "\n"
-         "\tcheck_period=" << (hst->check_period ? hst->check_period : "") << "\n"
-         "\tnotification_period=" << (hst->notification_period ? hst->notification_period : "") << "\n"
-         "\tcheck_interval=" << hst->check_interval << "\n"
-         "\tretry_interval=" << hst->retry_interval << "\n"
-         "\tevent_handler=" << (hst->event_handler ? hst->event_handler : "") << "\n"
-         "\thas_been_checked=" << hst->has_been_checked << "\n"
-         "\tshould_be_scheduled=" << hst->should_be_scheduled << "\n"
-         "\tcheck_execution_time=" << std::setprecision(3) << std::fixed << hst->execution_time << "\n"
-         "\tcheck_latency=" << std::setprecision(3) << std::fixed << hst->latency << "\n"
-         "\tcheck_type=" << hst->check_type << "\n"
-         "\tcurrent_state=" << hst->current_state << "\n"
-         "\tlast_hard_state=" << hst->last_hard_state << "\n"
-         "\tlast_event_id=" << hst->last_event_id << "\n"
-         "\tcurrent_event_id=" << hst->current_event_id << "\n"
-         "\tcurrent_problem_id=" << hst->current_problem_id << "\n"
-         "\tlast_problem_id=" << hst->last_problem_id << "\n"
-         "\tplugin_output=" << (hst->plugin_output ? hst->plugin_output : "") << "\n"
-         "\tlong_plugin_output=" << (hst->long_plugin_output ? hst->long_plugin_output : "") << "\n"
-         "\tperformance_data=" << (hst->perf_data ? hst->perf_data : "") << "\n"
-         "\tlast_check=" << static_cast<unsigned long>(hst->last_check) << "\n"
-         "\tnext_check=" << static_cast<unsigned long>(hst->next_check) << "\n"
-         "\tcheck_options=" << hst->check_options << "\n"
-         "\tcurrent_attempt=" << hst->current_attempt << "\n"
-         "\tmax_attempts=" << hst->max_attempts << "\n"
-         "\tstate_type=" << hst->state_type << "\n"
-         "\tlast_state_change=" << static_cast<unsigned long>(hst->last_state_change) << "\n"
-         "\tlast_hard_state_change=" << static_cast<unsigned long>(hst->last_hard_state_change) << "\n"
-         "\tlast_time_up=" << static_cast<unsigned long>(hst->last_time_up) << "\n"
-         "\tlast_time_down=" << static_cast<unsigned long>(hst->last_time_down) << "\n"
-         "\tlast_time_unreachable=" << static_cast<unsigned long>(hst->last_time_unreachable) << "\n"
-         "\tlast_notification=" << static_cast<unsigned long>(hst->last_host_notification) << "\n"
-         "\tnext_notification=" << static_cast<unsigned long>(hst->next_host_notification) << "\n"
-         "\tno_more_notifications=" << hst->no_more_notifications << "\n"
-         "\tcurrent_notification_number=" << hst->current_notification_number << "\n"
-         "\tcurrent_notification_id=" << hst->current_notification_id << "\n"
-         "\tnotifications_enabled=" << hst->notifications_enabled << "\n"
-         "\tproblem_has_been_acknowledged=" << hst->problem_has_been_acknowledged << "\n"
-         "\tacknowledgement_type=" << hst->acknowledgement_type << "\n"
-         "\tactive_checks_enabled=" << hst->checks_enabled << "\n"
-         "\tpassive_checks_enabled=" << hst->accept_passive_host_checks << "\n"
-         "\tevent_handler_enabled=" << hst->event_handler_enabled << "\n"
-         "\tflap_detection_enabled=" << hst->flap_detection_enabled << "\n"
-         "\tprocess_performance_data=" << hst->process_performance_data << "\n"
-         "\tobsess_over_host=" << hst->obsess_over_host << "\n"
+      "\thost_name=" << hst->get_host_name() << "\n"
+         // XXX
+         // "\tmodified_attributes=" << hst->modified_attributes << "\n"
+         // "\tcheck_command=" << (hst->host_check_command ? hst->host_check_command : "") << "\n"
+         // "\tcheck_period=" << (hst->check_period ? hst->check_period : "") << "\n"
+         // "\tnotification_period=" << (hst->notification_period ? hst->notification_period : "") << "\n"
+         "\tcheck_interval=" << hst->get_normal_check_interval() << "\n"
+         "\tretry_interval=" << hst->get_retry_check_interval() << "\n"
+         // "\tevent_handler=" << (hst->event_handler ? hst->event_handler : "") << "\n"
+         "\thas_been_checked=" << hst->has_been_checked() << "\n"
+         "\tshould_be_scheduled=" << hst->get_should_be_scheduled() << "\n"
+         "\tcheck_execution_time=" << std::setprecision(3) << std::fixed << hst->get_execution_time() << "\n"
+         "\tcheck_latency=" << std::setprecision(3) << std::fixed << hst->get_latency() << "\n"
+         "\tcheck_type=" << hst->get_check_type() << "\n"
+         "\tcurrent_state=" << hst->get_current_state() << "\n"
+         "\tlast_hard_state=" << hst->get_last_hard_state() << "\n"
+         "\tlast_event_id=" << hst->get_last_event_id() << "\n"
+         "\tcurrent_event_id=" << hst->get_current_event_id() << "\n"
+         "\tcurrent_problem_id=" << hst->get_current_problem_id() << "\n"
+         "\tlast_problem_id=" << hst->get_last_problem_id() << "\n"
+         "\tplugin_output=" << hst->get_output() << "\n"
+         "\tlong_plugin_output=" << hst->get_long_output() << "\n"
+         "\tperformance_data=" << hst->get_perfdata() << "\n"
+         "\tlast_check=" << static_cast<unsigned long>(hst->get_last_check()) << "\n"
+         "\tnext_check=" << static_cast<unsigned long>(hst->get_next_check()) << "\n"
+         // "\tcheck_options=" << hst->check_options << "\n"
+         "\tcurrent_attempt=" << hst->get_current_attempt() << "\n"
+         "\tmax_attempts=" << hst->get_max_attempts() << "\n"
+         "\tstate_type=" << hst->get_state_type() << "\n"
+         "\tlast_state_change=" << static_cast<unsigned long>(hst->get_last_state_change()) << "\n"
+         "\tlast_hard_state_change=" << static_cast<unsigned long>(hst->get_last_hard_state_change()) << "\n"
+         "\tlast_time_up=" << static_cast<unsigned long>(hst->get_last_time_up()) << "\n"
+         "\tlast_time_down=" << static_cast<unsigned long>(hst->get_last_time_down()) << "\n"
+         "\tlast_time_unreachable=" << static_cast<unsigned long>(hst->get_last_time_unreachable()) << "\n"
+         "\tlast_notification=" << static_cast<unsigned long>(hst->get_last_notification()) << "\n"
+         "\tnext_notification=" << static_cast<unsigned long>(hst->get_next_notification()) << "\n"
+         "\tno_more_notifications=" << hst->get_no_more_notifications() << "\n"
+         "\tcurrent_notification_number=" << hst->get_current_notification_number() << "\n"
+         "\tcurrent_notification_id=" << hst->get_current_notification_id() << "\n"
+         "\tnotifications_enabled=" << hst->are_notifications_enabled() << "\n"
+         "\tproblem_has_been_acknowledged=" << hst->is_acknowledged() << "\n"
+         "\tacknowledgement_type=" << hst->get_acknowledgement_type() << "\n"
+         "\tactive_checks_enabled=" << hst->are_checks_enabled() << "\n"
+         "\tpassive_checks_enabled=" << hst->get_accept_passive_host_checks() << "\n"
+         "\tevent_handler_enabled=" << hst->is_event_handler_enabled() << "\n"
+         "\tflap_detection_enabled=" << hst->is_flap_detection_enabled() << "\n"
+         "\tprocess_performance_data=" << hst->get_process_perfdata() << "\n"
+         "\tobsess_over_host=" << hst->is_obsessed_over() << "\n"
          "\tlast_update=" << static_cast<unsigned long>(current_time) << "\n"
-         "\tis_flapping=" << hst->is_flapping << "\n"
-         "\tpercent_state_change=" << std::setprecision(2) << std::fixed << hst->percent_state_change << "\n"
-         "\tscheduled_downtime_depth=" << hst->scheduled_downtime_depth << "\n";
+         "\tis_flapping=" << hst->is_flapping() << "\n"
+         "\tpercent_state_change=" << std::setprecision(2) << std::fixed << hst->get_percent_state_change() << "\n"
+         "\tscheduled_downtime_depth=" << hst->get_scheduled_downtime_depth() << "\n";
 
     // custom variables
-    for (customvariablesmember* cvarm = hst->custom_variables; cvarm; cvarm = cvarm->next) {
-      if (cvarm->variable_name)
-        stream << "\t_" << cvarm->variable_name << "=" << cvarm->has_been_modified << ";"
-               << (cvarm->variable_value ? cvarm->variable_value : "") << "\n";
-    }
+    // XXX
+    // for (customvariablesmember* cvarm = hst->custom_variables; cvarm; cvarm = cvarm->next) {
+    //   if (cvarm->variable_name)
+    //     stream << "\t_" << cvarm->variable_name << "=" << cvarm->has_been_modified << ";"
+    //            << (cvarm->variable_value ? cvarm->variable_value : "") << "\n";
+    // }
     stream << "\t}\n\n";
   }
 
   // save service status data
-  for (service* svc = service_list; svc; svc = svc->next) {
+  for (umap<std::pair<std::string, std::string>, com::centreon::shared_ptr<::service> >::const_iterator
+         it(configuration::applier::state::instance().services().begin()),
+         end(configuration::applier::state::instance().services().end());
+       it != end;
+       ++it) {
+    service* svc(it->second.get());
+    // XXX
     stream
       << "servicestatus {\n"
-         "\thost_name=" << svc->host_name << "\n"
-         "\tservice_description=" << svc->description << "\n"
-         "\tmodified_attributes=" << svc->modified_attributes << "\n"
-         "\tcheck_command=" << (svc->service_check_command ? svc->service_check_command : "") << "\n"
-         "\tcheck_period=" << (svc->check_period ? svc->check_period : "") << "\n"
-         "\tnotification_period=" << (svc->notification_period ? svc->notification_period : "") << "\n"
-         "\tcheck_interval=" << svc->check_interval << "\n"
-         "\tretry_interval=" << svc->retry_interval << "\n"
-         "\tevent_handler=" << (svc->event_handler ? svc->event_handler : "") << "\n"
-         "\thas_been_checked=" << svc->has_been_checked << "\n"
-         "\tshould_be_scheduled=" << svc->should_be_scheduled << "\n"
-         "\tcheck_execution_time=" << std::setprecision(3) << std::fixed << svc->execution_time << "\n"
-         "\tcheck_latency=" << std::setprecision(3) << std::fixed << svc->latency << "\n"
-         "\tcheck_type=" << svc->check_type << "\n"
-         "\tcurrent_state=" << svc->current_state << "\n"
-         "\tlast_hard_state=" << svc->last_hard_state << "\n"
-         "\tlast_event_id=" << svc->last_event_id << "\n"
-         "\tcurrent_event_id=" << svc->current_event_id << "\n"
-         "\tcurrent_problem_id=" << svc->current_problem_id << "\n"
-         "\tlast_problem_id=" << svc->last_problem_id << "\n"
-         "\tcurrent_attempt=" << svc->current_attempt << "\n"
-         "\tmax_attempts=" << svc->max_attempts << "\n"
-         "\tstate_type=" << svc->state_type << "\n"
-         "\tlast_state_change=" << static_cast<unsigned long>(svc->last_state_change) << "\n"
-         "\tlast_hard_state_change=" << static_cast<unsigned long>(svc->last_hard_state_change) << "\n"
-         "\tlast_time_ok=" << static_cast<unsigned long>(svc->last_time_ok) << "\n"
-         "\tlast_time_warning=" << static_cast<unsigned long>(svc->last_time_warning) << "\n"
-         "\tlast_time_unknown=" << static_cast<unsigned long>(svc->last_time_unknown) << "\n"
-         "\tlast_time_critical=" << static_cast<unsigned long>(svc->last_time_critical) << "\n"
-         "\tplugin_output=" << (svc->plugin_output ? svc->plugin_output : "") << "\n"
-         "\tlong_plugin_output=" << (svc->long_plugin_output ? svc->long_plugin_output : "") << "\n"
-         "\tperformance_data=" << (svc->perf_data ? svc->perf_data : "") << "\n"
-         "\tlast_check=" << static_cast<unsigned long>(svc->last_check) << "\n"
-         "\tnext_check=" << static_cast<unsigned long>(svc->next_check) << "\n"
-         "\tcheck_options=" << svc->check_options << "\n"
-         "\tcurrent_notification_number=" << svc->current_notification_number << "\n"
-         "\tcurrent_notification_id=" << svc->current_notification_id << "\n"
-         "\tlast_notification=" << static_cast<unsigned long>(svc->last_notification) << "\n"
-         "\tnext_notification=" << static_cast<unsigned long>(svc->next_notification) << "\n"
-         "\tno_more_notifications=" << svc->no_more_notifications << "\n"
-         "\tnotifications_enabled=" << svc->notifications_enabled << "\n"
-         "\tactive_checks_enabled=" << svc->checks_enabled << "\n"
-         "\tpassive_checks_enabled=" << svc->accept_passive_service_checks << "\n"
-         "\tevent_handler_enabled=" << svc->event_handler_enabled << "\n"
-         "\tproblem_has_been_acknowledged=" << svc->problem_has_been_acknowledged << "\n"
-         "\tacknowledgement_type=" << svc->acknowledgement_type << "\n"
-         "\tflap_detection_enabled=" << svc->flap_detection_enabled << "\n"
-         "\tprocess_performance_data=" << svc->process_performance_data << "\n"
-         "\tobsess_over_service=" << svc->obsess_over_service << "\n"
+         "\thost_name=" << svc->get_host_name() << "\n"
+         "\tservice_description=" << svc->get_description() << "\n"
+         // "\tmodified_attributes=" << svc->modified_attributes << "\n"
+         // "\tcheck_command=" << (svc->service_check_command ? svc->service_check_command : "") << "\n"
+         // "\tcheck_period=" << (svc->check_period ? svc->check_period : "") << "\n"
+         // "\tnotification_period=" << (svc->notification_period ? svc->notification_period : "") << "\n"
+         "\tcheck_interval=" << svc->get_normal_check_interval() << "\n"
+         "\tretry_interval=" << svc->get_retry_check_interval() << "\n"
+         // "\tevent_handler=" << (svc->event_handler ? svc->event_handler : "") << "\n"
+         "\thas_been_checked=" << svc->has_been_checked() << "\n"
+         "\tshould_be_scheduled=" << svc->get_should_be_scheduled() << "\n"
+         "\tcheck_execution_time=" << std::setprecision(3) << std::fixed << svc->get_execution_time() << "\n"
+         "\tcheck_latency=" << std::setprecision(3) << std::fixed << svc->get_latency() << "\n"
+         "\tcheck_type=" << svc->get_check_type() << "\n"
+         "\tcurrent_state=" << svc->get_current_state() << "\n"
+         "\tlast_hard_state=" << svc->get_last_hard_state() << "\n"
+         "\tlast_event_id=" << svc->get_last_event_id() << "\n"
+         "\tcurrent_event_id=" << svc->get_current_event_id() << "\n"
+         "\tcurrent_problem_id=" << svc->get_current_problem_id() << "\n"
+         "\tlast_problem_id=" << svc->get_last_problem_id() << "\n"
+         "\tcurrent_attempt=" << svc->get_current_attempt() << "\n"
+         "\tmax_attempts=" << svc->get_max_attempts() << "\n"
+         "\tstate_type=" << svc->get_state_type() << "\n"
+         "\tlast_state_change=" << static_cast<unsigned long>(svc->get_last_state_change()) << "\n"
+         "\tlast_hard_state_change=" << static_cast<unsigned long>(svc->get_last_hard_state_change()) << "\n"
+         "\tlast_time_ok=" << static_cast<unsigned long>(svc->get_last_time_ok()) << "\n"
+         "\tlast_time_warning=" << static_cast<unsigned long>(svc->get_last_time_warning()) << "\n"
+         "\tlast_time_unknown=" << static_cast<unsigned long>(svc->get_last_time_unknown()) << "\n"
+         "\tlast_time_critical=" << static_cast<unsigned long>(svc->get_last_time_critical()) << "\n"
+         "\tplugin_output=" << svc->get_output() << "\n"
+         "\tlong_plugin_output=" << svc->get_long_output() << "\n"
+         "\tperformance_data=" << svc->get_perfdata() << "\n"
+         "\tlast_check=" << static_cast<unsigned long>(svc->get_last_check()) << "\n"
+         "\tnext_check=" << static_cast<unsigned long>(svc->get_next_check()) << "\n"
+         // "\tcheck_options=" << svc->check_options << "\n"
+         "\tcurrent_notification_number=" << svc->get_current_notification_number() << "\n"
+         "\tcurrent_notification_id=" << svc->get_current_notification_id() << "\n"
+         "\tlast_notification=" << static_cast<unsigned long>(svc->get_last_notification()) << "\n"
+         "\tnext_notification=" << static_cast<unsigned long>(svc->get_next_notification()) << "\n"
+         "\tno_more_notifications=" << svc->get_no_more_notifications() << "\n"
+         "\tnotifications_enabled=" << svc->are_notifications_enabled() << "\n"
+         "\tactive_checks_enabled=" << svc->are_checks_enabled() << "\n"
+         "\tpassive_checks_enabled=" << svc->get_accept_passive_service_checks() << "\n"
+         "\tevent_handler_enabled=" << svc->is_event_handler_enabled() << "\n"
+         "\tproblem_has_been_acknowledged=" << svc->is_acknowledged() << "\n"
+         "\tacknowledgement_type=" << svc->get_acknowledgement_type() << "\n"
+         "\tflap_detection_enabled=" << svc->is_flap_detection_enabled() << "\n"
+         "\tprocess_performance_data=" << svc->get_process_perfdata() << "\n"
+         "\tobsess_over_service=" << svc->is_obsessed_over() << "\n"
          "\tlast_update=" << static_cast<unsigned long>(current_time) << "\n"
-         "\tis_flapping=" << svc->is_flapping << "\n"
-         "\tpercent_state_change=" << std::setprecision(2) << std::fixed << svc->percent_state_change << "\n"
-         "\tscheduled_downtime_depth=" << svc->scheduled_downtime_depth << "\n";
+         "\tis_flapping=" << svc->is_flapping() << "\n"
+         "\tpercent_state_change=" << std::setprecision(2) << std::fixed << svc->get_percent_state_change() << "\n"
+         "\tscheduled_downtime_depth=" << svc->get_scheduled_downtime_depth() << "\n";
 
     // custom variables
-    for (customvariablesmember* cvarm = svc->custom_variables; cvarm; cvarm = cvarm->next) {
-      if (cvarm->variable_name)
-        stream << "\t_" << cvarm->variable_name << "=" << cvarm->has_been_modified << ";"
-               << (cvarm->variable_value ? cvarm->variable_value : "") << "\n";
-    }
+    // XXX
+    // for (customvariablesmember* cvarm = svc->custom_variables; cvarm; cvarm = cvarm->next) {
+    //   if (cvarm->variable_name)
+    //     stream << "\t_" << cvarm->variable_name << "=" << cvarm->has_been_modified << ";"
+    //            << (cvarm->variable_value ? cvarm->variable_value : "") << "\n";
+    // }
     stream << "\t}\n\n";
   }
 
