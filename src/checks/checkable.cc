@@ -32,22 +32,19 @@ using namespace com::centreon::engine::checks;
  * Constructor.
  */
 checkable::checkable()
-  : _in_downtime(false), _is_flapping(false) {
-}
+  : _in_downtime(false), _is_flapping(false) {}
 
 /**
  * Copy constructor.
  *
  * @param[in] other Object to copy.
  */
-checkable::checkable(checkable const& other) {
-}
-
-/**
- * Destructor.
- */
-checkable::~checkable() {
-}
+checkable::checkable(checkable const& other)
+  : _in_downtime(other._in_downtime),
+    _is_flapping(other._is_flapping),
+    _current_state(other._current_state),
+    _last_state(other._last_state),
+    _last_hard_state(other._last_hard_state) {}
 
 /**
  * Assignment operator.
@@ -58,17 +55,18 @@ checkable::~checkable() {
  */
 checkable& checkable::operator=(checkable const& other) {
 
+  _in_downtime = other._in_downtime;
+  _is_flapping = other._is_flapping;
+  _current_state = other._current_state;
+  _last_state = other._last_state;
+  _last_hard_state = other._last_hard_state;
   return (*this);
 }
 
 /**
- * This method tells if this checkable is in downtime.
- *
- * @return a boolean
+ * Destructor.
  */
-bool checkable::in_downtime() const {
-  // FIXME: must be implemented
-  return _in_downtime;
+checkable::~checkable() {
 }
 
 /**
@@ -81,17 +79,31 @@ bool checkable::is_flapping() const {
   return _is_flapping;
 }
 
-int checkable::get_state() const {
+int checkable::get_current_state() const {
   // FIXME: must be implemented
-  return _state;
+  return _current_state;
 }
 
 int checkable::get_last_state() const {
   // FIXME: must be implemented
-  return 0;
+  return _last_state;
 }
 
 int checkable::get_last_hard_state() const {
   // FIXME: must be implemented
-  return 0;
+  return _last_hard_state;
 }
+
+void checkable::set_current_state(int state) {
+  _last_state = _current_state;
+  _current_state = state;
+}
+
+void checkable::set_last_state(int state) {
+  _last_state = state;
+}
+
+void checkable::set_last_hard_state(int state) {
+  _last_hard_state = state;
+}
+

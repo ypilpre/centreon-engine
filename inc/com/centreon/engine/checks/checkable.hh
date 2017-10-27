@@ -38,15 +38,19 @@ namespace           checks {
                     ~checkable();
     checkable&      operator=(checkable const& other);
     bool            is_flapping() const;
-    bool            in_downtime() const;
-    int             get_state() const;
-    int             get_last_state() const;
+    int             get_current_state() const;
     int             get_last_hard_state() const;
+    int             get_last_state() const;
+    void            set_current_state(int state);
+    void            set_last_hard_state(int state);
+    void            set_last_state(int state);
 
    protected:
     bool            _in_downtime;
     bool            _is_flapping;
-    int             _state;
+    int             _current_state;
+    int             _last_state;
+    int             _last_hard_state;
   };
 }
 
