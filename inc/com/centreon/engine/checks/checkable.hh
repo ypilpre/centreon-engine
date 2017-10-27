@@ -49,6 +49,7 @@ namespace              checks {
     int                get_current_event_id() const;
     int                get_current_problem_id() const;
     int                get_current_state() const;
+    command*           get_event_handler() const;
     double             get_execution_time() const;
     int                get_freshness_threshold() const;
     int                get_initial_state() const;
@@ -61,7 +62,7 @@ namespace              checks {
     std::string const& get_long_output() const;
     int                get_max_attempts() const;
     time_t             get_next_check() const;
-    int                get_normal_check_interval();
+    int                get_normal_check_interval() const;
     std::string const& get_output() const;
     std::string const& get_perfdata() const;
     bool               get_process_perfdata() const;
@@ -72,8 +73,10 @@ namespace              checks {
     bool               has_been_checked() const;
     bool               host_problem_at_last_check() const;
     bool               is_being_freshened() const;
+    bool               is_event_handler_enabled() const;
     bool               is_executing() const;
     bool               is_flapping() const;
+    bool               is_obsessed_over() const;
     void               set_being_freshened(bool freshened);
     void               set_check_options(int options);
     void               set_check_type(int type);

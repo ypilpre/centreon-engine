@@ -45,6 +45,11 @@ class                     host : public monitorable {
   bool                    get_stalk_on_unreachable() const;
   bool                    get_stalk_on_up() const;
   bool                    get_should_reschedule_current_check() const;
+  void                    set_last_time_down(time_t last_time);
+  void                    set_last_time_unreachable(time_t last_time);
+  void                    set_last_time_up(time_t last_time);
+  void                    set_notified_on_down(bool notify);
+  void                    set_notified_on_unreachable(bool notify);
   void                    set_should_reschedule_current_check(
                             bool reschedule);
 };
