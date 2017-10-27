@@ -36,9 +36,10 @@ using namespace com::centreon::engine::notifications;
  */
 notifier::notifier()
   : _type(NONE),
-    _last_notification_date(0),
-    _notification_number(0),
-    _notified_states(0) {}
+    _last_notification(0),
+    _current_notification_number(0),
+    _notified_states(0),
+    _notification_interval(60) {}
 
 /**
  * Copy constructor.
@@ -47,9 +48,10 @@ notifier::notifier()
  */
 notifier::notifier(notifier const& other)
   : _type(other._type),
-    _last_notification_date(other._last_notification_date),
-    _notification_number(other._notification_number),
-    _notified_states(other._notified_states) {}
+    _last_notification(other._last_notification),
+    _current_notification_number(other._current_notification_number),
+    _notified_states(other._notified_states),
+    _notification_interval(other._notification_interval) {}
 
 /**
  * Assignment operator.
@@ -60,9 +62,10 @@ notifier::notifier(notifier const& other)
  */
 notifier& notifier::operator=(notifier const& other) {
   _type = other._type;
-  _last_notification_date = other._last_notification_date;
-  _notification_number = other._notification_number;
+  _last_notification = other._last_notification;
+  _current_notification_number = other._current_notification_number;
   _notified_states = other._notified_states;
+  _notification_interval = other._notification_interval;
   return (*this);
 }
 
@@ -76,7 +79,7 @@ void notifier::notify(notification_type type) {
   notifier_filter should_notify = _get_filter(type);
   if ((this->*should_notify)()) {
 
-    time(&_last_notification_date);
+    time(&_last_notification);
   }
 }
 
@@ -85,7 +88,7 @@ void notifier::notify(notification_type type) {
  *
  * @return a boolean
  */
-bool notifier::enabled() const {
+bool notifier::are_notifications_enabled() const {
   return config->enable_notifications();
 }
 
@@ -94,8 +97,18 @@ bool notifier::enabled() const {
  *
  * @return a boolean
  */
-bool notifier::state_notification_enabled(int state) const {
+bool notifier::is_state_notification_enabled(int state) const {
   return (_notified_states & (1 << state));
+}
+
+/**
+ * This method tells if this checkable is in downtime.
+ *
+ * @return a boolean
+ */
+bool notifier::is_in_downtime() const {
+  // FIXME: must be implemented
+  return _in_downtime;
 }
 
 /**
@@ -135,20 +148,20 @@ notifier::notifier_filter notifier::_filter[] = {
 bool notifier::_problem_filter() {
   time_t now;
   time(&now);
-  if (in_downtime()
+  if (is_in_downtime()
       || is_flapping()
-      || !state_notification_enabled(get_state()))
+      || !is_state_notification_enabled(get_current_state()))
     return false;
 
-  int notif_number = _get_notification_number();
+  int notif_number = get_current_notification_number();
 
   /* We already have been notified */
   if (notif_number >= 1
       && _type == PROBLEM
-      && get_last_state() == get_state()) {
+      && get_last_state() == get_current_state()) {
     /* No notification if the delay between previous notification and now
        is less than notification_interval */
-    if (now - _get_last_notification_date() < _get_notification_interval())
+    if (now - get_last_notification() < _get_notification_interval())
       return false;
 
   }
@@ -170,20 +183,28 @@ bool notifier::_recovery_filter() {
  *
  * @return an integer.
  */
-int notifier::_get_notification_number() const {
-  return _notification_number;
+int notifier::get_current_notification_number() const {
+  return _current_notification_number;
 }
 
 long notifier::_get_notification_interval() const {
   return _notification_interval;
 }
 
-long notifier::_get_last_notification_date() const {
-  return _last_notification_date;
+long notifier::get_last_notification() const {
+  return _last_notification;
 }
 
 void notifier::enable_state_notification(int state) {
   _notified_states |= (1 << state);
+}
+
+void notifier::set_last_notification(time_t last_notification) {
+  _last_notification = last_notification;
+}
+
+void notifier::set_next_notification(time_t next_notification) {
+  _next_notification = next_notification;
 }
 
 #if 0
@@ -2912,4 +2933,5 @@ int add_notification(nagios_macros* mac, contact* cntct) {
 
   return (OK);
 }
+
 #endif

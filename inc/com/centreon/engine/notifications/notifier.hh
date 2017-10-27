@@ -50,12 +50,18 @@ namespace           notifications {
     };
                       notifier();
                       notifier(notifier const& other);
-                      ~notifier();
+    virtual           ~notifier();
     notifier&         operator=(notifier const& other);
-    bool              enabled() const;
-    bool              state_notification_enabled(int state) const;
-    void              notify(notification_type type);
+    bool              are_notifications_enabled() const;
+    bool              is_in_downtime() const;
+    bool              is_state_notification_enabled(int state) const;
+    int               get_current_notification_number() const;
+    time_t            get_last_notification() const;
+    time_t            get_next_notification() const;
     void              enable_state_notification(int state);
+    void              notify(notification_type type);
+    void              set_last_notification(time_t last_notification);
+    void              set_next_notification(time_t next_notification);
 
    private:
     static notifier_filter
@@ -64,17 +70,16 @@ namespace           notifications {
     notifier_filter   _get_filter(notification_type type) const;
     bool              _problem_filter();
     bool              _recovery_filter();
-    int               _get_notification_number() const;
     long              _get_notification_interval() const;
-    long              _get_last_notification_date() const;
 
-    int               _type;
-    int               _notification_number;
-    long              _notification_interval;
     int               _notified_states;
 
    protected:
-    time_t            _last_notification_date;
+    time_t            _last_notification;
+    time_t            _next_notification;
+    long              _notification_interval;
+    int               _current_notification_number;
+    notification_type _type;
   };
 }
 
