@@ -64,6 +64,7 @@ namespace              checks {
     int                get_normal_check_interval();
     std::string const& get_output() const;
     std::string const& get_perfdata() const;
+    bool               get_process_perfdata() const;
     int                get_retry_check_interval() const;
     bool               get_should_be_scheduled() const;
     int                get_state_type() const;
