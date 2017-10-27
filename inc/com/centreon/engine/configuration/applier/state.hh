@@ -26,6 +26,7 @@
 #  include "com/centreon/concurrency/mutex.hh"
 #  include "com/centreon/engine/configuration/applier/difference.hh"
 #  include "com/centreon/engine/configuration/state.hh"
+#  include "com/centreon/engine/host.hh"
 #  include "com/centreon/engine/namespace.hh"
 #  include "com/centreon/shared_ptr.hh"
 
@@ -33,11 +34,9 @@
 struct command_struct;
 struct contact_struct;
 struct contactgroup_struct;
-struct host_struct;
 struct hostdependency_struct;
 struct hostescalation_struct;
 struct hostgroup_struct;
-struct service_struct;
 struct servicedependency_struct;
 struct serviceescalation_struct;
 struct servicegroup_struct;
@@ -107,13 +106,13 @@ namespace           configuration {
                     contactgroups_find(configuration::contactgroup::key_type const& k) const;
       umap<std::string, shared_ptr<contactgroup_struct> >::iterator
                     contactgroups_find(configuration::contactgroup::key_type const& k);
-      umap<std::string, shared_ptr<host_struct> > const&
+      umap<std::string, shared_ptr<::host> > const&
                     hosts() const throw ();
-      umap<std::string, shared_ptr<host_struct> >&
+      umap<std::string, shared_ptr<::host> >&
                     hosts() throw ();
-      umap<std::string, shared_ptr<host_struct> >::const_iterator
+      umap<std::string, shared_ptr<::host> >::const_iterator
                     hosts_find(configuration::host::key_type const& k) const;
-      umap<std::string, shared_ptr<host_struct> >::iterator
+      umap<std::string, shared_ptr<::host> >::iterator
                     hosts_find(configuration::host::key_type const& k);
       umultimap<std::string, shared_ptr<hostdependency_struct> > const&
                     hostdependencies() const throw ();
@@ -139,13 +138,13 @@ namespace           configuration {
                     hostgroups_find(configuration::hostgroup::key_type const& k) const;
       umap<std::string, shared_ptr<hostgroup_struct> >::iterator
                     hostgroups_find(configuration::hostgroup::key_type const& k);
-      umap<std::pair<std::string, std::string>, shared_ptr<service_struct> > const&
+      umap<std::pair<std::string, std::string>, shared_ptr<::service> > const&
                     services() const throw ();
-      umap<std::pair<std::string, std::string>, shared_ptr<service_struct> >&
+      umap<std::pair<std::string, std::string>, shared_ptr<::service> >&
                     services() throw ();
-      umap<std::pair<std::string, std::string>, shared_ptr<service_struct> >::const_iterator
+      umap<std::pair<std::string, std::string>, shared_ptr<::service> >::const_iterator
                     services_find(configuration::service::key_type const& k) const;
-      umap<std::pair<std::string, std::string>, shared_ptr<service_struct> >::iterator
+      umap<std::pair<std::string, std::string>, shared_ptr<::service> >::iterator
                     services_find(configuration::service::key_type const& k);
       umultimap<std::pair<std::string, std::string>, shared_ptr<servicedependency_struct> > const&
                     servicedependencies() const throw ();
@@ -229,7 +228,7 @@ namespace           configuration {
                     _contactgroups;
       concurrency::condvar
                     _cv_lock;
-      umap<std::string, shared_ptr<host_struct> >
+      umap<std::string, shared_ptr<::host> >
                     _hosts;
       umultimap<std::string, shared_ptr<hostdependency_struct> >
                     _hostdependencies;
@@ -241,7 +240,7 @@ namespace           configuration {
                     _lock;
       processing_state
                     _processing_state;
-      umap<std::pair<std::string, std::string>, shared_ptr<service_struct> >
+      umap<std::pair<std::string, std::string>, shared_ptr<::service> >
                     _services;
       umultimap<std::pair<std::string, std::string>, shared_ptr<servicedependency_struct> >
                     _servicedependencies;

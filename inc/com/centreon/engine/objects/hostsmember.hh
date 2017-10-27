@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2013 Merethis
+** Copyright 2011-2013,2017 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -20,13 +20,14 @@
 #ifndef CCE_OBJECTS_HOSTSMEMBER_HH
 #  define CCE_OBJECTS_HOSTSMEMBER_HH
 
+#  include "com/centreon/engine/host.hh"
+
 /* Forward declaration. */
-struct host_struct;
 struct hostgroup_struct;
 
 typedef struct               hostsmember_struct {
   char*                      host_name;
-  host_struct*               host_ptr;
+  host*                      host_ptr;
   struct hostsmember_struct* next;
 }                            hostsmember;
 
@@ -60,5 +61,3 @@ std::ostream& operator<<(std::ostream& os, hostsmember const& obj);
 #  endif /* C++ */
 
 #endif // !CCE_OBJECTS_HOSTSMEMBER_HH
-
-
