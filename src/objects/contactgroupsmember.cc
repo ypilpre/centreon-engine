@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2013 Merethis
+** Copyright 2011-2013,2017 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -18,14 +18,14 @@
 */
 
 #include "com/centreon/engine/deleter/contactgroupsmember.hh"
+#include "com/centreon/engine/host.hh"
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/objects/contact.hh"
 #include "com/centreon/engine/objects/contactgroupsmember.hh"
-#include "com/centreon/engine/objects/host.hh"
 #include "com/centreon/engine/objects/hostescalation.hh"
-#include "com/centreon/engine/objects/service.hh"
 #include "com/centreon/engine/objects/serviceescalation.hh"
 #include "com/centreon/engine/objects/tool.hh"
+#include "com/centreon/engine/service.hh"
 #include "com/centreon/engine/shared.hh"
 #include "com/centreon/engine/string.hh"
 
@@ -127,8 +127,9 @@ contactgroupsmember* add_contactgroup_to_host(
     obj->group_name = string::dup(group_name);
 
     // Add the new member to the head of the member list.
-    obj->next = hst->contact_groups;
-    hst->contact_groups = obj;
+    // XXX
+    // obj->next = hst->contact_groups;
+    // hst->contact_groups = obj;
   }
   catch (...) {
     deleter::contactgroupsmember(obj);
@@ -203,8 +204,9 @@ contactgroupsmember* add_contactgroup_to_service(
     obj->group_name = string::dup(group_name);
 
     // Add this contactgroup to the service.
-    obj->next = svc->contact_groups;
-    svc->contact_groups = obj;
+    // XXX
+    // obj->next = svc->contact_groups;
+    // svc->contact_groups = obj;
   }
   catch (...) {
     deleter::contactgroupsmember(obj);
