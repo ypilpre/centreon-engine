@@ -34,7 +34,6 @@
 #include "com/centreon/engine/service.hh"
 #include "com/centreon/engine/string.hh"
 #include "com/centreon/engine/xpddefault.hh"
-#include "find.hh"
 
 using namespace com::centreon::engine;
 using namespace com::centreon::engine::logging;
@@ -90,7 +89,7 @@ int xpddefault_initialize_performance_data() {
     // get the command name, leave any arguments behind.
     temp_command_name = my_strtok(temp_buffer, "!");
 
-    if ((temp_command = find_command(temp_command_name)) == NULL) {
+    if ((temp_command = &find_command(temp_command_name)) == NULL) {
       logger(log_runtime_warning, basic)
         << "Warning: Host performance command '" << temp_command_name
         << "' was not found - host performance data will not "
@@ -108,7 +107,7 @@ int xpddefault_initialize_performance_data() {
     // get the command name, leave any arguments behind.
     temp_command_name = my_strtok(temp_buffer, "!");
 
-    if ((temp_command = find_command(temp_command_name)) == NULL) {
+    if ((temp_command = &find_command(temp_command_name)) == NULL) {
       logger(log_runtime_warning, basic)
         << "Warning: Service performance command '" << temp_command_name
         << "' was not found - service performance data will not "
@@ -128,7 +127,7 @@ int xpddefault_initialize_performance_data() {
 
     // get the command name, leave any arguments behind.
     temp_command_name = my_strtok(temp_buffer, "!");
-    if ((temp_command = find_command(temp_command_name)) == NULL) {
+    if ((temp_command = &find_command(temp_command_name)) == NULL) {
       logger(log_runtime_warning, basic)
         << "Warning: Host performance file processing command '"
         << temp_command_name << "' was not found - host performance "
@@ -148,7 +147,7 @@ int xpddefault_initialize_performance_data() {
 
     // get the command name, leave any arguments behind.
     temp_command_name = my_strtok(temp_buffer, "!");
-    if ((temp_command = find_command(temp_command_name)) == NULL) {
+    if ((temp_command = &find_command(temp_command_name)) == NULL) {
       logger(log_runtime_warning, basic)
         << "Warning: Service performance file processing command '"
         << temp_command_name << "' was not found - service performance "
