@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2013,2016 Merethis
+** Copyright 2011-2013,2016-2017 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -87,22 +87,24 @@ void applier::contact::_update(
   if (obj.retain_nonstatus_information) {
     if (state.host_notification_period().is_set()) {
       if (obj.modified_host_attributes & MODATTR_NOTIFICATION_TIMEPERIOD) {
-        if (!find_timeperiod(state.host_notification_period()->c_str()))
-          obj.modified_host_attributes -= MODATTR_NOTIFICATION_TIMEPERIOD;
-        else
-          string::setstr(
-            obj.host_notification_period,
-            *state.host_notification_period());
+        // XXX
+        // if (!find_timeperiod(state.host_notification_period()->c_str()))
+        //   obj.modified_host_attributes -= MODATTR_NOTIFICATION_TIMEPERIOD;
+        // else
+        //   string::setstr(
+        //     obj.host_notification_period,
+        //     *state.host_notification_period());
       }
     }
     if (state.service_notification_period().is_set()) {
       if (obj.modified_service_attributes & MODATTR_NOTIFICATION_TIMEPERIOD) {
-        if (!find_timeperiod(state.service_notification_period()->c_str()))
-          obj.modified_service_attributes -= MODATTR_NOTIFICATION_TIMEPERIOD;
-        else
-          string::setstr(
-            obj.service_notification_period,
-            *state.service_notification_period());
+        // XXX
+        // if (!find_timeperiod(state.service_notification_period()->c_str()))
+        //   obj.modified_service_attributes -= MODATTR_NOTIFICATION_TIMEPERIOD;
+        // else
+        //   string::setstr(
+        //     obj.service_notification_period,
+        //     *state.service_notification_period());
       }
     }
     if (state.host_notifications_enabled().is_set()) {
