@@ -31,7 +31,7 @@ set(
   "${SRC_DIR}/connector.cc"
   "${SRC_DIR}/contact.cc"
   "${SRC_DIR}/contactgroup.cc"
-  "${SRC_DIR}/host.cc"
+  # "${SRC_DIR}/host.cc"
   "${SRC_DIR}/hostdependency.cc"
   "${SRC_DIR}/hostescalation.cc"
   "${SRC_DIR}/hostgroup.cc"
