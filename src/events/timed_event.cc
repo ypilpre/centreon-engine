@@ -1,8 +1,8 @@
 /*
-** Copyright 2007-2008      Ethan Galstad
-** Copyright 2007,2010      Andreas Ericsson
-** Copyright 2010           Max Schubert
-** Copyright 2011-2013,2016 Centreon
+** Copyright 2007-2008           Ethan Galstad
+** Copyright 2007,2010           Andreas Ericsson
+** Copyright 2010                Max Schubert
+** Copyright 2011-2013,2016-2017 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -21,6 +21,7 @@
 */
 
 #include "com/centreon/engine/broker.hh"
+#include "com/centreon/engine/configuration/applier/state.hh"
 #include "com/centreon/engine/error.hh"
 #include "com/centreon/engine/events/defines.hh"
 #include "com/centreon/engine/events/timed_event.hh"
@@ -40,7 +41,7 @@ using namespace com::centreon::engine::logging;
  *  @param[in] event The event to execute.
  */
 static void _exec_event_service_check(timed_event* event) {
-  service* svc(reinterpret_cast<service*>(event->event_data));
+  service* svc(static_cast<service*>(event->event_data));
 
   // get check latency.
   timeval tv;
@@ -49,8 +50,8 @@ static void _exec_event_service_check(timed_event* event) {
                             + (double)(tv.tv_usec / 1000) / 1000.0);
 
   logger(dbg_events, basic)
-    << "** Service Check Event ==> Host: '" << svc->host_name
-    << "', Service: '" << svc->description << "', Options: "
+    << "** Service Check Event ==> Host: '" << svc->get_host_name()
+    << "', Service: '" << svc->get_description() << "', Options: "
     << event->event_options << ", Latency: " << latency << " sec";
 
   // run the service check.
@@ -255,7 +256,7 @@ static void _exec_event_host_check(timed_event* event) {
                             + (double)(tv.tv_usec / 1000) / 1000.0);
 
   logger(dbg_events, basic)
-    << "** Host Check Event ==> Host: '" << hst->name
+    << "** Host Check Event ==> Host: '" << hst->get_host_name()
     << "', Options: " << event->event_options
     << ", Latency: " << latency << " sec";
 
@@ -316,8 +317,9 @@ static void _exec_event_expire_comment(timed_event* event) {
 static void _exec_event_expire_host_ack(timed_event* event) {
   logger(dbg_events, basic)
     << "** Expire Host Acknowledgement Event";
-  check_for_expired_acknowledgement(
-    static_cast<host*>(event->event_data));
+  // XXX
+  // check_for_expired_acknowledgement(
+  //   static_cast<host*>(event->event_data));
   return ;
 }
 
@@ -329,8 +331,9 @@ static void _exec_event_expire_host_ack(timed_event* event) {
 static void _exec_event_expire_service_ack(timed_event* event) {
   logger(dbg_events, basic)
     << "** Expire Service Acknowledgement Event";
-  check_for_expired_acknowledgement(
-    static_cast<service*>(event->event_data));
+  // XXX
+  // check_for_expired_acknowledgement(
+  //   static_cast<service*>(event->event_data));
   return ;
 }
 
@@ -575,105 +578,117 @@ void compensate_for_system_time_change(
   resort_event_list(&event_list_low, &event_list_low_tail);
 
   // adjust service timestamps.
-  for (service* svc(service_list); svc; svc = svc->next) {
-    adjust_timestamp_for_time_change(
-      last_time,
-      current_time,
-      time_difference,
-      &svc->last_notification);
-    adjust_timestamp_for_time_change(
-      last_time,
-      current_time,
-      time_difference,
-      &svc->last_check);
-    adjust_timestamp_for_time_change(
-      last_time,
-      current_time,
-      time_difference,
-      &svc->next_check);
-    adjust_timestamp_for_time_change(
-      last_time,
-      current_time,
-      time_difference,
-      &svc->last_state_change);
-    adjust_timestamp_for_time_change(
-      last_time,
-      current_time,
-      time_difference,
-      &svc->last_hard_state_change);
-    adjust_timestamp_for_time_change(
-      last_time,
-      current_time,
-      time_difference,
-      &service_other_props[std::make_pair(
-                                  svc->host_ptr->name,
-                                  svc->description)].initial_notif_time);
-    adjust_timestamp_for_time_change(
-      last_time,
-      current_time,
-      time_difference,
-      &service_other_props[std::make_pair(
-                                  svc->host_ptr->name,
-                                  svc->description)].last_acknowledgement);
+  for (umap<std::pair<std::string, std::string>, com::centreon::shared_ptr<::service> >::iterator
+         it(configuration::applier::state::instance().services().begin()),
+         end(configuration::applier::state::instance().services().end());
+       it != end;
+       ++it) {
+    service* svc(it->second.get());
+    // XXX
+    // adjust_timestamp_for_time_change(
+    //   last_time,
+    //   current_time,
+    //   time_difference,
+    //   &svc->last_notification);
+    // adjust_timestamp_for_time_change(
+    //   last_time,
+    //   current_time,
+    //   time_difference,
+    //   &svc->last_check);
+    // adjust_timestamp_for_time_change(
+    //   last_time,
+    //   current_time,
+    //   time_difference,
+    //   &svc->next_check);
+    // adjust_timestamp_for_time_change(
+    //   last_time,
+    //   current_time,
+    //   time_difference,
+    //   &svc->last_state_change);
+    // adjust_timestamp_for_time_change(
+    //   last_time,
+    //   current_time,
+    //   time_difference,
+    //   &svc->last_hard_state_change);
+    // adjust_timestamp_for_time_change(
+    //   last_time,
+    //   current_time,
+    //   time_difference,
+    //   &service_other_props[std::make_pair(
+    //                               svc->host_ptr->name,
+    //                               svc->description)].initial_notif_time);
+    // adjust_timestamp_for_time_change(
+    //   last_time,
+    //   current_time,
+    //   time_difference,
+    //   &service_other_props[std::make_pair(
+    //                               svc->host_ptr->name,
+    //                               svc->description)].last_acknowledgement);
 
     // recalculate next re-notification time.
-    svc->next_notification
-      = get_next_service_notification_time(
-          svc,
-          svc->last_notification);
+    svc->set_next_notification(
+      get_next_service_notification_time(
+        svc,
+        svc->get_last_notification()));
 
     // update the status data.
     update_service_status(svc, false);
   }
 
   // adjust host timestamps.
-  for (host* hst(host_list); hst; hst = hst->next) {
-    adjust_timestamp_for_time_change(
-      last_time,
-      current_time,
-      time_difference,
-      &hst->last_host_notification);
-    adjust_timestamp_for_time_change(
-      last_time,
-      current_time,
-      time_difference,
-      &hst->last_check);
-    adjust_timestamp_for_time_change(
-      last_time,
-      current_time,
-      time_difference,
-      &hst->next_check);
-    adjust_timestamp_for_time_change(
-      last_time,
-      current_time,
-      time_difference,
-      &hst->last_state_change);
-    adjust_timestamp_for_time_change(
-      last_time,
-      current_time,
-      time_difference,
-      &hst->last_hard_state_change);
-    adjust_timestamp_for_time_change(
-      last_time,
-      current_time,
-      time_difference,
-      &hst->last_state_history_update);
-    adjust_timestamp_for_time_change(
-      last_time,
-      current_time,
-      time_difference,
-      &host_other_props[hst->name].initial_notif_time);
-    adjust_timestamp_for_time_change(
-      last_time,
-      current_time,
-      time_difference,
-      &host_other_props[hst->name].last_acknowledgement);
+  for (umap<std::string, com::centreon::shared_ptr<::host> >::iterator
+         it(configuration::applier::state::instance().hosts().begin()),
+         end(configuration::applier::state::instance().hosts().end());
+       it != end;
+       ++it) {
+    host* hst(it->second.get());
+    // XXX
+    // adjust_timestamp_for_time_change(
+    //   last_time,
+    //   current_time,
+    //   time_difference,
+    //   &hst->last_host_notification);
+    // adjust_timestamp_for_time_change(
+    //   last_time,
+    //   current_time,
+    //   time_difference,
+    //   &hst->last_check);
+    // adjust_timestamp_for_time_change(
+    //   last_time,
+    //   current_time,
+    //   time_difference,
+    //   &hst->next_check);
+    // adjust_timestamp_for_time_change(
+    //   last_time,
+    //   current_time,
+    //   time_difference,
+    //   &hst->last_state_change);
+    // adjust_timestamp_for_time_change(
+    //   last_time,
+    //   current_time,
+    //   time_difference,
+    //   &hst->last_hard_state_change);
+    // adjust_timestamp_for_time_change(
+    //   last_time,
+    //   current_time,
+    //   time_difference,
+    //   &hst->last_state_history_update);
+    // adjust_timestamp_for_time_change(
+    //   last_time,
+    //   current_time,
+    //   time_difference,
+    //   &host_other_props[hst->name].initial_notif_time);
+    // adjust_timestamp_for_time_change(
+    //   last_time,
+    //   current_time,
+    //   time_difference,
+    //   &host_other_props[hst->name].last_acknowledgement);
 
     // recalculate next re-notification time.
-    hst->next_host_notification
-      = get_next_host_notification_time(
-          hst,
-          hst->last_host_notification);
+    hst->set_next_notification(
+      get_next_host_notification_time(
+        hst,
+        hst->get_last_notification()));
 
     // update the status data.
     update_host_status(hst, false);
@@ -1036,7 +1051,7 @@ bool operator==(
           || (obj1.event_type == EVENT_EXPIRE_HOST_ACK))) {
     host& hst1(*(host*)obj1.event_data);
     host& hst2(*(host*)obj2.event_data);
-    if (strcmp(hst1.name, hst2.name))
+    if (hst1.get_host_name() != hst2.get_host_name())
       return (false);
   }
   else if (is_not_null
@@ -1044,8 +1059,8 @@ bool operator==(
                || (obj1.event_type == EVENT_EXPIRE_SERVICE_ACK))) {
     service& svc1(*(service*)obj1.event_data);
     service& svc2(*(service*)obj2.event_data);
-    if (strcmp(svc1.host_name, svc2.host_name)
-        || strcmp(svc1.description, svc2.description))
+    if (svc1.get_host_name() != svc2.get_host_name()
+        || svc1.get_description() != svc2.get_description())
       return (false);
   }
   else if (is_not_null
@@ -1105,13 +1120,13 @@ std::ostream& operator<<(std::ostream& os, timed_event const& obj) {
            || obj.event_type == EVENT_EXPIRE_HOST_ACK) {
     host& hst(*(host*)obj.event_data);
     os << "  event_data:                 "
-       << hst.name << "\n";
+       << hst.get_host_name() << "\n";
   }
   else if (obj.event_type == EVENT_SERVICE_CHECK
            || obj.event_type == EVENT_EXPIRE_SERVICE_ACK) {
     service& svc(*(service*)obj.event_data);
     os << "  event_data:                 "
-       << svc.host_name << ", " << svc.description << "\n";
+       << svc.get_host_name() << ", " << svc.get_description() << "\n";
   }
   else if (obj.event_type == EVENT_SCHEDULED_DOWNTIME
            || obj.event_type == EVENT_EXPIRE_COMMENT) {
