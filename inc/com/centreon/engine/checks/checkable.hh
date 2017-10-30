@@ -42,6 +42,7 @@ namespace              checks {
     bool               are_checks_enabled() const;
     bool               get_accept_passive_service_checks() const;
     command*           get_check_command() const;
+    std::string        get_check_command_args() const;
     bool               get_check_freshness() const;
     timeperiod*        get_check_period() const;
     int                get_check_type() const;
