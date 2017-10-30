@@ -53,7 +53,6 @@ set(
   "${INC_DIR}/events.h"
   # "${INC_DIR}/find.hh"
   "${INC_DIR}/locations.h"
-  "${INC_DIR}/logging.h"
   "${INC_DIR}/macros.h"
   "${INC_DIR}/mmap.h"
   "${INC_DIR}/nebcallbacks.h"

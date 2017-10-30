@@ -1,5 +1,5 @@
 ##
-## Copyright 2011-2013 Merethis
+## Copyright 2011-2013,2017 Centreon
 ##
 ## This file is part of Centreon Scheduler.
 ##
@@ -37,13 +37,11 @@ set(
   "${SRC_DIR}/customvariablesmember.cc"
   "${SRC_DIR}/daterange.cc"
   "${SRC_DIR}/downtime.cc"
-  "${SRC_DIR}/host.cc"
   "${SRC_DIR}/hostdependency.cc"
   "${SRC_DIR}/hostescalation.cc"
   "${SRC_DIR}/hostgroup.cc"
   "${SRC_DIR}/hostsmember.cc"
   "${SRC_DIR}/objectlist.cc"
-  "${SRC_DIR}/service.cc"
   "${SRC_DIR}/servicedependency.cc"
   "${SRC_DIR}/serviceescalation.cc"
   "${SRC_DIR}/servicegroup.cc"
@@ -64,14 +62,12 @@ set(
   "${INC_DIR}/customvariablesmember.hh"
   "${INC_DIR}/daterange.hh"
   "${INC_DIR}/downtime.hh"
-  "${INC_DIR}/host.hh"
   "${INC_DIR}/hostdependency.hh"
   "${INC_DIR}/hostescalation.hh"
   "${INC_DIR}/hostgroup.hh"
   "${INC_DIR}/hostsmember.hh"
   "${INC_DIR}/listmember.hh"
   "${INC_DIR}/objectlist.hh"
-  "${INC_DIR}/service.hh"
   "${INC_DIR}/servicedependency.hh"
   "${INC_DIR}/serviceescalation.hh"
   "${INC_DIR}/servicegroup.hh"
