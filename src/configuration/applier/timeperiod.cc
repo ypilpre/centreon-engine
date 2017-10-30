@@ -28,6 +28,8 @@
 #include "com/centreon/engine/deleter/timerange.hh"
 #include "com/centreon/engine/error.hh"
 #include "com/centreon/engine/globals.hh"
+#include "com/centreon/engine/objects/timeperiodexclusion.hh"
+#include "com/centreon/engine/objects/timerange.hh"
 
 using namespace com::centreon::engine::configuration;
 
