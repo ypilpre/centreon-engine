@@ -44,6 +44,7 @@ namespace              checks {
     command*           get_check_command() const;
     std::string        get_check_command_args() const;
     bool               get_check_freshness() const;
+    int                get_check_options() const;
     timeperiod*        get_check_period() const;
     int                get_check_type() const;
     int                get_current_attempt() const;
