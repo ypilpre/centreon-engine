@@ -27,6 +27,7 @@
 #include "com/centreon/engine/error.hh"
 #include "com/centreon/engine/globals.hh"
 #include "com/centreon/engine/logging/logger.hh"
+#include "com/centreon/engine/objects/servicesmember.hh"
 
 using namespace com::centreon::engine::configuration;
 
