@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2013,2015 Merethis
+** Copyright 2011-2013,2015,2017 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -26,6 +26,7 @@
 #include "com/centreon/engine/objects/commandsmember.hh"
 #include "com/centreon/engine/objects/customvariablesmember.hh"
 #include "com/centreon/engine/objects/contact.hh"
+#include "com/centreon/engine/objects/objectlist.hh"
 #include "com/centreon/engine/objects/tool.hh"
 #include "com/centreon/engine/shared.hh"
 #include "com/centreon/engine/string.hh"
