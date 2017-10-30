@@ -19,14 +19,14 @@
 
 #include "com/centreon/engine/broker.hh"
 #include "com/centreon/engine/deleter/contactsmember.hh"
+#include "com/centreon/engine/host.hh"
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/objects/contactgroup.hh"
 #include "com/centreon/engine/objects/contactsmember.hh"
-#include "com/centreon/engine/objects/host.hh"
 #include "com/centreon/engine/objects/hostescalation.hh"
-#include "com/centreon/engine/objects/service.hh"
 #include "com/centreon/engine/objects/serviceescalation.hh"
 #include "com/centreon/engine/objects/tool.hh"
+#include "com/centreon/engine/service.hh"
 #include "com/centreon/engine/shared.hh"
 #include "com/centreon/engine/string.hh"
 
@@ -158,7 +158,8 @@ contactsmember* add_contact_to_contactgroup(
  *  @return Contact membership object.
  */
 contactsmember* add_contact_to_host(host* hst, char const* contact_name) {
-  return (add_contact_to_object(&hst->contacts, contact_name));
+  // XXX
+  // return (add_contact_to_object(&hst->contacts, contact_name));
 }
 
 /**
@@ -229,7 +230,8 @@ contactsmember* add_contact_to_object(
 contactsmember* add_contact_to_service(
                   service* svc,
                   char const* contact_name) {
-  return (add_contact_to_object(&svc->contacts, contact_name));
+  // XXX
+  // return (add_contact_to_object(&svc->contacts, contact_name));
 }
 
 /**
