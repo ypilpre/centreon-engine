@@ -741,9 +741,9 @@ int handle_async_service_check_result(
     temp_service->set_next_notification((time_t)0);
     if (temp_service->get_recovery_been_sent()) {
       temp_service->set_current_notification_number(0);
-      temp_service->set_notified_on_unknown(false);
-      temp_service->set_notified_on_warning(false);
-      temp_service->set_notified_on_critical(false);
+      temp_service->set_notify_on_unknown(false);
+      temp_service->set_notify_on_warning(false);
+      temp_service->set_notify_on_critical(false);
       temp_service->set_initial_notif_time(0);
     }
     temp_service->set_acknowledged(false);
@@ -1043,7 +1043,7 @@ int handle_async_service_check_result(
       }
 
       /* else log the problem (again) if this service is flagged as being volatile */
-      else if (temp_service->is_volatile()) {
+      else if (temp_service->get_volatile()) {
         log_service_event(temp_service);
         state_was_logged = true;
       }
@@ -1070,7 +1070,7 @@ int handle_async_service_check_result(
 
       /* run the service event handler if we changed state from the last hard state or if this service is flagged as being volatile */
       if (hard_state_change == true
-          || temp_service->is_volatile())
+          || temp_service->get_volatile())
         handle_service_event(temp_service);
 
       /* save the last hard state */

@@ -668,6 +668,7 @@ set(
   # "${SRC_DIR}/notifications.cc"
   "${SRC_DIR}/perfdata.cc"
   "${SRC_DIR}/sehandlers.cc"
+  "${SRC_DIR}/service.cc"
   "${SRC_DIR}/shared.cc"
   "${SRC_DIR}/statusdata.cc"
   "${SRC_DIR}/string.cc"

@@ -42,27 +42,50 @@ class                service : public monitorable {
                      service(service const& other);
                      ~service();
   service&           operator=(service const& other);
+
+  // Configuration.
   std::string const& get_description() const;
   host*              get_host() const;
-  time_t             get_last_time_critical() const;
-  time_t             get_last_time_ok() const;
-  time_t             get_last_time_unknown() const;
-  time_t             get_last_time_warning() const;
   bool               get_stalk_on_critical() const;
   bool               get_stalk_on_ok() const;
   bool               get_stalk_on_unknown() const;
   bool               get_stalk_on_warning() const;
-  bool               is_notified_on_critical() const;
-  bool               is_notified_on_unknown() const;
-  bool               is_notified_on_warning() const;
-  bool               is_volatile() const;
+  bool               get_volatile() const;
+
+  // State runtime.
+  time_t             get_last_time_critical() const;
   void               set_last_time_critical(time_t last_critical);
+  time_t             get_last_time_ok() const;
   void               set_last_time_ok(time_t last_ok);
+  time_t             get_last_time_unknown() const;
   void               set_last_time_unknown(time_t last_unknown);
+  time_t             get_last_time_warning() const;
   void               set_last_time_warning(time_t last_warning);
-  void               set_notified_on_critical(bool notified);
-  void               set_notified_on_unknown(bool notified);
-  void               set_notified_on_warning(bool notified);
+
+  // Notification.
+  bool               get_notify_on_critical() const;
+  void               set_notify_on_critical(bool notify);
+  bool               get_notify_on_unknown() const;
+  void               set_notify_on_unknown(bool notify);
+  bool               get_notify_on_warning() const;
+  void               set_notify_on_warning(bool notify);
+
+ private:
+  void               _internal_copy(service const& other);
+
+  std::string        _description;
+  host*              _host;
+  time_t             _last_time_critical;
+  time_t             _last_time_ok;
+  time_t             _last_time_unknown;
+  time_t             _last_time_warning;
+  bool               _notify_on_critical;
+  bool               _notify_on_unknown;
+  bool               _notify_on_warning;
+  bool               _stalk_on_critical;
+  bool               _stalk_on_ok;
+  bool               _stalk_on_unknown;
+  bool               _stalk_on_warning;
 };
 
 CCE_END()
