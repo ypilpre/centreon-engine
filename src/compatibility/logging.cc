@@ -189,7 +189,7 @@ int write_to_syslog(char const* buffer, unsigned long type) {
  *  @return Return true on success.
  */
 int log_service_event(service const* svc) {
-  if (svc->get_state_type() == SOFT_STATE
+  if (svc->get_current_state_type() == SOFT_STATE
       && !config->log_service_retries())
     return (OK);
 
@@ -206,7 +206,7 @@ int log_service_event(service const* svc) {
     log_options = tab_service_states[svc->get_current_state()].id;
     state = tab_service_states[svc->get_current_state()].str;
   }
-  char const* state_type(tab_state_type[svc->get_state_type()]);
+  char const* state_type(tab_state_type[svc->get_current_state_type()]);
 
   logger(log_options, basic) << "SERVICE ALERT: "
     << svc->get_host_name() << ";" << svc->get_description()
@@ -235,7 +235,7 @@ int log_host_event(host const* hst) {
     log_options = tab_host_states[hst->get_current_state()].id;
     state = tab_host_states[hst->get_current_state()].str;
   }
-  char const* state_type(tab_state_type[hst->get_state_type()]);
+  char const* state_type(tab_state_type[hst->get_current_state_type()]);
 
   logger(log_options, basic) << "HOST ALERT: " << hst->get_host_name()
     << ";" << state << ";" << state_type << ";"
@@ -258,7 +258,7 @@ void log_host_state(unsigned int type, host* hst) {
         && ((unsigned int)hst->get_current_state()
             < sizeof(tab_host_states) / sizeof(*tab_host_states)))
       state = tab_host_states[hst->get_current_state()].str;
-    char const* state_type(tab_state_type[hst->get_state_type()]);
+    char const* state_type(tab_state_type[hst->get_current_state_type()]);
     logger(log_info_message, basic) << type_str << " HOST STATE: "
       << hst->get_host_name() << ";" << state << ";" << state_type
       << ";" << hst->get_current_attempt() << ";" << hst->get_output();
@@ -280,7 +280,7 @@ void log_service_state(unsigned int type, service* svc) {
         && ((unsigned int)svc->get_current_state()
             < sizeof(tab_service_states) / sizeof(*tab_service_states)))
       state = tab_service_states[svc->get_current_state()].str;
-    char const* state_type(tab_state_type[svc->get_state_type()]);
+    char const* state_type(tab_state_type[svc->get_current_state_type()]);
     logger(log_info_message, basic) << type_str << " SERVICE STATE: "
       << svc->get_host_name() << ";" << svc->get_description() << ";"
       << state << ";" << state_type << ";" << svc->get_current_attempt()

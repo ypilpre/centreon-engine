@@ -314,7 +314,7 @@ void loop::_dispatching() {
           // Otherwise reschedule (TODO: This should be smarter as it
           // doesn't consider its timeperiod).
           else {
-            if ((SOFT_STATE == temp_service->get_state_type())
+            if ((SOFT_STATE == temp_service->get_current_state_type())
                 && (temp_service->get_current_state() != STATE_OK))
               temp_service->set_next_check(
                 (time_t)(temp_service->get_next_check()
@@ -364,7 +364,7 @@ void loop::_dispatching() {
             &event_list_low_tail);
 
           // Reschedule.
-          if ((SOFT_STATE == temp_host->get_state_type())
+          if ((SOFT_STATE == temp_host->get_current_state_type())
               && (temp_host->get_current_state() != STATE_OK))
             temp_host->set_next_check(
               (time_t)(temp_host->get_next_check()

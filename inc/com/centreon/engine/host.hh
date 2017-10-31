@@ -39,6 +39,7 @@ class                     host : public monitorable {
                           ~host();
   host&                   operator=(host const& other);
   std::list<host*> const& get_children() const;
+  int                     get_initial_state() const;
   time_t                  get_last_time_down() const;
   time_t                  get_last_time_unreachable() const;
   time_t                  get_last_time_up() const;

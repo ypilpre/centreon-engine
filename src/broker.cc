@@ -1585,7 +1585,7 @@ int broker_service_check(
   ds.current_attempt = svc->get_current_attempt();
   ds.max_attempts = svc->get_max_attempts();
   ds.state = svc->get_current_state();
-  ds.state_type = svc->get_state_type();
+  ds.state_type = svc->get_current_state_type();
   ds.timeout = timeout;
   ds.command_name = command_name;
   ds.command_args = command_args;

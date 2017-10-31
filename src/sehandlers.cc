@@ -57,7 +57,7 @@ int obsessive_compulsive_service_check_processor(service* svc) {
   /* bail out if we shouldn't be obsessing */
   if (config->obsess_over_services() == false)
     return (OK);
-  if (!svc->is_obsessed_over())
+  if (!svc->get_ocp_enabled())
     return (OK);
 
   /* if there is no valid command, exit */
@@ -154,7 +154,7 @@ int obsessive_compulsive_host_check_processor(host* hst) {
   /* bail out if we shouldn't be obsessing */
   if (config->obsess_over_hosts() == false)
     return (OK);
-  if (!hst->is_obsessed_over())
+  if (!hst->get_ocp_enabled())
     return (OK);
 
   /* if there is no valid command, exit */
@@ -249,7 +249,7 @@ int handle_service_event(service* svc) {
     SERVICE_STATECHANGE,
     (void*)svc,
     svc->get_current_state(),
-    svc->get_state_type(),
+    svc->get_current_state_type(),
     svc->get_current_attempt(),
     svc->get_max_attempts(),
     NULL);
@@ -257,7 +257,7 @@ int handle_service_event(service* svc) {
   /* bail out if we shouldn't be running event handlers */
   if (config->enable_event_handlers() == false)
     return (OK);
-  if (!svc->is_event_handler_enabled())
+  if (!svc->get_event_handler_enabled())
     return (OK);
 
   /* find the host */
@@ -375,7 +375,7 @@ int run_global_service_event_handler(nagios_macros* mac, service* svc) {
     GLOBAL_SERVICE_EVENTHANDLER,
     (void*)svc,
     svc->get_current_state(),
-    svc->get_state_type(),
+    svc->get_current_state_type(),
     start_time,
     end_time,
     exectime,
@@ -431,7 +431,7 @@ int run_global_service_event_handler(nagios_macros* mac, service* svc) {
     GLOBAL_SERVICE_EVENTHANDLER,
     (void*)svc,
     svc->get_current_state(),
-    svc->get_state_type(),
+    svc->get_current_state_type(),
     start_time,
     end_time,
     exectime,
@@ -488,7 +488,7 @@ int run_service_event_handler(nagios_macros* mac, service* svc) {
   get_raw_command_line_r(
     mac,
     svc->get_event_handler(),
-    svc->get_event_handler() ? svc->get_event_handler()->name : NULL,
+    svc->get_event_handler_args().c_str(),
     &raw_command,
     macro_options);
   if (raw_command == NULL)
@@ -513,9 +513,9 @@ int run_service_event_handler(nagios_macros* mac, service* svc) {
   if (config->log_event_handlers() == true) {
     std::ostringstream oss;
     oss << "SERVICE EVENT HANDLER: " << svc->get_host_name() << ';'
-	<< svc->get_description()
-	<< ";$SERVICESTATE$;$SERVICESTATETYPE$;$SERVICEATTEMPT$;"
-	<< svc->get_event_handler() ? svc->get_event_handler()->name : "";
+        << svc->get_description()
+        << ";$SERVICESTATE$;$SERVICESTATETYPE$;$SERVICEATTEMPT$;"
+        << svc->get_event_handler_args();
     process_macros_r(
       mac,
       oss.str().c_str(),
@@ -535,16 +535,14 @@ int run_service_event_handler(nagios_macros* mac, service* svc) {
                  SERVICE_EVENTHANDLER,
                  (void*)svc,
                  svc->get_current_state(),
-                 svc->get_state_type(),
+                 svc->get_current_state_type(),
                  start_time,
                  end_time,
                  exectime,
                  config->event_handler_timeout(),
                  early_timeout,
                  result,
-                 svc->get_event_handler()
-                 ? svc->get_event_handler()->name
-                 : NULL,
+                 svc->get_event_handler_args().c_str(),
                  processed_command,
                  NULL,
                  NULL);
@@ -592,14 +590,14 @@ int run_service_event_handler(nagios_macros* mac, service* svc) {
     SERVICE_EVENTHANDLER,
     (void*)svc,
     svc->get_current_state(),
-    svc->get_state_type(),
+    svc->get_current_state_type(),
     start_time,
     end_time,
     exectime,
     config->event_handler_timeout(),
     early_timeout,
     result,
-    svc->get_event_handler() ? svc->get_event_handler()->name : NULL,
+    svc->get_event_handler_args().c_str(),
     processed_command,
     command_output,
     NULL);
@@ -635,7 +633,7 @@ int handle_host_event(host* hst) {
     HOST_STATECHANGE,
     (void*)hst,
     hst->get_current_state(),
-    hst->get_state_type(),
+    hst->get_current_state_type(),
     hst->get_current_attempt(),
     hst->get_max_attempts(),
     NULL);
@@ -643,7 +641,7 @@ int handle_host_event(host* hst) {
   /* bail out if we shouldn't be running event handlers */
   if (config->enable_event_handlers() == false)
     return (OK);
-  if (!hst->is_event_handler_enabled())
+  if (!hst->get_event_handler_enabled())
     return (OK);
 
   /* update host macros */
@@ -756,7 +754,7 @@ int run_global_host_event_handler(nagios_macros* mac, host* hst) {
                  GLOBAL_HOST_EVENTHANDLER,
                  (void*)hst,
                  hst->get_current_state(),
-                 hst->get_state_type(),
+                 hst->get_current_state_type(),
                  start_time,
                  end_time,
                  exectime,
@@ -810,7 +808,7 @@ int run_global_host_event_handler(nagios_macros* mac, host* hst) {
     GLOBAL_HOST_EVENTHANDLER,
     (void*)hst,
     hst->get_current_state(),
-    hst->get_state_type(),
+    hst->get_current_state_type(),
     start_time,
     end_time,
     exectime,
@@ -866,7 +864,7 @@ int run_host_event_handler(nagios_macros* mac, host* hst) {
   get_raw_command_line_r(
     mac,
     hst->get_event_handler(),
-    hst->get_event_handler()->name,
+    hst->get_event_handler_args().c_str(),
     &raw_command,
     macro_options);
   if (raw_command == NULL)
@@ -892,7 +890,7 @@ int run_host_event_handler(nagios_macros* mac, host* hst) {
     std::ostringstream oss;
     oss << "HOST EVENT HANDLER: " << hst->get_host_name()
 	<< ";$HOSTSTATE$;$HOSTSTATETYPE$;$HOSTATTEMPT$;"
-	<< hst->get_event_handler()->name;
+	<< hst->get_event_handler_args();
     process_macros_r(
       mac,
       oss.str().c_str(),
@@ -912,14 +910,14 @@ int run_host_event_handler(nagios_macros* mac, host* hst) {
                  HOST_EVENTHANDLER,
                  (void*)hst,
                  hst->get_current_state(),
-                 hst->get_state_type(),
+                 hst->get_current_state_type(),
                  start_time,
                  end_time,
                  exectime,
                  config->event_handler_timeout(),
                  early_timeout,
                  result,
-                 hst->get_event_handler()->name,
+                 hst->get_event_handler_args().c_str(),
                  processed_command,
                  NULL,
                  NULL);
@@ -967,14 +965,14 @@ int run_host_event_handler(nagios_macros* mac, host* hst) {
     HOST_EVENTHANDLER,
     (void*)hst,
     hst->get_current_state(),
-    hst->get_state_type(),
+    hst->get_current_state_type(),
     start_time,
     end_time,
     exectime,
     config->event_handler_timeout(),
     early_timeout,
     result,
-    hst->get_event_handler()->name,
+    hst->get_event_handler_args().c_str(),
     processed_command,
     command_output,
     NULL);
@@ -1031,17 +1029,17 @@ int handle_host_state(host* hst) {
   if (hst->get_last_state() != hst->get_current_state()
       || hst->get_last_hard_state() != hst->get_current_state()
       || (hst->get_current_state() == HOST_UP
-          && hst->get_state_type() == SOFT_STATE))
+          && hst->get_current_state_type() == SOFT_STATE))
     state_change = true;
 
   /* if the host state has changed... */
   if (state_change == true) {
 
     /* update last state change times */
-    if (hst->get_state_type() == SOFT_STATE
+    if (hst->get_current_state_type() == SOFT_STATE
         || hst->get_last_state() != hst->get_current_state())
       hst->set_last_state_change(current_time);
-    if (hst->get_state_type() == HARD_STATE)
+    if (hst->get_current_state_type() == HARD_STATE)
       hst->set_last_hard_state_change(current_time);
 
     /* update the event id */
@@ -1090,8 +1088,8 @@ int handle_host_state(host* hst) {
     hst->set_no_more_notifications(false);
 
     /* write the host state change to the main log file */
-    if (hst->get_state_type() == HARD_STATE
-        || (hst->get_state_type() == SOFT_STATE
+    if (hst->get_current_state_type() == HARD_STATE
+        || (hst->get_current_state_type() == SOFT_STATE
             && config->log_host_retries() == true))
       log_host_event(hst);
 
@@ -1106,7 +1104,7 @@ int handle_host_state(host* hst) {
     }
 
     /* notify contacts about the recovery or problem if its a "hard" state */
-    if (hst->get_state_type() == HARD_STATE)
+    if (hst->get_current_state_type() == HARD_STATE)
       host_notification(
         hst,
         NOTIFICATION_NORMAL,
@@ -1139,7 +1137,7 @@ int handle_host_state(host* hst) {
     if ((hst->get_current_state() != HOST_UP ||
          (hst->get_current_state() == HOST_UP
           && !hst->get_recovery_been_sent()))
-        && hst->get_state_type() == HARD_STATE)
+        && hst->get_current_state_type() == HARD_STATE)
       host_notification(
         hst,
         NOTIFICATION_NORMAL,
@@ -1157,7 +1155,7 @@ int handle_host_state(host* hst) {
     }
 
     /* if we're in a soft state and we should log host retries, do so now... */
-    if (hst->get_state_type() == SOFT_STATE
+    if (hst->get_current_state_type() == SOFT_STATE
         && config->log_host_retries() == true)
       log_host_event(hst);
   }

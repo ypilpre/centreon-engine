@@ -315,7 +315,7 @@ void checker::run(
     hst->set_should_reschedule_current_check(true);
 
   // Don't execute a new host check if one is already running.
-  if (hst->is_executing()
+  if (hst->get_executing()
         && !(check_options & CHECK_OPTION_FORCE_EXECUTION)) {
     logger(dbg_checks, basic)
       << "A check of this host (" << hst->get_host_name()
@@ -335,7 +335,7 @@ void checker::run(
             hst,
             HOST_CHECK_ACTIVE,
             hst->get_current_state(),
-            hst->get_state_type(),
+            hst->get_current_state_type(),
             start_time,
             end_time,
             hst->get_check_command_args().c_str(),
@@ -439,7 +439,7 @@ void checker::run(
     hst,
     HOST_CHECK_ACTIVE,
     hst->get_current_state(),
-    hst->get_state_type(),
+    hst->get_current_state_type(),
     start_time,
     end_time,
     hst->get_check_command_args().c_str(),
@@ -796,7 +796,7 @@ void checker::run_sync(
   if (use_cached_result
       && !(check_options & CHECK_OPTION_FORCE_EXECUTION)) {
     // We can used the cached result, so return it and get out of here.
-    if (hst->has_been_checked()
+    if (hst->get_has_been_checked()
         && (static_cast<unsigned long>(
               start_time.tv_sec - hst->get_last_check())
             <= check_timestamp_horizon)) {
@@ -834,21 +834,20 @@ void checker::run_sync(
 
   // Update host state.
   hst->set_last_state(hst->get_current_state());
-  if (HARD_STATE == hst->get_state_type())
+  if (HARD_STATE == hst->get_current_state_type())
     hst->set_last_hard_state(hst->get_current_state());
 
   // Save old plugin output for state stalking.
   std::string old_plugin_output(hst->get_output());
 
   // Set the checked flag.
-  hst->set_checked(true);
+  hst->set_has_been_checked(true);
 
   // Clear the freshness flag.
   hst->set_being_freshened(false);
 
   // Clear check options - we don't want old check options retained.
-  // XXX
-  // hst->check_options = CHECK_OPTION_NONE;
+  hst->set_check_options(CHECK_OPTION_NONE);
 
   // Set the check type.
   hst->set_check_type(HOST_CHECK_ACTIVE);
@@ -863,7 +862,7 @@ void checker::run_sync(
     hst,
     HOST_CHECK_ACTIVE,
     hst->get_current_state(),
-    hst->get_state_type(),
+    hst->get_current_state_type(),
     start_time,
     end_time,
     hst->get_check_command_args().c_str(),
@@ -908,7 +907,7 @@ void checker::run_sync(
     hst,
     HOST_CHECK_ACTIVE,
     hst->get_current_state(),
-    hst->get_state_type(),
+    hst->get_current_state_type(),
     start_time,
     end_time,
     hst->get_check_command_args().c_str(),
@@ -1028,7 +1027,7 @@ int checker::_execute_sync(host* hst) {
             hst,
             HOST_CHECK_ACTIVE,
             hst->get_current_state(),
-            hst->get_state_type(),
+            hst->get_current_state_type(),
             start_time,
             end_time,
             hst->get_check_command_args().c_str(),
@@ -1080,7 +1079,7 @@ int checker::_execute_sync(host* hst) {
     hst,
     HOST_CHECK_ACTIVE,
     HOST_UP,
-    hst->get_state_type(),
+    hst->get_current_state_type(),
     start_time,
     end_time,
     hst->get_check_command_args().c_str(),
@@ -1255,7 +1254,7 @@ int checker::_execute_sync(host* hst) {
     hst,
     HOST_CHECK_ACTIVE,
     return_result,
-    hst->get_state_type(),
+    hst->get_current_state_type(),
     start_time,
     end_time,
     hst->get_check_command_args().c_str(),
