@@ -33,7 +33,7 @@ service::service()
  *
  *  @param[in] other  Object to copy.
  */
-service::service(service const& other) {
+service::service(service const& other) : monitorable(other) {
   _internal_copy(other);
 }
 
@@ -113,6 +113,15 @@ bool service::get_stalk_on_unknown() const {
  */
 bool service::get_stalk_on_warning() const {
   return (_stalk_on_warning);
+}
+
+/**
+ *  Check if this warning is volatile.
+ *
+ *  @return True if service is volatile.
+ */
+bool service::get_volatile() const {
+  return (_volatile);
 }
 
 /**************************************
@@ -285,5 +294,6 @@ void service::_internal_copy(service const& other) {
   _stalk_on_ok = other._stalk_on_ok;
   _stalk_on_unknown = other._stalk_on_unknown;
   _stalk_on_warning = other._stalk_on_warning;
+  _volatile = other._volatile;
   return ;
 }

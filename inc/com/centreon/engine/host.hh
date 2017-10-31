@@ -38,25 +38,47 @@ class                     host : public monitorable {
                           host(host const& other);
                           ~host();
   host&                   operator=(host const& other);
+
+  // Configuration.
   std::list<host*> const& get_children() const;
   int                     get_initial_state() const;
-  time_t                  get_last_time_down() const;
-  time_t                  get_last_time_unreachable() const;
-  time_t                  get_last_time_up() const;
   std::list<host*> const& get_parents() const;
   bool                    get_stalk_on_down() const;
   bool                    get_stalk_on_unreachable() const;
   bool                    get_stalk_on_up() const;
-  bool                    get_should_reschedule_current_check() const;
-  bool                    is_notified_on_down() const;
-  bool                    is_notified_on_unreachable() const;
+
+  // State runtime.
+  time_t                  get_last_time_down() const;
   void                    set_last_time_down(time_t last_time);
+  time_t                  get_last_time_unreachable() const;
   void                    set_last_time_unreachable(time_t last_time);
+  time_t                  get_last_time_up() const;
   void                    set_last_time_up(time_t last_time);
-  void                    set_notified_on_down(bool notify);
-  void                    set_notified_on_unreachable(bool notify);
+  bool                    get_should_reschedule_current_check() const;
   void                    set_should_reschedule_current_check(
                             bool reschedule);
+
+  // Notification.
+  bool                    get_notify_on_down() const;
+  void                    set_notify_on_down(bool notify);
+  bool                    get_notify_on_unreachable() const;
+  void                    set_notify_on_unreachable(bool notify);
+
+ private:
+  void                    _internal_copy(host const& other);
+
+  std::list<host*>        _children;
+  int                     _initial_state;
+  time_t                  _last_time_down;
+  time_t                  _last_time_unreachable;
+  time_t                  _last_time_up;
+  bool                    _notify_on_down;
+  bool                    _notify_on_unreachable;
+  std::list<host*>        _parents;
+  bool                    _should_reschedule_current_check;
+  bool                    _stalk_on_down;
+  bool                    _stalk_on_unreachable;
+  bool                    _stalk_on_up;
 };
 
 CCE_END()

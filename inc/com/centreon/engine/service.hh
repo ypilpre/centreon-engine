@@ -86,6 +86,7 @@ class                service : public monitorable {
   bool               _stalk_on_ok;
   bool               _stalk_on_unknown;
   bool               _stalk_on_warning;
+  bool               _volatile;
 };
 
 CCE_END()

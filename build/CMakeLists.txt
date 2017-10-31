@@ -663,6 +663,7 @@ set(
   "${SRC_DIR}/error.cc"
   # "${SRC_DIR}/flapping.cc"
   "${SRC_DIR}/globals.cc"
+  "${SRC_DIR}/host.cc"
   "${SRC_DIR}/macros.cc"
   "${SRC_DIR}/nebmods.cc"
   # "${SRC_DIR}/notifications.cc"
