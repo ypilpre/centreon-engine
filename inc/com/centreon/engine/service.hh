@@ -52,6 +52,9 @@ class                service : public monitorable {
   bool               get_stalk_on_ok() const;
   bool               get_stalk_on_unknown() const;
   bool               get_stalk_on_warning() const;
+  bool               is_notified_on_critical() const;
+  bool               is_notified_on_unknown() const;
+  bool               is_notified_on_warning() const;
   bool               is_volatile() const;
   void               set_last_time_critical(time_t last_critical);
   void               set_last_time_ok(time_t last_ok);

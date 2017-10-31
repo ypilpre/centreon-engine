@@ -40,7 +40,7 @@ namespace              checks {
     virtual            ~checkable();
     checkable&         operator=(checkable const& other);
     bool               are_checks_enabled() const;
-    bool               get_accept_passive_service_checks() const;
+    bool               get_accept_passive_checks() const;
     command*           get_check_command() const;
     std::string        get_check_command_args() const;
     bool               get_check_freshness() const;
@@ -105,6 +105,7 @@ namespace              checks {
     void               set_long_output(std::string const& output);
     void               set_next_check(time_t next_check);
     void               set_output(std::string const& output);
+    void               set_percent_state_change(double change);
     void               set_perfdata(std::string const& perfdata);
     void               set_state_type(int state);
     void               set_should_be_scheduled(bool schedule);

@@ -38,7 +38,6 @@ class                     host : public monitorable {
                           host(host const& other);
                           ~host();
   host&                   operator=(host const& other);
-  bool                    get_accept_passive_host_checks() const;
   std::list<host*> const& get_children() const;
   time_t                  get_last_time_down() const;
   time_t                  get_last_time_unreachable() const;
@@ -48,6 +47,8 @@ class                     host : public monitorable {
   bool                    get_stalk_on_unreachable() const;
   bool                    get_stalk_on_up() const;
   bool                    get_should_reschedule_current_check() const;
+  bool                    is_notified_on_down() const;
+  bool                    is_notified_on_unreachable() const;
   void                    set_last_time_down(time_t last_time);
   void                    set_last_time_unreachable(time_t last_time);
   void                    set_last_time_up(time_t last_time);

@@ -266,7 +266,7 @@ int handle_async_service_check_result(
         "service checks are disabled globally.";
       return (ERROR);
     }
-    if (!temp_service->get_accept_passive_service_checks()) {
+    if (!temp_service->get_accept_passive_checks()) {
       logger(dbg_checks, basic)
         << "Discarding passive service check result because passive "
         "checks are disabled for this service.";
@@ -1619,7 +1619,7 @@ void check_service_result_freshness() {
 
     /* skip services that have both active and passive checks disabled */
     if (!temp_service->are_checks_enabled()
-        && !temp_service->get_accept_passive_service_checks())
+        && !temp_service->get_accept_passive_checks())
       continue ;
 
     /* skip services that are already being freshened */
@@ -2108,7 +2108,7 @@ void check_host_result_freshness() {
 
     /* skip hosts that have both active and passive checks disabled */
     if (!temp_host->are_checks_enabled()
-        && !temp_host->get_accept_passive_host_checks())
+        && !temp_host->get_accept_passive_checks())
       continue ;
 
     /* skip hosts that are currently executing (problems here will be caught by orphaned host check) */
@@ -2523,7 +2523,7 @@ int handle_async_host_check_result_3x(
         "checks are disabled globally.";
       return (ERROR);
     }
-    if (!temp_host->get_accept_passive_host_checks()) {
+    if (!temp_host->get_accept_passive_checks()) {
       logger(dbg_checks, basic)
         << "Discarding passive host check result because passive checks "
         "are disabled for this host.";
