@@ -53,12 +53,13 @@ namespace           notifications {
     virtual           ~notifier();
     notifier&         operator=(notifier const& other);
     bool              are_notifications_enabled() const;
-    bool              is_in_downtime() const;
-    bool              is_state_notification_enabled(int state) const;
+    void              enable_state_notification(int state);
     int               get_current_notification_number() const;
+    notification_type get_current_notification_type() const;
     time_t            get_last_notification() const;
     time_t            get_next_notification() const;
-    void              enable_state_notification(int state);
+    bool              is_in_downtime() const;
+    bool              is_state_notification_enabled(int state) const;
     void              notify(notification_type type);
     void              set_last_notification(time_t last_notification);
     void              set_next_notification(time_t next_notification);

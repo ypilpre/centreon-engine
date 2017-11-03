@@ -75,14 +75,6 @@ notifier& notifier::operator=(notifier const& other) {
 notifier::~notifier() {
 }
 
-void notifier::notify(notification_type type) {
-  notifier_filter should_notify = _get_filter(type);
-  if ((this->*should_notify)()) {
-
-    time(&_last_notification);
-  }
-}
-
 /**
  * This method tells if notifications are enabled globally
  *
@@ -90,6 +82,16 @@ void notifier::notify(notification_type type) {
  */
 bool notifier::are_notifications_enabled() const {
   return config->enable_notifications();
+}
+
+void notifier::notify(notification_type type) {
+  if (are_notifications_enabled()) {
+    notifier_filter should_notify = _get_filter(type);
+    if ((this->*should_notify)()) {
+
+      time(&_last_notification);
+    }
+  }
 }
 
 /**
@@ -168,13 +170,22 @@ bool notifier::_problem_filter() {
   return true;
 }
 
+notifier::notification_type notifier::get_current_notification_type() const {
+  return _type;
+}
+
 /**
  * Filter method on recovery notifications
  *
  * @return a boolean
  */
 bool notifier::_recovery_filter() {
-  // FIXME: To be implemented
+
+  if (is_in_downtime()
+      || get_current_notification_type() != PROBLEM
+      || get_current_state() != 0)
+    return false;
+
   return true;
 }
 
