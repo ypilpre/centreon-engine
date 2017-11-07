@@ -163,16 +163,10 @@ void checker::reap() {
       if (SERVICE_CHECK == result.object_check_type) {
         try {
           // Check if the service exists.
-          umap<std::pair<std::string, std::string>, com::centreon::shared_ptr<::service> >::const_iterator
-            it(configuration::applier::state::instance().services_find(
-                 std::make_pair(
-                        result.host_name,
-                        result.service_description)));
-          if (it == configuration::applier::state::instance().services().end())
-            throw (engine_error() << "Could not find service '"
-                   << result.service_description << "' on host '"
-                   << result.host_name << "'");
-          service* svc(it->second.get());
+          service* svc(configuration::applier::state::instance().services_find(
+                         std::make_pair(
+                           result.host_name,
+                           result.service_description)).get());
 
           // Process the check result.
           logger(dbg_checks, more)

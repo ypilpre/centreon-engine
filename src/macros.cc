@@ -213,16 +213,15 @@ int grab_custom_macro_value_r(
       /* if first arg is blank, it means use the current host name */
       if (mac->host_ptr == NULL)
         return (ERROR);
-      {
-        umap<std::pair<std::string, std::string>, com::centreon::shared_ptr<::service> >::const_iterator
-          it(configuration::applier::state::instance().services_find(
-               std::make_pair(
+      try {
+        temp_service = configuration::applier::state::instance().services_find(
+          std::make_pair(
                  mac->host_ptr ? mac->host_ptr->get_host_name() : "",
-                 arg2)));
-        if (it != configuration::applier::state::instance().services().end())
-          temp_service = it->second.get();
-        else
-          temp_service = NULL;
+                 arg2)).get();
+      }
+      catch (not_found const& e) {
+        (void)e;
+        temp_service = NULL;
       }
       if (temp_service) {
         /* get the service macro value */

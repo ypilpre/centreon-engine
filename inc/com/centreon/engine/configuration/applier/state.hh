@@ -140,10 +140,8 @@ namespace           configuration {
                     services() const throw ();
       umap<std::pair<std::string, std::string>, shared_ptr<::service> >&
                     services() throw ();
-      umap<std::pair<std::string, std::string>, shared_ptr<::service> >::const_iterator
+      shared_ptr<::service>
                     services_find(configuration::service::key_type const& k) const;
-      umap<std::pair<std::string, std::string>, shared_ptr<::service> >::iterator
-                    services_find(configuration::service::key_type const& k);
       umultimap<std::pair<std::string, std::string>, shared_ptr<servicedependency_struct> > const&
                     servicedependencies() const throw ();
       umultimap<std::pair<std::string, std::string>, shared_ptr<servicedependency_struct> >&

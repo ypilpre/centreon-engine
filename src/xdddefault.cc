@@ -81,13 +81,16 @@ int xdddefault_validate_downtime_data() {
 
     /* delete downtimes with invalid service descriptions */
     if (temp_downtime->type == SERVICE_DOWNTIME) {
-      umap<std::pair<std::string, std::string>, com::centreon::shared_ptr<::service> >::const_iterator
-        it(configuration::applier::state::instance().services_find(
-             std::make_pair(
-                    temp_downtime->host_name,
-                    temp_downtime->service_description)));
-      if (it == configuration::applier::state::instance().services().end())
+      try {
+        configuration::applier::state::instance().services_find(
+          std::make_pair(
+                 temp_downtime->host_name,
+                 temp_downtime->service_description));
+      }
+      catch (not_found const& e) {
+        (void)e;
         save = false;
+      }
     }
 
     /* delete downtimes that have expired */

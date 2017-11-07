@@ -629,25 +629,16 @@ umap<std::pair<std::string, std::string>, shared_ptr<::service> >& applier::stat
 /**
  *  Find a service by its key.
  *
- *  @param[in] k Pair of host name / service description.
+ *  @param[in] k  Pair of host name / service description.
  *
- *  @return Iterator to the element if found, services().end()
- *          otherwise.
+ *  @return Pointer to element if found. Throw not_found if not found.
  */
-umap<std::pair<std::string, std::string>, shared_ptr<::service> >::const_iterator applier::state::services_find(configuration::service::key_type const& k) const {
-  return (_services.find(k));
-}
-
-/**
- *  Find a service by its key.
- *
- *  @param[in] k Pair of host name / service description.
- *
- *  @return Iterator to the element if found, services().end()
- *          otherwise.
- */
-umap<std::pair<std::string, std::string>, shared_ptr<::service> >::iterator applier::state::services_find(configuration::service::key_type const& k) {
-  return (_services.find(k));
+shared_ptr<::service> applier::state::services_find(configuration::service::key_type const& k) const {
+  umap<std::pair<std::string, std::string>, shared_ptr<::service> >::const_iterator
+    it(_services.find(k));
+  if (it == _services.end())
+    throw (not_found() << "Could not find service '" << k.second << "' on host '" << k.first << "'");
+  return (it->second);
 }
 
 /**
