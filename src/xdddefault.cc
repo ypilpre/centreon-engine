@@ -21,6 +21,7 @@
 #include "com/centreon/engine/common.hh"
 #include "com/centreon/engine/configuration/applier/state.hh"
 #include "com/centreon/engine/globals.hh"
+#include "com/centreon/engine/not_found.hh"
 #include "com/centreon/engine/objects/downtime.hh"
 #include "com/centreon/engine/xdddefault.hh"
 
@@ -69,12 +70,13 @@ int xdddefault_validate_downtime_data() {
     save = true;
 
     /* delete downtimes with invalid host names */
-    {
-      umap<std::string, com::centreon::shared_ptr<::host> >::const_iterator
-        it(configuration::applier::state::instance().hosts_find(
-             temp_downtime->host_name));
-      if (it == configuration::applier::state::instance().hosts().end())
-        save = false;
+    try {
+      configuration::applier::state::instance().hosts_find(
+        temp_downtime->host_name);
+    }
+    catch (not_found const& e) {
+      (void)e;
+      save = false;
     }
 
     /* delete downtimes with invalid service descriptions */

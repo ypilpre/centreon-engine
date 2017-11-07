@@ -193,13 +193,9 @@ void checker::reap() {
       // Host check result.
       else {
         try {
-          umap<std::string, com::centreon::shared_ptr<::host> >::const_iterator
-            it(configuration::applier::state::instance().hosts_find(
-                 result.host_name));
-          if (it == configuration::applier::state::instance().hosts().end())
-            throw (engine_error() << "Could not find host '"
-                   << result.host_name << "'");
-          host* hst(it->second.get());
+          host* hst(
+                  configuration::applier::state::instance().hosts_find(
+                    result.host_name).get());
 
           // Process the check result.
           logger(dbg_checks, more)

@@ -45,6 +45,7 @@
 #include "com/centreon/engine/globals.hh"
 #include "com/centreon/engine/logging.hh"
 #include "com/centreon/engine/logging/logger.hh"
+#include "com/centreon/engine/not_found.hh"
 #include "com/centreon/engine/objects/command.hh"
 #include "com/centreon/engine/objects/contactsmember.hh"
 #include "com/centreon/engine/objects/contactgroupsmember.hh"
@@ -384,23 +385,14 @@ umap<std::string, shared_ptr<::host> >& applier::state::hosts() throw () {
  *
  *  @param[in] k Host key (host name).
  *
- *  @return Iterator to the host object if found, hosts().end() if it
- *          was not.
+ *  @return Host pointer if found. Will throw not_found if not found.
  */
-umap<std::string, shared_ptr<::host> >::const_iterator applier::state::hosts_find(configuration::host::key_type const& k) const {
-  return (_hosts.find(k));
-}
-
-/**
- *  Find a host from its key.
- *
- *  @param[in] k Host key (host name).
- *
- *  @return Iterator to the host object if found, hosts().end() if it
- *          was not.
- */
-umap<std::string, shared_ptr<::host> >::iterator applier::state::hosts_find(configuration::host::key_type const& k) {
-  return (_hosts.find(k));
+shared_ptr<::host> applier::state::hosts_find(configuration::host::key_type const& k) const {
+  umap<std::string, shared_ptr<::host> >::const_iterator
+    it(_hosts.find(k));
+  if (it == _hosts.end())
+    throw (not_found_error() << "Could not find host '" << k << "'");
+  return (it->second);
 }
 
 /**

@@ -26,6 +26,7 @@
 #include "com/centreon/engine/globals.hh"
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/macros.hh"
+#include "com/centreon/engine/not_found.hh"
 #include "com/centreon/engine/objects/contactsmember.hh"
 #include "com/centreon/engine/objects/hostsmember.hh"
 #include "com/centreon/engine/objects/objectlist.hh"
@@ -131,11 +132,13 @@ int grab_custom_macro_value_r(
     if (arg2 == NULL) {
       /* find the host for on-demand macros */
       if (arg1) {
-        umap<std::string, com::centreon::shared_ptr<::host> >::const_iterator
-          it(configuration::applier::state::instance().hosts_find(arg1));
-        if (it == configuration::applier::state::instance().hosts().end())
+        try {
+          temp_host = configuration::applier::state::instance().hosts_find(arg1).get();
+        }
+        catch (not_found const& e) {
+          (void)e;
           return (ERROR);
-        temp_host = it->second.get();
+        }
       }
       /* else use saved host pointer */
       else if ((temp_host = mac->host_ptr) == NULL)
