@@ -665,6 +665,7 @@ set(
   "${SRC_DIR}/globals.cc"
   "${SRC_DIR}/host.cc"
   "${SRC_DIR}/macros.cc"
+  "${SRC_DIR}/monitorable.cc"
   "${SRC_DIR}/nebmods.cc"
   # "${SRC_DIR}/notifications.cc"
   "${SRC_DIR}/perfdata.cc"

@@ -39,6 +39,11 @@ class                monitorable : public notifications::notifier {
   virtual            ~monitorable();
   monitorable&       operator=(monitorable const& other);
   std::string const& get_host_name() const;
+
+ private:
+  void               _internal_copy(monitorable const& other);
+
+  std::string        _host_name;
 };
 
 CCE_END()
