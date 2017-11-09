@@ -74,26 +74,32 @@ namespace           notifications {
     void              notify(notification_type type);
     void              set_last_notification(time_t last_notification);
     void              set_next_notification(time_t next_notification);
+    bool              should_be_escalated() const;
 
    protected:
     time_t            _last_notification;
     time_t            _next_notification;
     long              _notification_interval;
     int               _current_notification_number;
+    int               _current_notification_id;
     notification_type _type;
 
    private:
-    static notifier_filter
-                      _filter[];
-
     notifier_filter   _get_filter(notification_type type) const;
     bool              _problem_filter();
     bool              _recovery_filter();
     long              _get_notification_interval() const;
 
+    static notifier_filter
+                      _filter[];
+    static std::string
+                      _notification_string[];
+
     int               _notified_states;
     std::list<shared_ptr<contacts::contact_generic> >
                       _contacts;
+    std::string       _author;
+    std::string       _comment;
   };
 }
 

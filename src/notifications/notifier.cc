@@ -17,16 +17,20 @@
 ** <http://www.gnu.org/licenses/>.
 */
 
+#include <memory>
+#include <sstream>
 #include "com/centreon/engine/contacts/contact_user.hh"
 #include "com/centreon/engine/globals.hh"
+#include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/notifications/notifier.hh"
 #include "com/centreon/shared_ptr.hh"
 
 using namespace com::centreon;
 using namespace com::centreon::engine;
 using namespace com::centreon::engine::checks;
-using namespace com::centreon::engine::notifications;
 using namespace com::centreon::engine::contacts;
+using namespace com::centreon::engine::logging;
+using namespace com::centreon::engine::notifications;
 
 
 /**************************************                                         
@@ -92,6 +96,16 @@ bool notifier::are_notifications_enabled() const {
   return config->enable_notifications();
 }
 
+/**
+ *  Tell if the current notification is escalated
+ *
+ *  @return a boolean 
+ */
+bool notifier::should_be_escalated() const {
+  // FIXME DBR: not implemented
+  return true;
+}
+
 void notifier::notify(notification_type type) {
   std::list<shared_ptr<contact_user> > users_to_notify = get_contact_users();
   if (users_to_notify.empty())
@@ -100,6 +114,9 @@ void notifier::notify(notification_type type) {
   if (are_notifications_enabled()) {
     notifier_filter should_notify = _get_filter(type);
     if ((this->*should_notify)()) {
+      nagios_macros mac;
+      std::ostringstream oss;
+      bool first_time = true;
 
       // Notify each contact
       for (
@@ -109,8 +126,82 @@ void notifier::notify(notification_type type) {
         it != end;
         ++it) {
 
+        logger(dbg_notifications, most)
+          << "** Notifying contact '" << (*it)->get_name() << "'";
 
+        if (first_time)
+          oss << (*it)->get_name();
+        else
+          oss << ',' << (*it)->get_name();
       }
+
+      memset(&mac, 0, sizeof(mac));
+
+      // grab the macro variables
+      // FIXME DBR: This code cannot work now. Could we improve macros ?
+//      grab_host_macros_r(&mac, get_host());
+//      if (!_is_host())
+//        grab_service_macros_r(&mac, get_service());
+
+      /* _author is a string representing someone. This string can represent
+         a name or an alias. And it does not inevitably represent a contact
+         user. */
+      // FIXME DBR: find_contact is no more compatible with the new contact user
+//      if (!_author.empty())
+//        std::auto_ptr<contact_user> temp_contact(find_contact(_author));
+
+      string::setstr(mac.x[MACRO_NOTIFICATIONAUTHOR], _author);
+      string::setstr(mac.x[MACRO_NOTIFICATIONCOMMENT], _comment);
+      // FIXME DBR: temp_contact is not defined, see previous lines...
+//      if (temp_contact) {
+//        string::setstr(mac.x[MACRO_NOTIFICATIONAUTHORNAME], temp_contact->get_name());
+//        string::setstr(mac.x[MACRO_NOTIFICATIONAUTHORALIAS], temp_contact->get_alias());
+//      }
+//      else {
+//        string::setstr(mac.x[MACRO_NOTIFICATIONAUTHORNAME]);
+//        string::setstr(mac.x[MACRO_NOTIFICATIONAUTHORALIAS]);
+//      }
+
+      /* Old Nagios comment: these macros are deprecated and will likely
+         disappear in next major release. if this is an acknowledgement,
+         get author and comment macros: FIXME: Is it useful for us ??? */
+      if (_type == ACKNOWLEDGEMENT) {
+        string::setstr(mac.x[MACRO_SERVICEACKAUTHOR], _author);
+        string::setstr(mac.x[MACRO_SERVICEACKCOMMENT], _comment);
+        // FIXME DBR: Same as previous comment
+//        if (temp_contact) {
+//          string::setstr(mac.x[MACRO_SERVICEACKAUTHORNAME], temp_contact->get_name());
+//          string::setstr(mac.x[MACRO_SERVICEACKAUTHORALIAS], temp_contact->get_alias());
+//        }
+//        else {
+//          string::setstr(mac.x[MACRO_SERVICEACKAUTHORNAME]);
+//          string::setstr(mac.x[MACRO_SERVICEACKAUTHORALIAS]);
+//        }
+      }
+
+      // Set the notification type macro
+      string::setstr(
+                mac.x[MACRO_NOTIFICATIONTYPE],
+                _notification_string[_type]);
+
+      // Set the notification number
+      string::setstr(
+                mac.x[MACRO_SERVICENOTIFICATIONNUMBER],
+                _current_notification_number);
+
+      /* set the notification id macro */
+      // FIXME DBR: _current_notification_id is not managed now, the only
+      // possible value is 0.
+      string::setstr(
+                mac.x[MACRO_SERVICENOTIFICATIONID],
+                _current_notification_id);
+
+      string::setstr(
+                mac.x[MACRO_NOTIFICATIONISESCALATED],
+                should_be_escalated());
+      string::setstr(
+                mac.x[MACRO_NOTIFICATIONRECIPIENTS],
+                oss.str());
 
       time(&_last_notification);
     }
@@ -182,6 +273,19 @@ notifier::notifier_filter notifier::_filter[] = {
   0,
   &notifier::_problem_filter,
   &notifier::_recovery_filter
+};
+
+std::string notifier::_notification_string[] = {
+  "NONE",
+  "PROBLEM",
+  "RECOVERY",
+  "ACKNOWLEDGEMENT",
+  "FLAPPINGSTART",
+  "FLAPPINGSTOP",
+  "FLAPPINGDISABLED",
+  "DOWNTIMESTART",
+  "DOWNTIMESTOP",
+  "DOWNTIMECANCELLED"
 };
 
 /**************************************
