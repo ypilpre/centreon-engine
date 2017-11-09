@@ -31,7 +31,7 @@ set(
   "${SRC_DIR}/clear_hostgroup.cc"
   "${SRC_DIR}/clear_service.cc"
   "${SRC_DIR}/clear_servicegroup.cc"
-  # "${SRC_DIR}/grab_host.cc"
+  "${SRC_DIR}/grab_host.cc"
   # "${SRC_DIR}/grab_service.cc"
   "${SRC_DIR}/grab_value.cc"
   "${SRC_DIR}/misc.cc"
