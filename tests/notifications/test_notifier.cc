@@ -1,5 +1,8 @@
 #include "test_notifier.hh"
 
+test_notifier::test_notifier()
+  : __is_host(false) {}
+
 void test_notifier::set_in_downtime(bool downtime) {
   _in_downtime = true;
 }
@@ -18,4 +21,12 @@ void test_notifier::set_notification_interval(long interval) {
 
 void test_notifier::set_current_notification_number(int number) {
   _current_notification_number = number;
+}
+
+bool test_notifier::_is_host() const {
+  return __is_host;
+}
+
+void test_notifier::set_is_host(bool is_host) {
+  __is_host = is_host;
 }

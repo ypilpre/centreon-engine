@@ -46,6 +46,8 @@ namespace           checks {
     void            set_last_state(int state);
 
    protected:
+    virtual bool    _is_host() const = 0;
+
     bool            _in_downtime;
     bool            _is_flapping;
     int             _current_state;
