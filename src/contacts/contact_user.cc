@@ -64,7 +64,7 @@ contact_user::~contact_user() {
  *
  *  @return std::list<individual_contact*>
  */
-//void contact_user::fill_contact_users(
-//                     std::list<shared_ptr<contact_user> >& list) {
-//  list.push_back(shared_ptr<contact_user>(new contact_user(*this)));
-//}
+void contact_user::fill_contact_users(
+                     std::list<shared_ptr<contact_user> >& lst) {
+  lst.push_back(shared_ptr<contact_user>(new contact_user(*this)));
+}

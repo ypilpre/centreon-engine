@@ -17,9 +17,12 @@
 ** <http://www.gnu.org/licenses/>.
 */
 
+#include "com/centreon/engine/contacts/contact_user.hh"
 #include "com/centreon/engine/globals.hh"
 #include "com/centreon/engine/notifications/notifier.hh"
+#include "com/centreon/shared_ptr.hh"
 
+using namespace com::centreon;
 using namespace com::centreon::engine;
 using namespace com::centreon::engine::checks;
 using namespace com::centreon::engine::notifications;
@@ -90,6 +93,10 @@ bool notifier::are_notifications_enabled() const {
 }
 
 void notifier::notify(notification_type type) {
+  std::list<shared_ptr<contact_user> > contact_users = get_contact_users();
+  if (contact_users.empty())
+    return ;
+
   if (are_notifications_enabled()) {
     notifier_filter should_notify = _get_filter(type);
     if ((this->*should_notify)()) {
@@ -97,6 +104,19 @@ void notifier::notify(notification_type type) {
       time(&_last_notification);
     }
   }
+}
+
+std::list<shared_ptr<contact_user> > notifier::get_contact_users() {
+  std::list<shared_ptr<contact_user> > retval;
+  for (
+    std::list<shared_ptr<contact_generic> >::iterator it(_contacts.begin()),
+                                                      end(_contacts.end());
+    it != end;
+    ++it) {
+
+    (*it)->fill_contact_users(retval);
+  }
+  return retval;
 }
 
 /**

@@ -20,15 +20,16 @@
 #ifndef CCE_CONTACTS_CONTACT_GENERIC_HH
 #  define CCE_CONTACTS_CONTACT_GENERIC_HH
 
-//#  include <list>
-//#  include "com/centreon/shared_ptr.hh"
+#  include <list>
+#  include "com/centreon/engine/namespace.hh"
+#  include "com/centreon/shared_ptr.hh"
 
 CCE_BEGIN()
-
 namespace           contacts {
 
   // Forward declaration
-  class               contact_user;
+  class             contact_user;
+  class             contact_group;
 
   /**
    *  @class contact_generic contact_generic.hh "com/centreon/engine/notifications/contact_generic.hh"
@@ -36,16 +37,13 @@ namespace           contacts {
    *
    */
   class               contact_generic {
-    friend class      contact_user;
-    friend class      contact_group;
-
     public:
                       contact_generic();
                       contact_generic(contact_generic const& other);
     contact_generic&          operator=(contact_generic const& other);
      virtual          ~contact_generic();
-//     virtual void     fill_contact_users(
-//                        std::list<shared_ptr<contact_user> >& lst) = 0;
+     virtual void     fill_contact_users(
+                        std::list<shared_ptr<contact_user> >& lst) = 0;
   };
 }
 

@@ -58,14 +58,14 @@ contact_group& contact_group::operator=(contact_group const& other) {
 contact_group::~contact_group() {
 }
 
-//void contact_group::fill_contact_users(
-//                      std::list<shared_ptr<contact_user> >& lst) {
-//
-//  for (
-//    std::list<shared_ptr<contact_generic> >::iterator it(_contacts.begin()),
-//                                                      end(_contacts.end());
-//    it != end;
-//    ++it) {
-//    (*it)->fill_contact_users(lst);
-//  }
-//}
+void contact_group::fill_contact_users(
+                      std::list<shared_ptr<contact_user> >& lst) {
+
+  for (
+    std::list<shared_ptr<contact_generic> >::iterator it(_contacts.begin()),
+                                                      end(_contacts.end());
+    it != end;
+    ++it) {
+    (*it)->fill_contact_users(lst);
+  }
+}

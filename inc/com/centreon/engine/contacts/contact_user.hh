@@ -36,8 +36,8 @@ namespace           contacts {
                       contact_user(contact_user const& other);
      contact_user&    operator=(contact_user const& other);
      virtual          ~contact_user();
-//     void             fill_contact_users(
-//                        std::list<shared_ptr<contact_user> >& lst);
+     void             fill_contact_users(
+                        std::list<shared_ptr<contact_user> >& lst);
   };
 }
 

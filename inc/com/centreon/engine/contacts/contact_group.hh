@@ -38,12 +38,12 @@ namespace             contacts {
                       contact_group(contact_group const& other);
     contact_group&    operator=(contact_group const& other);
      virtual          ~contact_group();
-//     void             fill_contact_users(
-//                        std::list<shared_ptr<contact_user> >& lst);
+     void             fill_contact_users(
+                        std::list<shared_ptr<contact_user> >& lst);
 
     private:
-//     std::list<shared_ptr<contact_generic> >
-//                      _contacts;
+     std::list<shared_ptr<contact_generic> >
+                      _contacts;
   };
 }
 

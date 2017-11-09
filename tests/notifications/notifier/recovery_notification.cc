@@ -22,10 +22,14 @@
 #include "../../timeperiod/utils.hh"
 #include "../test_notifier.hh"
 #include "com/centreon/engine/configuration/state.hh"
+#include "com/centreon/engine/contacts/contact_user.hh"
 #include "com/centreon/engine/notifications/notifier.hh"
+#include "com/centreon/shared_ptr.hh"
 
+using namespace com::centreon;
 using namespace com::centreon::engine;
 using namespace com::centreon::engine::notifications;
+using namespace com::centreon::engine::contacts;
 
 extern configuration::state* config;
 
@@ -36,6 +40,7 @@ class RecoveryNotification : public ::testing::Test {
     _notifier.reset(new test_notifier());
     if (config == NULL)
       config = new configuration::state;
+    _notifier->add_contact(shared_ptr<contact_user>(new contact_user));
   }
 
  protected:
