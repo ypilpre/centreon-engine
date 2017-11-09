@@ -23,6 +23,7 @@
 using namespace com::centreon::engine;
 using namespace com::centreon::engine::checks;
 using namespace com::centreon::engine::notifications;
+using namespace com::centreon::engine::contacts;
 
 
 /**************************************                                         
@@ -73,6 +74,10 @@ notifier& notifier::operator=(notifier const& other) {
  * Destructor.
  */
 notifier::~notifier() {
+}
+
+void notifier::add_contact(shared_ptr<contact_generic> user) {
+  _contacts.push_back(user);
 }
 
 /**

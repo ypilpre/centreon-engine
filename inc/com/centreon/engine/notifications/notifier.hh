@@ -21,9 +21,15 @@
 #  define CCE_NOTIFICATIONS_NOTIFIER_HH
 
 #  include <ctime>
+#  include <list>
 #  include "com/centreon/engine/checks/checkable.hh"
+#  include "com/centreon/shared_ptr.hh"
 
 CCE_BEGIN()
+
+namespace           contacts {
+  class contact_generic;
+}
 
 namespace           notifications {
 
@@ -52,6 +58,7 @@ namespace           notifications {
                       notifier(notifier const& other);
     virtual           ~notifier();
     notifier&         operator=(notifier const& other);
+    void              add_contact(shared_ptr<contacts::contact_generic> user);
     bool              are_notifications_enabled() const;
     void              enable_state_notification(int state);
     int               get_current_notification_number() const;
@@ -64,6 +71,13 @@ namespace           notifications {
     void              set_last_notification(time_t last_notification);
     void              set_next_notification(time_t next_notification);
 
+   protected:
+    time_t            _last_notification;
+    time_t            _next_notification;
+    long              _notification_interval;
+    int               _current_notification_number;
+    notification_type _type;
+
    private:
     static notifier_filter
                       _filter[];
@@ -74,13 +88,8 @@ namespace           notifications {
     long              _get_notification_interval() const;
 
     int               _notified_states;
-
-   protected:
-    time_t            _last_notification;
-    time_t            _next_notification;
-    long              _notification_interval;
-    int               _current_notification_number;
-    notification_type _type;
+    std::list<shared_ptr<contacts::contact_generic> >
+                      _contacts;
   };
 }
 
