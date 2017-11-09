@@ -100,8 +100,6 @@ extern time_t                    event_start;
 
 extern int                       embedded_perl_initialized;
 
-extern host_set                  host_list;
-extern service_set               service_list;
 extern contact*                  contact_list;
 extern contact*                  contact_list_tail;
 extern std::map<std::string, contact_other_properties> contact_other_props;

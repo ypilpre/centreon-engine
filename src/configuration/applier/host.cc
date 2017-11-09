@@ -85,6 +85,7 @@ void applier::host::add_object(
   config->hosts().insert(obj);
 
   // Create host.
+  shared_ptr<host> h(new host(obj));
   host_struct*
     h(add_host(
         obj.host_name().c_str(),

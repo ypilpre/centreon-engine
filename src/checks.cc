@@ -1532,12 +1532,12 @@ void check_for_orphaned_services() {
   time(&current_time);
 
   /* check all services... */
-  for (service_set::const_iterator
-         it(service_list.begin()),
-         end(service_list.end());
+  for (umap<std::pair<std::string, std::string>, com::centreon::shared_ptr<service> >::const_iterator
+         it(configuration::applier::state::instance().services().begin()),
+         end(configuration::applier::state::instance().services().end());
        it != end;
        ++it) {
-    temp_service = *it;
+    temp_service = it->second.get();
 
     /* skip services that are not currently executing */
     if (!temp_service->get_executing())
@@ -1602,12 +1602,12 @@ void check_service_result_freshness() {
   time(&current_time);
 
   /* check all services... */
-  for (service_set::const_iterator
-         it(service_list.begin()),
-         end(service_list.end());
+  for (umap<std::pair<std::string, std::string>, com::centreon::shared_ptr<service> >::const_iterator
+         it(configuration::applier::state::instance().services().begin()),
+         end(configuration::applier::state::instance().services().end());
        it != end;
        ++it) {
-    temp_service = *it;
+    temp_service = it->second.get();
 
     /* skip services we shouldn't be checking for freshness */
     if (!temp_service->get_freshness_checks_enabled())
@@ -2023,12 +2023,12 @@ void check_for_orphaned_hosts() {
   time(&current_time);
 
   /* check all hosts... */
-  for (host_set::const_iterator
-         it(host_list.begin()),
-         end(host_list.end());
+  for (umap<std::string, com::centreon::shared_ptr<host> >::const_iterator
+         it(configuration::applier::state::instance().hosts().begin()),
+         end(configuration::applier::state::instance().hosts().end());
        it != end;
        ++it) {
-    temp_host = *it;
+    temp_host = it->second.get();
 
     /* skip hosts that don't have a set check interval (on-demand checks are missed by the orphan logic) */
     if (temp_host->get_next_check() == (time_t)0L)
@@ -2095,12 +2095,12 @@ void check_host_result_freshness() {
   time(&current_time);
 
   /* check all hosts... */
-  for (host_set::const_iterator
-         it(host_list.begin()),
-         end(host_list.end());
+  for (umap<std::string, com::centreon::shared_ptr<host> >::const_iterator
+         it(configuration::applier::state::instance().hosts().begin()),
+         end(configuration::applier::state::instance().hosts().end());
        it != end;
        ++it) {
-    temp_host = *it;
+    temp_host = it->second.get();
 
     /* skip hosts we shouldn't be checking for freshness */
     if (!temp_host->get_freshness_checks_enabled())
