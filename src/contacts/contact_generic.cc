@@ -18,6 +18,7 @@
 */
 
 #include <list>
+#include <typeinfo>
 #include "com/centreon/engine/globals.hh"
 #include "com/centreon/engine/contacts/contact_generic.hh"
 
@@ -57,4 +58,11 @@ contact_generic& contact_generic::operator=(contact_generic const& other) {
  * Destructor.
  */
 contact_generic::~contact_generic() {
+}
+
+bool contact_generic::operator<(contact_generic const& other) const {
+  if (typeid(*this) != typeid(other))
+    return (typeid(*this).before(typeid(other)));
+  else
+    return _lt(other);
 }

@@ -69,3 +69,10 @@ void contact_group::fill_contact_users(
     (*it)->fill_contact_users(lst);
   }
 }
+
+bool contact_group::_lt(contact_generic const& other) const {
+//  contact_user& other_group(static_cast<contact_group>(other));
+
+  // FIXME DBR: to complete
+  return false;
+}

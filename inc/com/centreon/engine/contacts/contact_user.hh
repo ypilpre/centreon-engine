@@ -38,6 +38,8 @@ namespace           contacts {
      virtual          ~contact_user();
      void             fill_contact_users(
                         std::list<shared_ptr<contact_user> >& lst);
+    private:
+     bool             _lt(contact_generic const& other) const;
   };
 }
 

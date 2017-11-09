@@ -42,6 +42,8 @@ namespace             contacts {
                         std::list<shared_ptr<contact_user> >& lst);
 
     private:
+     bool             _lt(contact_generic const& other) const = 0;
+
      std::list<shared_ptr<contact_generic> >
                       _contacts;
   };

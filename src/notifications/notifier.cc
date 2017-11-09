@@ -93,19 +93,41 @@ bool notifier::are_notifications_enabled() const {
 }
 
 void notifier::notify(notification_type type) {
-  std::list<shared_ptr<contact_user> > contact_users = get_contact_users();
-  if (contact_users.empty())
+  std::list<shared_ptr<contact_user> > users_to_notify = get_contact_users();
+  if (users_to_notify.empty())
     return ;
 
   if (are_notifications_enabled()) {
     notifier_filter should_notify = _get_filter(type);
     if ((this->*should_notify)()) {
 
+      // Notify each contact
+      for (
+        std::list<shared_ptr<contact_user> >::iterator
+                                                it(users_to_notify.begin()),
+                                                end(users_to_notify.end());
+        it != end;
+        ++it) {
+
+
+      }
+
       time(&_last_notification);
     }
   }
 }
 
+static bool _compare_shared_ptr(
+    shared_ptr<contact_generic> const& a,
+    shared_ptr<contact_generic> const& b) {
+  return (*a < *b);
+}
+
+/**
+ *  get the users to notify. Duplications are removed from the list.
+ *
+ *  @return A list of contact_user pointers.
+ */
 std::list<shared_ptr<contact_user> > notifier::get_contact_users() {
   std::list<shared_ptr<contact_user> > retval;
   for (
@@ -116,6 +138,8 @@ std::list<shared_ptr<contact_user> > notifier::get_contact_users() {
 
     (*it)->fill_contact_users(retval);
   }
+  retval.sort(_compare_shared_ptr);
+  retval.unique();
   return retval;
 }
 
@@ -134,7 +158,6 @@ bool notifier::is_state_notification_enabled(int state) const {
  * @return a boolean
  */
 bool notifier::is_in_downtime() const {
-  // FIXME: must be implemented
   return _in_downtime;
 }
 

@@ -25,11 +25,11 @@
 #  include "com/centreon/shared_ptr.hh"
 
 CCE_BEGIN()
-namespace           contacts {
+namespace             contacts {
 
   // Forward declaration
-  class             contact_user;
-  class             contact_group;
+  class               contact_user;
+  class               contact_group;
 
   /**
    *  @class contact_generic contact_generic.hh "com/centreon/engine/notifications/contact_generic.hh"
@@ -37,13 +37,16 @@ namespace           contacts {
    *
    */
   class               contact_generic {
-    public:
+   public:
                       contact_generic();
                       contact_generic(contact_generic const& other);
-    contact_generic&          operator=(contact_generic const& other);
-     virtual          ~contact_generic();
-     virtual void     fill_contact_users(
+    contact_generic&  operator=(contact_generic const& other);
+    bool              operator<(contact_generic const& other) const;
+    virtual           ~contact_generic();
+    virtual void      fill_contact_users(
                         std::list<shared_ptr<contact_user> >& lst) = 0;
+   private:
+    virtual bool      _lt(contact_generic const& other) const = 0;
   };
 }
 

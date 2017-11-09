@@ -68,3 +68,10 @@ void contact_user::fill_contact_users(
                      std::list<shared_ptr<contact_user> >& lst) {
   lst.push_back(shared_ptr<contact_user>(new contact_user(*this)));
 }
+
+bool contact_user::_lt(contact_generic const& other) const {
+  contact_user const& other_user = static_cast<contact_user const&>(other);
+
+  // FIXME DBR: to complete
+  return false;
+}
