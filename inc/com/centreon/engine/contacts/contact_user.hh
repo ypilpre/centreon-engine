@@ -20,6 +20,7 @@
 #ifndef CCE_CONTACTS_CONTACT_INDIVIDUAL_HH
 #  define CCE_CONTACTS_CONTACT_INDIVIDUAL_HH
 
+#  include <string>
 #  include "com/centreon/engine/contacts/contact_generic.hh"
 
 CCE_BEGIN()
@@ -33,13 +34,19 @@ namespace           contacts {
   class               contact_user : public contact_generic {
     public:
                       contact_user();
+                      contact_user(std::string const& name);
                       contact_user(contact_user const& other);
      contact_user&    operator=(contact_user const& other);
      virtual          ~contact_user();
      void             fill_contact_users(
                         std::list<shared_ptr<contact_user> >& lst);
+     std::string const&
+                      get_name() const;
+
     private:
      bool             _lt(contact_generic const& other) const;
+
+     std::string      _name;
   };
 }
 

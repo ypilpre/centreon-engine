@@ -36,11 +36,18 @@ using namespace com::centreon::engine::contacts;
 contact_user::contact_user() {}
 
 /**
+ * Constructor.
+ */
+contact_user::contact_user(std::string const& name)
+  : _name(name) {}
+
+/**
  * Copy constructor.
  *
  * @param[in] other Object to copy.
  */
-contact_user::contact_user(contact_user const& other) {}
+contact_user::contact_user(contact_user const& other)
+  : _name(other._name) {}
 
 /**
  * Assignment operator.
@@ -50,6 +57,7 @@ contact_user::contact_user(contact_user const& other) {}
  * @return This object
  */
 contact_user& contact_user::operator=(contact_user const& other) {
+  _name = other._name;
   return (*this);
 }
 
@@ -69,9 +77,17 @@ void contact_user::fill_contact_users(
   lst.push_back(shared_ptr<contact_user>(new contact_user(*this)));
 }
 
+/**
+ *  Returns the contact name as a reference.
+ *
+ *  @return a string reference.
+ */
+std::string const& contact_user::get_name() const {
+  return _name;
+}
+
 bool contact_user::_lt(contact_generic const& other) const {
   contact_user const& other_user = static_cast<contact_user const&>(other);
 
-  // FIXME DBR: to complete
-  return false;
+  return (_name < other_user._name);
 }
