@@ -87,6 +87,26 @@ TEST_F(SimpleNotification, ProblemWithUnnotifiedState) {
 
 // Given a notifier with state 1.
 // When notification is enabled on state 1
+// And no contact user for notification are configured
+// And the notify method is called with PROBLEM type for state 1
+// Then no notification is sent.
+TEST_F(SimpleNotification, NoContactUser) {
+  // When
+  _notifier->set_current_state(1);
+  time_t last_notification = _notifier->get_last_notification();
+  time_t now = last_notification + 20;
+  set_time(now);
+  // And
+  _notifier->clear_contacts();
+  // And
+  _notifier->enable_state_notification(1);
+  _notifier->notify(notifier::PROBLEM);
+  // Then
+  ASSERT_EQ(last_notification, _notifier->get_last_notification());
+}
+
+// Given a notifier with state 1.
+// When notification is enabled on state 1
 // And the notify method is called with PROBLEM type for state 1
 // Then a notification is sent.
 TEST_F(SimpleNotification, SimpleNotification) {

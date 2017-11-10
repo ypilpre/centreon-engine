@@ -61,6 +61,7 @@ namespace           notifications {
     notifier&         operator=(notifier const& other);
     void              add_contact(shared_ptr<contacts::contact_generic> user);
     bool              are_notifications_enabled() const;
+    void              clear_contacts();
     void              enable_state_notification(int state);
     std::list<shared_ptr<contacts::contact_user> >
                       get_contact_users();
@@ -71,7 +72,11 @@ namespace           notifications {
     time_t            get_next_notification() const;
     bool              is_in_downtime() const;
     bool              is_state_notification_enabled(int state) const;
-    void              notify(notification_type type);
+    void              notify(
+                        notification_type type,
+                        std::string const& author,
+                        std::string const& comment);
+
     void              set_last_notification(time_t last_notification);
     void              set_next_notification(time_t next_notification);
     bool              should_be_escalated() const;
@@ -98,8 +103,6 @@ namespace           notifications {
     int               _notified_states;
     std::list<shared_ptr<contacts::contact_generic> >
                       _contacts;
-    std::string       _author;
-    std::string       _comment;
   };
 }
 

@@ -88,6 +88,13 @@ void notifier::add_contact(shared_ptr<contact_generic> user) {
 }
 
 /**
+ *  Clear the contacts list
+ */
+void notifier::clear_contacts() {
+  _contacts.clear();
+}
+
+/**
  * This method tells if notifications are enabled globally
  *
  * @return a boolean
@@ -106,7 +113,10 @@ bool notifier::should_be_escalated() const {
   return true;
 }
 
-void notifier::notify(notification_type type) {
+void notifier::notify(
+    notification_type type,
+    std::string const& author,
+    std::string const& comment) {
   std::list<shared_ptr<contact_user> > users_to_notify = get_contact_users();
   if (users_to_notify.empty())
     return ;
