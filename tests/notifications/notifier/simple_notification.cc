@@ -22,14 +22,14 @@
 #include "../../timeperiod/utils.hh"
 #include "../test_notifier.hh"
 #include "com/centreon/engine/configuration/state.hh"
-#include "com/centreon/engine/contacts/contact_user.hh"
+#include "com/centreon/engine/configuration/contact.hh"
 #include "com/centreon/engine/notifications/notifier.hh"
 #include "com/centreon/shared_ptr.hh"
 
 using namespace com::centreon;
 using namespace com::centreon::engine;
 using namespace com::centreon::engine::notifications;
-using namespace com::centreon::engine::contacts;
+using namespace com::centreon::engine::configuration;
 
 extern configuration::state* config;
 
@@ -41,7 +41,7 @@ class SimpleNotification : public ::testing::Test {
     if (config == NULL) {
       config = new configuration::state;
     }
-    shared_ptr<contact_user> user(new contact_user);
+    shared_ptr<configuration::contact> user(new configuration::contact);
     _notifier->add_contact(user);
   }
 
@@ -57,7 +57,7 @@ TEST_F(SimpleNotification, ProblemWithDowntime) {
   _notifier->set_in_downtime(true);
   long last_notification = _notifier->get_last_notification();
   // When
-  _notifier->notify(notifier::PROBLEM);
+  _notifier->notify(notifier::PROBLEM, "admin", "Test comment");
   ASSERT_EQ(last_notification, _notifier->get_last_notification());
 }
 
@@ -69,7 +69,7 @@ TEST_F(SimpleNotification, ProblemDuringFlapping) {
   _notifier->set_is_flapping(true);
   long last_notification = _notifier->get_last_notification();
   // When
-  _notifier->notify(notifier::PROBLEM);
+  _notifier->notify(notifier::PROBLEM, "admin", "Test comment");
   ASSERT_EQ(last_notification, _notifier->get_last_notification());
 }
 
@@ -81,7 +81,7 @@ TEST_F(SimpleNotification, ProblemWithUnnotifiedState) {
   _notifier->set_current_state(1);
   long last_notification = _notifier->get_last_notification();
   // When
-  _notifier->notify(notifier::PROBLEM);
+  _notifier->notify(notifier::PROBLEM, "admin", "Test comment");
   ASSERT_EQ(last_notification, _notifier->get_last_notification());
 }
 
@@ -100,7 +100,7 @@ TEST_F(SimpleNotification, NoContactUser) {
   _notifier->clear_contacts();
   // And
   _notifier->enable_state_notification(1);
-  _notifier->notify(notifier::PROBLEM);
+  _notifier->notify(notifier::PROBLEM, "admin", "Test comment");
   // Then
   ASSERT_EQ(last_notification, _notifier->get_last_notification());
 }
@@ -117,7 +117,7 @@ TEST_F(SimpleNotification, SimpleNotification) {
   time_t now = last_notification + 20;
   set_time(now);
   _notifier->enable_state_notification(1);
-  _notifier->notify(notifier::PROBLEM);
+  _notifier->notify(notifier::PROBLEM, "admin", "Test comment");
   ASSERT_TRUE(_notifier->get_last_notification() >= now);
 }
 
@@ -138,6 +138,6 @@ TEST_F(SimpleNotification, TooEarlyNewNotification) {
   set_time(now);
   // When
   _notifier->set_current_state(1);
-  _notifier->notify(notifier::PROBLEM);
+  _notifier->notify(notifier::PROBLEM, "admin", "Test comment");
   ASSERT_TRUE(_notifier->get_last_notification() < now);
 }

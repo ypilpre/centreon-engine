@@ -19,7 +19,7 @@
 
 #include <memory>
 #include <sstream>
-#include "com/centreon/engine/contacts/contact_user.hh"
+#include "com/centreon/engine/configuration/contact.hh"
 #include "com/centreon/engine/globals.hh"
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/notifications/notifier.hh"
@@ -28,7 +28,7 @@
 using namespace com::centreon;
 using namespace com::centreon::engine;
 using namespace com::centreon::engine::checks;
-using namespace com::centreon::engine::contacts;
+using namespace com::centreon::engine::configuration;
 using namespace com::centreon::engine::logging;
 using namespace com::centreon::engine::notifications;
 
@@ -83,7 +83,7 @@ notifier& notifier::operator=(notifier const& other) {
 notifier::~notifier() {
 }
 
-void notifier::add_contact(shared_ptr<contact_generic> user) {
+void notifier::add_contact(shared_ptr<configuration::contact> user) {
   _contacts.push_back(user);
 }
 
@@ -109,15 +109,19 @@ bool notifier::are_notifications_enabled() const {
  *  @return a boolean 
  */
 bool notifier::should_be_escalated() const {
+
+  logger(dbg_functions, basic)
+    << "notifier: should_be_escalated()";
+
   // FIXME DBR: not implemented
-  return true;
+  return false;
 }
 
 void notifier::notify(
     notification_type type,
     std::string const& author,
     std::string const& comment) {
-  std::list<shared_ptr<contact_user> > users_to_notify = get_contact_users();
+  std::list<shared_ptr<configuration::contact> > users_to_notify = get_contacts_list();
   if (users_to_notify.empty())
     return ;
 
@@ -130,19 +134,19 @@ void notifier::notify(
 
       // Notify each contact
       for (
-        std::list<shared_ptr<contact_user> >::iterator
+        std::list<shared_ptr<configuration::contact> >::iterator
                                                 it(users_to_notify.begin()),
                                                 end(users_to_notify.end());
         it != end;
         ++it) {
 
         logger(dbg_notifications, most)
-          << "** Notifying contact '" << (*it)->get_name() << "'";
+          << "** Notifying contact '" << (*it)->contact_name() << "'";
 
         if (first_time)
-          oss << (*it)->get_name();
+          oss << (*it)->contact_name();
         else
-          oss << ',' << (*it)->get_name();
+          oss << ',' << (*it)->contact_name();
       }
 
       memset(&mac, 0, sizeof(mac));
@@ -153,15 +157,20 @@ void notifier::notify(
 //      if (!_is_host())
 //        grab_service_macros_r(&mac, get_service());
 
-      /* _author is a string representing someone. This string can represent
-         a name or an alias. And it does not inevitably represent a contact
-         user. */
-      // FIXME DBR: find_contact is no more compatible with the new contact user
-//      if (!_author.empty())
-//        std::auto_ptr<contact_user> temp_contact(find_contact(_author));
+      /* The author is a string taken from an external command. It can be
+         the contact name or the contact alias. And if the external command
+         is badly configured, maybe no contact is associated to this author */
+      configuration::contact const* author_contact;
+      if (!author.empty()) {
+        set_contact::const_iterator it = config->contacts_find(author);
+        if (it != config->contacts().end())
+          author_contact = &(*it);
+        else
+          author_contact = NULL;
+      }
 
-      string::setstr(mac.x[MACRO_NOTIFICATIONAUTHOR], _author);
-      string::setstr(mac.x[MACRO_NOTIFICATIONCOMMENT], _comment);
+      string::setstr(mac.x[MACRO_NOTIFICATIONAUTHOR], author);
+      string::setstr(mac.x[MACRO_NOTIFICATIONCOMMENT], comment);
       // FIXME DBR: temp_contact is not defined, see previous lines...
 //      if (temp_contact) {
 //        string::setstr(mac.x[MACRO_NOTIFICATIONAUTHORNAME], temp_contact->get_name());
@@ -176,8 +185,8 @@ void notifier::notify(
          disappear in next major release. if this is an acknowledgement,
          get author and comment macros: FIXME: Is it useful for us ??? */
       if (_type == ACKNOWLEDGEMENT) {
-        string::setstr(mac.x[MACRO_SERVICEACKAUTHOR], _author);
-        string::setstr(mac.x[MACRO_SERVICEACKCOMMENT], _comment);
+        string::setstr(mac.x[MACRO_SERVICEACKAUTHOR], author);
+        string::setstr(mac.x[MACRO_SERVICEACKCOMMENT], comment);
         // FIXME DBR: Same as previous comment
 //        if (temp_contact) {
 //          string::setstr(mac.x[MACRO_SERVICEACKAUTHORNAME], temp_contact->get_name());
@@ -219,26 +228,32 @@ void notifier::notify(
 }
 
 static bool _compare_shared_ptr(
-    shared_ptr<contact_generic> const& a,
-    shared_ptr<contact_generic> const& b) {
+    shared_ptr<configuration::contact> const& a,
+    shared_ptr<configuration::contact> const& b) {
   return (*a < *b);
 }
 
 /**
- *  get the users to notify. Duplications are removed from the list.
+ *  get the users to notify in a string form each one separated by a comma.
  *
- *  @return A list of contact_user pointers.
+ *  @return A string.
  */
-std::list<shared_ptr<contact_user> > notifier::get_contact_users() {
-  std::list<shared_ptr<contact_user> > retval;
+std::list<shared_ptr<configuration::contact> > notifier::get_contacts_list() {
+
+  /* See if this notification should be escalated */
+  _escalate_notification = should_be_escalated();
+
+  std::list<shared_ptr<configuration::contact> > retval;
+
   for (
-    std::list<shared_ptr<contact_generic> >::iterator it(_contacts.begin()),
-                                                      end(_contacts.end());
+    std::list<shared_ptr<configuration::contact> >::iterator
+                                                    it(_contacts.begin()),
+                                                    end(_contacts.end());
     it != end;
     ++it) {
-
-    (*it)->fill_contact_users(retval);
+    retval.push_back(*it);
   }
+
   retval.sort(_compare_shared_ptr);
   retval.unique();
   return retval;
@@ -1544,6 +1559,7 @@ int is_valid_escalation_for_service_notification(
  *  @return true if service notification should be escalated, false if
  *          it should not.
  */
+// FIXME DBR: not implemented...
 int should_service_notification_be_escalated(service* svc) {
   // Debug.
   logger(dbg_functions, basic)

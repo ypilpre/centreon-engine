@@ -23,14 +23,11 @@
 #  include <ctime>
 #  include <list>
 #  include "com/centreon/engine/checks/checkable.hh"
-#  include "com/centreon/engine/contacts/contact_user.hh"
+#  include "com/centreon/engine/configuration/contact.hh"
+#  include "com/centreon/engine/configuration/contactgroup.hh"
 #  include "com/centreon/shared_ptr.hh"
 
 CCE_BEGIN()
-
-namespace           contacts {
-  class contact_generic;
-}
 
 namespace           notifications {
 
@@ -59,12 +56,12 @@ namespace           notifications {
                       notifier(notifier const& other);
     virtual           ~notifier();
     notifier&         operator=(notifier const& other);
-    void              add_contact(shared_ptr<contacts::contact_generic> user);
+    void              add_contact(shared_ptr<configuration::contact> user);
     bool              are_notifications_enabled() const;
     void              clear_contacts();
     void              enable_state_notification(int state);
-    std::list<shared_ptr<contacts::contact_user> >
-                      get_contact_users();
+    std::list<shared_ptr<configuration::contact> >
+                      get_contacts_list();
 
     int               get_current_notification_number() const;
     notification_type get_current_notification_type() const;
@@ -99,9 +96,10 @@ namespace           notifications {
                       _filter[];
     static std::string
                       _notification_string[];
+    bool              _escalate_notification;
 
     int               _notified_states;
-    std::list<shared_ptr<contacts::contact_generic> >
+    std::list<shared_ptr<configuration::contact> >
                       _contacts;
   };
 }

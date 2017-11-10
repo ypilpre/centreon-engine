@@ -22,14 +22,13 @@
 #include "../../timeperiod/utils.hh"
 #include "../test_notifier.hh"
 #include "com/centreon/engine/configuration/state.hh"
-#include "com/centreon/engine/contacts/contact_user.hh"
+#include "com/centreon/engine/configuration/contact.hh"
 #include "com/centreon/engine/notifications/notifier.hh"
 #include "com/centreon/shared_ptr.hh"
 
 using namespace com::centreon;
 using namespace com::centreon::engine;
 using namespace com::centreon::engine::notifications;
-using namespace com::centreon::engine::contacts;
 
 extern configuration::state* config;
 
@@ -40,7 +39,8 @@ class RecoveryNotification : public ::testing::Test {
     _notifier.reset(new test_notifier());
     if (config == NULL)
       config = new configuration::state;
-    _notifier->add_contact(shared_ptr<contact_user>(new contact_user));
+    _notifier->add_contact(shared_ptr<configuration::contact>(
+                                                new configuration::contact));
   }
 
  protected:
@@ -59,7 +59,7 @@ TEST_F(RecoveryNotification, SimpleRecovery) {
   long last_notification = _notifier->get_last_notification();
   // When
   _notifier->set_current_state(0);
-  _notifier->notify(notifier::RECOVERY);
+  _notifier->notify(notifier::RECOVERY, "admin", "Test comment");
   long current_notification = _notifier->get_last_notification();
   ASSERT_GT(current_notification, last_notification);
 }
@@ -78,7 +78,7 @@ TEST_F(RecoveryNotification, RecoveryDuringDowntime) {
   long last_notification = _notifier->get_last_notification();
   // When
   _notifier->set_current_state(0);
-  _notifier->notify(notifier::RECOVERY);
+  _notifier->notify(notifier::RECOVERY, "admin", "Test comment");
   long current_notification = _notifier->get_last_notification();
   ASSERT_EQ(current_notification, last_notification);
 }
@@ -97,7 +97,7 @@ TEST_F(RecoveryNotification, RecoveryWithNonOkState) {
   long last_notification = _notifier->get_last_notification();
   // When
   _notifier->set_current_state(1);
-  _notifier->notify(notifier::RECOVERY);
+  _notifier->notify(notifier::RECOVERY, "admin", "Test comment");
   long current_notification = _notifier->get_last_notification();
   ASSERT_EQ(current_notification, last_notification);
 }
