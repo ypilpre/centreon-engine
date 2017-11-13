@@ -26,6 +26,9 @@
 
 CCE_BEGIN()
 
+// Forward declaration.
+namespace configuration { class host; }
+
 /**
  *  @class host host.hh "com/centreon/engine/host.hh"
  *  @brief This class represents a host.
@@ -34,7 +37,7 @@ CCE_BEGIN()
  */
 class                     host : public monitorable {
  public:
-                          host();
+                          host(configuration::host const& cfg);
                           host(host const& other);
                           ~host();
   host&                   operator=(host const& other);

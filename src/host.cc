@@ -17,14 +17,17 @@
 ** <http://www.gnu.org/licenses/>.
 */
 
+#include "com/centreon/engine/configuration/host.hh"
 #include "com/centreon/engine/host.hh"
 
 using namespace com::centreon::engine;
 
 /**
- *  Default constructor.
+ *  Constructor.
+ *
+ *  @param[in] cfg  Base configuration.
  */
-host::host()
+host::host(configuration::host const& cfg)
 // XXX
 {}
 
