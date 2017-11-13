@@ -17,14 +17,17 @@
 ** <http://www.gnu.org/licenses/>.
 */
 
+#include "com/centreon/engine/configuration/service.hh"
 #include "com/centreon/engine/service.hh"
 
 using namespace com::centreon::engine;
 
 /**
- *  Default constructor.
+ *  Constructor.
+ *
+ *  @param[in] cfg  Base configuration.
  */
-service::service()
+service::service(configuration::service const& cfg)
 // XXX
 {}
 

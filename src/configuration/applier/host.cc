@@ -84,6 +84,7 @@ void applier::host::add_object(
   // Create host.
   try {
     shared_ptr<::host> h(new ::host(obj));
+    config->hosts().insert(obj);
   }
   catch (std::exception const& e) {
     logger(logging::log_config_error, logging::basic)

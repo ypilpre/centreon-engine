@@ -27,8 +27,9 @@
 
 CCE_BEGIN()
 
-// Forward declaration.
+// Forward declarations.
 class host;
+namespace configuration { class service; }
 
 /**
  *  @class service service.hh "com/centreon/engine/service.hh"
@@ -38,7 +39,7 @@ class host;
  */
 class                service : public monitorable {
  public:
-                     service();
+                     service(configuration::service const& cfg);
                      service(service const& other);
                      ~service();
   service&           operator=(service const& other);
