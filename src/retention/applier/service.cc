@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2013,2015-2016 Centreon
+** Copyright 2011-2013,2015-2017 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -47,9 +47,8 @@ void applier::service::apply(
        it != end;
        ++it) {
     try {
-      service_struct& svc(find_service(
-                            (*it)->host_name(),
-                            (*it)->service_description()));
+      ::service& svc(*configuration::applier::state::instance().services_find(
+        std::make_pair((*it)->host_name(), (*it)->service_description())));
       _update(config, **it, svc, scheduling_info_is_ok);
     }
     catch (...) {
@@ -70,236 +69,230 @@ void applier::service::apply(
 void applier::service::_update(
        configuration::state const& config,
        retention::service const& state,
-       service_struct& obj,
+       ::service& obj,
        bool scheduling_info_is_ok) {
   if (state.modified_attributes().is_set()) {
-    obj.modified_attributes = *state.modified_attributes();
-    // mask out attributes we don't want to retain.
-    obj.modified_attributes &= ~config.retained_host_attribute_mask();
+    obj.set_modified_attributes(*state.modified_attributes());
+    // Mask out attributes we don't want to retain.
+    obj.set_modified_attributes(
+          obj.get_modified_attributes()
+          & ~config.retained_host_attribute_mask());
   }
 
-  if (obj.retain_status_information) {
+  if (obj.get_retain_state_info()) {
     if (state.has_been_checked().is_set())
-      obj.has_been_checked = *state.has_been_checked();
+      obj.set_has_been_checked(*state.has_been_checked());
     if (state.check_execution_time().is_set())
-      obj.execution_time = *state.check_execution_time();
+      obj.set_execution_time(*state.check_execution_time());
     if (state.check_latency().is_set())
-      obj.latency = *state.check_latency();
+      obj.set_latency(*state.check_latency());
     if (state.check_type().is_set())
-      obj.check_type = *state.check_type();
+      obj.set_check_type(*state.check_type());
     if (state.current_state().is_set())
-      obj.current_state = *state.current_state();
+      obj.set_current_state(*state.current_state());
     if (state.last_state().is_set())
-      obj.last_state = *state.last_state();
+      obj.set_last_state(*state.last_state());
     if (state.last_hard_state().is_set())
-      obj.last_hard_state = *state.last_hard_state();
+      obj.set_last_hard_state(*state.last_hard_state());
     if (state.current_attempt().is_set())
-      obj.current_attempt = *state.current_attempt();
+      obj.set_current_attempt(*state.current_attempt());
     if (state.current_event_id().is_set())
-      obj.current_event_id = *state.current_event_id();
+      obj.set_current_event_id(*state.current_event_id());
     if (state.last_event_id().is_set())
-      obj.last_event_id = *state.last_event_id();
+      obj.set_last_event_id(*state.last_event_id());
     if (state.current_problem_id().is_set())
-      obj.current_problem_id = *state.current_problem_id();
+      obj.set_current_problem_id(*state.current_problem_id());
     if (state.last_problem_id().is_set())
-      obj.last_problem_id = *state.last_problem_id();
+      obj.set_last_problem_id(*state.last_problem_id());
     if (state.state_type().is_set())
-      obj.state_type = *state.state_type();
+      obj.set_current_state_type(*state.state_type());
     if (state.last_state_change().is_set())
-      obj.last_state_change = *state.last_state_change();
+      obj.set_last_state_change(*state.last_state_change());
     if (state.last_hard_state_change().is_set())
-      obj.last_hard_state_change = *state.last_hard_state_change();
+      obj.set_last_hard_state_change(*state.last_hard_state_change());
     if (state.last_time_ok().is_set())
-      obj.last_time_ok = *state.last_time_ok();
+      obj.set_last_time_ok(*state.last_time_ok());
     if (state.last_time_warning().is_set())
-      obj.last_time_warning = *state.last_time_warning();
+      obj.set_last_time_warning(*state.last_time_warning());
     if (state.last_time_unknown().is_set())
-      obj.last_time_unknown = *state.last_time_unknown();
+      obj.set_last_time_unknown(*state.last_time_unknown());
     if (state.last_time_critical().is_set())
-      obj.last_time_critical = *state.last_time_critical();
+      obj.set_last_time_critical(*state.last_time_critical());
     if (state.plugin_output().is_set())
-      string::setstr(obj.plugin_output, *state.plugin_output());
+      obj.set_output(*state.plugin_output());
     if (state.long_plugin_output().is_set())
-      string::setstr(obj.long_plugin_output, *state.long_plugin_output());
+      obj.set_long_output(*state.long_plugin_output());
     if (state.performance_data().is_set())
-      string::setstr(obj.perf_data, *state.performance_data());
-    if (state.last_acknowledgement().is_set())
-      service_other_props[std::make_pair(obj.host_ptr->name, obj.description)].last_acknowledgement
-        = *state.last_acknowledgement();
+      obj.set_perfdata(*state.performance_data());
+    // XXX
+    // if (state.last_acknowledgement().is_set())
+    //   obj.set_last_acknowledgement(*state.last_acknowledgement());
     if (state.last_check().is_set())
-      obj.last_check = *state.last_check();
+      obj.set_last_check(*state.last_check());
     if (state.next_check().is_set()
         && config.use_retained_scheduling_info()
         && scheduling_info_is_ok)
-      obj.next_check = *state.next_check();
+      obj.set_next_check(*state.next_check());
     if (state.check_options().is_set()
         && config.use_retained_scheduling_info()
         && scheduling_info_is_ok)
-      obj.check_options = *state.check_options();
+      obj.set_check_options(*state.check_options());
     if (state.notified_on_unknown().is_set())
-      obj.notified_on_unknown = *state.notified_on_unknown();
+      obj.set_notify_on_unknown(*state.notified_on_unknown());
     if (state.notified_on_warning().is_set())
-      obj.notified_on_warning = *state.notified_on_warning();
+      obj.set_notify_on_warning(*state.notified_on_warning());
     if (state.notified_on_critical().is_set())
-      obj.notified_on_critical = *state.notified_on_critical();
+      obj.set_notify_on_critical(*state.notified_on_critical());
     if (state.current_notification_number().is_set())
-      obj.current_notification_number = *state.current_notification_number();
-    if (state.current_notification_id().is_set())
-      obj.current_notification_id = *state.current_notification_id();
+      obj.set_current_notification_number(*state.current_notification_number());
+    // XXX
+    // if (state.current_notification_id().is_set())
+    //   obj.set_current_notification_id(*state.current_notification_id());
     if (state.last_notification().is_set())
-      obj.last_notification = *state.last_notification();
+      obj.set_last_notification(*state.last_notification());
     if (state.percent_state_change().is_set())
-      obj.percent_state_change = *state.percent_state_change();
-    if (state.check_flapping_recovery_notification().is_set())
-      obj.check_flapping_recovery_notification = *state.check_flapping_recovery_notification();
-    if (state.state_history().is_set()) {
-      utils::set_state_history(
-        *state.state_history(),
-        obj.state_history);
-      obj.state_history_index = 0;
-    }
+      obj.set_percent_state_change(*state.percent_state_change());
+    // if (state.check_flapping_recovery_notification().is_set())
+    //   obj.set_check_flapping_recovery_notification(*state.check_flapping_recovery_notification());
+    // if (state.state_history().is_set()) {
+    //   utils::set_state_history(
+    //     *state.state_history(),
+    //     obj.state_history);
+    //   obj.state_history_index = 0;
+    // }
   }
 
-  if (obj.retain_nonstatus_information) {
+  if (obj.get_retain_nonstate_info()) {
     if (state.problem_has_been_acknowledged().is_set())
-      obj.problem_has_been_acknowledged = *state.problem_has_been_acknowledged();
-
+      obj.set_acknowledged(*state.problem_has_been_acknowledged());
     if (state.acknowledgement_type().is_set())
-      obj.acknowledgement_type = *state.acknowledgement_type();
-
-    if (state.notifications_enabled().is_set()
-        && (obj.modified_attributes & MODATTR_NOTIFICATIONS_ENABLED))
-      obj.notifications_enabled = *state.notifications_enabled();
-
+      obj.set_acknowledgement_type(*state.acknowledgement_type());
+    // XXX
+    // if (state.notifications_enabled().is_set()
+    //     && (obj.get_modified_attributes() & MODATTR_NOTIFICATIONS_ENABLED))
+    //   obj.set_notifications_enabled(*state.notifications_enabled());
     if (state.active_checks_enabled().is_set()
-        && (obj.modified_attributes & MODATTR_ACTIVE_CHECKS_ENABLED))
-      obj.checks_enabled = *state.active_checks_enabled();
-
+        && (obj.get_modified_attributes() & MODATTR_ACTIVE_CHECKS_ENABLED))
+      obj.set_active_checks_enabled(*state.active_checks_enabled());
     if (state.passive_checks_enabled().is_set()
-        && (obj.modified_attributes & MODATTR_PASSIVE_CHECKS_ENABLED))
-      obj.accept_passive_service_checks = *state.passive_checks_enabled();
-
+        && (obj.get_modified_attributes() & MODATTR_PASSIVE_CHECKS_ENABLED))
+      obj.set_passive_checks_enabled(*state.passive_checks_enabled());
     if (state.event_handler_enabled().is_set()
-        && (obj.modified_attributes & MODATTR_EVENT_HANDLER_ENABLED))
-      obj.event_handler_enabled = *state.event_handler_enabled();
-
+        && (obj.get_modified_attributes() & MODATTR_EVENT_HANDLER_ENABLED))
+      obj.set_event_handler_enabled(*state.event_handler_enabled());
     if (state.flap_detection_enabled().is_set()
-        && (obj.modified_attributes & MODATTR_FLAP_DETECTION_ENABLED))
-      obj.flap_detection_enabled = *state.flap_detection_enabled();
-
+        && (obj.get_modified_attributes() & MODATTR_FLAP_DETECTION_ENABLED))
+      obj.set_flap_detection_enabled(*state.flap_detection_enabled());
     if (state.process_performance_data().is_set()
-        && (obj.modified_attributes & MODATTR_PERFORMANCE_DATA_ENABLED))
-      obj.process_performance_data = *state.process_performance_data();
-
+        && (obj.get_modified_attributes() & MODATTR_PERFORMANCE_DATA_ENABLED))
+      obj.set_process_perfdata(*state.process_performance_data());
     if (state.obsess_over_service().is_set()
-        && (obj.modified_attributes & MODATTR_OBSESSIVE_HANDLER_ENABLED))
-      obj.obsess_over_service = *state.obsess_over_service();
-
-    if (state.check_command().is_set()
-        && (obj.modified_attributes & MODATTR_CHECK_COMMAND)) {
-      if (utils::is_command_exist(*state.check_command()))
-        string::setstr(obj.service_check_command, *state.check_command());
-      else
-        obj.modified_attributes -= MODATTR_CHECK_COMMAND;
-    }
-
-    if (state.check_period().is_set()
-        && (obj.modified_attributes & MODATTR_CHECK_TIMEPERIOD)) {
-      if (is_timeperiod_exist(*state.check_period()))
-        string::setstr(obj.check_period, *state.check_period());
-      else
-        obj.modified_attributes -= MODATTR_CHECK_TIMEPERIOD;
-    }
-
-    if (state.notification_period().is_set()
-        && (obj.modified_attributes & MODATTR_NOTIFICATION_TIMEPERIOD)) {
-      if (is_timeperiod_exist(*state.notification_period()))
-        string::setstr(obj.notification_period, *state.notification_period());
-      else
-        obj.modified_attributes -= MODATTR_NOTIFICATION_TIMEPERIOD;
-    }
-
-    if (state.event_handler().is_set()
-        && (obj.modified_attributes & MODATTR_EVENT_HANDLER_COMMAND)) {
-      if (utils::is_command_exist(*state.event_handler()))
-        string::setstr(obj.event_handler, *state.event_handler());
-      else
-        obj.modified_attributes -= MODATTR_EVENT_HANDLER_COMMAND;
-    }
+        && (obj.get_modified_attributes() & MODATTR_OBSESSIVE_HANDLER_ENABLED))
+      obj.set_ocp_enabled(*state.obsess_over_service());
+    // XXX
+    // if (state.check_command().is_set()
+    //     && (obj.modified_attributes & MODATTR_CHECK_COMMAND)) {
+    //   if (utils::is_command_exist(*state.check_command()))
+    //     string::setstr(obj.service_check_command, *state.check_command());
+    //   else
+    //     obj.modified_attributes -= MODATTR_CHECK_COMMAND;
+    // }
+    // if (state.check_period().is_set()
+    //     && (obj.modified_attributes & MODATTR_CHECK_TIMEPERIOD)) {
+    //   if (is_timeperiod_exist(*state.check_period()))
+    //     string::setstr(obj.check_period, *state.check_period());
+    //   else
+    //     obj.modified_attributes -= MODATTR_CHECK_TIMEPERIOD;
+    // }
+    // if (state.notification_period().is_set()
+    //     && (obj.modified_attributes & MODATTR_NOTIFICATION_TIMEPERIOD)) {
+    //   if (is_timeperiod_exist(*state.notification_period()))
+    //     string::setstr(obj.notification_period, *state.notification_period());
+    //   else
+    //     obj.modified_attributes -= MODATTR_NOTIFICATION_TIMEPERIOD;
+    // }
+    // if (state.event_handler().is_set()
+    //     && (obj.modified_attributes & MODATTR_EVENT_HANDLER_COMMAND)) {
+    //   if (utils::is_command_exist(*state.event_handler()))
+    //     string::setstr(obj.event_handler, *state.event_handler());
+    //   else
+    //     obj.modified_attributes -= MODATTR_EVENT_HANDLER_COMMAND;
+    // }
 
     if (state.normal_check_interval().is_set()
-        && (obj.modified_attributes & MODATTR_NORMAL_CHECK_INTERVAL))
-      obj.check_interval = *state.normal_check_interval();
-
+        && (obj.get_modified_attributes() & MODATTR_NORMAL_CHECK_INTERVAL))
+      obj.set_normal_check_interval(*state.normal_check_interval());
     if (state.retry_check_interval().is_set()
-        && (obj.modified_attributes & MODATTR_RETRY_CHECK_INTERVAL))
-      obj.retry_interval = *state.retry_check_interval();
-
+        && (obj.get_modified_attributes() & MODATTR_RETRY_CHECK_INTERVAL))
+      obj.set_retry_check_interval(*state.retry_check_interval());
     if (state.max_attempts().is_set()
-        && (obj.modified_attributes & MODATTR_MAX_CHECK_ATTEMPTS)) {
-      obj.max_attempts = *state.max_attempts();
+        && (obj.get_modified_attributes() & MODATTR_MAX_CHECK_ATTEMPTS)) {
+      obj.set_max_attempts(*state.max_attempts());
 
-      // adjust current attempt number if in a hard state.
-      if (obj.state_type == HARD_STATE
-          && obj.current_state != STATE_OK
-          && obj.current_attempt > 1)
-        obj.current_attempt = obj.max_attempts;
+      // Adjust current attempt number if in a hard state.
+      if (obj.get_current_state_type() == HARD_STATE
+          && obj.get_current_state() != STATE_OK
+          && obj.get_current_attempt() > 1)
+        obj.set_current_attempt(obj.get_max_attempts());
     }
 
-    if (!state.customvariables().empty()
-        && (obj.modified_attributes & MODATTR_CUSTOM_VARIABLE)) {
-      for (map_customvar::const_iterator
-             it(state.customvariables().begin()),
-             end(state.customvariables().end());
-           it != end;
-           ++it) {
-        update_customvariable(
-          obj.custom_variables,
-          it->first,
-          it->second);
-      }
-    }
+    // XXX
+    // if (!state.customvariables().empty()
+    //     && (obj.modified_attributes & MODATTR_CUSTOM_VARIABLE)) {
+    //   for (map_customvar::const_iterator
+    //          it(state.customvariables().begin()),
+    //          end(state.customvariables().end());
+    //        it != end;
+    //        ++it) {
+    //     update_customvariable(
+    //       obj.custom_variables,
+    //       it->first,
+    //       it->second);
+    //   }
+    // }
   }
   // Adjust modified attributes if necessary.
   else
-    obj.modified_attributes = MODATTR_NONE;
+    obj.set_modified_attributes(MODATTR_NONE);
 
   bool allow_flapstart_notification(true);
 
   // Adjust modified attributes if no custom variable has been changed.
-  if (obj.modified_attributes & MODATTR_CUSTOM_VARIABLE) {
-    bool at_least_one_modified(false);
-    for (customvariablesmember* member(obj.custom_variables);
-         member;
-         member = member->next)
-      if (member->has_been_modified)
-        at_least_one_modified = true;
-    if (!at_least_one_modified)
-      obj.modified_attributes -= MODATTR_CUSTOM_VARIABLE;
+  if (obj.get_modified_attributes() & MODATTR_CUSTOM_VARIABLE) {
+    // XXX
+    // bool at_least_one_modified(false);
+    // for (customvariablesmember* member(obj.custom_variables);
+    //      member;
+    //      member = member->next)
+    //   if (member->has_been_modified)
+    //     at_least_one_modified = true;
+    // if (!at_least_one_modified)
+    //   obj.modified_attributes -= MODATTR_CUSTOM_VARIABLE;
   }
 
-  // calculate next possible notification time.
-  if (obj.current_state != STATE_OK && obj.last_notification)
-    obj.next_notification
-      = get_next_service_notification_time(
-          &obj,
-          obj.last_notification);
+  // Calculate next possible notification time.
+  if (obj.get_current_state() != STATE_OK && obj.get_last_notification())
+    obj.set_next_notification(
+          get_next_service_notification_time(
+            &obj,
+            obj.get_last_notification()));
 
-  // fix old vars.
-  if (!obj.has_been_checked && obj.state_type == SOFT_STATE)
-    obj.state_type = HARD_STATE;
+  // Fix old vars.
+  if (!obj.get_has_been_checked()
+      && obj.get_current_state_type() == SOFT_STATE)
+    obj.set_current_state_type(HARD_STATE);
 
   // ADDED 01/23/2009 adjust current check attempt if service is
   // in hard problem state (max attempts may have changed in config
   // since restart).
-  if (obj.current_state != STATE_OK && obj.state_type == HARD_STATE)
-    obj.current_attempt = obj.max_attempts;
-
+  if (obj.get_current_state() != STATE_OK
+      && obj.get_current_state_type() == HARD_STATE)
+    obj.set_current_attempt(obj.get_max_attempts());
 
   // ADDED 02/20/08 assume same flapping state if large
   // install tweaks enabled.
   if (config.use_large_installation_tweaks())
-    obj.is_flapping = state.is_flapping();
+    obj.set_flapping(state.is_flapping());
   // else use normal startup flap detection logic.
   else {
     // service was flapping before program started.
@@ -314,19 +307,19 @@ void applier::service::_update(
 
     // service was flapping before and isn't now, so clear
     // recovery check variable if service isn't flapping now.
-    if (state.is_flapping() && !obj.is_flapping)
-      obj.check_flapping_recovery_notification = false;
+    // XXX
+    // if (state.is_flapping() && !obj.get_flapping())
+    //   obj.set_check_flapping_recovery_notification(false);
   }
 
   // handle new vars added in 2.x.
-  if (obj.last_hard_state_change)
-    obj.last_hard_state_change = obj.last_state_change;
+  if (obj.get_last_hard_state_change())
+    obj.set_last_hard_state_change(obj.get_last_state_change());
 
   // Handle recovery been sent
-  if (state.recovery_been_sent().is_set())
-    service_other_props[std::make_pair(obj.description,
-                                       obj.host_ptr->name)].recovery_been_sent
-      = *state.recovery_been_sent();
+  // XXX
+  // if (state.recovery_been_sent().is_set())
+  //   obj.set_recovery_been_sent(*state.recovery_been_sent());
 
   // update service status.
   update_service_status(&obj, false);

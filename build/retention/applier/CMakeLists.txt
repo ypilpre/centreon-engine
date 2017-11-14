@@ -32,7 +32,7 @@ set(
   "${SRC_DIR}/downtime.cc"
   "${SRC_DIR}/host.cc"
   "${SRC_DIR}/program.cc"
-  # "${SRC_DIR}/service.cc"
+  "${SRC_DIR}/service.cc"
   "${SRC_DIR}/state.cc"
   "${SRC_DIR}/utils.cc"
 
