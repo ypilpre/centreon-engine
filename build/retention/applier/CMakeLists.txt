@@ -30,7 +30,7 @@ set(
   "${SRC_DIR}/comment.cc"
   "${SRC_DIR}/contact.cc"
   "${SRC_DIR}/downtime.cc"
-  # "${SRC_DIR}/host.cc"
+  "${SRC_DIR}/host.cc"
   "${SRC_DIR}/program.cc"
   # "${SRC_DIR}/service.cc"
   "${SRC_DIR}/state.cc"

@@ -66,11 +66,51 @@ std::string const& monitorable::get_host_name() const {
 }
 
 /**
+ *  Check if non-state retention is enabled for this object.
+ *
+ *  @return True if non-state retention is enabled.
+ */
+bool monitorable::get_retain_nonstate_info() const {
+  return (_retain_nonstate_info);
+}
+
+/**
+ *  Enable or disable non-state retention for this object.
+ *
+ *  @param[in] retain  True to retain non-state information.
+ */
+void monitorable::set_retain_nonstate_info(bool retain) {
+  _retain_nonstate_info = retain;
+  return ;
+}
+
+/**
+ *  Check if state retention is enabled for this object.
+ *
+ *  @return True if state retention is enabled.
+ */
+bool monitorable::get_retain_state_info() const {
+  return (_retain_state_info);
+}
+
+/**
+ *  Enable or disable state retention for this object.
+ *
+ *  @param[in] retain  True to retain state information.
+ */
+void monitorable::set_retain_state_info(bool retain) {
+  _retain_state_info = retain;
+  return ;
+}
+
+/**
  *  Copy internal data members.
  *
  *  @param[in] other  Object to copy.
  */
 void monitorable::_internal_copy(monitorable const& other) {
   _host_name = other._host_name;
+  _retain_nonstate_info = other._retain_nonstate_info;
+  _retain_state_info = other._retain_state_info;
   return ;
 }

@@ -42,15 +42,22 @@ namespace              checks {
 
     // Check configuration.
     bool               get_active_checks_enabled() const;
+    void               set_active_checks_enabled(bool enable);
     command*           get_check_command() const;
     std::string const& get_check_command_args() const;
     timeperiod*        get_check_period() const;
     int                get_max_attempts() const;
+    void               set_max_attempts(int attempts);
     int                get_normal_check_interval() const;
+    void               set_normal_check_interval(int interval);
     bool               get_ocp_enabled() const;
+    void               set_ocp_enabled(bool enable);
     bool               get_passive_checks_enabled() const;
+    void               set_passive_checks_enabled(bool enable);
     bool               get_process_perfdata() const;
+    void               set_process_perfdata(bool process);
     int                get_retry_check_interval() const;
+    void               set_retry_check_interval(int interval);
     std::string const& get_timezone() const;
 
     // Check runtime.
@@ -113,9 +120,11 @@ namespace              checks {
     command*           get_event_handler() const;
     std::string const& get_event_handler_args() const;
     bool               get_event_handler_enabled() const;
+    void               set_event_handler_enabled(bool enable);
 
     // Flap detection.
     bool               get_flap_detection_enabled() const;
+    void               set_flap_detection_enabled(bool enable);
     bool               get_flapping() const;
     void               set_flapping(bool flapping);
 
@@ -123,6 +132,7 @@ namespace              checks {
     bool               get_being_freshened() const;
     void               set_being_freshened(bool freshened);
     bool               get_freshness_checks_enabled() const;
+    void               set_freshness_checks_enabled(bool enable);
     int                get_freshness_threshold() const;
 
    private:

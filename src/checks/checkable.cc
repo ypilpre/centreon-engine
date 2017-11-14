@@ -71,6 +71,16 @@ bool checkable::get_active_checks_enabled() const {
 }
 
 /**
+ *  Enable or disable active monitoring checks.
+ *
+ *  @param[in] enable  True to enable active checks on object.
+ */
+void checkable::set_active_checks_enabled(bool enable) {
+  _active_checks_enabled = enable;
+  return ;
+}
+
+/**
  *  Get check command object.
  *
  *  @return Check command of this object. NULL for none.
@@ -107,12 +117,32 @@ int checkable::get_max_attempts() const {
 }
 
 /**
+ *  Set the maximum number of attempts.
+ *
+ *  @param[in] attempts  Maximum number of attempts.
+ */
+void checkable::set_max_attempts(int attempts) {
+  _max_attempts = attempts;
+  return ;
+}
+
+/**
  *  Get the normal check interval.
  *
  *  @return Normal check interval in seconds.
  */
 int checkable::get_normal_check_interval() const {
   return (_normal_check_interval);
+}
+
+/**
+ *  Set the normal check interval.
+ *
+ *  @param[in] interval  New normal check interval in seconds.
+ */
+void checkable::set_normal_check_interval(int interval) {
+  _normal_check_interval = interval;
+  return ;
 }
 
 /**
@@ -125,12 +155,32 @@ bool checkable::get_ocp_enabled() const {
 }
 
 /**
+ *  Enable or disable obsessive compulsive processing.
+ *
+ *  @param[in] enable  True to enable.
+ */
+void checkable::set_ocp_enabled(bool enable) {
+  _ocp_enabled = enable;
+  return ;
+}
+
+/**
  *  Check if passive checks are accepted.
  *
  *  @return True if passive checks are accepted.
  */
 bool checkable::get_passive_checks_enabled() const {
   return (_passive_checks_enabled);
+}
+
+/**
+ *  Enable or disable passive checks on object.
+ *
+ *  @param[in] enable  True to enable passive checks on object.
+ */
+void checkable::set_passive_checks_enabled(bool enable) {
+  _passive_checks_enabled = enable;
+  return ;
 }
 
 /**
@@ -143,12 +193,33 @@ bool checkable::get_process_perfdata() const {
 }
 
 /**
+ *  Enable or disable performance data processing.
+ *
+ *  @param[in] process  True to enable external performance data
+ *                      processing.
+ */
+void checkable::set_process_perfdata(bool process) {
+  _process_perfdata = process;
+  return ;
+}
+
+/**
  *  Get retry check interval.
  *
  *  @return Retry check interval in seconds.
  */
 int checkable::get_retry_check_interval() const {
   return (_retry_check_interval);
+}
+
+/**
+ *  Set retry check interval.
+ *
+ *  @param[in] interval  New retry check interval.
+ */
+void checkable::set_retry_check_interval(int interval) {
+  _retry_check_interval = interval;
+  return ;
 }
 
 /**
@@ -700,6 +771,16 @@ bool checkable::get_event_handler_enabled() const {
   return (_event_handler_enabled);
 }
 
+/**
+ *  Enable or disable event handler.
+ *
+ *  @param[in] enable  True to enable event handler for this object.
+ */
+void checkable::set_event_handler_enabled(bool enable) {
+  _event_handler_enabled = enable;
+  return ;
+}
+
 /**************************************
 *                                     *
 *            Flap detection           *
@@ -713,6 +794,16 @@ bool checkable::get_event_handler_enabled() const {
  */
 bool checkable::get_flap_detection_enabled() const {
   return (_flap_detection_enabled);
+}
+
+/**
+ *  Enable or disable flap detection.
+ *
+ *  @param[in] enable  True to enable flap detection.
+ */
+void checkable::set_flap_detection_enabled(bool enable) {
+  _flap_detection_enabled = enable;
+  return ;
 }
 
 /**
@@ -766,6 +857,16 @@ void checkable::set_being_freshened(bool freshened) {
  */
 bool checkable::get_freshness_checks_enabled() const {
   return (_freshness_checks_enabled);
+}
+
+/**
+ *  Enable or disable freshness checks.
+ *
+ *  @param[in] enable  True to enable freshness checks.
+ */
+void checkable::set_freshness_checks_enabled(bool enable) {
+  _freshness_checks_enabled = enable;
+  return ;
 }
 
 /**
