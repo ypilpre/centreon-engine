@@ -20,7 +20,9 @@
 #ifndef CCE_MONITORABLE_HH
 #  define CCE_MONITORABLE_HH
 
+#  include <map>
 #  include <string>
+#  include "com/centreon/engine/customvar.hh"
 #  include "com/centreon/engine/namespace.hh"
 #  include "com/centreon/engine/notifications/notifier.hh"
 
@@ -32,24 +34,27 @@ CCE_BEGIN()
  *
  *  Monitorable nodes are checked and notified of problems.
  */
-class                monitorable : public notifications::notifier {
+class                  monitorable : public notifications::notifier {
  public:
-                     monitorable();
-                     monitorable(monitorable const& other);
-  virtual            ~monitorable();
-  monitorable&       operator=(monitorable const& other);
-  std::string const& get_host_name() const;
-  bool               get_retain_nonstate_info() const;
-  void               set_retain_nonstate_info(bool retain);
-  bool               get_retain_state_info() const;
-  void               set_retain_state_info(bool retain);
+                       monitorable();
+                       monitorable(monitorable const& other);
+  virtual              ~monitorable();
+  monitorable&         operator=(monitorable const& other);
+  customvar_set const& get_customvars() const;
+  void                 set_customvar(customvar const& var);
+  std::string const&   get_host_name() const;
+  bool                 get_retain_nonstate_info() const;
+  void                 set_retain_nonstate_info(bool retain);
+  bool                 get_retain_state_info() const;
+  void                 set_retain_state_info(bool retain);
 
  private:
-  void               _internal_copy(monitorable const& other);
+  void                 _internal_copy(monitorable const& other);
 
-  std::string        _host_name;
-  bool               _retain_nonstate_info;
-  bool               _retain_state_info;
+  std::string          _host_name;
+  bool                 _retain_nonstate_info;
+  bool                 _retain_state_info;
+  customvar_set        _vars;
 };
 
 CCE_END()

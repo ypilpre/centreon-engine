@@ -57,6 +57,25 @@ monitorable& monitorable::operator=(monitorable const& other) {
 }
 
 /**
+ *  Get custom variables.
+ *
+ *  @return Set of this object's custom variables.
+ */
+customvar_set const& monitorable::get_customvars() const {
+  return (_vars);
+}
+
+/**
+ *  Set custom variable.
+ *
+ *  @param[in] var  New custom variable.
+ */
+void monitorable::set_customvar(customvar const& var) {
+  _vars[var.get_name()] = var;
+  return ;
+}
+
+/**
  *  Get host name.
  *
  *  @return This object's host name.
@@ -112,5 +131,6 @@ void monitorable::_internal_copy(monitorable const& other) {
   _host_name = other._host_name;
   _retain_nonstate_info = other._retain_nonstate_info;
   _retain_state_info = other._retain_state_info;
+  _vars = other._vars;
   return ;
 }

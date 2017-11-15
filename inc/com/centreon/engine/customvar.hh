@@ -22,6 +22,7 @@
 
 #  include <string>
 #  include "com/centreon/engine/namespace.hh"
+#  include "com/centreon/unordered_hash.hh"
 
 CCE_BEGIN()
 
@@ -33,15 +34,13 @@ CCE_BEGIN()
  */
 class                customvar {
  public:
-                     customvar(
-                       std::string const& name,
-                       std::string const& value = "",
-                       bool modified = false);
+                     customvar();
                      customvar(customvar const& other);
                      ~customvar();
   customvar&         operator=(customvar const& other);
   bool               get_modified() const;
   std::string const& get_name() const;
+  void               set_name(std::string const& name);
   std::string const& get_value() const;
   void               set_modified(bool modified);
   void               set_value(std::string const& value);
@@ -51,6 +50,8 @@ class                customvar {
   std::string        _name;
   std::string        _value;
 };
+
+typedef umap<std::string, customvar> customvar_set;
 
 CCE_END()
 

@@ -22,17 +22,9 @@
 using namespace com::centreon::engine;
 
 /**
- *  Constructor.
- *
- *  @param[in] name      Variable name.
- *  @param[in] value     Variable value.
- *  @param[in] modified  Variable modification flag.
+ *  Default constructor.
  */
-customvar::customvar(
-             std::string const& name,
-             std::string const& value,
-             bool modified)
-  : _modified(modified), _name(name), _value(value) {}
+customvar::customvar() : _modified(false) {}
 
 /**
  *  Copy constructor.
@@ -82,6 +74,16 @@ bool customvar::get_modified() const {
  */
 std::string const& customvar::get_name() const {
   return (_name);
+}
+
+/**
+ *  Set variable name.
+ *
+ *  @param[in] name  Variable name.
+ */
+void customvar::set_name(std::string const& name) {
+  _name = name;
+  return ;
 }
 
 /**
