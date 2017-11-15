@@ -148,7 +148,7 @@ int grab_custom_macro_value_r(
       result = grab_custom_object_macro_r(
                  mac,
                  macro_name + 5,
-                 NULL, // XXX temp_host->custom_variables,
+                 temp_host->get_customvars(),
                  output);
     }
     /* a host macro with a hostgroup name and delimiter */
@@ -205,7 +205,7 @@ int grab_custom_macro_value_r(
       result = grab_custom_object_macro_r(
                  mac,
                  macro_name + 8,
-                 NULL, // XXX temp_service->custom_variables,
+                 temp_service->get_customvars(),
                  output);
     }
     /* else and ondemand macro... */
@@ -228,7 +228,7 @@ int grab_custom_macro_value_r(
         result = grab_custom_object_macro_r(
                    mac,
                    macro_name + 8,
-                   NULL, // XXX temp_service->custom_variables,
+                   temp_service->get_customvars(),
                    output);
       }
       /* else we have a service macro with a servicegroup name and a delimiter... */
@@ -289,11 +289,12 @@ int grab_custom_macro_value_r(
         return (ERROR);
 
       /* get the contact macro value */
-      result = grab_custom_object_macro_r(
-                 mac,
-                 macro_name + 8,
-                 temp_contact->custom_variables,
-                 output);
+      // XXX
+      // result = grab_custom_object_macro_r(
+      //            mac,
+      //            macro_name + 8,
+      //            temp_contact->custom_variables,
+      //            output);
     }
     /* a contact macro with a contactgroup name and delimiter */
     else {
@@ -876,41 +877,45 @@ int grab_standard_contactgroup_macro(
   return (OK);
 }
 
-/* computes a custom object macro */
+/**
+ *  Computes a custom object macro.
+ *
+ *  @param[in]  mac         Unused.
+ *  @param[in]  macro_name  Macro name.
+ *  @param[in]  vars        Custom variables.
+ *  @param[out] output      Pointer to output buffer.
+ *
+ *  @return OK on success.
+ */
 int grab_custom_object_macro_r(
       nagios_macros* mac,
       char* macro_name,
-      customvariablesmember* vars,
+      customvar_set const& vars,
       char** output) {
-  customvariablesmember* temp_customvariablesmember = NULL;
-  int result = ERROR;
-
   (void)mac;
 
-  if (macro_name == NULL || vars == NULL || output == NULL)
+  // Check arguments.
+  if (macro_name == NULL || output == NULL)
     return (ERROR);
 
-  /* get the custom variable */
-  for (temp_customvariablesmember = vars;
-       temp_customvariablesmember != NULL;
-       temp_customvariablesmember = temp_customvariablesmember->next) {
-
-    if (temp_customvariablesmember->variable_name == NULL)
-      continue;
-
-    if (!strcmp(macro_name, temp_customvariablesmember->variable_name)) {
-      if (temp_customvariablesmember->variable_value)
-        *output = string::dup(temp_customvariablesmember->variable_value);
+  // Get the custom variable.
+  int result(ERROR);
+  for (customvar_set::const_iterator
+         it(vars.begin()),
+         end(vars.end());
+       it != end;
+       ++it)
+    if (it->second.get_name() == macro_name) {
+      *output = string::dup(it->second.get_value().c_str());
       result = OK;
-      break;
+      break ;
     }
-  }
   return (result);
 }
 
 int grab_custom_object_macro(
       char* macro_name,
-      customvariablesmember* vars,
+      customvar_set const& vars,
       char** output) {
   return (grab_custom_object_macro_r(
             get_global_macros(),
@@ -1527,57 +1532,60 @@ int set_custom_macro_environment_vars_r(nagios_macros* mac, int set) {
   service* temp_service = NULL;
   contact* temp_contact = NULL;
 
-  // XXX
-  // /***** CUSTOM HOST VARIABLES *****/
-  // /* generate variables and save them for later */
-  // if ((temp_host = mac->host_ptr) && set == true) {
-  //   for (temp_customvariablesmember = temp_host->custom_variables;
-  //        temp_customvariablesmember != NULL;
-  //        temp_customvariablesmember = temp_customvariablesmember->next) {
-  //     std::string var("_HOST");
-  //     var.append(temp_customvariablesmember->variable_name);
-  //     add_custom_variable_to_object(
-  //       &mac->custom_host_vars,
-  //       var.c_str(),
-  //       temp_customvariablesmember->variable_value);
-  //   }
-  // }
-  // /* set variables */
-  // for (temp_customvariablesmember = mac->custom_host_vars;
-  //      temp_customvariablesmember != NULL;
-  //      temp_customvariablesmember = temp_customvariablesmember->next) {
-  //   set_macro_environment_var(
-  //     temp_customvariablesmember->variable_name,
-  //     clean_macro_chars(
-  //       temp_customvariablesmember->variable_value,
-  //       STRIP_ILLEGAL_MACRO_CHARS | ESCAPE_MACRO_CHARS),
-  //     set);
-  // }
+  /***** CUSTOM HOST VARIABLES *****/
+  /* generate variables and save them for later */
+  if ((temp_host = mac->host_ptr) && set == true) {
+    for (customvar_set::const_iterator
+           it(temp_host->get_customvars().begin()),
+           end(temp_host->get_customvars().end());
+         it != end;
+         ++it) {
+      std::string var("_HOST");
+      var.append(it->second.get_name());
+      add_custom_variable_to_object(
+        &mac->custom_host_vars,
+        var.c_str(),
+        it->second.get_value().c_str());
+    }
+  }
+  /* set variables */
+  for (temp_customvariablesmember = mac->custom_host_vars;
+       temp_customvariablesmember != NULL;
+       temp_customvariablesmember = temp_customvariablesmember->next) {
+    set_macro_environment_var(
+      temp_customvariablesmember->variable_name,
+      clean_macro_chars(
+        temp_customvariablesmember->variable_value,
+        STRIP_ILLEGAL_MACRO_CHARS | ESCAPE_MACRO_CHARS),
+      set);
+  }
 
-  // /***** CUSTOM SERVICE VARIABLES *****/
-  // /* generate variables and save them for later */
-  // if ((temp_service = mac->service_ptr) && set == true) {
-  //   for (temp_customvariablesmember = temp_service->custom_variables;
-  //        temp_customvariablesmember != NULL;
-  //        temp_customvariablesmember = temp_customvariablesmember->next) {
-  //     std::string var("_SERVICE");
-  //     var.append(temp_customvariablesmember->variable_name);
-  //     add_custom_variable_to_object(
-  //       &mac->custom_service_vars,
-  //       var.c_str(),
-  //       temp_customvariablesmember->variable_value);
-  //   }
-  // }
-  // /* set variables */
-  // for (temp_customvariablesmember = mac->custom_service_vars;
-  //      temp_customvariablesmember != NULL;
-  //      temp_customvariablesmember = temp_customvariablesmember->next)
-  //   set_macro_environment_var(
-  //     temp_customvariablesmember->variable_name,
-  //     clean_macro_chars(
-  //       temp_customvariablesmember->variable_value,
-  //       STRIP_ILLEGAL_MACRO_CHARS | ESCAPE_MACRO_CHARS),
-  //     set);
+  /***** CUSTOM SERVICE VARIABLES *****/
+  /* generate variables and save them for later */
+  if ((temp_service = mac->service_ptr) && set == true) {
+    for (customvar_set::const_iterator
+           it(temp_service->get_customvars().begin()),
+           end(temp_service->get_customvars().end());
+         it != end;
+         ++it) {
+      std::string var("_SERVICE");
+      var.append(it->second.get_name());
+      add_custom_variable_to_object(
+        &mac->custom_service_vars,
+        var.c_str(),
+        it->second.get_value().c_str());
+    }
+  }
+  /* set variables */
+  for (temp_customvariablesmember = mac->custom_service_vars;
+       temp_customvariablesmember != NULL;
+       temp_customvariablesmember = temp_customvariablesmember->next)
+    set_macro_environment_var(
+      temp_customvariablesmember->variable_name,
+      clean_macro_chars(
+        temp_customvariablesmember->variable_value,
+        STRIP_ILLEGAL_MACRO_CHARS | ESCAPE_MACRO_CHARS),
+      set);
 
   // /***** CUSTOM CONTACT VARIABLES *****/
   // /* generate variables and save them for later */

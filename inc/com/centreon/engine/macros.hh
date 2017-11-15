@@ -1,6 +1,6 @@
 /*
-** Copyright 1999-2010 Ethan Galstad
-** Copyright 2011-2013 Merethis
+** Copyright 1999-2010      Ethan Galstad
+** Copyright 2011-2013,2017 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -77,7 +77,7 @@ int grab_standard_contactgroup_macro(
       char** output);
 int grab_custom_object_macro(
       char* macro_name,
-      customvariablesmember* vars,
+      com::centreon::engine::customvar_set const& vars,
       char** output);
 
 // Thread-safe version of the above.
@@ -121,7 +121,7 @@ int grab_standard_contact_macro_r(
 int grab_custom_object_macro_r(
       nagios_macros* mac,
       char* macro_name,
-      customvariablesmember* vars,
+      com::centreon::engine::customvar_set const& vars,
       char** output);
 
 // cleans macros characters before insertion into output string

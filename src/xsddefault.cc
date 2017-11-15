@@ -218,8 +218,8 @@ int xsddefault_save_status_data() {
     stream
       << "hoststatus {\n"
       "\thost_name=" << hst->get_host_name() << "\n"
+         "\tmodified_attributes=" << hst->get_modified_attributes() << "\n"
          // XXX
-         // "\tmodified_attributes=" << hst->modified_attributes << "\n"
          // "\tcheck_command=" << (hst->host_check_command ? hst->host_check_command : "") << "\n"
          // "\tcheck_period=" << (hst->check_period ? hst->check_period : "") << "\n"
          // "\tnotification_period=" << (hst->notification_period ? hst->notification_period : "") << "\n"
@@ -242,7 +242,7 @@ int xsddefault_save_status_data() {
          "\tperformance_data=" << hst->get_perfdata() << "\n"
          "\tlast_check=" << static_cast<unsigned long>(hst->get_last_check()) << "\n"
          "\tnext_check=" << static_cast<unsigned long>(hst->get_next_check()) << "\n"
-         // "\tcheck_options=" << hst->check_options << "\n"
+         "\tcheck_options=" << hst->get_check_options() << "\n"
          "\tcurrent_attempt=" << hst->get_current_attempt() << "\n"
          "\tmax_attempts=" << hst->get_max_attempts() << "\n"
          "\tstate_type=" << hst->get_current_state_type() << "\n"
@@ -270,13 +270,15 @@ int xsddefault_save_status_data() {
          "\tpercent_state_change=" << std::setprecision(2) << std::fixed << hst->get_percent_state_change() << "\n"
          "\tscheduled_downtime_depth=" << hst->get_scheduled_downtime_depth() << "\n";
 
-    // custom variables
-    // XXX
-    // for (customvariablesmember* cvarm = hst->custom_variables; cvarm; cvarm = cvarm->next) {
-    //   if (cvarm->variable_name)
-    //     stream << "\t_" << cvarm->variable_name << "=" << cvarm->has_been_modified << ";"
-    //            << (cvarm->variable_value ? cvarm->variable_value : "") << "\n";
-    // }
+    // Custom variables.
+    for (customvar_set::const_iterator
+           it(hst->get_customvars().begin()),
+           end(hst->get_customvars().end());
+         it != end;
+         ++it)
+      stream << "\t_" << it->second.get_name()
+             << "=" << it->second.get_modified() << ";"
+             << it->second.get_value() << "\n";
     stream << "\t}\n\n";
   }
 
@@ -287,12 +289,12 @@ int xsddefault_save_status_data() {
        it != end;
        ++it) {
     service* svc(it->second.get());
-    // XXX
     stream
       << "servicestatus {\n"
          "\thost_name=" << svc->get_host_name() << "\n"
          "\tservice_description=" << svc->get_description() << "\n"
-         // "\tmodified_attributes=" << svc->modified_attributes << "\n"
+         "\tmodified_attributes=" << svc->get_modified_attributes() << "\n"
+         // XXX
          // "\tcheck_command=" << (svc->service_check_command ? svc->service_check_command : "") << "\n"
          // "\tcheck_period=" << (svc->check_period ? svc->check_period : "") << "\n"
          // "\tnotification_period=" << (svc->notification_period ? svc->notification_period : "") << "\n"
@@ -324,7 +326,7 @@ int xsddefault_save_status_data() {
          "\tperformance_data=" << svc->get_perfdata() << "\n"
          "\tlast_check=" << static_cast<unsigned long>(svc->get_last_check()) << "\n"
          "\tnext_check=" << static_cast<unsigned long>(svc->get_next_check()) << "\n"
-         // "\tcheck_options=" << svc->check_options << "\n"
+         "\tcheck_options=" << svc->get_check_options() << "\n"
          "\tcurrent_notification_number=" << svc->get_current_notification_number() << "\n"
          "\tcurrent_notification_id=" << svc->get_current_notification_id() << "\n"
          "\tlast_notification=" << static_cast<unsigned long>(svc->get_last_notification()) << "\n"
@@ -344,13 +346,15 @@ int xsddefault_save_status_data() {
          "\tpercent_state_change=" << std::setprecision(2) << std::fixed << svc->get_percent_state_change() << "\n"
          "\tscheduled_downtime_depth=" << svc->get_scheduled_downtime_depth() << "\n";
 
-    // custom variables
-    // XXX
-    // for (customvariablesmember* cvarm = svc->custom_variables; cvarm; cvarm = cvarm->next) {
-    //   if (cvarm->variable_name)
-    //     stream << "\t_" << cvarm->variable_name << "=" << cvarm->has_been_modified << ";"
-    //            << (cvarm->variable_value ? cvarm->variable_value : "") << "\n";
-    // }
+    // Custom variables.
+    for (customvar_set::const_iterator
+           it(svc->get_customvars().begin()),
+           end(svc->get_customvars().end());
+         it != end;
+         ++it)
+      stream << "\t_" << it->second.get_name() << "="
+             << it->second.get_modified() << ";"
+             << it->second.get_value() << "\n";
     stream << "\t}\n\n";
   }
 

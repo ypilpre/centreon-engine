@@ -228,20 +228,19 @@ void applier::host::_update(
         obj.set_current_attempt(obj.get_max_attempts());
     }
 
-    // XXX
-    // if (!state.customvariables().empty()
-    //     && (obj.modified_attributes & MODATTR_CUSTOM_VARIABLE)) {
-    //   for (map_customvar::const_iterator
-    //          it(state.customvariables().begin()),
-    //          end(state.customvariables().end());
-    //        it != end;
-    //        ++it) {
-    //     update_customvariable(
-    //       obj.custom_variables,
-    //       it->first,
-    //       it->second);
-    //   }
-    // }
+    if (!state.customvariables().empty()
+        && (obj.get_modified_attributes() & MODATTR_CUSTOM_VARIABLE)) {
+      for (map_customvar::const_iterator
+             it(state.customvariables().begin()),
+             end(state.customvariables().end());
+           it != end;
+           ++it) {
+        customvar var;
+        var.set_name(it->first);
+        var.set_value(it->second);
+        obj.set_customvar(var);
+      }
+    }
   }
   // Adjust modified attributes if necessary.
   else
@@ -250,17 +249,19 @@ void applier::host::_update(
   bool allow_flapstart_notification(true);
 
   // Adjust modified attributes if no custom variable has been changed.
-  // XXX
-  // if (obj.modified_attributes & MODATTR_CUSTOM_VARIABLE) {
-  //   bool at_least_one_modified(false);
-  //   for (customvariablesmember* member(obj.custom_variables);
-  //        member;
-  //        member = member->next)
-  //     if (member->has_been_modified)
-  //       at_least_one_modified = true;
-  //   if (!at_least_one_modified)
-  //     obj.modified_attributes -= MODATTR_CUSTOM_VARIABLE;
-  // }
+  if (obj.get_modified_attributes() & MODATTR_CUSTOM_VARIABLE) {
+    bool at_least_one_modified(false);
+    for (customvar_set::const_iterator
+           it(obj.get_customvars().begin()),
+           end(obj.get_customvars().end());
+         it != end;
+         ++it)
+      if (it->second.get_modified())
+        at_least_one_modified = true;
+    if (!at_least_one_modified)
+      obj.set_modified_attributes(
+            obj.get_modified_attributes() - MODATTR_CUSTOM_VARIABLE);
+  }
 
   // calculate next possible notification time.
   if (obj.get_current_state() != HOST_UP && obj.get_last_notification())
