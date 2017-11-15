@@ -37,6 +37,13 @@ not_found::not_found(char const* file, char const* function, int line)
   : error(file, function, line) {}
 
 /**
+ *  Copy constructor.
+ *
+ *  @param[in] other  Object to copy.
+ */
+not_found::not_found(not_found const& other) : error(other) {}
+
+/**
  *  Destructor.
  */
 not_found::~not_found() throw () {}
