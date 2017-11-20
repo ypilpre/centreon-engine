@@ -44,8 +44,11 @@ namespace              checks {
     bool               get_active_checks_enabled() const;
     void               set_active_checks_enabled(bool enable);
     command*           get_check_command() const;
+    void               set_check_command(command* cmd);
     std::string const& get_check_command_args() const;
+    void               set_check_command_args(std::string const& args);
     timeperiod*        get_check_period() const;
+    void               set_check_period(timeperiod* tp);
     int                get_max_attempts() const;
     void               set_max_attempts(int attempts);
     int                get_normal_check_interval() const;
@@ -118,7 +121,9 @@ namespace              checks {
 
     // Event handler.
     command*           get_event_handler() const;
+    void               set_event_handler(command* cmd);
     std::string const& get_event_handler_args() const;
+    void               set_event_handler_args(std::string const& args);
     bool               get_event_handler_enabled() const;
     void               set_event_handler_enabled(bool enable);
 

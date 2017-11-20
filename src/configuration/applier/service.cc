@@ -610,41 +610,71 @@ void applier::service::remove_object(
  */
 void applier::service::resolve_object(
                          configuration::service const& obj) {
-  // XXX
-  // // Logging.
-  // logger(logging::dbg_config, logging::more)
-  //   << "Resolving service '" << obj.service_description()
-  //   << "' of host '" << *obj.hosts().begin() << "'.";
+  // Logging.
+  logger(logging::dbg_config, logging::more)
+    << "Resolving service '" << obj.service_description()
+    << "' of host '" << *obj.hosts().begin() << "'.";
 
-  // // Find service.
-  // umap<std::pair<std::string, std::string>, shared_ptr<service_struct> >::iterator
-  //   it(applier::state::instance().services_find(obj.key()));
-  // if (applier::state::instance().services().end() == it)
-  //   throw (engine_error() << "Cannot resolve non-existing service '"
-  //          << obj.service_description() << "' of host '"
-  //          << *obj.hosts().begin() << "'");
+  try {
+    // Find service.
+    ::service& svc(
+      *applier::state::instance().services_find(obj.key()));
 
-  // // Remove service group links.
-  // deleter::listmember(
-  //   it->second->servicegroups_ptr,
-  //   &deleter::objectlist);
+    // Find host and adjust its counters.
+    ::host& hst(
+      *applier::state::instance().hosts_find(*obj.hosts().begin()));
+    svc.set_host(&hst);
+    hst.add_service(&svc);
+    // XXX
+    // ++hst->set_second->total_services;
+    // hst->second->total_service_check_interval
+    //   += static_cast<unsigned long>(it->second->check_interval);
 
-  // // Find host and adjust its counters.
-  // umap<std::string, shared_ptr<host_struct> >::iterator
-  //   hst(applier::state::instance().hosts_find(it->second->host_name));
-  // if (hst != applier::state::instance().hosts().end()) {
-  //   ++hst->second->total_services;
-  //   hst->second->total_service_check_interval
-  //     += static_cast<unsigned long>(it->second->check_interval);
-  // }
 
-  // // Resolve service.
-  // if (!check_service(it->second.get(), &config_warnings, &config_errors))
-  //     throw (engine_error() << "Cannot resolve service '"
-  //            << obj.service_description() << "' of host '"
-  //            << *obj.hosts().begin() << "'");
+    // Resolve check command.
+    {
+      // Get the command name.
+      std::string command_name(obj.check_command().substr(
+                                 0,
+                                 obj.check_command().find_first_of('!')));
 
-  // return ;
+      // Set resolved command and arguments.
+      svc.set_check_command(&find_command(command_name));
+      svc.set_check_command_args(obj.check_command());
+    }
+
+    // Resolve check period.
+    if (!obj.check_period().empty())
+      svc.set_check_period(
+        configuration::applier::state::instance().timeperiods_find(
+          obj.check_period()).get());
+
+    // Resolve contacts.
+
+    // Resolve contact groups.
+
+    // Resolve event handler.
+    if (!obj.event_handler().empty()) {
+      // Get the command name.
+      std::string command_name(obj.event_handler().substr(
+                                 0,
+                                 obj.event_handler().find_first_of('!')));
+
+      // Get command.
+      svc.set_event_handler(&find_command(command_name));
+      svc.set_event_handler_args(obj.event_handler());
+    }
+
+    // Resolve notification period.
+    // XXX
+  }
+  catch (std::exception const& e) {
+    throw (engine_error() << "Could not resolve service '"
+           << obj.service_description() << "' of host '"
+           << *obj.hosts().begin() << "': " << e.what());
+  }
+
+  return ;
 }
 
 /**

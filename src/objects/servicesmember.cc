@@ -83,51 +83,6 @@ std::ostream& operator<<(std::ostream& os, servicesmember const& obj) {
 }
 
 /**
- *  Link a service to its host.
- *
- *  @param[in,out] hst Host.
- *  @param[in]     svc Service.
- *
- *  @return Host-service relation.
- */
-servicesmember* add_service_link_to_host(host* hst, service* svc) {
-  // Make sure we have the data we need.
-  if (!hst || !svc)
-    return (NULL);
-
-  // Allocate memory.
-  servicesmember* obj(new servicesmember);
-  memset(obj, 0, sizeof(*obj));
-
-  try {
-    // Initialize values.
-    obj->service_ptr = svc;
-
-    // Add the child entry to the host definition.
-    obj->next = hst->services;
-    hst->services = obj;
-
-    // Notify event broker.
-    timeval tv(get_broker_timestamp(NULL));
-    broker_relation_data(
-      NEBTYPE_PARENT_ADD,
-      NEBFLAG_NONE,
-      NEBATTR_NONE,
-      hst,
-      NULL,
-      NULL,
-      svc,
-      &tv);
-  }
-  catch (...) {
-    deleter::servicesmember(obj);
-    obj = NULL;
-  }
-
-  return (obj);
-}
-
-/**
  *  Add a new service to a service group.
  *
  *  @param[in,out] temp_servicegroup Target service group.

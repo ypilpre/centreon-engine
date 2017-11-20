@@ -22,6 +22,7 @@
 #  define CCE_CONFIG_HH
 
 #  include "com/centreon/engine/host.hh"
+#  include "com/centreon/engine/objects/contact.hh"
 #  include "com/centreon/engine/objects/contactgroup.hh"
 #  include "com/centreon/engine/objects/hostdependency.hh"
 #  include "com/centreon/engine/objects/hostescalation.hh"

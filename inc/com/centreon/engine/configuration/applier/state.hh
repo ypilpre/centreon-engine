@@ -170,10 +170,8 @@ namespace           configuration {
                     timeperiods() const throw ();
       umap<std::string, shared_ptr<timeperiod_struct> >&
                     timeperiods() throw ();
-      umap<std::string, shared_ptr<timeperiod_struct> >::const_iterator
+      shared_ptr<timeperiod_struct>
                     timeperiods_find(configuration::timeperiod::key_type const& k) const;
-      umap<std::string, shared_ptr<timeperiod_struct> >::iterator
-                    timeperiods_find(configuration::timeperiod::key_type const& k);
       umap<std::string, std::string>&
                     user_macros();
       umap<std::string, std::string> const&

@@ -380,16 +380,13 @@ int grab_datetime_macro_r(
   case MACRO_ISVALIDTIME:
   case MACRO_NEXTVALIDTIME:
     /* find the timeperiod */
-    {
-      umap<std::string, com::centreon::shared_ptr<timeperiod_struct> >::const_iterator
-        it(configuration::applier::state::instance().timeperiods_find(arg1));
-      if (it != configuration::applier::state::instance().timeperiods().end())
-        temp_timeperiod = it->second.get();
-      else
-        temp_timeperiod = NULL;
+    try {
+      temp_timeperiod = configuration::applier::state::instance().timeperiods_find(arg1).get();
     }
-    if (!temp_timeperiod)
+    catch (not_found const& e) {
+      (void)e;
       return (ERROR);
+    }
     /* what timestamp should we use? */
     if (arg2)
       test_time = (time_t)strtoul(arg2, NULL, 0);

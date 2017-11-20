@@ -38,9 +38,6 @@ typedef struct                  servicesmember_struct {
 extern "C" {
 #  endif /* C++ */
 
-servicesmember* add_service_link_to_host(
-                  host* hst,
-                  service* service_ptr);
 servicesmember* add_service_to_servicegroup(
                   servicegroup_struct* temp_servicegroup,
                   char const* host_name,

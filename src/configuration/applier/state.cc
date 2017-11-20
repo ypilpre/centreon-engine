@@ -888,23 +888,15 @@ umap<std::string, shared_ptr<timeperiod_struct> >& applier::state::timeperiods()
  *
  *  @param[in] k Time period name.
  *
- *  @return Iterator to the element if found, timeperiods().end()
- *          otherwise.
+ *  @return Pointer to the element if found. Throw if not.
  */
-umap<std::string, shared_ptr<timeperiod_struct> >::const_iterator applier::state::timeperiods_find(configuration::timeperiod::key_type const& k) const {
-  return (_timeperiods.find(k));
-}
-
-/**
- *  Find a time period from its key.
- *
- *  @param[in] k Time period name.
- *
- *  @return Iterator to the element if found, timeperiods().end()
- *          otherwise.
- */
-umap<std::string, shared_ptr<timeperiod_struct> >::iterator applier::state::timeperiods_find(configuration::timeperiod::key_type const& k) {
-  return (_timeperiods.find(k));
+shared_ptr<timeperiod_struct> applier::state::timeperiods_find(configuration::timeperiod::key_type const& k) const {
+  umap<std::string, shared_ptr<timeperiod_struct> >::const_iterator
+    it(_timeperiods.find(k));
+  if (it == _timeperiods.end())
+    throw (not_found_error()
+           << "Could not find timeperiod '" << k << "'");
+  return (it->second);
 }
 
 /**

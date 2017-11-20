@@ -23,6 +23,7 @@
 #include <cstdlib>
 #include <sstream>
 #include "com/centreon/engine/config.hh"
+#include "com/centreon/engine/configuration/applier/state.hh"
 #include "com/centreon/engine/configuration/parser.hh"
 #include "com/centreon/engine/globals.hh"
 #include "com/centreon/engine/logging/logger.hh"
@@ -40,7 +41,6 @@ using namespace com::centreon::engine::logging;
 int pre_flight_check() {
   host* temp_host(NULL);
   char* buf(NULL);
-  service* temp_service(NULL);
   command* temp_command(NULL);
   char* temp_command_name(NULL);
   int warnings(0);
@@ -79,7 +79,7 @@ int pre_flight_check() {
     /* get the command name, leave any arguments behind */
     temp_command_name = my_strtok(buf, "!");
 
-    temp_command = find_command(temp_command_name);
+    temp_command = &find_command(temp_command_name);
     if (temp_command == NULL) {
       logger(log_verification_error, basic)
         << "Error: Global host event handler command '"
@@ -101,7 +101,7 @@ int pre_flight_check() {
     /* get the command name, leave any arguments behind */
     temp_command_name = my_strtok(buf, "!");
 
-    temp_command = find_command(temp_command_name);
+    temp_command = &find_command(temp_command_name);
     if (temp_command == NULL) {
       logger(log_verification_error, basic)
         << "Error: Global service event handler command '"
@@ -128,7 +128,7 @@ int pre_flight_check() {
     /* get the command name, leave any arguments behind */
     temp_command_name = my_strtok(buf, "!");
 
-    temp_command = find_command(temp_command_name);
+    temp_command = &find_command(temp_command_name);
     if (temp_command == NULL) {
       logger(log_verification_error, basic)
         << "Error: Obsessive compulsive service processor command '"
@@ -149,7 +149,7 @@ int pre_flight_check() {
     /* get the command name, leave any arguments behind */
     temp_command_name = my_strtok(buf, "!");
 
-    temp_command = find_command(temp_command_name);
+    temp_command = &find_command(temp_command_name);
     if (temp_command == NULL) {
       logger(log_verification_error, basic)
         << "Error: Obsessive compulsive host processor command '"
@@ -164,14 +164,17 @@ int pre_flight_check() {
   }
 
   /* count number of services associated with each host (we need this for flap detection)... */
-  for (temp_service = service_list;
-       temp_service != NULL;
-       temp_service = temp_service->next) {
-    if ((temp_host = find_host(temp_service->host_name))) {
-      temp_host->total_services++;
-      temp_host->total_service_check_interval
-        += static_cast<unsigned long>(temp_service->check_interval);
-    }
+  for (umap<std::pair<std::string, std::string>, com::centreon::shared_ptr<::service> >::const_iterator
+         it(configuration::applier::state::instance().services().begin()),
+         end(configuration::applier::state::instance().services().end());
+       it != end;
+       ++it) {
+    // XXX
+    // if ((temp_host = find_host(temp_service->host_name))) {
+    //   temp_host->total_services++;
+    //   temp_host->total_service_check_interval
+    //     += static_cast<unsigned long>(temp_service->check_interval);
+    // }
   }
 
   if (verify_config == true) {
@@ -235,10 +238,12 @@ int pre_flight_object_check(int* w, int* e) {
   if (verify_config == true)
     logger(log_info_message, basic) << "Checking services...";
   int total_objects(0);
-  for (service* temp_service(service_list);
-       temp_service;
-       temp_service = temp_service->next, ++total_objects)
-    check_service(temp_service, &warnings, &errors);
+  for (umap<std::pair<std::string, std::string>, com::centreon::shared_ptr<::service> >::const_iterator
+         it(configuration::applier::state::instance().services().begin()),
+         end(configuration::applier::state::instance().services().end());
+       it != end;
+       ++it, ++total_objects)
+    check_service(it->second.get(), &warnings, &errors);
   if (verify_config == true)
     logger(log_info_message, basic)
       << "\tChecked " << total_objects << " services.";
@@ -247,10 +252,12 @@ int pre_flight_object_check(int* w, int* e) {
   if (verify_config == true)
     logger(log_info_message, basic) << "Checking hosts...";
   total_objects = 0;
-  for (host* temp_host(host_list);
-       temp_host;
-       temp_host = temp_host->next, ++total_objects)
-    check_host(temp_host, &warnings, &errors);
+  for (umap<std::string, com::centreon::shared_ptr<::host> >::const_iterator
+         it(configuration::applier::state::instance().hosts().begin()),
+         end(configuration::applier::state::instance().hosts().end());
+       it != end;
+       ++it, ++total_objects)
+    check_host(it->second.get(), &warnings, &errors);
   if (verify_config == true)
     logger(log_info_message, basic)
       << "\tChecked " << total_objects << " hosts.";
@@ -398,18 +405,16 @@ int pre_flight_object_check(int* w, int* e) {
 #define DFS_NEAR_LOOP                    3      /* has trouble sons */
 #define DFS_LOOPY                        4      /* is a part of a loop */
 
-#define dfs_get_status(h) h->circular_path_checked
-#define dfs_unset_status(h) h->circular_path_checked = 0
-#define dfs_set_status(h, flag) h->circular_path_checked = (flag)
-#define dfs_host_status(h) (h ? dfs_get_status(h) : DFS_OK)
+#define dfs_get_status(h) (h)->get_circular_path_checked()
+#define dfs_unset_status(h) (h)->set_circular_path_checked(0)
+#define dfs_set_status(h, flag) (h)->set_circular_path_checked(flag)
+#define dfs_host_status(h) ((h) ? dfs_get_status(h) : DFS_OK)
 
 /**
  * Modified version of Depth-first Search
  * http://en.wikipedia.org/wiki/Depth-first_search
  */
 static int dfs_host_path(host* root) {
-  hostsmember* child(NULL);
-
   if (!root)
     return (DFS_NEAR_LOOP);
 
@@ -420,17 +425,21 @@ static int dfs_host_path(host* root) {
   dfs_set_status(root, DFS_TEMP_CHECKED);
 
   /* We are scanning the children */
-  for (child = root->child_hosts; child != NULL; child = child->next) {
-    int child_status = dfs_get_status(child->host_ptr);
+  for (host_set::const_iterator
+         it(root->get_children().begin()),
+         end(root->get_children().end());
+       it != end;
+       ++it) {
+    int child_status = dfs_get_status(*it);
 
     /* If a child is not checked, check it */
     if (child_status == DFS_UNCHECKED)
-      child_status = dfs_host_path(child->host_ptr);
+      child_status = dfs_host_path(*it);
 
     /* If a child already temporary checked, its a problem,
      * loop inside, and its a acked status */
     if (child_status == DFS_TEMP_CHECKED) {
-      dfs_set_status(child->host_ptr, DFS_LOOPY);
+      dfs_set_status(*it, DFS_LOOPY);
       dfs_set_status(root, DFS_LOOPY);
     }
 
@@ -441,7 +450,7 @@ static int dfs_host_path(host* root) {
         dfs_set_status(root, DFS_NEAR_LOOP);
 
       /* we already saw this child, it's a problem */
-      dfs_set_status(child->host_ptr, DFS_LOOPY);
+      dfs_set_status(*it, DFS_LOOPY);
     }
   }
 
@@ -457,7 +466,6 @@ static int dfs_host_path(host* root) {
 
 /* check for circular paths and dependencies */
 int pre_flight_circular_check(int* w, int* e) {
-  host* temp_host(NULL);
   servicedependency* temp_sd(NULL);
   servicedependency* temp_sd2(NULL);
   hostdependency* temp_hd(NULL);
@@ -478,28 +486,32 @@ int pre_flight_circular_check(int* w, int* e) {
   found = false;
 
   /* We clean the dsf status from previous check */
-  for (temp_host = host_list;
-       temp_host != NULL;
-       temp_host = temp_host->next) {
-    dfs_set_status(temp_host, DFS_UNCHECKED);
-  }
+  for (umap<std::string, com::centreon::shared_ptr<::host> >::iterator
+         it(configuration::applier::state::instance().hosts().begin()),
+         end(configuration::applier::state::instance().hosts().end());
+       it != end;
+       ++it)
+    dfs_set_status(it->second.get(), DFS_UNCHECKED);
 
-  for (temp_host = host_list;
-       temp_host != NULL;
-       temp_host = temp_host->next) {
-    if (dfs_host_path(temp_host) == DFS_LOOPY)
+  for (umap<std::string, com::centreon::shared_ptr<::host> >::iterator
+         it(configuration::applier::state::instance().hosts().begin()),
+         end(configuration::applier::state::instance().hosts().end());
+       it != end;
+       ++it)
+    if (dfs_host_path(it->second.get()) == DFS_LOOPY)
       errors = 1;
-  }
 
-  for (temp_host = host_list;
-       temp_host != NULL;
-       temp_host = temp_host->next) {
-    if (dfs_get_status(temp_host) == DFS_LOOPY)
+  for (umap<std::string, com::centreon::shared_ptr<::host> >::iterator
+         it(configuration::applier::state::instance().hosts().begin()),
+         end(configuration::applier::state::instance().hosts().end());
+       it != end;
+       ++it) {
+    if (dfs_get_status(it->second.get()) == DFS_LOOPY)
       logger(log_verification_error, basic)
-        << "Error: The host '" << temp_host->name
+        << "Error: The host '" << it->second->get_host_name()
         << "' is part of a circular parent/child chain!";
     /* clean DFS status */
-    dfs_set_status(temp_host, DFS_UNCHECKED);
+    dfs_set_status(it->second.get(), DFS_UNCHECKED);
   }
 
   /********************************************/
@@ -630,22 +642,22 @@ int check_service(service* svc, int* w, int* e) {
   int warnings(0);
 
   /* check for a valid host */
-  host* temp_host = find_host(svc->host_name);
+  host* temp_host(svc->get_host());
 
   /* we couldn't find an associated host! */
-
   if (!temp_host) {
-    logger(log_verification_error, basic)
-      << "Error: Host '" << svc->host_name << "' specified in service "
-      "'" << svc->description << "' not defined anywhere!";
+    logger(log_verification_error, basic) << "Error: Host '"
+      << svc->get_host_name() << "' specified in service '"
+      << svc->get_description() << "' not defined anywhere!";
     errors++;
   }
 
   /* save the host pointer for later */
-  svc->host_ptr = temp_host;
+  // XXX
+  // svc->host_ptr = temp_host;
 
-  /* add a reverse link from the host to the service for faster lookups later */
-  add_service_link_to_host(temp_host, svc);
+  // /* add a reverse link from the host to the service for faster lookups later */
+  // add_service_link_to_host(temp_host, svc);
 
   /* check the event handler command */
   if (svc->event_handler != NULL) {
