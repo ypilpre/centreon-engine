@@ -30,10 +30,12 @@
 #include "com/centreon/engine/deleter/objectlist.hh"
 #include "com/centreon/engine/error.hh"
 #include "com/centreon/engine/globals.hh"
+#include "com/centreon/engine/not_found.hh"
 
 using namespace com::centreon;
 using namespace com::centreon::engine;
 using namespace com::centreon::engine::configuration;
+using namespace com::centreon::engine::logging;
 
 /**
  *  Check if the service group name matches the configuration object.
@@ -610,6 +612,9 @@ void applier::service::remove_object(
  */
 void applier::service::resolve_object(
                          configuration::service const& obj) {
+  // Failure flag.
+  bool failure(false);
+
   // Logging.
   logger(logging::dbg_config, logging::more)
     << "Resolving service '" << obj.service_description()
@@ -618,18 +623,28 @@ void applier::service::resolve_object(
   try {
     // Find service.
     ::service& svc(
-      *applier::state::instance().services_find(obj.key()));
+      *applier::state::instance().services_find(obj.key()).get());
 
     // Find host and adjust its counters.
-    ::host& hst(
-      *applier::state::instance().hosts_find(*obj.hosts().begin()));
-    svc.set_host(&hst);
-    hst.add_service(&svc);
-    // XXX
-    // ++hst->set_second->total_services;
-    // hst->second->total_service_check_interval
-    //   += static_cast<unsigned long>(it->second->check_interval);
-
+    try {
+      ::host* hst(NULL);
+      hst = applier::state::instance().hosts_find(
+                                         *obj.hosts().begin()).get();
+      svc.set_host(hst);
+      hst->add_service(&svc);
+      // XXX
+      // ++hst->set_second->total_services;
+      // hst->second->total_service_check_interval
+      //   += static_cast<unsigned long>(it->second->check_interval);
+    }
+    catch (not_found const& e) {
+      (void)e;
+      logger(log_verification_error, basic) << "Error: Host '"
+        << svc.get_host_name() << "' specified in service '"
+        << svc.get_description() << "' not defined anywhere!";
+      ++config_errors;
+      failure = true;
+    }
 
     // Resolve check command.
     {
@@ -637,21 +652,47 @@ void applier::service::resolve_object(
       std::string command_name(obj.check_command().substr(
                                  0,
                                  obj.check_command().find_first_of('!')));
-
-      // Set resolved command and arguments.
-      svc.set_check_command(&find_command(command_name));
-      svc.set_check_command_args(obj.check_command());
+      try {
+        // Set resolved command and arguments.
+        svc.set_check_command(&find_command(command_name));
+        svc.set_check_command_args(obj.check_command());
+      }
+      catch (not_found const& e) {
+        (void)e;
+        logger(log_verification_error, basic)
+          << "Error: Service check command '" << command_name
+          << "' specified in service '" << svc.get_description()
+          << "' for host '" << svc.get_host_name()
+          << "' not defined anywhere!";
+        ++config_errors;
+        failure = true;
+      }
     }
 
     // Resolve check period.
-    if (!obj.check_period().empty())
-      svc.set_check_period(
-        configuration::applier::state::instance().timeperiods_find(
-          obj.check_period()).get());
-
-    // Resolve contacts.
-
-    // Resolve contact groups.
+    if (!obj.check_period().empty()) {
+      try {
+        svc.set_check_period(
+          configuration::applier::state::instance().timeperiods_find(
+            obj.check_period()).get());
+      }
+      catch (not_found const& e) {
+        (void)e;
+        logger(log_verification_error, basic)
+          << "Error: Check period '" << obj.check_period()
+          << "' specified for service '" << svc.get_description()
+          << "' on host '" << svc.get_host_name()
+          << "' is not defined anywhere!";
+        ++config_errors;
+        failure = true;
+      }
+    }
+    else {
+      logger(log_verification_error, basic) << "Warning: Service '"
+        << svc.get_description() << "' on host '"
+        << svc.get_host_name() << "' has no check time period defined!";
+      ++config_warnings;
+    }
 
     // Resolve event handler.
     if (!obj.event_handler().empty()) {
@@ -660,13 +701,38 @@ void applier::service::resolve_object(
                                  0,
                                  obj.event_handler().find_first_of('!')));
 
-      // Get command.
-      svc.set_event_handler(&find_command(command_name));
-      svc.set_event_handler_args(obj.event_handler());
+      try {
+        // Get command.
+        svc.set_event_handler(&find_command(command_name));
+        svc.set_event_handler_args(obj.event_handler());
+      }
+      catch (not_found const& e) {
+        (void)e;
+        logger(log_verification_error, basic)
+          << "Error: Event handler command '" << command_name
+          << "' specified in service '" << svc.get_description()
+          << "' for host '" << svc.get_host_name()
+          << "' not defined anywhere";
+        ++config_errors;
+        failure = true;
+      }
     }
+
+    // Resolve contacts.
+    // XXX
+
+    // Resolve contact groups.
+    // XXX
 
     // Resolve notification period.
     // XXX
+
+    // Check for sane recovery options.
+    // XXX
+
+    // Throw exception in case of failure.
+    if (failure)
+      throw (error() << "please check logs above");
   }
   catch (std::exception const& e) {
     throw (engine_error() << "Could not resolve service '"
