@@ -35,25 +35,6 @@
 using namespace com::centreon;
 using namespace com::centreon::engine;
 using namespace com::centreon::engine::configuration;
-using namespace com::centreon::engine::logging;
-
-/**
- *  Check if the service group name matches the configuration object.
- */
-class         servicegroup_name_comparator {
-public:
-              servicegroup_name_comparator(
-                std::string const& servicegroup_name) {
-    _servicegroup_name = servicegroup_name;
-  }
-
-  bool        operator()(shared_ptr<configuration::servicegroup> sg) {
-    return (_servicegroup_name == sg->servicegroup_name());
-  }
-
-private:
-  std::string _servicegroup_name;
-};
 
 /**
  *  Default constructor.
@@ -639,9 +620,10 @@ void applier::service::resolve_object(
     }
     catch (not_found const& e) {
       (void)e;
-      logger(log_verification_error, basic) << "Error: Host '"
-        << svc.get_host_name() << "' specified in service '"
-        << svc.get_description() << "' not defined anywhere!";
+      logger(logging::log_verification_error, logging::basic)
+        << "Error: Host '" << svc.get_host_name()
+        << "' specified in service '" << svc.get_description()
+        << "' not defined anywhere!";
       ++config_errors;
       failure = true;
     }
@@ -659,7 +641,7 @@ void applier::service::resolve_object(
       }
       catch (not_found const& e) {
         (void)e;
-        logger(log_verification_error, basic)
+        logger(logging::log_verification_error, logging::basic)
           << "Error: Service check command '" << command_name
           << "' specified in service '" << svc.get_description()
           << "' for host '" << svc.get_host_name()
@@ -678,7 +660,7 @@ void applier::service::resolve_object(
       }
       catch (not_found const& e) {
         (void)e;
-        logger(log_verification_error, basic)
+        logger(logging::log_verification_error, logging::basic)
           << "Error: Check period '" << obj.check_period()
           << "' specified for service '" << svc.get_description()
           << "' on host '" << svc.get_host_name()
@@ -688,9 +670,10 @@ void applier::service::resolve_object(
       }
     }
     else {
-      logger(log_verification_error, basic) << "Warning: Service '"
-        << svc.get_description() << "' on host '"
-        << svc.get_host_name() << "' has no check time period defined!";
+      logger(logging::log_verification_error, logging::basic)
+        << "Warning: Service '" << svc.get_description()
+        << "' on host '" << svc.get_host_name()
+        << "' has no check time period defined!";
       ++config_warnings;
     }
 
@@ -708,7 +691,7 @@ void applier::service::resolve_object(
       }
       catch (not_found const& e) {
         (void)e;
-        logger(log_verification_error, basic)
+        logger(logging::log_verification_error, logging::basic)
           << "Error: Event handler command '" << command_name
           << "' specified in service '" << svc.get_description()
           << "' for host '" << svc.get_host_name()
@@ -728,6 +711,9 @@ void applier::service::resolve_object(
     // XXX
 
     // Check for sane recovery options.
+    // XXX
+
+    // Check for illegal characters in service description.
     // XXX
 
     // Throw exception in case of failure.
