@@ -34,6 +34,7 @@
 #include "com/centreon/engine/deleter/servicesmember.hh"
 #include "com/centreon/engine/error.hh"
 #include "com/centreon/engine/globals.hh"
+#include "com/centreon/engine/not_found.hh"
 
 using namespace com::centreon;
 using namespace com::centreon::engine;
@@ -547,11 +548,14 @@ void applier::host::remove_object(
  */
 void applier::host::resolve_object(
                       configuration::host const& obj) {
-  // XXX
-  // // Logging.
-  // logger(logging::dbg_config, logging::more)
-  //   << "Resolving host '" << obj.host_name() << "'.";
+  // Failure flag.
+  bool failure(false);
 
+  // Logging.
+  logger(logging::dbg_config, logging::more)
+    << "Resolving host '" << obj.host_name() << "'.";
+
+  // XXX : move in separate pre-resolution method
   // // If it is the very first host to be resolved,
   // // remove all the child backlinks of all the hosts.
   // // It is necessary to do it only once to prevent the removal
@@ -563,27 +567,114 @@ void applier::host::resolve_object(
   //     deleter::listmember(it->second->child_hosts, &deleter::hostsmember);
   // }
 
-  // // Find host.
-  // umap<std::string, shared_ptr<host_struct> >::iterator
-  //   it(applier::state::instance().hosts_find(obj.key()));
-  // if (applier::state::instance().hosts().end() == it)
-  //   throw (engine_error() << "Cannot resolve non-existing host '"
-  //          << obj.host_name() << "'");
+  try {
+    // Find host.
+    ::host& hst(
+              *applier::state::instance().hosts_find(obj.key()).get());
 
-  // // Remove service backlinks.
-  // deleter::listmember(it->second->services, &deleter::servicesmember);
+    // XXX
+    // // Reset host counters.
+    // it->second->total_services = 0;
+    // it->second->total_service_check_interval = 0;
 
-  // // Remove host group links.
-  // deleter::listmember(it->second->hostgroups_ptr, &deleter::objectlist);
+    // Make sure host has at least one service associated with it.
+    // XXX
 
-  // // Reset host counters.
-  // it->second->total_services = 0;
-  // it->second->total_service_check_interval = 0;
+    // Resolve check command.
+    {
+      // Get the command name.
+      std::string command_name(obj.check_command().substr(
+                                 0,
+                                 obj.check_command().find_first_of('!')));
+      try {
+        // Set resolved command and arguments.
+        hst.set_check_command(&find_command(command_name));
+        hst.set_check_command_args(obj.check_command());
+      }
+      catch (not_found const& e) {
+        (void)e;
+        logger(logging::log_verification_error, logging::basic)
+          << "Error: Host check command '" << command_name
+          << "' specified for host '" << hst.get_host_name()
+          << "' is not defined anywhere!";
+        ++config_errors;
+        failure = true;
+      }
+    }
 
-  // // Resolve host.
-  // if (!check_host(it->second.get(), &config_warnings, &config_errors))
-  //   throw (engine_error() << "Cannot resolve host '"
-  //          << obj.host_name() << "'");
+    // Resolve check period.
+    if (!obj.check_period().empty()) {
+      try {
+        hst.set_check_period(
+          configuration::applier::state::instance().timeperiods_find(
+            obj.check_period()).get());
+      }
+      catch (not_found const& e) {
+        (void)e;
+        logger(logging::log_verification_error, logging::basic)
+          << "Error: Check period '" << obj.check_period()
+          << "' specified for host '" << hst.get_host_name()
+          << "' is not defined anywhere!";
+        ++config_errors;
+        failure = true;
+      }
+    }
+    else {
+      logger(logging::log_verification_error, logging::basic)
+        << "Warning: Host '" << hst.get_host_name()
+        << "' has no check time period defined!";
+      ++config_warnings;
+    }
+
+    // Resolve event handler.
+    if (!obj.event_handler().empty()) {
+      // Get the command name.
+      std::string command_name(obj.event_handler().substr(
+                                 0,
+                                 obj.event_handler().find_first_of('!')));
+
+      try {
+        // Get command.
+        hst.set_event_handler(&find_command(command_name));
+        hst.set_event_handler_args(obj.event_handler());
+      }
+      catch (not_found const& e) {
+        (void)e;
+        logger(logging::log_verification_error, logging::basic)
+          << "Error: Event handler command '" << command_name
+          << "' specified for host '" << hst.get_host_name()
+          << "' not defined anywhere";
+        ++config_errors;
+        failure = true;
+      }
+    }
+
+    // Resolve parents.
+    // XXX
+
+    // Resolve contacts.
+    // XXX
+
+    // Resolve contact groups.
+    // XXX
+
+    // Resolve notification period.
+    // XXX
+
+    // Check for sane recovery options.
+    // XXX
+
+    // Check for illegal characters in host name.
+    // XXX
+
+    // Throw exception in case of failure.
+    if (failure)
+      throw (error() << "please check logs above");
+  }
+  catch (std::exception const& e) {
+    throw (engine_error() << "Could not resolve host '"
+           << obj.host_name() << "': " << e.what());
+  }
 
   return ;
 }
