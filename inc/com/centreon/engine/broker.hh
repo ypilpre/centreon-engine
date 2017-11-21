@@ -22,7 +22,7 @@
 #  define CCE_BROKER_HH
 
 #  include <sys/time.h>
-#  include "com/centreon/engine/objects/contact.hh"
+#  include "com/centreon/engine/contact.hh"
 #  include "com/centreon/engine/objects/host.hh"
 #  include "com/centreon/engine/objects/service.hh"
 
@@ -322,7 +322,7 @@ void           broker_adaptive_contact_data(
                  int type,
                  int flags,
                  int attr,
-                 contact* cntct,
+                 com::centreon::engine::contact* cntct,
                  int command_type,
                  unsigned long modattr,
                  unsigned long modattrs,
@@ -415,7 +415,7 @@ int            broker_contact_notification_data(
                  struct timeval start_time,
                  struct timeval end_time,
                  void* data,
-                 contact* cntct,
+                 com::centreon::engine::contact* cntct,
                  char* ack_author,
                  char* ack_data,
                  int escalated,
@@ -429,7 +429,7 @@ int            broker_contact_notification_method_data(
                  struct timeval start_time,
                  struct timeval end_time,
                  void* data,
-                 contact* cntct,
+                 com::centreon::engine::contact* cntct,
                  char const* cmd,
                  char* ack_author,
                  char* ack_data,
@@ -439,7 +439,7 @@ void           broker_contact_status(
                  int type,
                  int flags,
                  int attr,
-                 contact* cntct,
+                 com::centreon::engine::contact* cntct,
                  struct timeval const* timestamp);
 void           broker_custom_variable(
                  int type,

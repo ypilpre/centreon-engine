@@ -30,9 +30,9 @@
 #  include "com/centreon/shared_ptr.hh"
 
 // Forward declaration.
-struct command_struct;
-struct contact_struct;
-struct contactgroup_struct;
+//struct command_struct;
+//struct contact_struct;
+//struct contactgroup_struct;
 struct host_struct;
 struct hostdependency_struct;
 struct hostescalation_struct;
@@ -53,6 +53,9 @@ namespace commands {
 namespace retention {
   class   state;
 }
+
+class contact;
+class contactgroup;
 
 namespace           configuration {
   namespace         applier {
@@ -91,21 +94,21 @@ namespace           configuration {
                     connectors_find(configuration::connector::key_type const& k) const;
       umap<std::string, shared_ptr<commands::connector> >::iterator
                     connectors_find(configuration::connector::key_type const& k);
-      umap<std::string, shared_ptr<contact_struct> > const&
+      umap<std::string, shared_ptr< com::centreon::engine::contact> > const&
                     contacts() const throw ();
-      umap<std::string, shared_ptr<contact_struct> >&
+      umap<std::string, shared_ptr< com::centreon::engine::contact> >&
                     contacts() throw ();
-      umap<std::string, shared_ptr<contact_struct> >::const_iterator
+      umap<std::string, shared_ptr< com::centreon::engine::contact> >::const_iterator
                     contacts_find(configuration::contact::key_type const& k) const;
-      umap<std::string, shared_ptr<contact_struct> >::iterator
+      umap<std::string, shared_ptr< com::centreon::engine::contact> >::iterator
                     contacts_find(configuration::contact::key_type const& k);
-      umap<std::string, shared_ptr<contactgroup_struct> > const&
+      umap<std::string, shared_ptr< com::centreon::engine::contactgroup> > const&
                     contactgroups() const throw ();
-      umap<std::string, shared_ptr<contactgroup_struct> >&
+      umap<std::string, shared_ptr< com::centreon::engine::contactgroup> >&
                     contactgroups() throw ();
-      umap<std::string, shared_ptr<contactgroup_struct> >::const_iterator
+      umap<std::string, shared_ptr< com::centreon::engine::contactgroup> >::const_iterator
                     contactgroups_find(configuration::contactgroup::key_type const& k) const;
-      umap<std::string, shared_ptr<contactgroup_struct> >::iterator
+      umap<std::string, shared_ptr< com::centreon::engine::contactgroup> >::iterator
                     contactgroups_find(configuration::contactgroup::key_type const& k);
       umap<std::string, shared_ptr<host_struct> > const&
                     hosts() const throw ();
@@ -223,9 +226,9 @@ namespace           configuration {
                     _commands;
       umap<std::string, shared_ptr<commands::connector> >
                     _connectors;
-      umap<std::string, shared_ptr<contact_struct> >
+      umap<std::string, shared_ptr< com::centreon::engine::contact> >
                     _contacts;
-      umap<std::string, shared_ptr<contactgroup_struct> >
+      umap<std::string, shared_ptr< com::centreon::engine::contactgroup> >
                     _contactgroups;
       concurrency::condvar
                     _cv_lock;

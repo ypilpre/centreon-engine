@@ -23,6 +23,7 @@
 
 # Set necessary settings.
 cmake_minimum_required(VERSION 2.8)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++98 -fpermissive")
 project("Centreon Engine" C CXX)
 set(PROJECT_SOURCE_DIR "${PROJECT_SOURCE_DIR}/..")
 set(INC_DIR "${PROJECT_SOURCE_DIR}/inc")
@@ -666,6 +667,8 @@ set(
   "${SRC_DIR}/broker.cc"
   "${SRC_DIR}/checks.cc"
   "${SRC_DIR}/config.cc"
+  "${SRC_DIR}/contact.cc"
+  "${SRC_DIR}/contactgroup.cc"
   "${SRC_DIR}/diagnostic.cc"
   "${SRC_DIR}/downtime_finder.cc"
   "${SRC_DIR}/error.cc"
@@ -694,6 +697,8 @@ set(
   "${INC_DIR}/com/centreon/engine/circular_buffer.hh"
   "${INC_DIR}/com/centreon/engine/common.hh"
   "${INC_DIR}/com/centreon/engine/config.hh"
+  "${INC_DIR}/com/centreon/engine/contact.hh"
+  "${INC_DIR}/com/centreon/engine/contactgroup.hh"
   "${INC_DIR}/com/centreon/engine/diagnostic.hh"
   "${INC_DIR}/com/centreon/engine/downtime_finder.hh"
   "${INC_DIR}/com/centreon/engine/error.hh"

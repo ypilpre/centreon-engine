@@ -23,11 +23,15 @@
 #  include <string>
 #  include <time.h>
 #  include "com/centreon/engine/common.hh"
+#  include "com/centreon/shared_ptr.hh"
+
+CCE_BEGIN()
+  class contact;
+  class contactgroup;
+CCE_END()
 
 /* Forward declaration. */
 struct command_struct;
-struct contactgroupsmember_struct;
-struct contactsmember_struct;
 struct customvariablesmember_struct;
 struct host_struct;
 struct objectlist_struct;
@@ -44,8 +48,12 @@ typedef struct                  service_struct {
   double                        retry_interval;
   int                           max_attempts;
   int                           parallelize;
-  contactgroupsmember_struct*   contact_groups;
-  contactsmember_struct*        contacts;
+  umap<std::string, com::centreon::shared_ptr<com::centreon::engine::contactgroup> >
+                                contact_groups;
+
+  umap<std::string, com::centreon::shared_ptr<com::centreon::engine::contact> >
+                                contacts;
+
   double                        notification_interval;
   double                        first_notification_delay;
   int                           notify_on_unknown;
@@ -136,9 +144,14 @@ typedef struct                  service_struct {
   unsigned long                 modified_attributes;
 
   host_struct*                  host_ptr;
-  command_struct*               event_handler_ptr;
+
+  com::centreon::engine::commands::command*
+                                event_handler_ptr;
+
   char*                         event_handler_args;
-  command_struct*               check_command_ptr;
+  com::centreon::engine::commands::command*
+                                check_command_ptr;
+
   char*                         check_command_args;
   timeperiod_struct*            check_period_ptr;
   timeperiod_struct*            notification_period_ptr;
@@ -216,10 +229,10 @@ service* add_service(
 int      get_service_count();
 int      is_contact_for_service(
            service_struct* svc,
-           contact_struct* cntct);
+           com::centreon::engine::contact* cntct);
 int      is_escalated_contact_for_service(
            service_struct* svc,
-           contact_struct* cntct);
+           com::centreon::engine::contact* cntct);
 
 #  ifdef __cplusplus
 }

@@ -19,10 +19,14 @@
 
 #ifndef CCE_OBJECTS_SERVICEESCALATION_HH
 #  define CCE_OBJECTS_SERVICEESCALATION_HH
+#  include "com/centreon/shared_ptr.hh"
 
 /* Forward declaration. */
-struct contactgroupsmember_struct;
-struct contactsmember_struct;
+CCE_BEGIN()
+  class contact;
+  class contactgroup;
+CCE_END()
+
 struct service_struct;
 struct timeperiod_struct;
 
@@ -37,8 +41,12 @@ typedef struct                     serviceescalation_struct {
   int                              escalate_on_warning;
   int                              escalate_on_unknown;
   int                              escalate_on_critical;
-  contactgroupsmember_struct*      contact_groups;
-  contactsmember_struct*           contacts;
+  umap<std::string, com::centreon::shared_ptr<com::centreon::engine::contactgroup> >
+                                   contact_groups;
+
+  umap<std::string, com::centreon::shared_ptr<com::centreon::engine::contact> >
+                                   contacts;
+
   service_struct*                  service_ptr;
   timeperiod_struct*               escalation_period_ptr;
   struct serviceescalation_struct* next;

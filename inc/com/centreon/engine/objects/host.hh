@@ -23,12 +23,15 @@
 #  include <string>
 #  include <time.h>
 #  include "com/centreon/engine/common.hh"
+#  include "com/centreon/shared_ptr.hh"
 
 /* Forward declaration. */
+CCE_BEGIN()
+  class contact;
+  class contactgroup;
+CCE_END()
+
 struct command_struct;
-struct contact_struct;
-struct contactgroupsmember_struct;
-struct contactsmember_struct;
 struct customvariablesmember_struct;
 struct hostsmember_struct;
 struct objectlist_struct;
@@ -49,8 +52,10 @@ typedef struct                  host_struct {
   double                        retry_interval;
   int                           max_attempts;
   char*                         event_handler;
-  contactgroupsmember_struct*   contact_groups;
-  contactsmember_struct*        contacts;
+  umap<std::string, com::centreon::shared_ptr<com::centreon::engine::contactgroup> >
+                                contact_groups;
+  umap<std::string, com::centreon::shared_ptr<com::centreon::engine::contact> >
+                                contacts;
   double                        notification_interval;
   double                        first_notification_delay;
   int                           notify_on_down;
@@ -148,8 +153,12 @@ typedef struct                  host_struct {
   int                           circular_path_checked;
   int                           contains_circular_path;
 
-  command_struct*               event_handler_ptr;
-  command_struct*               check_command_ptr;
+  com::centreon::engine::commands::command*
+                                event_handler_ptr;
+
+  com::centreon::engine::commands::command*
+                                check_command_ptr;
+
   timeperiod_struct*            check_period_ptr;
   timeperiod_struct*            notification_period_ptr;
   objectlist_struct*            hostgroups_ptr;
@@ -236,8 +245,8 @@ host* add_host(
         int retain_nonstatus_information,
         int obsess_over_host);
 int   get_host_count();
-int   is_contact_for_host(host* hst, contact_struct* cntct);
-int   is_escalated_contact_for_host(host* hst, contact_struct* cntct);
+int   is_contact_for_host(host* hst, com::centreon::engine::contact* cntct);
+int   is_escalated_contact_for_host(host* hst, com::centreon::engine::contact* cntct);
 int   is_host_immediate_child_of_host(host* parent, host* child);
 int   is_host_immediate_parent_of_host(host* child, host* parent);
 int   number_of_immediate_child_hosts(host* hst);

@@ -21,8 +21,8 @@
 #ifndef CCE_MACROS_DEFINES_HH_
 # define CCE_MACROS_DEFINES_HH_
 
-# include "com/centreon/engine/objects/contact.hh"
-# include "com/centreon/engine/objects/contactgroup.hh"
+# include "com/centreon/engine/contact.hh"
+# include "com/centreon/engine/contactgroup.hh"
 # include "com/centreon/engine/objects/customvariablesmember.hh"
 # include "com/centreon/engine/objects/host.hh"
 # include "com/centreon/engine/objects/hostgroup.hh"
@@ -213,8 +213,8 @@ struct                   nagios_macros {
   hostgroup*             hostgroup_ptr;
   service*               service_ptr;
   servicegroup*          servicegroup_ptr;
-  contact*               contact_ptr;
-  contactgroup*          contactgroup_ptr;
+  com::centreon::engine::contact*               contact_ptr;
+  com::centreon::engine::contactgroup*          contactgroup_ptr;
   customvariablesmember* custom_host_vars;
   customvariablesmember* custom_service_vars;
   customvariablesmember* custom_contact_vars;

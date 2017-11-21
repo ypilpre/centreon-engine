@@ -19,8 +19,8 @@
 
 #include "com/centreon/engine/configuration/applier/state.hh"
 #include "com/centreon/engine/objects/command.hh"
-#include "com/centreon/engine/objects/contact.hh"
-#include "com/centreon/engine/objects/contactgroup.hh"
+#include "com/centreon/engine/contact.hh"
+#include "com/centreon/engine/contactgroup.hh"
 #include "com/centreon/engine/objects/host.hh"
 #include "com/centreon/engine/objects/hostgroup.hh"
 #include "com/centreon/engine/objects/service.hh"
@@ -37,6 +37,7 @@ struct serviceescalation_struct;
 
 using namespace com::centreon;
 using namespace com::centreon::engine;
+using namespace com::centreon::engine::commands;
 using namespace com::centreon::engine::configuration::applier;
 
 /**
