@@ -83,6 +83,7 @@ class                        host : public monitorable {
   void                       _internal_copy(host const& other);
 
   std::list<host*>           _children;
+  int                        _circular_path_checked;
   int                        _initial_state;
   time_t                     _last_time_down;
   time_t                     _last_time_unreachable;

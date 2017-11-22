@@ -83,6 +83,16 @@ host* service::get_host() const {
 }
 
 /**
+ *  Set service's host.
+ *
+ *  @param[in] hst  Service's host.
+ */
+void service::set_host(host* hst) {
+  _host = hst;
+  return ;
+}
+
+/**
  *  Check if this service should be stalked on critical state.
  *
  *  @return True if this service should be stalked on critical state.

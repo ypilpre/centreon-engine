@@ -74,6 +74,25 @@ std::list<host*> const& host::get_children() const {
 }
 
 /**
+ *  Get circular path checking status.
+ *
+ *  @return Circular path checking status.
+ */
+int host::get_circular_path_checked() const {
+  return (_circular_path_checked);
+}
+
+/**
+ *  Set circular path checking status.
+ *
+ *  @param[in] check_level  Circular check status.
+ */
+void host::set_circular_path_checked(int check_level) {
+  _circular_path_checked = check_level;
+  return ;
+}
+
+/**
  *  Get initial state.
  *
  *  @return Initial state.

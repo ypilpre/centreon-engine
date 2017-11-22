@@ -90,6 +90,16 @@ command* checkable::get_check_command() const {
 }
 
 /**
+ *  Set check command object.
+ *
+ *  @param[in] cmd  Check command object.
+ */
+void checkable::set_check_command(command* cmd) {
+  _check_command = cmd;
+  return ;
+}
+
+/**
  *  Get check command arguments (ARGx).
  *
  *  @return Unparsed check command arguments (command!ARG1!ARG2).
@@ -99,12 +109,32 @@ std::string const& checkable::get_check_command_args() const {
 }
 
 /**
+ *  Set check command arguments.
+ *
+ *  @param[in] args  Check command arguments.
+ */
+void checkable::set_check_command_args(std::string const& args) {
+  _check_command_args = args;
+  return ;
+}
+
+/**
  *  Get check timeperiod.
  *
  *  @return Check timeperiod of this object. NULL for none.
  */
 timeperiod* checkable::get_check_period() const {
   return (_check_period);
+}
+
+/**
+ *  Set check timeperiod.
+ *
+ *  @param[in] tp  Check timeperiod.
+ */
+void checkable::set_check_period(timeperiod* tp) {
+  _check_period = tp;
+  return ;
 }
 
 /**
@@ -754,12 +784,32 @@ command* checkable::get_event_handler() const {
 }
 
 /**
+ *  Set event handler.
+ *
+ *  @param[in] cmd  Event handler object.
+ */
+void checkable::set_event_handler(command* cmd) {
+  _event_handler = cmd;
+  return ;
+}
+
+/**
  *  Get event handler arguments.
  *
  *  @return Unparsed command arguments (command!ARG1!ARG2...).
  */
 std::string const& checkable::get_event_handler_args() const {
   return (_event_handler_args);
+}
+
+/**
+ *  Set event handler arguments.
+ *
+ *  @param[in] args  Event handler arguments.
+ */
+void checkable::set_event_handler_args(std::string const& args) {
+  _event_handler_args = args;
+  return ;
 }
 
 /**

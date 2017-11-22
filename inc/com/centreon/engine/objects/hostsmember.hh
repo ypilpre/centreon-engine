@@ -35,14 +35,8 @@ typedef struct               hostsmember_struct {
 extern "C" {
 #  endif /* C++ */
 
-hostsmember* add_child_link_to_host(
-               host* hst,
-               host* child_ptr);
 hostsmember* add_host_to_hostgroup(
                hostgroup_struct* temp_hostgroup,
-               char const* host_name);
-hostsmember* add_parent_host_to_host(
-               host* hst,
                char const* host_name);
 
 #  ifdef __cplusplus
