@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2014 Merethis
+** Copyright 2011-2014,2017 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -145,9 +145,9 @@ std::ostream& operator<<(std::ostream& os, serviceescalation const& obj) {
     escalation_period_str = chkstr(obj.escalation_period_ptr->name);
   std::string svc_str("\"NULL\"");
   if (obj.service_ptr) {
-    svc_str = chkstr(obj.service_ptr->host_name);
+    svc_str = obj.service_ptr->get_host_name();
     svc_str += ", ";
-    svc_str += chkstr(obj.service_ptr->description);
+    svc_str += obj.service_ptr->get_description();
   }
 
   os << "serviceescalation {\n"

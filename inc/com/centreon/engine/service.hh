@@ -25,6 +25,9 @@
 #  include "com/centreon/engine/monitorable.hh"
 #  include "com/centreon/engine/namespace.hh"
 
+// Forward declaration.
+struct servicegroup_struct;
+
 CCE_BEGIN()
 
 // Forward declarations.
@@ -53,6 +56,9 @@ class                service : public monitorable {
   bool               get_stalk_on_unknown() const;
   bool               get_stalk_on_warning() const;
   bool               get_volatile() const;
+
+  // Groups.
+  void               add_servicegroup(servicegroup_struct* sg);
 
   // State runtime.
   time_t             get_last_time_critical() const;

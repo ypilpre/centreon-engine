@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2014 Merethis
+** Copyright 2011-2014,2017 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -20,10 +20,11 @@
 #ifndef CCE_OBJECTS_SERVICEESCALATION_HH
 #  define CCE_OBJECTS_SERVICEESCALATION_HH
 
+#  include "com/centreon/engine/service.hh"
+
 /* Forward declaration. */
 struct contactgroupsmember_struct;
 struct contactsmember_struct;
-struct service_struct;
 struct timeperiod_struct;
 
 typedef struct                     serviceescalation_struct {
@@ -39,7 +40,7 @@ typedef struct                     serviceescalation_struct {
   int                              escalate_on_critical;
   contactgroupsmember_struct*      contact_groups;
   contactsmember_struct*           contacts;
-  service_struct*                  service_ptr;
+  service*                         service_ptr;
   timeperiod_struct*               escalation_period_ptr;
   struct serviceescalation_struct* next;
   struct serviceescalation_struct* nexthash;

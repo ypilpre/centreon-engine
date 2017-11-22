@@ -657,7 +657,7 @@ set(
   # Sources.
   "${SRC_DIR}/broker.cc"
   "${SRC_DIR}/checks.cc"
-  # "${SRC_DIR}/config.cc"
+  "${SRC_DIR}/config.cc"
   "${SRC_DIR}/customvar.cc"
   "${SRC_DIR}/diagnostic.cc"
   "${SRC_DIR}/downtime_finder.cc"

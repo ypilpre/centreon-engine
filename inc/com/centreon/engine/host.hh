@@ -24,6 +24,9 @@
 #  include "com/centreon/engine/monitorable.hh"
 #  include "com/centreon/engine/namespace.hh"
 
+// Forward declaration.
+struct hostgroup_struct;
+
 CCE_BEGIN()
 
 // Forward declarations.
@@ -55,6 +58,9 @@ class                        host : public monitorable {
   bool                       get_stalk_on_down() const;
   bool                       get_stalk_on_unreachable() const;
   bool                       get_stalk_on_up() const;
+
+  // Groups.
+  void                       add_hostgroup(hostgroup_struct* hg);
 
   // State runtime.
   time_t                     get_last_time_down() const;
