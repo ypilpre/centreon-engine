@@ -94,21 +94,21 @@ namespace           configuration {
                     connectors_find(configuration::connector::key_type const& k) const;
       umap<std::string, shared_ptr<commands::connector> >::iterator
                     connectors_find(configuration::connector::key_type const& k);
-      umap<std::string, shared_ptr< com::centreon::engine::contact> > const&
+      umap<std::string, shared_ptr<com::centreon::engine::contact> > const&
                     contacts() const throw ();
-      umap<std::string, shared_ptr< com::centreon::engine::contact> >&
+      umap<std::string, shared_ptr<com::centreon::engine::contact> >&
                     contacts() throw ();
-      umap<std::string, shared_ptr< com::centreon::engine::contact> >::const_iterator
+      umap<std::string, shared_ptr<com::centreon::engine::contact> >::const_iterator
                     contacts_find(configuration::contact::key_type const& k) const;
-      umap<std::string, shared_ptr< com::centreon::engine::contact> >::iterator
+      umap<std::string, shared_ptr<com::centreon::engine::contact> >::iterator
                     contacts_find(configuration::contact::key_type const& k);
-      umap<std::string, shared_ptr< com::centreon::engine::contactgroup> > const&
+      umap<std::string, shared_ptr<com::centreon::engine::contactgroup> > const&
                     contactgroups() const throw ();
-      umap<std::string, shared_ptr< com::centreon::engine::contactgroup> >&
+      umap<std::string, shared_ptr<com::centreon::engine::contactgroup> >&
                     contactgroups() throw ();
-      umap<std::string, shared_ptr< com::centreon::engine::contactgroup> >::const_iterator
+      umap<std::string, shared_ptr<com::centreon::engine::contactgroup> >::const_iterator
                     contactgroups_find(configuration::contactgroup::key_type const& k) const;
-      umap<std::string, shared_ptr< com::centreon::engine::contactgroup> >::iterator
+      umap<std::string, shared_ptr<com::centreon::engine::contactgroup> >::iterator
                     contactgroups_find(configuration::contactgroup::key_type const& k);
       umap<std::string, shared_ptr<host_struct> > const&
                     hosts() const throw ();

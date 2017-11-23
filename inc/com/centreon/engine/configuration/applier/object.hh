@@ -79,10 +79,10 @@ namespace          configuration {
 
     void modify_if_different(char*& s1, char const* s2);
 
-    void modify_if_different(
-           char** t1,
-           std::vector<std::string> const& t2,
-           unsigned int size);
+//    void modify_if_different(
+//           std::vector<std::string> const& t1,
+//           std::vector<std::string> const& t2,
+//           unsigned int size);
 
     template<typename T>
     void unregister_object(T** lst, T* ptr) {
