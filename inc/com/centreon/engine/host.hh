@@ -73,6 +73,14 @@ class                        host : public monitorable {
   void                       set_should_reschedule_current_check(
                                bool reschedule);
 
+  // Flap detection.
+  bool                       get_flap_detection_on_up() const;
+  bool                       get_flap_detection_on_down() const;
+  bool                       get_flap_detection_on_unreachable() const;
+  time_t                     get_last_historical_state_update() const;
+  void                       set_last_historical_state_update(
+                               time_t last_update);
+
   // Notification.
   bool                       get_notify_on_down() const;
   void                       set_notify_on_down(bool notify);
@@ -84,7 +92,11 @@ class                        host : public monitorable {
 
   std::list<host*>           _children;
   int                        _circular_path_checked;
+  bool                       _flap_detection_on_down;
+  bool                       _flap_detection_on_unreachable;
+  bool                       _flap_detection_on_up;
   int                        _initial_state;
+  time_t                     _last_historical_state_update;
   time_t                     _last_time_down;
   time_t                     _last_time_unreachable;
   time_t                     _last_time_up;

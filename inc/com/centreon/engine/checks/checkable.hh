@@ -132,6 +132,10 @@ namespace              checks {
     void               set_flap_detection_enabled(bool enable);
     bool               get_flapping() const;
     void               set_flapping(bool flapping);
+    double             get_low_flap_threshold() const;
+    double             get_high_flap_threshold() const;
+    void               add_historical_state(int state);
+    int                get_historical_state(int index);
 
     // Freshness checks.
     bool               get_being_freshened() const;
@@ -165,6 +169,7 @@ namespace              checks {
     bool               _freshness_checks_enabled;
     int                _freshness_threshold;
     bool               _has_been_checked;
+    double             _high_flap_threshold;
     bool               _host_problem_at_last_check;
     time_t             _last_check;
     int                _last_event_id;
@@ -175,6 +180,7 @@ namespace              checks {
     time_t             _last_state_change;
     double             _latency;
     std::string        _long_output;
+    double             _low_flap_threshold;
     int                _max_attempts;
     int                _modified_attributes;
     time_t             _next_check;

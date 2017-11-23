@@ -875,6 +875,43 @@ void checkable::set_flapping(bool flapping) {
   return ;
 }
 
+/**
+ *  Get low flap threshold.
+ *
+ *  @return Low flap threshold.
+ */
+double checkable::get_low_flap_threshold() const {
+  return (_low_flap_threshold);
+}
+
+/**
+ *  Get high flap threshold.
+ *
+ *  @return High flap threshold.
+ */
+double checkable::get_high_flap_threshold() const {
+  return (_high_flap_threshold);
+}
+
+/**
+ *  Add a state to the history.
+ *
+ *  @param[in] state  New state to add to history.
+ */
+void checkable::add_historical_state(int state) {
+  // XXX
+}
+
+/**
+ *  Get an historical state.
+ *
+ *  @param[in] index  State index from 0 (oldest) to the max number of
+ *                    historical states - 1 (newest).
+ */
+int checkable::get_historical_state(int index) {
+  // XXX
+}
+
 /**************************************
 *                                     *
 *          Freshness checks           *

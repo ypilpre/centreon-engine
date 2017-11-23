@@ -70,6 +70,12 @@ class                service : public monitorable {
   time_t             get_last_time_warning() const;
   void               set_last_time_warning(time_t last_warning);
 
+  // Flap detection.
+  bool               get_flap_detection_on_ok() const;
+  bool               get_flap_detection_on_warning() const;
+  bool               get_flap_detection_on_unknown() const;
+  bool               get_flap_detection_on_critical() const;
+
   // Notification.
   bool               get_notify_on_critical() const;
   void               set_notify_on_critical(bool notify);
@@ -83,6 +89,10 @@ class                service : public monitorable {
 
   std::string        _description;
   host*              _host;
+  bool               _flap_detection_on_critical;
+  bool               _flap_detection_on_ok;
+  bool               _flap_detection_on_unknown;
+  bool               _flap_detection_on_warning;
   time_t             _last_time_critical;
   time_t             _last_time_ok;
   time_t             _last_time_unknown;

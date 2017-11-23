@@ -245,6 +245,58 @@ void host::set_should_reschedule_current_check(bool reschedule) {
 
 /**************************************
 *                                     *
+*           Flap detection            *
+*                                     *
+**************************************/
+
+/**
+ *  Check if flap detection is enabled for UP state.
+ *
+ *  @return True if flap detection is enabled for UP state.
+ */
+bool host::get_flap_detection_on_up() const {
+  return (_flap_detection_on_up);
+}
+
+/**
+ *  Check if flap detection is enabled for DOWN state.
+ *
+ *  @return True if flap detection is enabled for DOWN state.
+ */
+bool host::get_flap_detection_on_down() const {
+  return (_flap_detection_on_down);
+}
+
+/**
+ *  Check if flap detection is enabled for UNREACHABLE state.
+ *
+ *  @return True if flap detection is enabled for UNREACHABLE state.
+ */
+bool host::get_flap_detection_on_unreachable() const {
+  return (_flap_detection_on_unreachable);
+}
+
+/**
+ *  Get last historical state update.
+ *
+ *  @return Last historical state update.
+ */
+time_t host::get_last_historical_state_update() const {
+  return (_last_historical_state_update);
+}
+
+/**
+ *  Set last historical state update.
+ *
+ *  @param[in] last_update  Last historical state update.
+ */
+void host::set_last_historical_state_update(time_t last_update) {
+  _last_historical_state_update = last_update;
+  return ;
+}
+
+/**************************************
+*                                     *
 *            Notification             *
 *                                     *
 **************************************/

@@ -236,6 +236,48 @@ void service::set_last_time_warning(time_t last_warning) {
 
 /**************************************
 *                                     *
+*            Flap detection           *
+*                                     *
+**************************************/
+
+/**
+ *  Check if flap detection is enabled for OK state.
+ *
+ *  @return True if flap detection is enabled for OK state.
+ */
+bool service::get_flap_detection_on_ok() const {
+  return (_flap_detection_on_ok);
+}
+
+/**
+ *  Check if flap detection is enabled for WARNING state.
+ *
+ *  @return True if flap detection is enabled for WARNING state.
+ */
+bool service::get_flap_detection_on_warning() const {
+  return (_flap_detection_on_warning);
+}
+
+/**
+ *  Check if flap detection is enabled for UNKNOWN state.
+ *
+ *  @return True if flap detection is enabled for UNKNOWN state.
+ */
+bool service::get_flap_detection_on_unknown() const {
+  return (_flap_detection_on_unknown);
+}
+
+/**
+ *  Check if flap detection is enabled for CRITICAL state.
+ *
+ *  @return True if flap detection is enabled for CRITICAL state.
+ */
+bool service::get_flap_detection_on_critical() const {
+  return (_flap_detection_on_critical);
+}
+
+/**************************************
+*                                     *
 *             Notification            *
 *                                     *
 **************************************/
