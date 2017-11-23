@@ -65,15 +65,6 @@ host& host::operator=(host const& other) {
 **************************************/
 
 /**
- *  Get children.
- *
- *  @return List of children.
- */
-std::list<host*> const& host::get_children() const {
-  return (_children);
-}
-
-/**
  *  Get circular path checking status.
  *
  *  @return Circular path checking status.
@@ -102,15 +93,6 @@ int host::get_initial_state() const {
 }
 
 /**
- *  Get parents.
- *
- *  @return List of parents.
- */
-std::list<host*> const& host::get_parents() const {
-  return (_parents);
-}
-
-/**
  *  Check if host should be stalked on down states.
  *
  *  @return True if host should be stalked.
@@ -135,6 +117,48 @@ bool host::get_stalk_on_unreachable() const {
  */
 bool host::get_stalk_on_up() const {
   return (_stalk_on_up);
+}
+
+/**************************************
+*                                     *
+*      Links with other objects       *
+*                                     *
+**************************************/
+
+/**
+ *  Get children.
+ *
+ *  @return List of children.
+ */
+std::list<host*> const& host::get_children() const {
+  return (_children);
+}
+
+/**
+ *  Add host group to this host.
+ *
+ *  @param[in] hg  Host group.
+ */
+void host::add_hostgroup(hostgroup_struct* hg) {
+  // XXX
+}
+
+/**
+ *  Get parents.
+ *
+ *  @return List of parents.
+ */
+std::list<host*> const& host::get_parents() const {
+  return (_parents);
+}
+
+/**
+ *  Add a service to this host.
+ *
+ *  @param[in] svc  Service.
+ */
+void host::add_service(service* svc) {
+  // XXX
 }
 
 /**************************************

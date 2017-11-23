@@ -49,15 +49,15 @@ class                service : public monitorable {
 
   // Configuration.
   std::string const& get_description() const;
-  host*              get_host() const;
-  void               set_host(host* hst);
   bool               get_stalk_on_critical() const;
   bool               get_stalk_on_ok() const;
   bool               get_stalk_on_unknown() const;
   bool               get_stalk_on_warning() const;
   bool               get_volatile() const;
 
-  // Groups.
+  // Links with other objects.
+  host*              get_host() const;
+  void               set_host(host* hst);
   void               add_servicegroup(servicegroup_struct* sg);
 
   // State runtime.

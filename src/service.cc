@@ -74,25 +74,6 @@ std::string const& service::get_description() const {
 }
 
 /**
- *  Get service's host.
- *
- *  @return Host that this service is running on.
- */
-host* service::get_host() const {
-  return (_host);
-}
-
-/**
- *  Set service's host.
- *
- *  @param[in] hst  Service's host.
- */
-void service::set_host(host* hst) {
-  _host = hst;
-  return ;
-}
-
-/**
  *  Check if this service should be stalked on critical state.
  *
  *  @return True if this service should be stalked on critical state.
@@ -135,6 +116,40 @@ bool service::get_stalk_on_warning() const {
  */
 bool service::get_volatile() const {
   return (_volatile);
+}
+
+/**************************************
+*                                     *
+*      Links with other objects       *
+*                                     *
+**************************************/
+
+/**
+ *  Get service's host.
+ *
+ *  @return Host that this service is running on.
+ */
+host* service::get_host() const {
+  return (_host);
+}
+
+/**
+ *  Set service's host.
+ *
+ *  @param[in] hst  Service's host.
+ */
+void service::set_host(host* hst) {
+  _host = hst;
+  return ;
+}
+
+/**
+ *  Add a service group to this service.
+ *
+ *  @param[in] sg  Service group.
+ */
+void service::add_servicegroup(servicegroup_struct* sg) {
+  // XXX
 }
 
 /**************************************

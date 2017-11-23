@@ -47,20 +47,20 @@ class                        host : public monitorable {
   host&                      operator=(host const& other);
 
   // Configuration.
-  std::list<host*> const&    get_children() const;
   int                        get_circular_path_checked() const;
   void                       set_circular_path_checked(int check_level);
   int                        get_initial_state() const;
-  std::list<host*> const&    get_parents() const;
-  void                       add_service(service* svc);
-  void                       clear_services();
-  std::list<service*> const& get_services() const;
   bool                       get_stalk_on_down() const;
   bool                       get_stalk_on_unreachable() const;
   bool                       get_stalk_on_up() const;
 
-  // Groups.
+  // Links with other objects.
+  std::list<host*> const&    get_children() const;
   void                       add_hostgroup(hostgroup_struct* hg);
+  std::list<host*> const&    get_parents() const;
+  void                       add_service(service* svc);
+  void                       clear_services();
+  std::list<service*> const& get_services() const;
 
   // State runtime.
   time_t                     get_last_time_down() const;
