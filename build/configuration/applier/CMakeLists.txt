@@ -40,7 +40,7 @@ set(
   "${SRC_DIR}/macros.cc"
   "${SRC_DIR}/member.cc"
   "${SRC_DIR}/object.cc"
-  # "${SRC_DIR}/scheduler.cc"
+  "${SRC_DIR}/scheduler.cc"
   "${SRC_DIR}/service.cc"
   "${SRC_DIR}/servicedependency.cc"
   "${SRC_DIR}/serviceescalation.cc"
