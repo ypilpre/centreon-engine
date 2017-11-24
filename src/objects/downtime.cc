@@ -26,7 +26,7 @@
 #include "com/centreon/engine/events/defines.hh"
 #include "com/centreon/engine/globals.hh"
 #include "com/centreon/engine/logging/logger.hh"
-#include "com/centreon/engine/notifications.hh"
+//#include "com/centreon/engine/notifications.hh"
 #include "com/centreon/engine/objects/comment.hh"
 #include "com/centreon/engine/objects/downtime.hh"
 #include "com/centreon/engine/objects/tool.hh"
@@ -250,12 +250,17 @@ int unschedule_downtime(int type, unsigned long downtime_id) {
           "cancelled.";
 
         /* send a notification */
-        host_notification(
-          hst,
-          NOTIFICATION_DOWNTIMECANCELLED,
-          NULL,
-          NULL,
-          NOTIFICATION_OPTION_NONE);
+    ///////////////
+    // FIXME DBR //
+    ///////////////
+//        hst->notify(notifier::DOWNTIMECANCELLED);
+
+//        host_notification(
+//          hst,
+//          NOTIFICATION_DOWNTIMECANCELLED,
+//          NULL,
+//          NULL,
+//          NOTIFICATION_OPTION_NONE);
       }
     }
     else {
@@ -271,12 +276,17 @@ int unschedule_downtime(int type, unsigned long downtime_id) {
           "for service has been cancelled.";
 
         /* send a notification */
-        service_notification(
-          svc,
-          NOTIFICATION_DOWNTIMECANCELLED,
-          NULL,
-          NULL,
-          NOTIFICATION_OPTION_NONE);
+    ///////////////
+    // FIXME DBR //
+    ///////////////
+//        svc->notify(notifier::DOWNTIMECANCELLED);
+
+//        service_notification(
+//          svc,
+//          NOTIFICATION_DOWNTIMECANCELLED,
+//          NULL,
+//          NULL,
+//          NOTIFICATION_OPTION_NONE);
       }
     }
   }
@@ -579,12 +589,19 @@ int handle_scheduled_downtime(scheduled_downtime*  temp_downtime) {
         "downtime";
 
       /* send a notification */
-      host_notification(
-        hst,
-        NOTIFICATION_DOWNTIMEEND,
-        temp_downtime->author,
-        temp_downtime->comment,
-        NOTIFICATION_OPTION_NONE);
+    ///////////////
+    // FIXME DBR //
+    ///////////////
+//      hst->notify(
+//             notifier::DOWNTIMEEND,
+//             temp_downtime->author,
+//             temp_downtime->comment);
+//      host_notification(
+//        hst,
+//        NOTIFICATION_DOWNTIMEEND,
+//        temp_downtime->author,
+//        temp_downtime->comment,
+//        NOTIFICATION_OPTION_NONE);
     }
     else if (temp_downtime->type == SERVICE_DOWNTIME
              && svc->scheduled_downtime_depth == 0) {
@@ -602,12 +619,19 @@ int handle_scheduled_downtime(scheduled_downtime*  temp_downtime) {
         "downtime";
 
       /* send a notification */
-      service_notification(
-        svc,
-        NOTIFICATION_DOWNTIMEEND,
-        temp_downtime->author,
-        temp_downtime->comment,
-        NOTIFICATION_OPTION_NONE);
+    ///////////////
+    // FIXME DBR //
+    ///////////////
+//      svc->notify(
+//             notifier::DOWNTIMEEND,
+//             temp_downtime->author,
+//             temp_downtime->comment);
+//      service_notification(
+//        svc,
+//        NOTIFICATION_DOWNTIMEEND,
+//        temp_downtime->author,
+//        temp_downtime->comment,
+//        NOTIFICATION_OPTION_NONE);
     }
 
     /* update the status data */
@@ -684,12 +708,20 @@ int handle_scheduled_downtime(scheduled_downtime*  temp_downtime) {
         << ";STARTED; Host has entered a period of scheduled downtime";
 
       /* send a notification */
-      host_notification(
-        hst,
-        NOTIFICATION_DOWNTIMESTART,
-        temp_downtime->author,
-        temp_downtime->comment,
-        NOTIFICATION_OPTION_NONE);
+    ///////////////
+    // FIXME DBR //
+    ///////////////
+//      hst->notify(
+//             notifier::DOWNTIMESTART,
+//             temp_downtime->author,
+//             temp_downtime->comment);
+//
+//      host_notification(
+//        hst,
+//        NOTIFICATION_DOWNTIMESTART,
+//        temp_downtime->author,
+//        temp_downtime->comment,
+//        NOTIFICATION_OPTION_NONE);
     }
     else if (temp_downtime->type == SERVICE_DOWNTIME
              && svc->scheduled_downtime_depth == 0) {
@@ -707,12 +739,20 @@ int handle_scheduled_downtime(scheduled_downtime*  temp_downtime) {
         "downtime";
 
       /* send a notification */
-      service_notification(
-        svc,
-        NOTIFICATION_DOWNTIMESTART,
-        temp_downtime->author,
-        temp_downtime->comment,
-        NOTIFICATION_OPTION_NONE);
+    ///////////////
+    // FIXME DBR //
+    ///////////////
+//      svc->notify(
+//             notifier::DOWNTIMESTART,
+//             temp_downtime->author,
+//             temp_downtime->comment);
+//
+//      service_notification(
+//        svc,
+//        NOTIFICATION_DOWNTIMESTART,
+//        temp_downtime->author,
+//        temp_downtime->comment,
+//        NOTIFICATION_OPTION_NONE);
     }
 
     /* increment the downtime depth variable */
