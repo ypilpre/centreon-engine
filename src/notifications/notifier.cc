@@ -19,7 +19,6 @@
 
 #include <memory>
 #include <sstream>
-#include "com/centreon/engine/configuration/contact.hh"
 #include "com/centreon/engine/globals.hh"
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/notifications/notifier.hh"
@@ -83,8 +82,12 @@ notifier& notifier::operator=(notifier const& other) {
 notifier::~notifier() {
 }
 
-void notifier::add_contact(shared_ptr<configuration::contact> user) {
-  _contacts.push_back(user);
+void notifier::add_contactgroup(shared_ptr<engine::contactgroup> cg) {
+  _contact_groups[cg->get_name()] = cg;
+}
+
+void notifier::add_contact(shared_ptr<engine::contact> user) {
+  _contacts[user->get_name()] = user;
 }
 
 /**
@@ -92,6 +95,13 @@ void notifier::add_contact(shared_ptr<configuration::contact> user) {
  */
 void notifier::clear_contacts() {
   _contacts.clear();
+}
+
+/**
+ *  Clear the contactgroups list
+ */
+void notifier::clear_contactgroups() {
+  _contact_groups.clear();
 }
 
 /**
@@ -121,7 +131,7 @@ void notifier::notify(
     notification_type type,
     std::string const& author,
     std::string const& comment) {
-  std::list<shared_ptr<configuration::contact> > users_to_notify = get_contacts_list();
+  std::list<shared_ptr<engine::contact> > users_to_notify = get_contacts_list();
   if (users_to_notify.empty())
     return ;
 
@@ -134,19 +144,19 @@ void notifier::notify(
 
       // Notify each contact
       for (
-        std::list<shared_ptr<configuration::contact> >::iterator
+        std::list<shared_ptr<engine::contact> >::iterator
                                                 it(users_to_notify.begin()),
                                                 end(users_to_notify.end());
         it != end;
         ++it) {
 
         logger(dbg_notifications, most)
-          << "** Notifying contact '" << (*it)->contact_name() << "'";
+          << "** Notifying contact '" << (*it)->get_name() << "'";
 
         if (first_time)
-          oss << (*it)->contact_name();
+          oss << (*it)->get_name();
         else
-          oss << ',' << (*it)->contact_name();
+          oss << ',' << (*it)->get_name();
       }
 
       memset(&mac, 0, sizeof(mac));
@@ -228,8 +238,8 @@ void notifier::notify(
 }
 
 static bool _compare_shared_ptr(
-    shared_ptr<configuration::contact> const& a,
-    shared_ptr<configuration::contact> const& b) {
+    shared_ptr<engine::contact> const& a,
+    shared_ptr<engine::contact> const& b) {
   return (*a < *b);
 }
 
@@ -238,20 +248,20 @@ static bool _compare_shared_ptr(
  *
  *  @return A string.
  */
-std::list<shared_ptr<configuration::contact> > notifier::get_contacts_list() {
+std::list<shared_ptr<engine::contact> > notifier::get_contacts_list() {
 
   /* See if this notification should be escalated */
   _escalate_notification = should_be_escalated();
 
-  std::list<shared_ptr<configuration::contact> > retval;
+  std::list<shared_ptr<engine::contact> > retval;
 
   for (
-    std::list<shared_ptr<configuration::contact> >::iterator
-                                                    it(_contacts.begin()),
-                                                    end(_contacts.end());
+    umap<std::string, shared_ptr<engine::contact> >::const_iterator
+      it(_contacts.begin()),
+      end(_contacts.end());
     it != end;
     ++it) {
-    retval.push_back(*it);
+    retval.push_back(it->second);
   }
 
   retval.sort(_compare_shared_ptr);
@@ -286,6 +296,22 @@ bool notifier::is_in_downtime() const {
  */
 notifier::notifier_filter notifier::_get_filter(notification_type type) const {
   return _filter[type];
+}
+
+umap<std::string, shared_ptr<engine::contact> > const& notifier::get_contacts() const {
+  return _contacts;
+}
+
+umap<std::string, shared_ptr<engine::contact> >& notifier::get_contacts() {
+  return _contacts;
+}
+
+umap<std::string, shared_ptr<engine::contactgroup> > const& notifier::get_contactgroups() const {
+  return _contact_groups;
+}
+
+umap<std::string, shared_ptr<engine::contactgroup> >& notifier::get_contactgroups() {
+  return _contact_groups;
 }
 
 /**************************************
@@ -393,6 +419,28 @@ void notifier::set_last_notification(time_t last_notification) {
 
 void notifier::set_next_notification(time_t next_notification) {
   _next_notification = next_notification;
+}
+
+bool notifier::contains_contact(contact* user) const {
+  std::string const& name(user->get_name());
+  return contains_contact(name);
+}
+
+bool notifier::contains_contact(std::string const& username) const {
+  umap<std::string, shared_ptr<contact> >::const_iterator it(
+    get_contacts().find(username));
+  if (it != get_contacts().end())
+    return true;
+
+  for (umap<std::string, shared_ptr<engine::contactgroup> >::const_iterator
+         cgit(get_contactgroups().begin()),
+         end(get_contactgroups().end());
+       cgit != end;
+       ++cgit) {
+    if (cgit->second->contains_member(username))
+      return true;
+  }
+  return false;
 }
 
 #if 0
