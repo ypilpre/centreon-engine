@@ -30,9 +30,6 @@
 #  include "com/centreon/shared_ptr.hh"
 
 // Forward declaration.
-//struct command_struct;
-//struct contact_struct;
-//struct contactgroup_struct;
 struct host_struct;
 struct hostdependency_struct;
 struct hostescalation_struct;
