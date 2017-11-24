@@ -30,3 +30,5 @@ bool test_notifier::_is_host() const {
 void test_notifier::set_is_host(bool is_host) {
   __is_host = is_host;
 }
+
+void test_notifier::_checkable_macro_builder(nagios_macros& mac) {}

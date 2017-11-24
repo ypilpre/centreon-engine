@@ -33,6 +33,7 @@ class test_notifier : public notifier {
 
  protected:
   bool _is_host() const;
+  void _checkable_macro_builder(nagios_macros& mac);
 
   bool __is_host;
 };
