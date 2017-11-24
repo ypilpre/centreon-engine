@@ -41,7 +41,8 @@ class SimpleNotification : public ::testing::Test {
     if (config == NULL) {
       config = new configuration::state;
     }
-    shared_ptr<configuration::contact> user(new configuration::contact);
+    shared_ptr<engine::contact> user(engine::contact::add_contact(
+      "test"));
     _notifier->add_contact(user);
   }
 

@@ -21,6 +21,7 @@
 #include <gtest/gtest.h>
 #include "../../timeperiod/utils.hh"
 #include "../test_notifier.hh"
+#include "com/centreon/engine/notifications/notifier.hh"
 #include "com/centreon/engine/configuration/state.hh"
 #include "com/centreon/engine/configuration/contact.hh"
 #include "com/centreon/engine/notifications/notifier.hh"
@@ -39,8 +40,9 @@ class RecoveryNotification : public ::testing::Test {
     _notifier.reset(new test_notifier());
     if (config == NULL)
       config = new configuration::state;
-    _notifier->add_contact(shared_ptr<configuration::contact>(
-                                                new configuration::contact));
+    _notifier->add_contact(
+       shared_ptr<engine::contact>(
+         engine::contact::add_contact("test")));
   }
 
  protected:
