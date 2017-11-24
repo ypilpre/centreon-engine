@@ -21,15 +21,17 @@
 #include <gtest/gtest.h>
 #include "../../timeperiod/utils.hh"
 #include "../test_notifier.hh"
-#include "com/centreon/engine/configuration/state.hh"
+#include "com/centreon/engine/configuration/applier/state.hh"
 #include "com/centreon/engine/configuration/contact.hh"
+#include "com/centreon/engine/configuration/state.hh"
 #include "com/centreon/engine/notifications/notifier.hh"
 #include "com/centreon/shared_ptr.hh"
 
 using namespace com::centreon;
 using namespace com::centreon::engine;
-using namespace com::centreon::engine::notifications;
 using namespace com::centreon::engine::configuration;
+using namespace com::centreon::engine::configuration::applier;
+using namespace com::centreon::engine::notifications;
 
 extern configuration::state* config;
 
@@ -38,12 +40,18 @@ class SimpleNotification : public ::testing::Test {
   void SetUp() {
     set_time(20);
     _notifier.reset(new test_notifier());
-    if (config == NULL) {
+    if (config == NULL)
       config = new configuration::state;
-    }
-    shared_ptr<engine::contact> user(engine::contact::add_contact(
-      "test"));
-    _notifier->add_contact(user);
+    configuration::applier::state::load();
+    engine::contact::add_contact("test");
+
+    _notifier->add_contact(configuration::applier::state::instance().contacts_find("test")->second);
+  }
+
+  void TearDown() {
+    configuration::applier::state::unload();
+    delete config;
+    config = NULL;
   }
 
  protected:
