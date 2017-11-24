@@ -103,28 +103,49 @@ void applier::hostescalation::add_object(
            << "on host '" << *obj.hosts().begin() << "'");
 
   // Add contacts to host escalation.
-  for (set_string::const_iterator
-         it(obj.contacts().begin()),
-         end(obj.contacts().end());
-       it != end;
-       ++it)
-    if (!add_contact_to_host_escalation(he, it->c_str()))
-      throw (engine_error() << "Could not add contact '" << *it
-             << "' on escalation of host '"
-             << *obj.hosts().begin() << "'");
+//    ///////////////
+//    // FIXME DBR //
+//    ///////////////
+//  for (set_string::const_iterator
+//         it(obj.contacts().begin()),
+//         end(obj.contacts().end());
+//       it != end;
+//       ++it)
+//    try {
+//      he->add_contact(*it);
+//    } catch (std::exception const& e) {
+//      throw (engine_error() << "Could not add contact '" << *it
+//             << "' on escalation of host '"
+//             << *obj.hosts().begin() << "' :"
+//             << e.what());
+//    }
+
+//    if (!add_contact_to_host_escalation(he, it->c_str()))
+//      throw (engine_error() << "Could not add contact '" << *it
+//             << "' on escalation of host '"
+//             << *obj.hosts().begin() << "'");
 
   // Add contact groups to host escalation.
-  for (set_string::const_iterator
-         it(obj.contactgroups().begin()),
-         end(obj.contactgroups().end());
-       it != end;
-       ++it)
-    if (!add_contactgroup_to_host_escalation(he, it->c_str()))
-      throw (engine_error() << "Could not add contact group '"
-             << *it << "' on escalation of host '"
-             << *obj.hosts().begin() << "'");
-
-  return ;
+//    ///////////////
+//    // FIXME DBR //
+//    ///////////////
+//  for (set_string::const_iterator
+//         it(obj.contactgroups().begin()),
+//         end(obj.contactgroups().end());
+//       it != end;
+//       ++it)
+//    try {
+//      he->add_contactgroup(*it);
+//    }
+//    catch (std::exception const& e) {
+//      throw (engine_error() << "Could not add contact group '"
+//             << *it << "' on escalation of host '"
+//             << *obj.hosts().begin() << "'");
+//    }
+//    if (!add_contactgroup_to_host_escalation(he, it->c_str()))
+//      throw (engine_error() << "Could not add contact group '"
+//             << *it << "' on escalation of host '"
+//             << *obj.hosts().begin() << "'");
 }
 
 /**
