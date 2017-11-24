@@ -100,16 +100,3 @@ int update_service_status(service* svc, int aggregated_dump) {
       NULL);
   return (OK);
 }
-
-/* updates contact status info */
-int update_contact_status(contact* cntct, int aggregated_dump) {
-  /* send data to event broker (non-aggregated dumps only) */
-  if (aggregated_dump == false)
-    broker_contact_status(
-      NEBTYPE_CONTACTSTATUS_UPDATE,
-      NEBFLAG_NONE,
-      NEBATTR_NONE,
-      cntct,
-      NULL);
-  return (OK);
-}
