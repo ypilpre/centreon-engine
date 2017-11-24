@@ -20,7 +20,6 @@
 #include "com/centreon/engine/configuration/applier/state.hh"
 #include "com/centreon/engine/flapping.hh"
 #include "com/centreon/engine/globals.hh"
-#include "com/centreon/engine/notifications.hh"
 #include "com/centreon/engine/objects/timeperiod.hh"
 #include "com/centreon/engine/retention/applier/service.hh"
 #include "com/centreon/engine/retention/applier/utils.hh"
@@ -279,11 +278,14 @@ void applier::service::_update(
   }
 
   // calculate next possible notification time.
-  if (obj.current_state != STATE_OK && obj.last_notification)
-    obj.next_notification
-      = get_next_service_notification_time(
-          &obj,
-          obj.last_notification);
+    ///////////////
+    // FIXME DBR //
+    ///////////////
+//  if (obj.current_state != STATE_OK && obj.last_notification)
+//    obj.next_notification
+//      = get_next_service_notification_time(
+//          &obj,
+//          obj.last_notification);
 
   // fix old vars.
   if (!obj.has_been_checked && obj.state_type == SOFT_STATE)
