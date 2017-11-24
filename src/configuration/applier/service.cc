@@ -24,8 +24,6 @@
 #include "com/centreon/engine/configuration/applier/object.hh"
 #include "com/centreon/engine/configuration/applier/scheduler.hh"
 #include "com/centreon/engine/configuration/applier/state.hh"
-#include "com/centreon/engine/deleter/contactgroupsmember.hh"
-#include "com/centreon/engine/deleter/contactsmember.hh"
 #include "com/centreon/engine/deleter/listmember.hh"
 #include "com/centreon/engine/deleter/objectlist.hh"
 #include "com/centreon/engine/error.hh"
@@ -206,41 +204,80 @@ void applier::service::add_object(
                              obj.service_description())].recovery_been_sent = true;
 
   // Add contacts.
-  for (set_string::const_iterator
-         it(obj.contacts().begin()),
-         end(obj.contacts().end());
-       it != end;
-       ++it)
-    if (!add_contact_to_service(svc, it->c_str()))
-      throw (engine_error() << "Could not add contact '"
-             << *it << "' to service '" << obj.service_description()
-             << "' of host '" << *obj.hosts().begin() << "'");
+//    ///////////////
+//    // FIXME DBR //
+//    ///////////////
+//  for (set_string::const_iterator
+//         it(obj.contacts().begin()),
+//         end(obj.contacts().end());
+//       it != end;
+//       ++it)
+//    try {
+//      svc->add_contact(*it);
+//    }
+//    catch (std::exception const& e) {
+//      throw (engine_error() << "Could not add contact '"
+//             << *it << "' to service '" << obj.service_description()
+//             << "' of host '" << *obj.hosts().begin() << "' :"
+//             << e.what());
+//    }
+
+//    if (!add_contact_to_service(svc, it->c_str()))
+//      throw (engine_error() << "Could not add contact '"
+//             << *it << "' to service '" << obj.service_description()
+//             << "' of host '" << *obj.hosts().begin() << "'");
 
   // Add contactgroups.
-  for (set_string::const_iterator
-         it(obj.contactgroups().begin()),
-         end(obj.contactgroups().end());
-       it != end;
-       ++it)
-    if (!add_contactgroup_to_service(svc, it->c_str()))
-      throw (engine_error() << "Could not add contact group '"
-             << *it << "' to service '" << obj.service_description()
-             << "' of host '" << *obj.hosts().begin() << "'");
+//    ///////////////
+//    // FIXME DBR //
+//    ///////////////
+//  for (set_string::const_iterator
+//         it(obj.contactgroups().begin()),
+//         end(obj.contactgroups().end());
+//       it != end;
+//       ++it)
+//    try {
+//      svc->add_contactgroup(*it);
+//    }
+//    catch (std::exception const& e) {
+//      throw (engine_error() << "Could not add contact group '"
+//             << *it << "' to service '" << obj.service_description()
+//             << "' of host '" << *obj.hosts().begin() << "' :"
+//             << e.what());
+//    }
+//    if (!add_contactgroup_to_service(svc, it->c_str()))
+//      throw (engine_error() << "Could not add contact group '"
+//             << *it << "' to service '" << obj.service_description()
+//             << "' of host '" << *obj.hosts().begin() << "'");
 
   // Add custom variables.
-  for (map_customvar::const_iterator
-         it(obj.customvariables().begin()),
-         end(obj.customvariables().end());
-       it != end;
-       ++it)
-    if (!add_custom_variable_to_service(
-           svc,
-           it->first.c_str(),
-           it->second.c_str()))
-      throw (engine_error() << "Could not add custom variable '"
-             << it->first << "' to service '"
-             << obj.service_description() << "' of host '"
-             << *obj.hosts().begin() << "'");
+//    ///////////////
+//    // FIXME DBR //
+//    ///////////////
+//  for (map_customvar::const_iterator
+//         it(obj.customvariables().begin()),
+//         end(obj.customvariables().end());
+//       it != end;
+//       ++it)
+//    try {
+//      svc->add_custom_variable(it->first, it->second);
+//    }
+//    catch (std::exception const& e) {
+//      throw (engine_error() << "Could not add custom variable '"
+//             << it->first << "' to service '"
+//             << obj.service_description() << "' of host '"
+//             << *obj.hosts().begin() << "' :"
+//             << e.what());
+//    }
+
+//    if (!add_custom_variable_to_service(
+//           svc,
+//           it->first.c_str(),
+//           it->second.c_str()))
+//      throw (engine_error() << "Could not add custom variable '"
+//             << it->first << "' to service '"
+//             << obj.service_description() << "' of host '"
+//             << *obj.hosts().begin() << "'");
 
   // Notify event broker.
   timeval tv(get_broker_timestamp(NULL));
@@ -530,38 +567,64 @@ void applier::service::modify_object(
 
   // Contacts.
   if (obj.contacts() != obj_old.contacts()) {
+//    ///////////////
+//    // FIXME DBR //
+//    ///////////////
     // Delete old contacts.
-    deleter::listmember(s->contacts, &deleter::contactsmember);
+//    s->clear_contacts();
+    //deleter::listmember(s->contacts, &deleter::contactsmember);
 
-    // Add contacts to host.
-    for (set_string::const_iterator
-           it(obj.contacts().begin()),
-           end(obj.contacts().end());
-         it != end;
-         ++it)
-      if (!add_contact_to_service(s, it->c_str()))
-        throw (engine_error() << "Could not add contact '"
-               << *it << "' to service '" << service_description
-               << "' on host '" << host_name << "'");
+//    // Add contacts to host.
+//    for (set_string::const_iterator
+//           it(obj.contacts().begin()),
+//           end(obj.contacts().end());
+//         it != end;
+//         ++it)
+//      try {
+//        s->add_contact(*it);
+//      }
+//      catch (std::exception const& e) {
+//        throw (engine_error() << "Could not add contact '"
+//               << *it << "' to service '" << service_description
+//               << "' on host '" << host_name << "' :"
+//               << e.what());
+//      }
+//      if (!add_contact_to_service(s, it->c_str()))
+//        throw (engine_error() << "Could not add contact '"
+//               << *it << "' to service '" << service_description
+//               << "' on host '" << host_name << "'");
   }
 
   // Contact groups.
   if (obj.contactgroups() != obj_old.contactgroups()) {
-    // Delete old contact groups.
-    deleter::listmember(
-      s->contact_groups,
-      &deleter::contactgroupsmember);
+//    ///////////////
+//    // FIXME DBR //
+//    ///////////////
+//    // Delete old contact groups.
+//    s->clear_contactgroups();
+//    deleter::listmember(
+//      s->contact_groups,
+//      &deleter::contactgroupsmember);
 
     // Add contact groups to host.
-    for (set_string::const_iterator
-           it(obj.contactgroups().begin()),
-           end(obj.contactgroups().end());
-         it != end;
-         ++it)
-      if (!add_contactgroup_to_service(s, it->c_str()))
-        throw (engine_error() << "Could not add contact group '"
-               << *it << "' to service '" << service_description
-               << "' on host '" << host_name << "'");
+//    for (set_string::const_iterator
+//           it(obj.contactgroups().begin()),
+//           end(obj.contactgroups().end());
+//         it != end;
+//         ++it)
+//      try {
+//        s->add_contactgroup(*it);
+//      }
+//      catch (std::exception const& e) {
+//        throw (engine_error() << "Could not add contact group '"
+//               << *it << "' to service '" << service_description
+//               << "' on host '" << host_name << "' :"
+//               << e.what());
+//      }
+//      if (!add_contactgroup_to_service(s, it->c_str()))
+//        throw (engine_error() << "Could not add contact group '"
+//               << *it << "' to service '" << service_description
+//               << "' on host '" << host_name << "'");
   }
 
   // Custom variables.
