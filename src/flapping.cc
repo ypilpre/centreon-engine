@@ -24,7 +24,6 @@
 #include "com/centreon/engine/flapping.hh"
 #include "com/centreon/engine/globals.hh"
 #include "com/centreon/engine/logging/logger.hh"
-#include "com/centreon/engine/notifications.hh"
 #include "com/centreon/engine/objects/comment.hh"
 #include "com/centreon/engine/statusdata.hh"
 
@@ -428,14 +427,18 @@ void set_service_flap(
     svc->check_flapping_recovery_notification = false;
 
   /* send a notification */
-  if (allow_flapstart_notification == true)
-    service_notification(
-      svc,
-      NOTIFICATION_FLAPPINGSTART,
-      NULL,
-      NULL,
-      NOTIFICATION_OPTION_NONE);
-  return;
+  if (allow_flapstart_notification) {
+          ////////////////
+          // FIXME DBR  //
+          ////////////////
+//    svc->notify(notifier::FLAPPINGSTART);
+//    service_notification(
+//      svc,
+//      NOTIFICATION_FLAPPINGSTART,
+//      NULL,
+//      NULL,
+//      NOTIFICATION_OPTION_NONE);
+  }
 }
 
 /* handles a service that has stopped flapping */
@@ -485,22 +488,30 @@ void clear_service_flap(
     NULL);
 
   /* send a notification */
-  service_notification(
-    svc,
-    NOTIFICATION_FLAPPINGSTOP,
-    NULL,
-    NULL,
-    NOTIFICATION_OPTION_NONE);
+          ////////////////
+          // FIXME DBR  //
+          ////////////////
+//  svc->notify(notifier::FLAPPINGSTOP);
+//  service_notification(
+//    svc,
+//    NOTIFICATION_FLAPPINGSTOP,
+//    NULL,
+//    NULL,
+//    NOTIFICATION_OPTION_NONE);
 
   /* should we send a recovery notification? */
   if (svc->check_flapping_recovery_notification == true
       && svc->current_state == STATE_OK)
-    service_notification(
-      svc,
-      NOTIFICATION_NORMAL,
-      NULL,
-      NULL,
-      NOTIFICATION_OPTION_NONE);
+          ////////////////
+          // FIXME DBR  //
+          ////////////////
+//    svc->notify(notifier::PROBLEM);
+//    service_notification(
+//      svc,
+//      NOTIFICATION_NORMAL,
+//      NULL,
+//      NULL,
+//      NOTIFICATION_OPTION_NONE);
 
   /* clear the recovery notification flag */
   svc->check_flapping_recovery_notification = false;
@@ -575,14 +586,18 @@ void set_host_flap(
     hst->check_flapping_recovery_notification = false;
 
   /* send a notification */
-  if (allow_flapstart_notification == true)
-    host_notification(
-      hst,
-      NOTIFICATION_FLAPPINGSTART,
-      NULL,
-      NULL,
-      NOTIFICATION_OPTION_NONE);
-  return;
+  if (allow_flapstart_notification) {
+          ////////////////
+          // FIXME DBR  //
+          ////////////////
+//    hst->notify(notifier::FLAPPINGSTART);
+//    host_notification(
+//      hst,
+//      NOTIFICATION_FLAPPINGSTART,
+//      NULL,
+//      NULL,
+//      NOTIFICATION_OPTION_NONE);
+  }
 }
 
 /* handles a host that has stopped flapping */
@@ -630,22 +645,31 @@ void clear_host_flap(
     NULL);
 
   /* send a notification */
-  host_notification(
-    hst,
-    NOTIFICATION_FLAPPINGSTOP,
-    NULL,
-    NULL,
-    NOTIFICATION_OPTION_NONE);
+          ////////////////
+          // FIXME DBR  //
+          ////////////////
+//  hst->notify(notifier::FLAPPINGSTOP);
+//  host_notification(
+//    hst,
+//    NOTIFICATION_FLAPPINGSTOP,
+//    NULL,
+//    NULL,
+//    NOTIFICATION_OPTION_NONE);
 
   /* should we send a recovery notification? */
-  if (hst->check_flapping_recovery_notification == true
-      && hst->current_state == HOST_UP)
-    host_notification(
-      hst,
-      NOTIFICATION_NORMAL,
-      NULL,
-      NULL,
-      NOTIFICATION_OPTION_NONE);
+  if (hst->check_flapping_recovery_notification
+      && hst->current_state == HOST_UP) {
+          ////////////////
+          // FIXME DBR  //
+          ////////////////
+//    hst->notify(notifier::PROBLEM);
+//    host_notification(
+//      hst,
+//      NOTIFICATION_NORMAL,
+//      NULL,
+//      NULL,
+//      NOTIFICATION_OPTION_NONE);
+  }
 
   /* clear the recovery notification flag */
   hst->check_flapping_recovery_notification = false;
@@ -864,22 +888,31 @@ void handle_host_flap_detection_disabled(host* hst) {
       NULL);
 
     /* send a notification */
-    host_notification(
-      hst,
-      NOTIFICATION_FLAPPINGDISABLED,
-      NULL,
-      NULL,
-      NOTIFICATION_OPTION_NONE);
+          ////////////////
+          // FIXME DBR  //
+          ////////////////
+//    hst->notify(notifier::FLAPPINGDISABLED);
+//    host_notification(
+//      hst,
+//      NOTIFICATION_FLAPPINGDISABLED,
+//      NULL,
+//      NULL,
+//      NOTIFICATION_OPTION_NONE);
 
     /* should we send a recovery notification? */
     if (hst->check_flapping_recovery_notification == true
-        && hst->current_state == HOST_UP)
-      host_notification(
-        hst,
-        NOTIFICATION_NORMAL,
-        NULL,
-        NULL,
-        NOTIFICATION_OPTION_NONE);
+        && hst->current_state == HOST_UP) {
+          ////////////////
+          // FIXME DBR  //
+          ////////////////
+//      hst->notify(notifier::PROBLEM);
+//      host_notification(
+//        hst,
+//        NOTIFICATION_NORMAL,
+//        NULL,
+//        NULL,
+//        NOTIFICATION_OPTION_NONE);
+    }
 
     /* clear the recovery notification flag */
     hst->check_flapping_recovery_notification = false;
@@ -1009,22 +1042,31 @@ void handle_service_flap_detection_disabled(service* svc) {
       NULL);
 
     /* send a notification */
-    service_notification(
-      svc,
-      NOTIFICATION_FLAPPINGDISABLED,
-      NULL,
-      NULL,
-      NOTIFICATION_OPTION_NONE);
+          ////////////////
+          // FIXME DBR  //
+          ////////////////
+//    svc->notify(notifier::FLAPPINGDISABLED);
+//    service_notification(
+//      svc,
+//      NOTIFICATION_FLAPPINGDISABLED,
+//      NULL,
+//      NULL,
+//      NOTIFICATION_OPTION_NONE);
 
     /* should we send a recovery notification? */
-    if (svc->check_flapping_recovery_notification == true
-        && svc->current_state == STATE_OK)
-      service_notification(
-        svc,
-        NOTIFICATION_NORMAL,
-        NULL,
-        NULL,
-        NOTIFICATION_OPTION_NONE);
+    if (svc->check_flapping_recovery_notification
+        && svc->current_state == STATE_OK) {
+          ////////////////
+          // FIXME DBR  //
+          ////////////////
+//      svc->notify(notifier::PROBLEM);
+//      service_notification(
+//        svc,
+//        NOTIFICATION_NORMAL,
+//        NULL,
+//        NULL,
+//        NOTIFICATION_OPTION_NONE);
+    }
 
     /* clear the recovery notification flag */
     svc->check_flapping_recovery_notification = false;
