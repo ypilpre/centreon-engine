@@ -29,13 +29,14 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include "com/centreon/engine/common.hh"
+#include "com/centreon/engine/configuration/applier/state.hh"
 #include "com/centreon/engine/globals.hh"
-#include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/macros.hh"
 #include "com/centreon/engine/objects/comment.hh"
 #include "com/centreon/engine/objects/downtime.hh"
 #include "com/centreon/engine/statusdata.hh"
 #include "com/centreon/engine/xsddefault.hh"
+#include "com/centreon/shared_ptr.hh"
 #include "skiplist.h"
 
 using namespace com::centreon::engine;
@@ -341,21 +342,26 @@ int xsddefault_save_status_data() {
   }
 
   // save contact status data
-  for (contact* cntct = contact_list; cntct; cntct = cntct->next) {
+  for (umap<std::string, com::centreon::shared_ptr<contact> >::const_iterator
+         it(configuration::applier::state::instance().contacts().begin()),
+         end(configuration::applier::state::instance().contacts().end());
+       it != end;
+       ++it) {
+    contact* cntct = it->second.get();
     stream
       << "contactstatus {\n"
-         "\tcontact_name=" << cntct->name << "\n"
-         "\tmodified_attributes=" << cntct->modified_attributes << "\n"
-         "\tmodified_host_attributes=" << cntct->modified_host_attributes << "\n"
-         "\tmodified_service_attributes=" << cntct->modified_service_attributes << "\n"
-         "\thost_notification_period=" << (cntct->host_notification_period ? cntct->host_notification_period : "") << "\n"
-         "\tservice_notification_period=" << (cntct->service_notification_period ? cntct->service_notification_period : "") << "\n"
-         "\tlast_host_notification=" << static_cast<unsigned long>(cntct->last_host_notification) << "\n"
-         "\tlast_service_notification=" << static_cast<unsigned long>(cntct->last_service_notification) << "\n"
-         "\thost_notifications_enabled=" << cntct->host_notifications_enabled << "\n"
-         "\tservice_notifications_enabled=" << cntct->service_notifications_enabled << "\n";
+         "\tcontact_name=" << cntct->get_name() << "\n"
+         "\tmodified_attributes=" << cntct->get_modified_attributes() << "\n"
+         "\tmodified_host_attributes=" << cntct->get_modified_host_attributes() << "\n"
+         "\tmodified_service_attributes=" << cntct->get_modified_service_attributes() << "\n"
+         "\thost_notification_period=" << (cntct->get_host_notification_period() ? cntct->get_host_notification_period_name() : "") << "\n"
+         "\tservice_notification_period=" << (cntct->get_service_notification_period() ? cntct->get_service_notification_period_name() : "") << "\n"
+         "\tlast_host_notification=" << static_cast<unsigned long>(cntct->get_last_host_notification()) << "\n"
+         "\tlast_service_notification=" << static_cast<unsigned long>(cntct->get_last_service_notification()) << "\n"
+         "\thost_notifications_enabled=" << cntct->is_host_notifications_enabled() << "\n"
+         "\tservice_notifications_enabled=" << cntct->is_service_notifications_enabled() << "\n";
     // custom variables
-    for (customvariablesmember* cvarm = cntct->custom_variables; cvarm; cvarm = cvarm->next) {
+    for (customvariablesmember* cvarm = cntct->get_custom_variables(); cvarm; cvarm = cvarm->next) {
       if (cvarm->variable_name)
         stream << "\t_" << cvarm->variable_name << "=" << cvarm->has_been_modified << ";"
                << (cvarm->variable_value ? cvarm->variable_value : "") << "\n";

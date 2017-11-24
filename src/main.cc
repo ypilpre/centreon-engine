@@ -53,7 +53,6 @@
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/macros/misc.hh"
 #include "com/centreon/engine/nebmods.hh"
-#include "com/centreon/engine/notifications.hh"
 #include "com/centreon/engine/objects/comment.hh"
 #include "com/centreon/engine/objects/downtime.hh"
 #include "com/centreon/engine/perfdata.hh"

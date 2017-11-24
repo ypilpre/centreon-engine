@@ -18,7 +18,6 @@
 */
 
 #include "com/centreon/engine/configuration/applier/state.hh"
-#include "com/centreon/engine/objects/command.hh"
 #include "com/centreon/engine/contact.hh"
 #include "com/centreon/engine/contactgroup.hh"
 #include "com/centreon/engine/objects/host.hh"
@@ -30,6 +29,7 @@
 #include "find.hh"
 
 // forward declaration.
+struct command_struct;
 struct hostdependency_struct;
 struct hostescalation_struct;
 struct servicedependency_struct;
@@ -37,7 +37,6 @@ struct serviceescalation_struct;
 
 using namespace com::centreon;
 using namespace com::centreon::engine;
-using namespace com::centreon::engine::commands;
 using namespace com::centreon::engine::configuration::applier;
 
 /**
@@ -47,7 +46,7 @@ using namespace com::centreon::engine::configuration::applier;
  *
  *  @return Command object if found, NULL otherwise.
  */
-command* find_command(char const* name) {
+command_struct* find_command(char const* name) {
   if (!name)
     return (NULL);
 
@@ -69,7 +68,7 @@ contact* find_contact(char const* name) {
   if (!name)
     return (NULL);
 
-  umap<std::string, shared_ptr<contact_struct> >::const_iterator
+  umap<std::string, shared_ptr<contact> >::const_iterator
     it(state::instance().contacts().find(name));
   if (it != state::instance().contacts().end())
     return (it->second.get());
@@ -87,7 +86,7 @@ contactgroup* find_contactgroup(char const* name) {
   if (!name)
     return (NULL);
 
-  umap<std::string, shared_ptr<contactgroup_struct> >::const_iterator
+  umap<std::string, shared_ptr<contactgroup> >::const_iterator
     it(state::instance().contactgroups().find(name));
   if (it != state::instance().contactgroups().end())
     return (it->second.get());

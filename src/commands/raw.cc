@@ -367,7 +367,7 @@ void raw::_build_contact_address_environment(
   if (!macros.contact_ptr)
     return;
   for (unsigned int i(0); i < MAX_CONTACT_ADDRESSES; ++i) {
-    char const* value(macros.contact_ptr->address[i]);
+    char const* value(macros.contact_ptr->get_address(i).c_str());
     if (!value)
       value = "";
     std::ostringstream oss;
@@ -389,7 +389,7 @@ void raw::_build_custom_contact_macro_environment(
   // Build custom contact variable.
   contact* hst(macros.contact_ptr);
   if (hst) {
-    for (customvariablesmember* customvar(hst->custom_variables);
+    for (customvariablesmember* customvar(hst->get_custom_variables());
          customvar;
          customvar = customvar->next)
       if (customvar->variable_name) {

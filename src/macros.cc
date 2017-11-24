@@ -1,6 +1,6 @@
 /*
 ** Copyright 1999-2010      Ethan Galstad
-** Copyright 2011-2013,2016 Centreon
+** Copyright 2011-2013,2017 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -22,6 +22,7 @@
 #include <cstdlib>
 #include <iomanip>
 #include <sstream>
+#include "com/centreon/engine/configuration/applier/state.hh"
 #include "com/centreon/engine/globals.hh"
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/macros.hh"
@@ -29,7 +30,9 @@
 #include "com/centreon/engine/string.hh"
 #include "com/centreon/engine/timeperiod.hh"
 #include "com/centreon/engine/utils.hh"
+#include "find.hh"
 
+using namespace com::centreon;
 using namespace com::centreon::engine;
 using namespace com::centreon::engine::logging;
 
@@ -85,9 +88,9 @@ int grab_contact_macros_r(nagios_macros* mac, contact* cntct) {
     return (ERROR);
 
   /* save pointer to first/primary contactgroup for later */
-  if (cntct->contactgroups_ptr)
-    mac->contactgroup_ptr
-      = (contactgroup*)cntct->contactgroups_ptr->object_ptr;
+  if (!cntct->get_contactgroups().empty()) {
+    mac->contactgroup_ptr = cntct->get_contactgroups().begin()->get();
+  }
   return (OK);
 }
 
@@ -111,7 +114,6 @@ int grab_custom_macro_value_r(
   servicegroup* temp_servicegroup = NULL;
   servicesmember* temp_servicesmember = NULL;
   contactgroup* temp_contactgroup = NULL;
-  contactsmember* temp_contactsmember = NULL;
   int delimiter_len = 0;
   char* temp_buffer = NULL;
   int result = OK;
@@ -273,7 +275,7 @@ int grab_custom_macro_value_r(
       result = grab_custom_object_macro_r(
                  mac,
                  macro_name + 8,
-                 temp_contact->custom_variables,
+                 temp_contact->get_custom_variables(),
                  output);
     }
     /* a contact macro with a contactgroup name and delimiter */
@@ -284,18 +286,20 @@ int grab_custom_macro_value_r(
       delimiter_len = strlen(arg2);
 
       /* concatenate macro values for all contactgroup members */
-      for (temp_contactsmember = temp_contactgroup->members;
-           temp_contactsmember != NULL;
-           temp_contactsmember = temp_contactsmember->next) {
+      for (umap<std::string, shared_ptr<contact> >::iterator
+             it(temp_contactgroup->get_members().begin()),
+             end(temp_contactgroup->get_members().end());
+           it != end;
+           ++it) {
 
-        if ((temp_contact = temp_contactsmember->contact_ptr) == NULL)
+        if ((temp_contact = it->second.get()) == NULL)
           continue;
 
         /* get the macro value for this contact */
         grab_custom_macro_value_r(
           mac,
           macro_name,
-          temp_contact->name,
+          temp_contact->get_name().c_str(),
           NULL,
           &temp_buffer);
 
@@ -722,44 +726,47 @@ int grab_standard_contact_macro_r(
   /* get the macro value */
   switch (macro_type) {
   case MACRO_CONTACTNAME:
-    *output = string::dup(temp_contact->name);
+    *output = string::dup(temp_contact->get_name().c_str());
     break;
 
   case MACRO_CONTACTALIAS:
-    *output = string::dup(temp_contact->alias);
+    *output = string::dup(temp_contact->get_alias().c_str());
     break;
 
   case MACRO_CONTACTEMAIL:
-    if (temp_contact->email)
-      *output = string::dup(temp_contact->email);
+    if (!temp_contact->get_email().empty())
+      *output = string::dup(temp_contact->get_email().c_str());
     break;
 
   case MACRO_CONTACTPAGER:
-    if (temp_contact->pager)
-      *output = string::dup(temp_contact->pager);
+    if (!temp_contact->get_pager().empty())
+      *output = string::dup(temp_contact->get_pager().c_str());
     break;
 
   case MACRO_CONTACTGROUPNAMES: {
     std::string buf;
     /* get the contactgroup names */
     /* find all contactgroups this contact is a member of */
-    for (temp_objectlist = temp_contact->contactgroups_ptr;
-         temp_objectlist != NULL;
-         temp_objectlist = temp_objectlist->next) {
-      if ((temp_contactgroup = (contactgroup*)temp_objectlist->object_ptr) == NULL)
+    for (std::list<shared_ptr<contactgroup> >::iterator
+           it(temp_contact->get_contactgroups().begin()),
+           end(temp_contact->get_contactgroups().end());
+         it != end;
+         ++it) {
+      if ((temp_contactgroup = it->get()) == NULL)
         continue;
 
       if (!buf.empty())
         buf.append(",");
-      buf.append(temp_contactgroup->group_name);
+      buf.append(temp_contactgroup->get_name());
     }
+
     if (!buf.empty())
       *output = string::dup(buf);
   }
     break;
 
   case MACRO_CONTACTTIMEZONE: {
-    *output = string::dup(get_contact_timezone(temp_contact->name));
+    *output = string::dup(temp_contact->get_timezone().c_str());
   }
     break ;
 
@@ -795,8 +802,8 @@ int grab_contact_address_macro(
     return (ERROR);
 
   /* get the macro */
-  if (temp_contact->address[macro_num])
-    *output = string::dup(temp_contact->address[macro_num]);
+  if (!temp_contact->get_address(macro_num).empty())
+    *output = string::dup(temp_contact->get_address(macro_num));
   return (OK);
 }
 
@@ -805,7 +812,7 @@ int grab_standard_contactgroup_macro(
       int macro_type,
       contactgroup* temp_contactgroup,
       char** output) {
-  contactsmember* temp_contactsmember = NULL;
+  //contactsmember* temp_contactsmember = NULL;
 
   if (temp_contactgroup == NULL || output == NULL)
     return (ERROR);
@@ -813,29 +820,31 @@ int grab_standard_contactgroup_macro(
   /* get the macro value */
   switch (macro_type) {
   case MACRO_CONTACTGROUPNAME:
-    *output = string::dup(temp_contactgroup->group_name);
+    *output = string::dup(temp_contactgroup->get_name());
     break;
 
   case MACRO_CONTACTGROUPALIAS:
-    if (temp_contactgroup->alias)
-      *output = string::dup(temp_contactgroup->alias);
+    if (!temp_contactgroup->get_alias().empty())
+      *output = string::dup(temp_contactgroup->get_alias());
     break;
 
   case MACRO_CONTACTGROUPMEMBERS:
     /* get the member list */
-    for (temp_contactsmember = temp_contactgroup->members;
-         temp_contactsmember != NULL;
-         temp_contactsmember = temp_contactsmember->next) {
-      if (temp_contactsmember->contact_name == NULL)
+    for (umap<std::string, shared_ptr<contact> >::iterator
+           it(temp_contactgroup->get_members().begin()),
+           end(temp_contactgroup->get_members().end());
+         it != end;
+         ++it) {
+      if (it->first.empty())
         continue;
       if (*output == NULL)
-        *output = string::dup(temp_contactsmember->contact_name);
+        *output = string::dup(it->first);
       else {
         *output = resize_string(
                     *output,
-                    strlen(*output) + strlen(temp_contactsmember->contact_name) + 2);
+                    strlen(*output) + it->first.length() + 2);
         strcat(*output, ",");
-        strcat(*output, temp_contactsmember->contact_name);
+        strcat(*output, it->first.c_str());
       }
     }
     break;
@@ -1554,7 +1563,7 @@ int set_custom_macro_environment_vars_r(nagios_macros* mac, int set) {
   /***** CUSTOM CONTACT VARIABLES *****/
   /* generate variables and save them for later */
   if ((temp_contact = mac->contact_ptr) && set == true) {
-    for (temp_customvariablesmember = temp_contact->custom_variables;
+    for (temp_customvariablesmember = temp_contact->get_custom_variables();
          temp_customvariablesmember != NULL;
          temp_customvariablesmember = temp_customvariablesmember->next) {
       std::string var("_CONTACT");
@@ -1598,7 +1607,7 @@ int set_contact_address_environment_vars_r(
     oss << "CONTACTADDRESS" << x;
     set_macro_environment_var(
       oss.str().c_str(),
-      mac->contact_ptr->address[x],
+      mac->contact_ptr->get_address(x).c_str(),
       set);
   }
 

@@ -280,7 +280,7 @@ umap<std::string, shared_ptr<commands::connector> >& applier::state::connectors(
  *
  *  @return The current contacts.
  */
-umap<std::string, shared_ptr<contact_struct> > const& applier::state::contacts() const throw () {
+umap<std::string, shared_ptr<engine::contact> > const& applier::state::contacts() const throw () {
   return (_contacts);
 }
 
@@ -289,7 +289,7 @@ umap<std::string, shared_ptr<contact_struct> > const& applier::state::contacts()
  *
  *  @return The current contacts.
  */
-umap<std::string, shared_ptr<contact_struct> >& applier::state::contacts() throw () {
+umap<std::string, shared_ptr<engine::contact> >& applier::state::contacts() throw () {
   return (_contacts);
 }
 
@@ -301,7 +301,7 @@ umap<std::string, shared_ptr<contact_struct> >& applier::state::contacts() throw
  *  @return Iterator to the element if found, contacts().end()
  *          otherwise.
  */
-umap<std::string, shared_ptr<contact_struct> >::const_iterator applier::state::contacts_find(configuration::contact::key_type const& k) const {
+umap<std::string, shared_ptr<engine::contact> >::const_iterator applier::state::contacts_find(configuration::contact::key_type const& k) const {
   return (_contacts.find(k));
 }
 
@@ -313,7 +313,7 @@ umap<std::string, shared_ptr<contact_struct> >::const_iterator applier::state::c
  *  @return Iterator to the element if found, contacts().end()
  *          otherwise.
  */
-umap<std::string, shared_ptr<contact_struct> >::iterator applier::state::contacts_find(configuration::contact::key_type const& k) {
+umap<std::string, shared_ptr<engine::contact> >::iterator applier::state::contacts_find(configuration::contact::key_type const& k) {
   return (_contacts.find(k));
 }
 
@@ -322,7 +322,7 @@ umap<std::string, shared_ptr<contact_struct> >::iterator applier::state::contact
  *
  *  @return The current contactgroups.
  */
-umap<std::string, shared_ptr<contactgroup_struct> > const& applier::state::contactgroups() const throw () {
+umap<std::string, shared_ptr<engine::contactgroup> > const& applier::state::contactgroups() const throw () {
   return (_contactgroups);
 }
 
@@ -331,7 +331,7 @@ umap<std::string, shared_ptr<contactgroup_struct> > const& applier::state::conta
  *
  *  @return The current contactgroups.
  */
-umap<std::string, shared_ptr<contactgroup_struct> >& applier::state::contactgroups() throw () {
+umap<std::string, shared_ptr<engine::contactgroup> >& applier::state::contactgroups() throw () {
   return (_contactgroups);
 }
 
@@ -343,7 +343,7 @@ umap<std::string, shared_ptr<contactgroup_struct> >& applier::state::contactgrou
  *  @return Iterator to the element if found, contactgroups().end()
  *          otherwise.
  */
-umap<std::string, shared_ptr<contactgroup_struct> >::const_iterator applier::state::contactgroups_find(configuration::contactgroup::key_type const& k) const {
+umap<std::string, shared_ptr<engine::contactgroup> >::const_iterator applier::state::contactgroups_find(configuration::contactgroup::key_type const& k) const {
   return (_contactgroups.find(k));
 }
 
@@ -355,7 +355,7 @@ umap<std::string, shared_ptr<contactgroup_struct> >::const_iterator applier::sta
  *  @return Iterator to the element if found, contactgroups().end()
  *          otherwise.
  */
-umap<std::string, shared_ptr<contactgroup_struct> >::iterator applier::state::contactgroups_find(configuration::contactgroup::key_type const& k) {
+umap<std::string, shared_ptr<engine::contactgroup> >::iterator applier::state::contactgroups_find(configuration::contactgroup::key_type const& k) {
   return (_contactgroups.find(k));
 }
 
@@ -553,14 +553,28 @@ umultimap<std::string, shared_ptr<hostescalation_struct> >::iterator applier::st
                       ? configuration::hostescalation::unreachable
                       : 0));
     current.escalation_options(options);
-    for (contactsmember_struct* m(p.first->second->contacts);
-         m;
-         m = m->next)
-      current.contacts().insert(m->contact_name);
-    for (contactgroupsmember_struct* m(p.first->second->contact_groups);
-         m;
-         m = m->next)
-      current.contactgroups().insert(m->group_name);
+    for (umap<std::string, shared_ptr<engine::contact> >::iterator
+           it(p.first->second->contacts.begin()),
+           end(p.first->second->contacts.end());
+         it != end;
+         ++it)
+      current.contacts().insert(it->first);
+
+//    for (contactsmember_struct* m(p.first->second->contacts);
+//         m;
+//         m = m->next)
+//      current.contacts().insert(m->contact_name);
+    for (umap<std::string, shared_ptr<engine::contactgroup> >::iterator
+           it(p.first->second->contact_groups.begin()),
+           end(p.first->second->contact_groups.end());
+         it != end;
+         ++it)
+      current.contactgroups().insert(it->first);
+
+//    for (contactgroupsmember_struct* m(p.first->second->contact_groups);
+//         m;
+//         m = m->next)
+//      current.contactgroups().insert(m->group_name);
 
     // Found !
     if (current == hesc)
@@ -819,14 +833,28 @@ umultimap<std::pair<std::string, std::string>, shared_ptr<serviceescalation_stru
                             ? configuration::serviceescalation::critical
                             : 0));
     current.escalation_options(options);
-    for (contactsmember_struct* m(p.first->second->contacts);
-         m;
-         m = m->next)
-      current.contacts().insert(m->contact_name);
-    for (contactgroupsmember_struct* m(p.first->second->contact_groups);
-         m;
-         m = m->next)
-      current.contactgroups().insert(m->group_name);
+    for (umap<std::string, shared_ptr<engine::contact> >::const_iterator
+           it(p.first->second->contacts.begin()),
+           end(p.first->second->contacts.end());
+         it != end;
+         ++it)
+      current.contacts().insert(it->first);
+
+//    for (contactsmember_struct* m(p.first->second->contacts);
+//         m;
+//         m = m->next)
+//      current.contacts().insert(m->contact_name);
+    for (umap<std::string, shared_ptr<engine::contactgroup> >::const_iterator
+           it(p.first->second->contact_groups.begin()),
+           end(p.first->second->contact_groups.end());
+         it != end;
+         ++it)
+      current.contactgroups().insert(it->first);
+
+//    for (contactgroupsmember_struct* m(p.first->second->contact_groups);
+//         m;
+//         m = m->next)
+//      current.contactgroups().insert(m->group_name);
 
     // Found !
     if (current == sesc)

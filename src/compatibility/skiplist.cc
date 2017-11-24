@@ -20,8 +20,11 @@
 
 #include <cstdlib>
 #include "com/centreon/engine/common.hh"
+#include "com/centreon/engine/contact.hh"
 #include "com/centreon/engine/globals.hh"
 #include "skiplist.h"
+
+using namespace com::centreon::engine;
 
 skiplist* skiplist_new(
             int max_levels,
@@ -583,7 +586,7 @@ int skiplist_compare_contact(void const* a, void const* b) {
     return (1);
   if (!ob)
     return (-1);
-  return (skiplist_compare_text(oa->name, NULL, ob->name, NULL));
+  return (oa->get_name().compare(ob->get_name()));
 }
 
 /**
@@ -603,11 +606,7 @@ int skiplist_compare_contactgroup(void const* a, void const* b) {
     return (1);
   if (!ob)
     return (-1);
-  return (skiplist_compare_text(
-            oa->group_name,
-            NULL,
-            ob->group_name,
-            NULL));
+  return (oa->get_name().compare(ob->get_name()));
 }
 
 /**

@@ -815,7 +815,7 @@ comment* get_next_comment_by_host(
            comment* start) {
   comment* temp_comment = NULL;
 
-  if (host_name == NULL || comment_hashlist == NULL)
+  if (host_name == NULL)
     return (NULL);
 
   if (start == NULL)

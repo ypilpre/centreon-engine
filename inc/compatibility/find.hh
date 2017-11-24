@@ -48,12 +48,9 @@ struct serviceescalation_struct;
 struct servicegroup_struct;
 struct timeperiod_struct;
 
-com::centreon::engine::commands::command* find_command(char const* name);
-com::centreon::engine::contact*
-                          find_contact(char const* name);
-
-com::centreon::engine::contactgroup*
-                          find_contactgroup(char const* name);
+command_struct*                             find_command(char const* name);
+com::centreon::engine::contact*             find_contact(char const* name);
+com::centreon::engine::contactgroup*        find_contactgroup(char const* name);
 
 host_struct*              find_host(char const* name);
 hostgroup_struct*         find_hostgroup(char const* name);

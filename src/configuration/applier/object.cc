@@ -38,26 +38,3 @@ void applier::modify_if_different(char*& s1, char const* s2) {
   return ;
 }
 
-void applier::modify_if_different(
-                char** t1,
-                std::vector<std::string> const& t2,
-                unsigned int size) {
-  unsigned int i(0);
-  for (std::vector<std::string>::const_iterator
-         it(t2.begin()),
-         end(t2.end());
-       (it != end) && (i < size);
-       ++it, ++i)
-    if (!t1[i] || strcmp(t1[i], it->c_str())) {
-      delete[] t1[i];
-      t1[i] = NULL;
-      if (!it->empty())
-        t1[i] = string::dup(*it);
-    }
-  while (i < size) {
-    delete [] t1[i];
-    t1[i] = NULL;
-    ++i;
-  }
-  return ;
-}
