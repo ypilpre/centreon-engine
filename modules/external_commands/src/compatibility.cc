@@ -30,7 +30,9 @@
 #include "com/centreon/engine/retention/parser.hh"
 #include "com/centreon/engine/retention/state.hh"
 #include "com/centreon/engine/string.hh"
+#include "com/centreon/unordered_hash.hh"
 
+using namespace com::centreon;
 using namespace com::centreon::engine;
 using namespace com::centreon::engine::logging;
 
@@ -1220,8 +1222,12 @@ int process_host_command(int cmd,
     str = my_strtok(NULL, ";");
     if (str)
       buf[1] = string::dup(str);
-    if (buf[0] && buf[1])
-      host_notification(temp_host, NOTIFICATION_CUSTOM, buf[0], buf[1], intval);
+    ///////////////
+    // FIXME DBR //
+    ///////////////
+//    if (buf[0] && buf[1])
+//      temp_host->notify(notifier::CUSTOM, buf[0], buf[1], intval);
+//      //host_notification(temp_host, NOTIFICATION_CUSTOM, buf[0], buf[1], intval);
     break;
 
   default:
@@ -1320,12 +1326,16 @@ int process_service_command(int cmd,
     str = my_strtok(NULL, ";");
     if (str)
       buf[1] = string::dup(str);
-    if (buf[0] && buf[1])
-      service_notification(temp_service,
-                           NOTIFICATION_CUSTOM,
-                           buf[0],
-                           buf[1],
-                           intval);
+    ///////////////
+    // FIXME DBR //
+    ///////////////
+//    if (buf[0] && buf[1])
+//      temp_service->notify(notifier::CUSTOM, buf[0], buf[1], intval);
+//     // service_notification(temp_service,
+//     //                      NOTIFICATION_CUSTOM,
+//     //                      buf[0],
+//     //                      buf[1],
+//     //                      intval);
     break;
 
   default:
@@ -1482,19 +1492,19 @@ int process_contact_command(int cmd,
   switch (cmd) {
 
   case CMD_ENABLE_CONTACT_HOST_NOTIFICATIONS:
-    enable_contact_host_notifications(temp_contact);
+    temp_contact->enable_host_notifications();
     break;
 
   case CMD_DISABLE_CONTACT_HOST_NOTIFICATIONS:
-    disable_contact_host_notifications(temp_contact);
+    temp_contact->disable_host_notifications();
     break;
 
   case CMD_ENABLE_CONTACT_SVC_NOTIFICATIONS:
-    enable_contact_service_notifications(temp_contact);
+    temp_contact->enable_service_notifications();
     break;
 
   case CMD_DISABLE_CONTACT_SVC_NOTIFICATIONS:
-    disable_contact_service_notifications(temp_contact);
+    temp_contact->disable_service_notifications();
     break;
 
   default:
@@ -1508,7 +1518,6 @@ int process_contactgroup_command(int cmd,
                                  char* args) {
   char* contactgroup_name = NULL;
   contactgroup* temp_contactgroup = NULL;
-  contactsmember* temp_member = NULL;
   contact* temp_contact = NULL;
 
   (void)entry_time;
@@ -1529,29 +1538,31 @@ int process_contactgroup_command(int cmd,
   case CMD_DISABLE_CONTACTGROUP_SVC_NOTIFICATIONS:
 
     /* loop through all contactgroup members */
-    for (temp_member = temp_contactgroup->members;
-         temp_member != NULL;
-         temp_member = temp_member->next) {
-
-      if ((temp_contact = temp_member->contact_ptr) == NULL)
+    for (umap<std::string, shared_ptr<engine::contact> >::const_iterator
+           it(temp_contactgroup->get_members().begin()),
+           end(temp_contactgroup->get_members().end());
+         it != end;
+         ++it) {
+      if (it->second.is_null())
         continue;
+      engine::contact* temp_member = it->second.get();
 
       switch (cmd) {
 
       case CMD_ENABLE_CONTACTGROUP_HOST_NOTIFICATIONS:
-        enable_contact_host_notifications(temp_contact);
+        temp_contact->enable_host_notifications();
         break;
 
       case CMD_DISABLE_CONTACTGROUP_HOST_NOTIFICATIONS:
-        disable_contact_host_notifications(temp_contact);
+        temp_contact->disable_host_notifications();
         break;
 
       case CMD_ENABLE_CONTACTGROUP_SVC_NOTIFICATIONS:
-        enable_contact_service_notifications(temp_contact);
+        temp_contact->enable_service_notifications();
         break;
 
       case CMD_DISABLE_CONTACTGROUP_SVC_NOTIFICATIONS:
-        disable_contact_service_notifications(temp_contact);
+        temp_contact->disable_service_notifications();
         break;
 
       default:
