@@ -48,17 +48,17 @@ namespace           notifications {
     };
 
     enum              notification_type {
-      NONE                 = -1,
-      PROBLEM              = 0,
-      ACKNOWLEDGEMENT      = 1,
-      FLAPPINGSTART        = 2,
-      FLAPPINGSTOP         = 3,
-      FLAPPINGDISABLED     = 4,
-      DOWNTIMESTART        = 5,
-      DOWNTIMESTOP         = 6,
-      DOWNTIMECANCELLED    = 7,
-      RECOVERY             = 8,
-      CUSTOM               = 99,
+      NONE                 = 0,
+      PROBLEM              = 1,
+      RECOVERY             = 2,
+      ACKNOWLEDGEMENT      = 3,
+      FLAPPINGSTART        = 4,
+      FLAPPINGSTOP         = 5,
+      FLAPPINGDISABLED     = 6,
+      DOWNTIMESTART        = 7,
+      DOWNTIMESTOP         = 8,
+      DOWNTIMECANCELLED    = 9,
+      CUSTOM               = 10,
     };
     enum              action_on {
       ON_NONE = 0,

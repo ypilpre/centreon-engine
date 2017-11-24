@@ -80,6 +80,8 @@ notifier& notifier::operator=(notifier const& other) {
  * Destructor.
  */
 notifier::~notifier() {
+  logger(dbg_functions, basic)
+    << "notifier: destructor";
 }
 
 void notifier::add_contactgroup(shared_ptr<engine::contactgroup> cg) {
@@ -336,7 +338,8 @@ std::string notifier::_notification_string[] = {
   "FLAPPINGDISABLED",
   "DOWNTIMESTART",
   "DOWNTIMESTOP",
-  "DOWNTIMECANCELLED"
+  "DOWNTIMECANCELLED",
+  "CUSTOM"
 };
 
 /**************************************
