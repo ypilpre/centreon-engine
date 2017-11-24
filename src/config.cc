@@ -27,8 +27,8 @@
 #include "com/centreon/engine/configuration/parser.hh"
 #include "com/centreon/engine/globals.hh"
 #include "com/centreon/engine/logging/logger.hh"
-#include "com/centreon/engine/notifications.hh"
 #include "com/centreon/engine/string.hh"
+#include "find.hh"
 
 using namespace com::centreon;
 using namespace com::centreon::engine;
@@ -43,7 +43,7 @@ int pre_flight_check() {
   host* temp_host(NULL);
   char* buf(NULL);
   service* temp_service(NULL);
-  com::centreon::engine::commands::command* temp_command(NULL);
+  command_struct* temp_command(NULL);
   char* temp_command_name(NULL);
   int warnings(0);
   int errors(0);
@@ -674,8 +674,7 @@ int check_service(service* svc, int* w, int* e) {
     /* get the command name, leave any arguments behind */
     char* temp_command_name = my_strtok(buf, "!");
 
-    com::centreon::engine::commands::command* temp_command(
-      find_command(temp_command_name));
+    command_struct* temp_command(find_command(temp_command_name));
     if (temp_command == NULL) {
       logger(log_verification_error, basic)
         << "Error: Event handler command '" << temp_command_name
@@ -696,8 +695,7 @@ int check_service(service* svc, int* w, int* e) {
   /* get the command name, leave any arguments behind */
   char* temp_command_name = my_strtok(buf, "!");
 
-  com::centreon::engine::commands::command* temp_command(
-    find_command(temp_command_name));
+  command_struct* temp_command(find_command(temp_command_name));
 
   if (temp_command == NULL) {
     logger(log_verification_error, basic)
@@ -913,8 +911,7 @@ int check_host(host* hst, int* w, int* e) {
     /* get the command name, leave any arguments behind */
     char* temp_command_name = my_strtok(buf, "!");
 
-    com::centreon::engine::commands::command* temp_command(
-      find_command(temp_command_name));
+    command_struct* temp_command(find_command(temp_command_name));
 
     if (temp_command == NULL) {
       logger(log_verification_error, basic)
@@ -939,8 +936,7 @@ int check_host(host* hst, int* w, int* e) {
     /* get the command name, leave any arguments behind */
     char* temp_command_name = my_strtok(buf, "!");
 
-    com::centreon::engine::commands::command* temp_command(
-      find_command(temp_command_name));
+    command_struct* temp_command(find_command(temp_command_name));
     if (temp_command == NULL) {
       logger(log_verification_error, basic)
         << "Error: Host check command '" << temp_command_name
