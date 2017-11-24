@@ -25,8 +25,6 @@
 #include "com/centreon/engine/globals.hh"
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/objects/commandsmember.hh"
-#include "com/centreon/engine/objects/contactgroupsmember.hh"
-#include "com/centreon/engine/objects/contactsmember.hh"
 #include "com/centreon/engine/objects/customvariablesmember.hh"
 #include "com/centreon/engine/objects/host.hh"
 #include "com/centreon/engine/objects/hostsmember.hh"
@@ -69,8 +67,8 @@ bool operator==(
           && obj1.retry_interval == obj2.retry_interval
           && obj1.max_attempts == obj2.max_attempts
           && is_equal(obj1.event_handler, obj2.event_handler)
-          && is_equal(obj1.contact_groups, obj2.contact_groups)
-          && is_equal(obj1.contacts, obj2.contacts)
+          && obj1.contact_groups == obj2.contact_groups   //is_equal(obj1.contact_groups, obj2.contact_groups)
+          && obj1.contacts == obj2.contacts               //is_equal(obj1.contacts, obj2.contacts)
           && obj1.notification_interval == obj2.notification_interval
           && obj1.first_notification_delay == obj2.first_notification_delay
           && obj1.notify_on_down == obj2.notify_on_down
@@ -635,26 +633,6 @@ int get_host_count() {
  *
  *  @return true or false.
  */
-int is_contact_for_host(host* hst, contact* cntct) {
-  if (!hst || !cntct)
-    return (false);
-
-  // Search all individual contacts of this host.
-  for (contactsmember* member(hst->contacts);
-       member;
-       member = member->next)
-    if (member->contact_ptr == cntct)
-      return (true);
-
-  // Search all contactgroups of this host.
-  for (contactgroupsmember* member(hst->contact_groups);
-       member;
-       member = member->next)
-    if (is_contact_member_of_contactgroup(member->group_ptr, cntct))
-      return (true);
-
-  return (false);
-}
 
 /**
  *  Tests whether or not a contact is an escalated contact for a
@@ -679,21 +657,23 @@ int is_escalated_contact_for_host(host* hst, contact* cntct) {
        ++it) {
     hostescalation* hstescalation(&*it->second);
     // Search all contacts of this host escalation.
-    for (contactsmember* member(hstescalation->contacts);
-         member;
-         member = member->next)
-      if (member->contact_ptr == cntct)
-        return (true);
+    umap<std::string, shared_ptr<engine::contact> >::const_iterator
+      cit(hstescalation->contacts.find(cntct->get_name()));
+    if (cit != hstescalation->contacts.end())
+      return true;
 
     // Search all contactgroups of this host escalation.
-    for (contactgroupsmember* member(hstescalation->contact_groups);
-         member;
-         member = member->next)
-      if (is_contact_member_of_contactgroup(member->group_ptr, cntct))
-        return (true);
+    for (umap<std::string, shared_ptr<contactgroup> >::const_iterator
+           gcit(hstescalation->contact_groups.begin()),
+           end(hstescalation->contact_groups.end());
+         gcit != end;
+         ++gcit) {
+      if (gcit->second->contains_member(cntct->get_name()))
+        return true;
+    }
   }
 
-  return (false);
+  return false;
 }
 
 /**

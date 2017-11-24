@@ -24,6 +24,8 @@
 #  include <time.h>
 #  include "com/centreon/engine/common.hh"
 #  include "com/centreon/shared_ptr.hh"
+#  include "com/centreon/unordered_hash.hh"
+#  include "com/centreon/engine/namespace.hh"
 
 /* Forward declaration. */
 CCE_BEGIN()
@@ -153,11 +155,9 @@ typedef struct                  host_struct {
   int                           circular_path_checked;
   int                           contains_circular_path;
 
-  com::centreon::engine::commands::command*
-                                event_handler_ptr;
+  command_struct*               event_handler_ptr;
 
-  com::centreon::engine::commands::command*
-                                check_command_ptr;
+  command_struct*               check_command_ptr;
 
   timeperiod_struct*            check_period_ptr;
   timeperiod_struct*            notification_period_ptr;
