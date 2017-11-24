@@ -317,7 +317,7 @@ bool contact::parse(char const* key, char const* value) {
  *
  *  @return The address.
  */
-tab_string const& contact::address() const throw () {
+std::vector<std::string> const& contact::address() const throw () {
   return (_address);
 }
 
