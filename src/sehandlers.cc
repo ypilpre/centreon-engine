@@ -25,7 +25,6 @@
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/macros.hh"
 #include "com/centreon/engine/neberrors.hh"
-#include "com/centreon/engine/notifications.hh"
 #include "com/centreon/engine/objects/comment.hh"
 #include "com/centreon/engine/objects/downtime.hh"
 #include "com/centreon/engine/perfdata.hh"
@@ -1101,14 +1100,18 @@ int handle_host_state(host* hst) {
     }
 
     /* notify contacts about the recovery or problem if its a "hard" state */
-    if (hst->state_type == HARD_STATE)
-      host_notification(
-        hst,
-        NOTIFICATION_NORMAL,
-        NULL,
-        NULL,
-        NOTIFICATION_OPTION_NONE);
-
+    if (hst->state_type == HARD_STATE) {
+          ////////////////
+          // FIXME DBR  //
+          ////////////////
+//      hst->notify(notifier::PROBLEM);
+//      host_notification(
+//        hst,
+//        NOTIFICATION_NORMAL,
+//        NULL,
+//        NULL,
+//        NOTIFICATION_OPTION_NONE);
+    }
     /* handle the host state change */
     handle_host_event(hst);
 
@@ -1134,13 +1137,18 @@ int handle_host_state(host* hst) {
     if ((hst->current_state != HOST_UP ||
          (hst->current_state == HOST_UP
           && !host_other_props[hst->name].recovery_been_sent))
-        && hst->state_type == HARD_STATE)
-      host_notification(
-        hst,
-        NOTIFICATION_NORMAL,
-        NULL,
-        NULL,
-        NOTIFICATION_OPTION_NONE);
+        && hst->state_type == HARD_STATE) {
+          ////////////////
+          // FIXME DBR  //
+          ////////////////
+//      hst->notify(notifier::PROBLEM);
+//      host_notification(
+//        hst,
+//        NOTIFICATION_NORMAL,
+//        NULL,
+//        NULL,
+//        NOTIFICATION_OPTION_NONE);
+    }
 
     /* the host recovered, so reset the current notification number and state flags (after the recovery notification has gone out) */
     if (!old_recovery_been_sent
