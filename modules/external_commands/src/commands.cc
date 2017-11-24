@@ -25,6 +25,7 @@
 #include <sys/time.h>
 #include "com/centreon/engine/broker.hh"
 #include "com/centreon/engine/checks/checker.hh"
+#include "com/centreon/engine/contact.hh"
 #include "com/centreon/engine/downtime_finder.hh"
 #include "com/centreon/engine/events/defines.hh"
 #include "com/centreon/engine/flapping.hh"
@@ -34,7 +35,6 @@
 #include "com/centreon/engine/modules/external_commands/internal.hh"
 #include "com/centreon/engine/modules/external_commands/processing.hh"
 #include "com/centreon/engine/modules/external_commands/utils.hh"
-#include "com/centreon/engine/notifications.hh"
 #include "com/centreon/engine/objects/comment.hh"
 #include "com/centreon/engine/objects/downtime.hh"
 #include "com/centreon/engine/statusdata.hh"
@@ -1733,15 +1733,15 @@ int cmd_change_object_int_var(int cmd, char* args) {
     /* set the modified attribute */
     switch (cmd) {
     case CMD_CHANGE_CONTACT_MODATTR:
-      temp_contact->modified_attributes = attr;
+      temp_contact->set_modified_attributes(attr);
       break;
 
     case CMD_CHANGE_CONTACT_MODHATTR:
-      temp_contact->modified_host_attributes = hattr;
+      temp_contact->set_modified_host_attributes(hattr);
       break;
 
     case CMD_CHANGE_CONTACT_MODSATTR:
-      temp_contact->modified_service_attributes = sattr;
+      temp_contact->set_modified_service_attributes(sattr);
       break;
 
     default:
@@ -1755,11 +1755,11 @@ int cmd_change_object_int_var(int cmd, char* args) {
       NEBATTR_NONE,
       temp_contact,
       cmd, attr,
-      temp_contact->modified_attributes,
+      temp_contact->get_modified_attributes(),
       hattr,
-      temp_contact->modified_host_attributes,
+      temp_contact->get_modified_host_attributes(),
       sattr,
-      temp_contact->modified_service_attributes,
+      temp_contact->get_modified_service_attributes(),
       NULL);
 
     /* update the status log with the contact info */
@@ -1977,16 +1977,14 @@ int cmd_change_object_char_var(int cmd, char* args) {
     break;
 
   case CMD_CHANGE_CONTACT_HOST_NOTIFICATION_TIMEPERIOD:
-    delete[] temp_contact->host_notification_period;
-    temp_contact->host_notification_period = temp_ptr;
-    temp_contact->host_notification_period_ptr = temp_timeperiod;
+    temp_contact->set_host_notification_period_name(temp_ptr);
+    temp_contact->set_host_notification_period(temp_timeperiod);
     hattr = MODATTR_NOTIFICATION_TIMEPERIOD;
     break;
 
   case CMD_CHANGE_CONTACT_SVC_NOTIFICATION_TIMEPERIOD:
-    delete[] temp_contact->service_notification_period;
-    temp_contact->service_notification_period = temp_ptr;
-    temp_contact->service_notification_period_ptr = temp_timeperiod;
+    temp_contact->set_service_notification_period_name(temp_ptr);
+    temp_contact->set_service_notification_period(temp_timeperiod);
     sattr = MODATTR_NOTIFICATION_TIMEPERIOD;
     break;
 
@@ -2084,8 +2082,10 @@ int cmd_change_object_char_var(int cmd, char* args) {
   case CMD_CHANGE_CONTACT_HOST_NOTIFICATION_TIMEPERIOD:
   case CMD_CHANGE_CONTACT_SVC_NOTIFICATION_TIMEPERIOD:
     /* set the modified attributes */
-    temp_contact->modified_host_attributes |= hattr;
-    temp_contact->modified_service_attributes |= sattr;
+    temp_contact->set_modified_host_attributes(
+        temp_contact->get_modified_host_attributes() | hattr);
+    temp_contact->set_modified_service_attributes(
+        temp_contact->get_modified_service_attributes() | sattr);
 
     /* send data to event broker */
     broker_adaptive_contact_data(
@@ -2095,15 +2095,16 @@ int cmd_change_object_char_var(int cmd, char* args) {
       temp_contact,
       cmd,
       attr,
-      temp_contact->modified_attributes,
+      temp_contact->get_modified_attributes(),
       hattr,
-      temp_contact->modified_host_attributes,
+      temp_contact->get_modified_host_attributes(),
       sattr,
-      temp_contact->modified_service_attributes,
+      temp_contact->get_modified_service_attributes(),
       NULL);
 
     /* update the status log with the contact info */
-    update_contact_status(temp_contact, false);
+    temp_contact->update_status(false);
+    //update_contact_status(temp_contact, false);
     break;
 
   default:
@@ -2172,7 +2173,7 @@ int cmd_change_object_custom_var(int cmd, char* args) {
   case CMD_CHANGE_CUSTOM_CONTACT_VAR:
     if ((temp_contact = find_contact(name1)) == NULL)
       return (ERROR);
-    temp_customvariablesmember = temp_contact->custom_variables;
+    temp_customvariablesmember = temp_contact->get_custom_variables();
     break;
 
   default:
@@ -2221,8 +2222,10 @@ int cmd_change_object_custom_var(int cmd, char* args) {
     break;
 
   case CMD_CHANGE_CUSTOM_CONTACT_VAR:
-    temp_contact->modified_attributes |= MODATTR_CUSTOM_VARIABLE;
-    update_contact_status(temp_contact, false);
+    temp_contact->set_modified_attributes(
+      temp_contact->get_modified_attributes() | MODATTR_CUSTOM_VARIABLE);
+    temp_contact->update_status(false);
+    //update_contact_status(temp_contact, false);
     break;
 
   default:
@@ -2631,138 +2634,6 @@ void disable_and_propagate_notifications(
   }
 }
 
-/* enables host notifications for a contact */
-void enable_contact_host_notifications(contact* cntct) {
-  unsigned long attr(MODATTR_NOTIFICATIONS_ENABLED);
-
-  /* no change */
-  if (cntct->host_notifications_enabled)
-    return;
-
-  /* set the attribute modified flag */
-  cntct->modified_host_attributes |= attr;
-
-  /* enable the host notifications... */
-  cntct->host_notifications_enabled = true;
-
-  /* send data to event broker */
-  broker_adaptive_contact_data(
-    NEBTYPE_ADAPTIVECONTACT_UPDATE,
-    NEBFLAG_NONE,
-    NEBATTR_NONE,
-    cntct,
-    CMD_NONE,
-    MODATTR_NONE,
-    cntct->modified_attributes,
-    attr,
-    cntct->modified_host_attributes,
-    MODATTR_NONE,
-    cntct->modified_service_attributes,
-    NULL);
-
-  /* update the status log to reflect the new contact state */
-  update_contact_status(cntct, false);
-}
-
-/* disables host notifications for a contact */
-void disable_contact_host_notifications(contact* cntct) {
-  unsigned long attr(MODATTR_NOTIFICATIONS_ENABLED);
-
-  /* no change */
-  if (cntct->host_notifications_enabled == false)
-    return;
-
-  /* set the attribute modified flag */
-  cntct->modified_host_attributes |= attr;
-
-  /* enable the host notifications... */
-  cntct->host_notifications_enabled = false;
-
-  /* send data to event broker */
-  broker_adaptive_contact_data(
-    NEBTYPE_ADAPTIVECONTACT_UPDATE,
-    NEBFLAG_NONE,
-    NEBATTR_NONE,
-    cntct,
-    CMD_NONE,
-    MODATTR_NONE,
-    cntct->modified_attributes,
-    attr,
-    cntct->modified_host_attributes,
-    MODATTR_NONE,
-    cntct->modified_service_attributes,
-    NULL);
-
-  /* update the status log to reflect the new contact state */
-  update_contact_status(cntct, false);
-}
-
-/* enables service notifications for a contact */
-void enable_contact_service_notifications(contact* cntct) {
-  unsigned long attr(MODATTR_NOTIFICATIONS_ENABLED);
-
-  /* no change */
-  if (cntct->service_notifications_enabled)
-    return;
-
-  /* set the attribute modified flag */
-  cntct->modified_service_attributes |= attr;
-
-  /* enable the host notifications... */
-  cntct->service_notifications_enabled = true;
-
-  /* send data to event broker */
-  broker_adaptive_contact_data(
-    NEBTYPE_ADAPTIVECONTACT_UPDATE,
-    NEBFLAG_NONE,
-    NEBATTR_NONE,
-    cntct,
-    CMD_NONE,
-    MODATTR_NONE,
-    cntct->modified_attributes,
-    MODATTR_NONE,
-    cntct->modified_host_attributes,
-    attr,
-    cntct->modified_service_attributes,
-    NULL);
-
-  /* update the status log to reflect the new contact state */
-  update_contact_status(cntct, false);
-}
-
-/* disables service notifications for a contact */
-void disable_contact_service_notifications(contact* cntct) {
-  unsigned long attr(MODATTR_NOTIFICATIONS_ENABLED);
-
-  /* no change */
-  if (cntct->service_notifications_enabled == false)
-    return;
-
-  /* set the attribute modified flag */
-  cntct->modified_service_attributes |= attr;
-
-  /* enable the host notifications... */
-  cntct->service_notifications_enabled = false;
-
-  /* send data to event broker */
-  broker_adaptive_contact_data(
-    NEBTYPE_ADAPTIVECONTACT_UPDATE,
-    NEBFLAG_NONE,
-    NEBATTR_NONE,
-    cntct,
-    CMD_NONE,
-    MODATTR_NONE,
-    cntct->modified_attributes,
-    MODATTR_NONE,
-    cntct->modified_host_attributes,
-    attr,
-    cntct->modified_service_attributes,
-    NULL);
-
-  /* update the status log to reflect the new contact state */
-  update_contact_status(cntct, false);
-}
-
 /* schedules downtime for all hosts "beyond" a given host */
 void schedule_and_propagate_downtime(
        host* temp_host,
@@ -2853,13 +2724,17 @@ void acknowledge_host_problem(
     NULL);
 
   /* send out an acknowledgement notification */
-  if (notify)
-    host_notification(
-      hst,
-      NOTIFICATION_ACKNOWLEDGEMENT,
-      ack_author,
-      ack_data,
-      NOTIFICATION_OPTION_NONE);
+    ///////////////
+    // FIXME DBR //
+    ///////////////
+//  if (notify)
+//    hst->notify(notifier::ACKNOWLEDGEMENT, ack_author, ack_data);
+////    host_notification(
+////      hst,
+////      NOTIFICATION_ACKNOWLEDGEMENT,
+////      ack_author,
+////      ack_data,
+////      NOTIFICATION_OPTION_NONE);
 
   /* update the status log with the host info */
   update_host_status(hst, false);
@@ -2919,13 +2794,17 @@ void acknowledge_service_problem(
     NULL);
 
   /* send out an acknowledgement notification */
-  if (notify)
-    service_notification(
-      svc,
-      NOTIFICATION_ACKNOWLEDGEMENT,
-      ack_author,
-      ack_data,
-      NOTIFICATION_OPTION_NONE);
+    ///////////////
+    // FIXME DBR //
+    ///////////////
+//  if (notify)
+//    svc->notify(notifier::ACKNOWLEDGEMENT, ack_author, ack_data);
+////    service_notification(
+////      svc,
+////      NOTIFICATION_ACKNOWLEDGEMENT,
+////      ack_author,
+////      ack_data,
+////      NOTIFICATION_OPTION_NONE);
 
   /* update the status log with the service info */
   update_service_status(svc, false);
@@ -4012,4 +3891,20 @@ void set_service_notification_number(service* svc, int num) {
 
   /* update the status log with the service info */
   update_service_status(svc, false);
+}
+
+void enable_contact_host_notifications(contact* contact) {
+  contact->enable_host_notifications();
+}
+
+void disable_contact_host_notifications(contact* contact) {
+  contact->disable_host_notifications();
+}
+
+void enable_contact_service_notifications(contact* contact) {
+  contact->enable_service_notifications();
+}
+
+void disable_contact_service_notifications(contact* contact) {
+  contact->disable_service_notifications();
 }
