@@ -19,6 +19,8 @@
 
 #include <fstream>
 #include <iomanip>
+#include "com/centreon/engine/configuration/applier/state.hh"
+#include "com/centreon/engine/objects/customvariablesmember.hh"
 #include "com/centreon/engine/broker.hh"
 #include "com/centreon/engine/error.hh"
 #include "com/centreon/engine/globals.hh"
@@ -80,21 +82,22 @@ std::ostream& dump::comments(std::ostream& os) {
  *
  *  @return The output stream.
  */
-std::ostream& dump::contact(std::ostream& os, contact_struct const& obj) {
+std::ostream& dump::contact(std::ostream& os, engine::contact const& obj) {
   os << "contact {\n"
-    "contact_name=" << obj.name << "\n"
-    "host_notification_period=" << (obj.host_notification_period ? obj.host_notification_period : "") << "\n"
-    "host_notifications_enabled=" << obj.host_notifications_enabled << "\n"
-    "last_host_notification=" << static_cast<unsigned long>(obj.last_host_notification) << "\n"
-    "last_service_notification=" << static_cast<unsigned long>(obj.last_service_notification) << "\n"
-    "modified_attributes=" << (obj.modified_attributes & ~0L) << "\n"
-    "modified_host_attributes=" << (obj.modified_host_attributes & ~config->retained_contact_host_attribute_mask()) << "\n"
-    "modified_service_attributes=" << (obj.modified_service_attributes & ~config->retained_contact_service_attribute_mask()) << "\n"
-    "service_notification_period=" << (obj.service_notification_period ? obj.service_notification_period : "") << "\n"
-    "service_notifications_enabled=" << obj.service_notifications_enabled << "\n";
-  dump::customvariables(os, *obj.custom_variables);
+    "contact_name=" << obj.get_name() << "\n"
+    "host_notification_period=" << obj.get_host_notification_period_name() << "\n"
+    "host_notifications_enabled=" << obj.is_host_notifications_enabled() << "\n"
+    "last_host_notification=" << static_cast<unsigned long>(obj.get_last_host_notification()) << "\n"
+    "last_service_notification=" << static_cast<unsigned long>(obj.get_last_service_notification()) << "\n"
+    "modified_attributes=" << (obj.get_modified_attributes() & ~0L) << "\n"
+    "modified_host_attributes=" << (obj.get_modified_host_attributes() & ~config->retained_contact_host_attribute_mask()) << "\n"
+    "modified_service_attributes=" << (obj.get_modified_service_attributes() & ~config->retained_contact_service_attribute_mask()) << "\n"
+    "service_notification_period=" << (obj.get_service_notification_period() ? obj.get_service_notification_period_name() : "") << "\n"
+    "service_notifications_enabled=" << obj.is_service_notifications_enabled() << "\n";
+
+  dump::customvariables(os, *obj.get_custom_variables());
   os << "}\n";
-  return (os);
+  return os;
 }
 
 /**
@@ -105,8 +108,12 @@ std::ostream& dump::contact(std::ostream& os, contact_struct const& obj) {
  *  @return The output stream.
  */
 std::ostream& dump::contacts(std::ostream& os) {
-  for (contact_struct* obj(contact_list); obj; obj = obj->next)
-    dump::contact(os, *obj);
+  for (umap<std::string, shared_ptr<engine::contact> >::const_iterator
+         it(configuration::applier::state::instance().contacts().begin()),
+         end(configuration::applier::state::instance().contacts().end());
+       it != end;
+       ++it)
+    dump::contact(os, *it->second.get());
   return (os);
 }
 
