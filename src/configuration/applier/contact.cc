@@ -112,8 +112,8 @@ void applier::contact::add_object(configuration::contact const& obj) {
   }
 
   // Create contact.
-  contact_struct*
-    c(add_contact(
+  engine::contact*
+    c(engine::contact::add_contact(
         obj.contact_name().c_str(),
         NULL_IF_EMPTY(obj.alias()),
         NULL_IF_EMPTY(obj.email()),
@@ -147,11 +147,11 @@ void applier::contact::add_object(configuration::contact const& obj) {
         obj.service_notifications_enabled(),
         obj.can_submit_commands(),
         obj.retain_status_information(),
-        obj.retain_nonstatus_information()));
+        obj.retain_nonstatus_information(),
+        obj.timezone()));
   if (!c)
     throw (engine_error() << "Could not register contact '"
            << obj.contact_name() << "'");
-  contact_other_props[obj.contact_name()].timezone = obj.timezone();
 
   // Add all the host notification commands.
   for (list_string::const_iterator
@@ -159,12 +159,15 @@ void applier::contact::add_object(configuration::contact const& obj) {
          end(obj.host_notification_commands().end());
        it != end;
        ++it)
-    if (!add_host_notification_command_to_contact(
-           c,
-           it->c_str()))
+    try {
+      c->add_host_notification_command(it->c_str());
+    }
+    catch (std::exception const& e) {
       throw (engine_error()
-             << "Could not add host notification command '"
-             << *it << "' to contact '" << obj.contact_name() << "'");
+        << "contact: Could not add host notification command '"
+        << *it << "' to contact '" << obj.contact_name() << "' :"
+        << e.what());
+    }
 
   // Add all the service notification commands.
   for (list_string::const_iterator
@@ -172,12 +175,15 @@ void applier::contact::add_object(configuration::contact const& obj) {
 	 end(obj.service_notification_commands().end());
        it != end;
        ++it)
-    if (!add_service_notification_command_to_contact(
-           c,
-	   it->c_str()))
+    try {
+      c->add_service_notification_command(it->c_str());
+    }
+    catch (std::exception const& e) {
       throw (engine_error()
-	     << "Could not add service notification command '"
-	     << *it << "' to contact '" << obj.contact_name() << "'");
+	     << "contact: Could not add service notification command '"
+	     << *it << "' to contact '" << obj.contact_name() << "' :"
+             << e.what());
+    }
 
   // Add all custom variables.
   for (map_customvar::const_iterator
@@ -185,15 +191,15 @@ void applier::contact::add_object(configuration::contact const& obj) {
            end(obj.customvariables().end());
        it != end;
        ++it)
-    if (!add_custom_variable_to_contact(
-           c,
-	   it->first.c_str(),
-	   it->second.c_str()))
+    try {
+      c->add_custom_variable(it->first.c_str(), it->second.c_str());
+    }
+    catch (std::exception const& e) {
       throw (engine_error()
 	     << "Could not add custom variable '" << it->first
-	     << "' to contact '" << obj.contact_name() << "'");
-
-  return ;
+	     << "' to contact '" << obj.contact_name() << "' :"
+             << e.what());
+    }
 }
 
 /**
@@ -258,12 +264,12 @@ void applier::contact::modify_object(
            << obj.contact_name() << "'");
 
   // Find contact object.
-  umap<std::string, shared_ptr<contact_struct> >::iterator
+  umap<std::string, shared_ptr<engine::contact> >::iterator
     it_obj(applier::state::instance().contacts_find(obj.key()));
   if (it_obj == applier::state::instance().contacts().end())
     throw (engine_error() << "Could not modify non-existing "
            << "contact object '" << obj.contact_name() << "'");
-  contact_struct* c(it_obj->second.get());
+  engine::contact* c(it_obj->second.get());
 
   // Update the global configuration set.
   configuration::contact old_cfg(*it_cfg);
@@ -271,140 +277,68 @@ void applier::contact::modify_object(
   config->contacts().insert(obj);
 
   // Modify contact.
-  modify_if_different(
-    c->alias,
-    (obj.alias().empty() ? obj.contact_name() : obj.alias()).c_str());
-  modify_if_different(c->email, NULL_IF_EMPTY(obj.email()));
-  modify_if_different(c->pager, NULL_IF_EMPTY(obj.pager()));
-  modify_if_different(
-    c->address,
-    obj.address(),
-    MAX_CONTACT_ADDRESSES);
-  modify_if_different(
-    c->notify_on_service_unknown,
-    static_cast<int>(static_cast<bool>(
-      obj.service_notification_options() & service::unknown)));
-  modify_if_different(
-    c->notify_on_service_warning,
-    static_cast<int>(static_cast<bool>(
-      obj.service_notification_options() & service::warning)));
-  modify_if_different(
-    c->notify_on_service_critical,
-    static_cast<int>(static_cast<bool>(
-      obj.service_notification_options() & service::critical)));
-  modify_if_different(
-    c->notify_on_service_recovery,
-    static_cast<int>(static_cast<bool>(
-      obj.service_notification_options() & service::ok)));
-  modify_if_different(
-    c->notify_on_service_flapping,
-    static_cast<int>(static_cast<bool>(
-      obj.service_notification_options() & service::flapping)));
-  modify_if_different(
-    c->notify_on_service_downtime,
-    static_cast<int>(static_cast<bool>(
-      obj.service_notification_options() & service::downtime)));
-  modify_if_different(
-    c->notify_on_host_down,
-    static_cast<int>(static_cast<bool>(
-      obj.host_notification_options() & host::down)));
-  modify_if_different(
-    c->notify_on_host_unreachable,
-    static_cast<int>(static_cast<bool>(
-      obj.host_notification_options() & host::unreachable)));
-  modify_if_different(
-    c->notify_on_host_recovery,
-    static_cast<int>(static_cast<bool>(
-      obj.host_notification_options() & host::up)));
-  modify_if_different(
-    c->notify_on_host_flapping,
-    static_cast<int>(static_cast<bool>(
-      obj.host_notification_options() & host::flapping)));
-  modify_if_different(
-    c->notify_on_host_downtime,
-    static_cast<int>(static_cast<bool>(
-      obj.host_notification_options() & host::downtime)));
-  modify_if_different(
-    c->host_notification_period,
-    NULL_IF_EMPTY(obj.host_notification_period()));
-  modify_if_different(
-    c->service_notification_period,
-    NULL_IF_EMPTY(obj.service_notification_period()));
-  modify_if_different(
-    c->host_notifications_enabled,
-    static_cast<int>(obj.host_notifications_enabled()));
-  modify_if_different(
-    c->service_notifications_enabled,
-    static_cast<int>(obj.service_notifications_enabled()));
-  modify_if_different(
-    c->can_submit_commands,
-    static_cast<int>(obj.can_submit_commands()));
-  modify_if_different(
-    c->retain_status_information,
-    static_cast<int>(obj.retain_status_information()));
-  modify_if_different(
-    c->retain_nonstatus_information,
-    static_cast<int>(obj.retain_nonstatus_information()));
-  contact_other_props[obj.contact_name()].timezone = obj.timezone();
+  c->update_config(obj);
 
   // Host notification commands.
   if (obj.host_notification_commands()
       != old_cfg.host_notification_commands()) {
-    deleter::listmember(
-      c->host_notification_commands,
-      &deleter::commandsmember);
+    c->clear_host_notification_commands();
 
     for (list_string::const_iterator
            it(obj.host_notification_commands().begin()),
            end(obj.host_notification_commands().end());
          it != end;
          ++it)
-      if (!add_host_notification_command_to_contact(
-             c,
-             it->c_str()))
+      try {
+        c->add_host_notification_command(it->c_str());
+      }
+      catch (std::exception const& e) {
         throw (engine_error()
                << "Could not add host notification command '"
                << *it << "' to contact '" << obj.contact_name()
-               << "'");
+               << "' :" << e.what());
+      }
   }
 
   // Service notification commands.
   if (obj.service_notification_commands()
       != old_cfg.service_notification_commands()) {
-    deleter::listmember(
-      c->service_notification_commands,
-      &deleter::commandsmember);
+    c->clear_service_notification_commands();
 
     for (list_string::const_iterator
            it(obj.service_notification_commands().begin()),
            end(obj.service_notification_commands().end());
          it != end;
          ++it)
-      if (!add_service_notification_command_to_contact(
-             c,
-             it->c_str()))
+      try {
+        c->add_service_notification_command(it->c_str());
+      }
+      catch (std::exception const& e) {
         throw (engine_error()
                << "Could not add service notification command '"
                << *it << "' to contact '" << obj.contact_name()
-               << "'");
+               << "' :" << e.what());
+      }
   }
 
   // Custom variables.
   if (std::operator!=(obj.customvariables(), old_cfg.customvariables())) {
-    remove_all_custom_variables_from_contact(c);
+    c->clear_custom_variables();
 
     for (map_customvar::const_iterator
            it(obj.customvariables().begin()),
            end(obj.customvariables().end());
          it != end;
          ++it)
-      if (!add_custom_variable_to_contact(
-             c,
-             it->first.c_str(),
-             it->second.c_str()))
+      try {
+        c->add_custom_variable(it->first.c_str(), it->second.c_str());
+      }
+      catch (std::exception const& e) {
         throw (engine_error()
                << "Could not add custom variable '" << it->first
-               << "' to contact '" << obj.contact_name() << "'");
+               << "' to contact '" << obj.contact_name() << "' :"
+               << e.what());
+      }
   }
 
   // Notify event broker.
@@ -422,8 +356,6 @@ void applier::contact::modify_object(
     MODATTR_ALL,
     MODATTR_ALL,
     &tv);
-
-  return ;
 }
 
 /**
@@ -438,13 +370,10 @@ void applier::contact::remove_object(
     << "Removing contact '" << obj.contact_name() << "'.";
 
   // Find contact.
-  umap<std::string, shared_ptr<contact_struct> >::iterator
+  umap<std::string, shared_ptr<engine::contact> >::iterator
     it(applier::state::instance().contacts_find(obj.key()));
   if (it != applier::state::instance().contacts().end()) {
-    contact_struct* cntct(it->second.get());
-
-    // Remove contact from its list.
-    unregister_object<contact_struct>(&contact_list, cntct);
+    engine::contact* cntct(it->second.get());
 
     // Notify event broker.
     timeval tv(get_broker_timestamp(NULL));
@@ -463,7 +392,6 @@ void applier::contact::remove_object(
       &tv);
 
     // Erase contact object (this will effectively delete the object).
-    contact_other_props.erase(obj.contact_name());
     applier::state::instance().contacts().erase(it);
   }
 
@@ -485,7 +413,7 @@ void applier::contact::resolve_object(
     << "Resolving contact '" << obj.contact_name() << "'.";
 
   // Find contact.
-  umap<std::string, shared_ptr<contact_struct> >::iterator
+  umap<std::string, shared_ptr<engine::contact> >::iterator
     it(applier::state::instance().contacts().find(obj.contact_name()));
   if (applier::state::instance().contacts().end() == it)
     throw (engine_error()
@@ -493,12 +421,14 @@ void applier::contact::resolve_object(
            << obj.contact_name() << "'");
 
   // Remove contact group links.
-  deleter::listmember(
-    it->second->contactgroups_ptr,
-    &deleter::objectlist);
+  it->second->get_contactgroups().clear();
+//  deleter::listmember(
+//    it->second->get_contactgroups(),
+//    &deleter::objectlist);
 
   // Resolve contact.
-  if (!check_contact(it->second.get(), &config_warnings, &config_errors))
+  //if (!check_contact(it->second.get(), &config_warnings, &config_errors))
+  if (!it->second->check(&config_warnings, &config_errors))
     throw (engine_error() << "Cannot resolve contact '"
            << obj.contact_name() << "'");
 
