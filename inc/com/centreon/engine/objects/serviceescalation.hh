@@ -19,7 +19,9 @@
 
 #ifndef CCE_OBJECTS_SERVICEESCALATION_HH
 #  define CCE_OBJECTS_SERVICEESCALATION_HH
+#  include <string>
 #  include "com/centreon/shared_ptr.hh"
+#  include "com/centreon/unordered_hash.hh"
 
 /* Forward declaration. */
 CCE_BEGIN()
