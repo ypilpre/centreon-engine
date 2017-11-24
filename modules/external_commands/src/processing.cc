@@ -768,12 +768,16 @@ void processing::_wrapper_send_custom_host_notification(
   if ((buf[0] = my_strtok(args, ";"))
       && (buf[1] = my_strtok(NULL, ";"))
       && (buf[2] = my_strtok(NULL, ";"))) {
-    host_notification(
-      hst,
-      NOTIFICATION_CUSTOM,
-      buf[1],
-      buf[2],
-      atoi(buf[0]));
+    ///////////////
+    // FIXME DBR //
+    ///////////////
+//    hst->notify(notifier::CUSTOM, buf[1], buf[2], atoi(buf[0]));
+////    host_notification(
+////      hst,
+////      NOTIFICATION_CUSTOM,
+////      buf[1],
+////      buf[2],
+////      atoi(buf[0]));
   }
 }
 
@@ -840,11 +844,15 @@ void processing::_wrapper_send_custom_service_notification(
   if ((buf[0] = my_strtok(args, ";"))
       && (buf[1] = my_strtok(NULL, ";"))
       && (buf[2] = my_strtok(NULL, ";"))) {
-    service_notification(
-      svc,
-      NOTIFICATION_CUSTOM,
-      buf[1],
-      buf[2],
-      atoi(buf[0]));
+    ///////////////
+    // FIXME DBR //
+    ///////////////
+//    svc->notify(notifier::CUSTOM, buf[1], buf[2], atoi(buf[0]));
+////    service_notification(
+////      svc,
+////      NOTIFICATION_CUSTOM,
+////      buf[1],
+////      buf[2],
+////      atoi(buf[0]));
   }
 }

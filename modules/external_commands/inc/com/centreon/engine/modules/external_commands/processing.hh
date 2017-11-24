@@ -24,16 +24,14 @@
 #  include <map>
 #  include <string>
 #  include "com/centreon/concurrency/mutex.hh"
+#  include "com/centreon/engine/contactgroup.hh"
 #  include "com/centreon/engine/namespace.hh"
-#  include "com/centreon/engine/objects/contact.hh"
-#  include "com/centreon/engine/objects/contactsmember.hh"
-#  include "com/centreon/engine/objects/contactgroup.hh"
 #  include "com/centreon/engine/objects/host.hh"
-#  include "com/centreon/engine/objects/hostsmember.hh"
 #  include "com/centreon/engine/objects/hostgroup.hh"
+#  include "com/centreon/engine/objects/hostsmember.hh"
 #  include "com/centreon/engine/objects/service.hh"
-#  include "com/centreon/engine/objects/servicesmember.hh"
 #  include "com/centreon/engine/objects/servicegroup.hh"
+#  include "com/centreon/engine/objects/servicesmember.hh"
 #  include "com/centreon/unordered_hash.hh"
 #  include "find.hh"
 
@@ -295,11 +293,15 @@ namespace         modules {
         if (!group)
           return ;
 
-        for (contactsmember* member(group->members);
-             member;
-             member = member->next)
-          if (member->contact_ptr)
-            (*fptr)(member->contact_ptr);
+        for (umap<std::string, shared_ptr<contact> >::const_iterator
+               it(group->get_members().begin()),
+               end(group->get_members().end());
+             it != end;
+             ++it) {
+          contact* ctct = it->second.get();
+          (*fptr)(ctct);
+        }
+
       }
 
       umap<std::string, command_info> _lst_command;
