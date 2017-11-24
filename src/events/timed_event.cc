@@ -617,10 +617,13 @@ void compensate_for_system_time_change(
                                   svc->description)].last_acknowledgement);
 
     // recalculate next re-notification time.
-    svc->next_notification
-      = get_next_service_notification_time(
-          svc,
-          svc->last_notification);
+    ///////////////
+    // FIXME DBR //
+    ///////////////
+//    svc->next_notification
+//      = get_next_service_notification_time(
+//          svc,
+//          svc->last_notification);
 
     // update the status data.
     update_service_status(svc, false);
@@ -670,10 +673,13 @@ void compensate_for_system_time_change(
       &host_other_props[hst->name].last_acknowledgement);
 
     // recalculate next re-notification time.
-    hst->next_host_notification
-      = get_next_host_notification_time(
-          hst,
-          hst->last_host_notification);
+    ///////////////
+    // FIXME DBR //
+    ///////////////
+//    hst->next_host_notification
+//      = get_next_host_notification_time(
+//          hst,
+//          hst->last_host_notification);
 
     // update the status data.
     update_host_status(hst, false);
