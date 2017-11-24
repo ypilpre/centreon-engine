@@ -38,7 +38,6 @@
 #include "com/centreon/engine/logging.hh"
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/neberrors.hh"
-#include "com/centreon/engine/notifications.hh"
 #include "com/centreon/engine/objects/comment.hh"
 #include "com/centreon/engine/objects/downtime.hh"
 #include "com/centreon/engine/perfdata.hh"
@@ -690,12 +689,16 @@ int handle_async_service_check_result(
       flapping_check_done = true;
 
       /* notify contacts about the service recovery */
-      service_notification(
-        temp_service,
-        NOTIFICATION_NORMAL,
-        NULL,
-        NULL,
-        NOTIFICATION_OPTION_NONE);
+      ////////////////
+      // FIXME DBR  //
+      ////////////////
+//      temp_service->notify(notifier::PROBLEM);
+//      service_notification(
+//        temp_service,
+//        NOTIFICATION_NORMAL,
+//        NULL,
+//        NULL,
+//        NOTIFICATION_OPTION_NONE);
 
       /* run the service event handler to handle the hard state change */
       handle_service_event(temp_service);
@@ -726,12 +729,16 @@ int handle_async_service_check_result(
     if(!service_other_props[std::make_pair(
                temp_service->host_ptr->name,
                temp_service->description)].recovery_been_sent && !hard_state_change) {
-      service_notification(
-        temp_service,
-        NOTIFICATION_NORMAL,
-        NULL,
-        NULL,
-        NOTIFICATION_OPTION_NONE);
+      ////////////////
+      // FIXME DBR  //
+      ////////////////
+//      temp_service->notify(notifier::PROBLEM);
+//      service_notification(
+//        temp_service,
+//        NOTIFICATION_NORMAL,
+//        NULL,
+//        NULL,
+//        NOTIFICATION_OPTION_NONE);
     }
 
     /* should we obsessive over service checks? */
@@ -896,12 +903,16 @@ int handle_async_service_check_result(
 	  route_result = temp_host->current_state;
 
 	  /* possibly re-send host notifications... */
-	  host_notification(
-            temp_host,
-            NOTIFICATION_NORMAL,
-            NULL,
-            NULL,
-            NOTIFICATION_OPTION_NONE);
+          ////////////////
+          // FIXME DBR  //
+          ////////////////
+//          temp_host->notify(notifier::PROBLEM);
+//          host_notification(
+//            temp_host,
+//            NOTIFICATION_NORMAL,
+//            NULL,
+//            NULL,
+//            NOTIFICATION_OPTION_NONE);
 	}
     }
 
@@ -1068,12 +1079,16 @@ int handle_async_service_check_result(
       flapping_check_done = true;
 
       /* (re)send notifications out about this service problem if the host is up (and was at last check also) and the dependencies were okay... */
-      service_notification(
-        temp_service,
-        NOTIFICATION_NORMAL,
-        NULL,
-        NULL,
-        NOTIFICATION_OPTION_NONE);
+          ////////////////
+          // FIXME DBR  //
+          ////////////////
+//      temp_service->notify(notifier::PROBLEM)
+//      service_notification(
+//        temp_service,
+//        NOTIFICATION_NORMAL,
+//        NULL,
+//        NULL,
+//        NOTIFICATION_OPTION_NONE);
 
       /* run the service event handler if we changed state from the last hard state or if this service is flagged as being volatile */
       if (hard_state_change == true
