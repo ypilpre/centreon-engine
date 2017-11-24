@@ -113,30 +113,51 @@ void applier::serviceescalation::add_object(
            << "' of host '" << obj.hosts().front() << "'");
 
   // Add contacts to host escalation.
-  for (set_string::const_iterator
-         it(obj.contacts().begin()),
-         end(obj.contacts().end());
-       it != end;
-       ++it)
-    if (!add_contact_to_serviceescalation(se, it->c_str()))
-      throw (engine_error() << "Could not add contact '" << *it
-             << "' to escalation of service '"
-             << obj.service_description().front() << "' of host '"
-             << obj.hosts().front() << "'");
+//    ///////////////
+//    // FIXME DBR //
+//    ///////////////
+//  for (set_string::const_iterator
+//         it(obj.contacts().begin()),
+//         end(obj.contacts().end());
+//       it != end;
+//       ++it)
+//    try {
+//      se->add_contact(*it);
+//    }
+//    catch (std::exception const& e) {
+//      throw (engine_error() << "Could not add contact '" << *it
+//             << "' to escalation of service '"
+//             << obj.service_description().front() << "' of host '"
+//             << obj.hosts().front() << "' :"
+//             << e.what());
+//    }
+//    if (!add_contact_to_serviceescalation(se, it->c_str()))
+//      throw (engine_error() << "Could not add contact '" << *it
+//             << "' to escalation of service '"
+//             << obj.service_description().front() << "' of host '"
+//             << obj.hosts().front() << "'");
 
   // Add contact groups to service escalation.
-  for (set_string::const_iterator
-         it(obj.contactgroups().begin()),
-         end(obj.contactgroups().end());
-       it != end;
-       ++it)
-    if (!add_contactgroup_to_serviceescalation(se, it->c_str()))
-      throw (engine_error() << "Could not add contact group '"
-             << *it << "' to escalation of service '"
-             << obj.service_description().front() << "' of host '"
-             << obj.hosts().front() << "'");
-
-  return ;
+//  for (set_string::const_iterator
+//         it(obj.contactgroups().begin()),
+//         end(obj.contactgroups().end());
+//       it != end;
+//       ++it)
+//    try {
+//      se->add_contactgroup(*it);
+//    }
+//    catch (std::exception const& e) {
+//      throw (engine_error() << "Could not add contact group '"
+//             << *it << "' to escalation of service '"
+//             << obj.service_description().front() << "' of host '"
+//             << obj.hosts().front() << "' :"
+//             << e.what());
+//    }
+//    if (!add_contactgroup_to_serviceescalation(se, it->c_str()))
+//      throw (engine_error() << "Could not add contact group '"
+//             << *it << "' to escalation of service '"
+//             << obj.service_description().front() << "' of host '"
+//             << obj.hosts().front() << "'");
 }
 
 /**
