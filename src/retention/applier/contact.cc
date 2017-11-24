@@ -40,7 +40,7 @@ void applier::contact::apply(
        it != end;
        ++it) {
     try {
-      contact_struct& cntct(find_contact((*it)->contact_name()));
+      engine::contact cntct(*(find_contact((*it)->contact_name().c_str())));
       _update(config, **it, cntct);
     }
     catch (...) {
@@ -59,91 +59,97 @@ void applier::contact::apply(
 void applier::contact::_update(
        configuration::state const& config,
        retention::contact const& state,
-       contact_struct& obj) {
+       engine::contact& obj) {
   if (state.modified_attributes().is_set()) {
-    obj.modified_attributes = *state.modified_attributes();
+    obj.set_modified_attributes(*state.modified_attributes() & ~0L);
     // mask out attributes we don't want to retain.
-    obj.modified_attributes &= ~0L;
   }
   if (state.modified_host_attributes().is_set()) {
-    obj.modified_host_attributes = *state.modified_host_attributes();
+    obj.set_modified_host_attributes(*state.modified_host_attributes()
+                                     & ~config.retained_contact_host_attribute_mask());
     // mask out attributes we don't want to retain.
-    obj.modified_host_attributes &= ~config.retained_contact_host_attribute_mask();
   }
   if (state.modified_service_attributes().is_set()) {
-    obj.modified_service_attributes = *state.modified_service_attributes();
+    obj.set_modified_service_attributes(*state.modified_service_attributes()
+                                        & ~config.retained_contact_service_attribute_mask());
     // mask out attributes we don't want to retain.
-    obj.modified_service_attributes &= ~config.retained_contact_service_attribute_mask();
   }
 
-  if (obj.retain_status_information) {
+  if (obj.get_retain_status_information()) {
     if (state.last_host_notification().is_set())
-      obj.last_host_notification = *state.last_host_notification();
+      obj.set_last_host_notification(*state.last_host_notification());
     if (state.last_service_notification().is_set())
-      obj.last_service_notification = *state.last_service_notification();
+      obj.set_last_service_notification(*state.last_service_notification());
   }
 
 
-  if (obj.retain_nonstatus_information) {
+  if (obj.get_retain_nonstatus_information()) {
     if (state.host_notification_period().is_set()) {
-      if (obj.modified_host_attributes & MODATTR_NOTIFICATION_TIMEPERIOD) {
+      if (obj.get_modified_host_attributes()
+          & MODATTR_NOTIFICATION_TIMEPERIOD) {
         if (!find_timeperiod(state.host_notification_period()->c_str()))
-          obj.modified_host_attributes -= MODATTR_NOTIFICATION_TIMEPERIOD;
+          obj.set_modified_host_attributes(
+              obj.get_modified_host_attributes()
+              - MODATTR_NOTIFICATION_TIMEPERIOD);
         else
-          string::setstr(
-            obj.host_notification_period,
-            *state.host_notification_period());
+          obj.set_host_notification_period_name(
+                *state.host_notification_period());
       }
     }
     if (state.service_notification_period().is_set()) {
-      if (obj.modified_service_attributes & MODATTR_NOTIFICATION_TIMEPERIOD) {
+      if (obj.get_modified_service_attributes() & MODATTR_NOTIFICATION_TIMEPERIOD) {
         if (!find_timeperiod(state.service_notification_period()->c_str()))
-          obj.modified_service_attributes -= MODATTR_NOTIFICATION_TIMEPERIOD;
+          obj.set_modified_service_attributes(
+            obj.get_modified_service_attributes()
+            - MODATTR_NOTIFICATION_TIMEPERIOD);
         else
-          string::setstr(
-            obj.service_notification_period,
+          obj.set_service_notification_period_name(
             *state.service_notification_period());
       }
     }
     if (state.host_notifications_enabled().is_set()) {
-      if (obj.modified_host_attributes & MODATTR_NOTIFICATIONS_ENABLED)
-        obj.host_notifications_enabled = *state.host_notifications_enabled();
+      if (obj.get_modified_host_attributes() & MODATTR_NOTIFICATIONS_ENABLED)
+        obj.set_host_notifications_enabled(*state.host_notifications_enabled());
     }
     if (state.service_notifications_enabled().is_set()) {
-      if (obj.modified_service_attributes & MODATTR_NOTIFICATIONS_ENABLED)
-        obj.service_notifications_enabled = *state.service_notifications_enabled();
+      if (obj.get_modified_service_attributes() & MODATTR_NOTIFICATIONS_ENABLED)
+        obj.set_service_notifications_enabled(
+          *state.service_notifications_enabled());
     }
 
     if (!state.customvariables().empty()
-        && (obj.modified_attributes & MODATTR_CUSTOM_VARIABLE)) {
+        && (obj.get_modified_attributes() & MODATTR_CUSTOM_VARIABLE)) {
       for (map_customvar::const_iterator
              it(state.customvariables().begin()),
              end(state.customvariables().end());
            it != end;
            ++it) {
-        update_customvariable(
-          obj.custom_variables,
-          it->first,
-          it->second);
+        obj.update_custom_variable(it->first, it->second);
+//        update_customvariable(
+//          obj.custom_variables,
+//          it->first,
+//          it->second);
       }
     }
   }
   // Adjust modified attributes if necessary.
   else
-    obj.modified_attributes = MODATTR_NONE;
+    obj.set_modified_attributes(MODATTR_NONE);
 
   // Adjust modified attributes if no custom variable has been changed.
-  if (obj.modified_attributes & MODATTR_CUSTOM_VARIABLE) {
+  if (obj.get_modified_attributes() & MODATTR_CUSTOM_VARIABLE) {
     bool at_least_one_modified(false);
-    for (customvariablesmember* member(obj.custom_variables);
+    for (customvariablesmember* member(obj.get_custom_variables());
          member;
          member = member->next)
       if (member->has_been_modified)
         at_least_one_modified = true;
     if (!at_least_one_modified)
-      obj.modified_attributes -= MODATTR_CUSTOM_VARIABLE;
+      obj.set_modified_attributes(
+        obj.get_modified_attributes()
+        - MODATTR_CUSTOM_VARIABLE);
   }
 
   // update contact status.
-  update_contact_status(&obj, false);
+  obj.update_status(false);
 }
