@@ -144,13 +144,6 @@ command* add_command(char const* name, char const* value) {
  *  @return The struct command or throw exception if the
  *          command is not found.
  */
-command& engine::find_command(std::string const& name) {
-  umap<std::string, shared_ptr<command_struct> >::const_iterator
-    it(state::instance().commands().find(name));
-  if (it == state::instance().commands().end())
-    throw (engine_error() << "Command '" << name << "' was not found");
-  return (*it->second);
-}
 
 /**
  *  Get if command exist.
