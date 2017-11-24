@@ -25,11 +25,12 @@
 #include "com/centreon/engine/globals.hh"
 #include "com/centreon/engine/nebmods.hh"
 #include "com/centreon/engine/nebstructs.hh"
-#include "com/centreon/engine/notifications.hh"
+#include "com/centreon/engine/notifications/notifier.hh"
 #include "com/centreon/engine/sehandlers.hh"
 #include "com/centreon/engine/string.hh"
 
 using namespace com::centreon::engine;
+using namespace com::centreon::engine::notifications;
 
 extern "C" {
 
@@ -549,7 +550,7 @@ int broker_contact_notification_data(
   ds.end_time = end_time;
   ds.reason_type = reason_type;
   ds.contact_name = const_cast<char*>(cntct->get_name().c_str());
-  if (notification_type == SERVICE_NOTIFICATION) {
+  if (notification_type == notifier::SERVICE_NOTIFICATION) {
     temp_service = (service*)data;
     ds.host_name = temp_service->host_name;
     ds.service_description = temp_service->description;
@@ -639,7 +640,7 @@ int broker_contact_notification_method_data(
   ds.contact_name = const_cast<char*>(cntct->get_name().c_str());
   ds.command_name = command_name;
   ds.command_args = command_args;
-  if (notification_type == SERVICE_NOTIFICATION) {
+  if (notification_type == notifier::SERVICE_NOTIFICATION) {
     temp_service = (service*)data;
     ds.host_name = temp_service->host_name;
     ds.service_description = temp_service->description;
@@ -1064,7 +1065,7 @@ void broker_group_member(
   if (!(config->event_broker_options() & BROKER_GROUP_MEMBER_DATA))
     return;
 
-  // Fill struct will relevant data.
+  // Fill struct with relevant data.
   nebstruct_group_member_data ds;
   ds.type = type;
   ds.flags = flags;
@@ -1336,7 +1337,7 @@ int broker_notification_data(
   ds.start_time = start_time;
   ds.end_time = end_time;
   ds.reason_type = reason_type;
-  if (notification_type == SERVICE_NOTIFICATION) {
+  if (notification_type == notifier::SERVICE_NOTIFICATION) {
     temp_service = (service*)data;
     ds.host_name = temp_service->host_name;
     ds.service_description = temp_service->description;
