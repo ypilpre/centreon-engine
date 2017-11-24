@@ -29,7 +29,6 @@ configuration::state* config(NULL);
 events::hash_timed_event quick_timed_event;
 std::map<std::string, host_other_properties> host_other_props;
 std::map<std::pair<std::string, std::string>, service_other_properties> service_other_props;
-std::map<std::string, contact_other_properties> contact_other_props;
 std::map<std::string, hostgroup_other_properties> hostgroup_other_props;
 std::map<std::string, servicegroup_other_properties> servicegroup_other_props;
 
@@ -107,7 +106,6 @@ int                 test_scheduling(false);
 int                 verify_circular_paths(true);
 int                 verify_config(false);
 nebcallback*        neb_callback_list[NEBCALLBACK_NUMITEMS];
-notification*       notification_list(NULL);
 pthread_t           worker_threads[TOTAL_WORKER_THREADS];
 sched_info          scheduling_info;
 scheduled_downtime* scheduled_downtime_list(NULL);

@@ -32,7 +32,6 @@
 #  include "com/centreon/engine/events/sched_info.hh"
 #  include "com/centreon/engine/events/timed_event.hh"
 #  include "com/centreon/engine/nebmods.hh"
-#  include "com/centreon/engine/notifications.hh"
 #  include "com/centreon/engine/objects.hh"
 #  include "com/centreon/engine/utils.hh"
 #  include "skiplist.h"
@@ -53,17 +52,10 @@ extern com::centreon::engine::configuration::state*
 
 extern char*                     config_file;
 
-extern com::centreon::engine::commands::command*
-                                 global_host_event_handler_ptr;
-
-extern com::centreon::engine::commands::command*
-                                 global_service_event_handler_ptr;
-
-extern com::centreon::engine::commands::command*
-                                 ocsp_command_ptr;
-
-extern com::centreon::engine::commands::command*
-                                 ochp_command_ptr;
+extern command_struct*           global_host_event_handler_ptr;
+extern command_struct*           global_service_event_handler_ptr;
+extern command_struct*           ocsp_command_ptr;
+extern command_struct*           ochp_command_ptr;
 
 extern unsigned long             logging_options;
 extern unsigned long             syslog_options;
@@ -140,7 +132,6 @@ extern skiplist*                 object_skiplists[];
 
 extern int                       __nagios_object_structure_version;
 
-extern notification*             notification_list;
 
 extern check_result              check_result_info;
 extern check_result*             check_result_list;
