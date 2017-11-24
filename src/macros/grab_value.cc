@@ -26,7 +26,9 @@
 #include "com/centreon/engine/string.hh"
 #include "com/centreon/unordered_hash.hh"
 #include "com/centreon/engine/configuration/applier/state.hh"
+#include "com/centreon/shared_ptr.hh"
 
+using namespace com::centreon;
 using namespace com::centreon::engine;
 using namespace com::centreon::engine::logging;
 
@@ -378,10 +380,12 @@ static int handle_contact_macro(
       size_t delimiter_len(strlen(arg2));
 
       // Concatenate macro values for all contactgroup members.
-      for (contactsmember* temp_contactsmember = cg->members;
-           temp_contactsmember != NULL;
-           temp_contactsmember = temp_contactsmember->next) {
-        contact* cntct(temp_contactsmember->contact_ptr);
+      for (umap<std::string, shared_ptr<contact> >::const_iterator
+             it(cg->get_members().begin()),
+             end(cg->get_members().end());
+           it != end;
+           ++it) {
+        contact* cntct(it->second.get());
         if (cntct) {
           // Get the macro value for this contact.
           char* buffer(NULL);
@@ -585,10 +589,15 @@ static int handle_summary_macro(
          temp_host != NULL;
          temp_host = temp_host->next) {
       // Filter totals based on contact if necessary.
-      bool authorized(
-             mac->contact_ptr
-             ? is_contact_for_host(temp_host, mac->contact_ptr)
-             : true);
+    ///////////////
+    // FIXME DBR //
+    ///////////////
+//      bool authorized(
+//             mac->contact_ptr
+//             ? temp_host->contains_contact(mac->contact_ptr)
+//             : true);
+      bool authorized(true); //FIXME DBR
+
       if (authorized) {
         bool problem(true);
         if ((temp_host->current_state == HOST_UP)
@@ -636,12 +645,17 @@ static int handle_summary_macro(
          temp_service != NULL;
          temp_service = temp_service->next) {
       // Filter totals based on contact if necessary.
-      bool authorized(
-             mac->contact_ptr
-             ? is_contact_for_service(
-                 temp_service,
-                 mac->contact_ptr)
-             : true);
+//    ///////////////
+//    // FIXME DBR //
+//    ///////////////
+//      bool authorized(
+//             mac->contact_ptr
+//             ? is_contact_for_service(
+//                 temp_service,
+//                 mac->contact_ptr)
+//             : true);
+      bool authorized(true); //FIXME DBR
+
       if (authorized) {
         bool problem(true);
         if (temp_service->current_state == STATE_OK
@@ -1007,7 +1021,6 @@ int grab_macro_value_r(
   char* arg[2] = { NULL, NULL };
   contact* temp_contact = NULL;
   contactgroup* temp_contactgroup = NULL;
-  contactsmember* temp_contactsmember = NULL;
   char* temp_buffer = NULL;
   int delimiter_len = 0;
   unsigned int x;
@@ -1149,13 +1162,14 @@ int grab_macro_value_r(
         delimiter_len = strlen(arg[1]);
 
         /* concatenate macro values for all contactgroup members */
-        for (temp_contactsmember = temp_contactgroup->members;
-             temp_contactsmember != NULL;
-             temp_contactsmember = temp_contactsmember->next) {
-
-          if ((temp_contact = temp_contactsmember->contact_ptr) == NULL)
+        for (umap<std::string, shared_ptr<contact> >::iterator
+               it(temp_contactgroup->get_members().begin()),
+               end(temp_contactgroup->get_members().end());
+             it != end;
+             ++it) {
+          if ((temp_contact = it->second.get()) == NULL)
             continue;
-          if ((temp_contact = find_contact(temp_contactsmember->contact_name)) == NULL)
+          if ((temp_contact = find_contact(it->first.c_str())) == NULL)
             continue;
 
           /* get the macro value for this contact */
