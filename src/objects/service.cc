@@ -25,8 +25,6 @@
 #include "com/centreon/engine/globals.hh"
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/objects/commandsmember.hh"
-#include "com/centreon/engine/objects/contactgroupsmember.hh"
-#include "com/centreon/engine/objects/contactsmember.hh"
 #include "com/centreon/engine/objects/customvariablesmember.hh"
 #include "com/centreon/engine/objects/service.hh"
 #include "com/centreon/engine/objects/tool.hh"
@@ -62,8 +60,8 @@ bool operator==(
           && obj1.retry_interval == obj2.retry_interval
           && obj1.max_attempts == obj2.max_attempts
           && obj1.parallelize == obj2.parallelize
-          && is_equal(obj1.contact_groups, obj2.contact_groups)
-          && is_equal(obj1.contacts, obj2.contacts)
+          && obj1.contact_groups == obj2.contact_groups
+          && obj1.contacts == obj2.contacts
           && obj1.notification_interval == obj2.notification_interval
           && obj1.first_notification_delay == obj2.first_notification_delay
           && obj1.notify_on_unknown == obj2.notify_on_unknown
@@ -600,26 +598,6 @@ int get_service_count() {
  *
  *  @return true or false.
  */
-int is_contact_for_service(service* svc, contact* cntct) {
-  if (!svc || !cntct)
-    return (false);
-
-  // Search all individual contacts of this service.
-  for (contactsmember* member(svc->contacts);
-       member;
-       member = member->next)
-    if (member->contact_ptr == cntct)
-      return (true);
-
-  // Search all contactgroups of this service.
-  for (contactgroupsmember* member(svc->contact_groups);
-       member;
-       member = member->next)
-    if (is_contact_member_of_contactgroup(member->group_ptr, cntct))
-      return (true);
-
-  return (false);
-}
 
 /**
  *  Tests whether or not a contact is an escalated contact for a
@@ -630,37 +608,6 @@ int is_contact_for_service(service* svc, contact* cntct) {
  *
  *  @return true or false.
  */
-int is_escalated_contact_for_service(service* svc, contact* cntct) {
-  if (!svc || !cntct)
-    return (false);
-
-  std::pair<std::string, std::string>
-    id(std::make_pair(svc->host_name, svc->description));
-  umultimap<std::pair<std::string, std::string>, shared_ptr<serviceescalation> > const&
-    escalations(state::instance().serviceescalations());
-
-  for (umultimap<std::pair<std::string, std::string>, shared_ptr<serviceescalation> >::const_iterator
-         it(escalations.find(id)), end(escalations.end());
-       it != end && it->first == id;
-       ++it) {
-    serviceescalation* svcescalation(&*it->second);
-    // Search all contacts of this service escalation.
-    for (contactsmember* member(svcescalation->contacts);
-         member;
-         member = member->next)
-      if (member->contact_ptr == cntct)
-        return (true);
-
-    // Search all contactgroups of this service escalation.
-    for (contactgroupsmember* member(svcescalation->contact_groups);
-         member;
-         member = member->next)
-      if (is_contact_member_of_contactgroup(member->group_ptr, cntct))
-        return (true);
-  }
-
-  return (false);
-}
 
 /**
  *  Check if acknowledgement on service expired.

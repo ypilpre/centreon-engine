@@ -24,6 +24,7 @@
 #  include <time.h>
 #  include "com/centreon/engine/common.hh"
 #  include "com/centreon/shared_ptr.hh"
+#  include "com/centreon/unordered_hash.hh"
 
 CCE_BEGIN()
   class contact;
@@ -145,13 +146,9 @@ typedef struct                  service_struct {
 
   host_struct*                  host_ptr;
 
-  com::centreon::engine::commands::command*
-                                event_handler_ptr;
-
+  command_struct*               event_handler_ptr;
   char*                         event_handler_args;
-  com::centreon::engine::commands::command*
-                                check_command_ptr;
-
+  command_struct*               check_command_ptr;
   char*                         check_command_args;
   timeperiod_struct*            check_period_ptr;
   timeperiod_struct*            notification_period_ptr;
