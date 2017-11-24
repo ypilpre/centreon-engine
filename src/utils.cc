@@ -45,7 +45,6 @@
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/macros.hh"
 #include "com/centreon/engine/nebmods.hh"
-#include "com/centreon/engine/notifications.hh"
 #include "com/centreon/engine/objects/comment.hh"
 #include "com/centreon/engine/shared.hh"
 #include "com/centreon/engine/string.hh"
@@ -992,8 +991,11 @@ void free_memory(nagios_macros* mac) {
   event_list_low = NULL;
   quick_timed_event.clear(hash_timed_event::low);
 
-  // Free any notification list that may have been overlooked.
-  free_notification_list();
+    ///////////////
+    // FIXME DBR //
+    ///////////////
+//  // Free any notification list that may have been overlooked.
+//  free_notification_list();
 
   /*
   ** Free memory associated with macros. It's ok to only free the
@@ -1008,18 +1010,3 @@ void free_memory(nagios_macros* mac) {
 }
 
 /* free a notification list that was created */
-void free_notification_list() {
-  notification* temp_notification = NULL;
-  notification* next_notification = NULL;
-
-  temp_notification = notification_list;
-  while (temp_notification != NULL) {
-    next_notification = temp_notification->next;
-    delete temp_notification;
-    temp_notification = next_notification;
-  }
-
-  /* reset notification list pointer */
-  notification_list = NULL;
-  return;
-}
