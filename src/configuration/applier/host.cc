@@ -26,8 +26,6 @@
 #include "com/centreon/engine/configuration/applier/object.hh"
 #include "com/centreon/engine/configuration/applier/scheduler.hh"
 #include "com/centreon/engine/configuration/applier/state.hh"
-#include "com/centreon/engine/deleter/contactsmember.hh"
-#include "com/centreon/engine/deleter/contactgroupsmember.hh"
 #include "com/centreon/engine/deleter/hostsmember.hh"
 #include "com/centreon/engine/deleter/listmember.hh"
 #include "com/centreon/engine/deleter/objectlist.hh"
@@ -174,9 +172,20 @@ void applier::host::add_object(
          end(obj.contacts().end());
        it != end;
        ++it)
-    if (!add_contact_to_host(h, it->c_str()))
-      throw (engine_error() << "Could not add contact '"
-             << *it << "' to host '" << obj.host_name() << "'");
+//    try {
+//      ///////////////
+//      // FIXME DBR //
+//      ///////////////
+//      h->add_contact(*it);
+//    }
+//    catch (std::exception const& e) {
+//      throw (engine_error() << "Could not add contact '"
+//             << *it << "' to host '" << obj.host_name() << "' :"
+//             << e.what());
+//    }
+//    if (!add_contact_to_host(h, it->c_str()))
+//      throw (engine_error() << "Could not add contact '"
+//             << *it << "' to host '" << obj.host_name() << "'");
 
   // Contact groups.
   for (set_string::const_iterator
@@ -184,9 +193,20 @@ void applier::host::add_object(
          end(obj.contactgroups().end());
        it != end;
        ++it)
-    if (!add_contactgroup_to_host(h, it->c_str()))
-      throw (engine_error() << "Could not add contact group '"
-             << *it << "' to host '" << obj.host_name() << "'");
+//    try {
+//             ///////////////
+//             // FIXME DBR //
+//             ///////////////
+//      h->add_contactgroup(*it);
+//    }
+//    catch (std::exception const& e) {
+//      throw (engine_error() << "Could not add contact group '"
+//             << *it << "' to host '" << obj.host_name() << "' :"
+//             << e.what());
+//    }
+//    if (!add_contactgroup_to_host(h, it->c_str()))
+//      throw (engine_error() << "Could not add contact group '"
+//             << *it << "' to host '" << obj.host_name() << "'");
 
   // Custom variables.
   for (map_customvar::const_iterator
@@ -452,35 +472,58 @@ void applier::host::modify_object(
   // Contacts.
   if (obj.contacts() != obj_old.contacts()) {
     // Delete old contacts.
-    deleter::listmember(h->contacts, &deleter::contactsmember);
+    ///////////////
+    // FIXME DBR //
+    ///////////////  Should disappear with host/service classification ;
+    //               Contacts are managed by notifier.
+    //deleter::listmember(h->contacts, &deleter::contactsmember);
 
     // Add contacts to host.
-    for (set_string::const_iterator
-           it(obj.contacts().begin()),
-           end(obj.contacts().end());
-         it != end;
-         ++it)
-      if (!add_contact_to_host(h, it->c_str()))
-        throw (engine_error() << "Could not add contact '"
-               << *it << "' to host '" << obj.host_name() << "'");
+//    for (set_string::const_iterator
+//           it(obj.contacts().begin()),
+//           end(obj.contacts().end());
+//         it != end;
+//         ++it)
+//      try {
+//        h->add_contact(*it);
+//      }
+//      catch (std::exception const& e) {
+//        throw (engine_error() << "Could not add contact '"
+//               << *it << "' to host '" << obj.host_name() << "' :"
+//               << e.what());
+//      }
   }
 
   // Contact groups.
   if (obj.contactgroups() != obj_old.contactgroups()) {
     // Delete old contact groups.
-    deleter::listmember(
-      h->contact_groups,
-      &deleter::contactgroupsmember);
+//    ///////////////
+//    // FIXME DBR //
+//    ///////////////
+//    h->clear_contactgroups();
+
+//    deleter::listmember(
+//      h->contact_groups,
+//      &deleter::contactgroupsmember);
 
     // Add contact groups to host.
     for (set_string::const_iterator
            it(obj.contactgroups().begin()),
            end(obj.contactgroups().end());
          it != end;
-         ++it)
-      if (!add_contactgroup_to_host(h, it->c_str()))
-        throw (engine_error() << "Could not add contact group '"
-               << *it << "' to host '" << obj.host_name() << "'");
+         ++it) {
+//    ///////////////
+//    // FIXME DBR //
+//    ///////////////
+//      try {
+//        h->add_contactgroup(*it);
+//      }
+//      catch (std::exception const& e) {
+//        throw (engine_error() << "Could not add contact group '"
+//               << *it << "' to host '" << obj.host_name() << "' :"
+//               << e.what());
+//      }
+    }
   }
 
   // Custom variables.
