@@ -1,7 +1,7 @@
 /*
-** Copyright 1999-2009      Ethan Galstad
-** Copyright 2009-2012      Icinga Development Team (http://www.icinga.org)
-** Copyright 2011-2014,2016 Centreon
+** Copyright 1999-2009           Ethan Galstad
+** Copyright 2009-2012           Icinga Development Team (http://www.icinga.org)
+** Copyright 2011-2014,2016-2017 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -380,14 +380,18 @@ int free_check_result(check_result* info) {
   return (OK);
 }
 
-/* parse raw plugin output and return: short and long output, perf data */
+/**
+ *  Parse raw plugin output and set target object with short and long
+ *  output, perf data.
+ *
+ *  @param[out] object  Target object.
+ *  @param[in]  buffer  Source buffer.
+ *
+ *  @return OK on success.
+ */
 int parse_check_output(
-      char* buf,
-      char** short_output,
-      char** long_output,
-      char** perf_data,
-      int escape_newlines_please,
-      int newlines_are_escaped) {
+      checks::checkable& object,
+      std::string const& buffer) {
   int current_line = 0;
   bool found_newline = false;
   bool eof = false;
@@ -402,16 +406,17 @@ int parse_check_output(
   int y = 0;
 
   /* initialize values */
-  if (short_output)
-    *short_output = NULL;
-  if (long_output)
-    *long_output = NULL;
-  if (perf_data)
-    *perf_data = NULL;
+  object.set_output(std::string());
+  object.set_long_output(std::string());
+  object.set_perfdata(std::string());
 
   /* nothing to do */
-  if (buf == NULL || *buf == 0)
+  if (buffer.empty())
     return (OK);
+
+  /* copy buffer to a modifiable buffer */
+  char* buf(new char[buffer.size() + 1]);
+  strcpy(buf, buffer.c_str());
 
   used_buf = strlen(buf) + 1;
 
@@ -420,21 +425,19 @@ int parse_check_output(
   dbuf_init(&db2, dbuf_chunk);
 
   /* unescape newlines and escaped backslashes first */
-  if (newlines_are_escaped) {
-    for (x = 0, y = 0; buf[x] != '\x0'; x++) {
-      if (buf[x] == '\\' && buf[x + 1] == '\\') {
-        x++;
-        buf[y++] = buf[x];
-      }
-      else if (buf[x] == '\\' && buf[x + 1] == 'n') {
-        x++;
-        buf[y++] = '\n';
-      }
-      else
-        buf[y++] = buf[x];
+  for (x = 0, y = 0; buf[x] != '\x0'; x++) {
+    if (buf[x] == '\\' && buf[x + 1] == '\\') {
+      x++;
+      buf[y++] = buf[x];
     }
-    buf[y] = '\x0';
+    else if (buf[x] == '\\' && buf[x + 1] == 'n') {
+      x++;
+      buf[y++] = '\n';
+    }
+    else
+      buf[y++] = buf[x];
   }
+  buf[y] = '\x0';
 
   /* process each line of input */
   for (x = 0; !eof; x++) {
@@ -442,8 +445,7 @@ int parse_check_output(
     /* we found the end of a line */
     if (buf[x] == '\n')
       found_newline = true;
-    else if (buf[x] == '\\' && buf[x + 1] == 'n'
-             && newlines_are_escaped == true) {
+    else if (buf[x] == '\\' && buf[x + 1] == 'n') {
       found_newline = true;
       buf[x] = '\x0';
       x++;
@@ -468,8 +470,8 @@ int parse_check_output(
 
         /* get the short plugin output */
         if ((ptr = strtok(tempbuf, "|"))) {
-          if (short_output)
-            *short_output = string::dup(ptr);
+          strip(ptr);
+          object.set_output(ptr);
 
           /* get the optional perf data */
           if ((ptr = strtok(NULL, "\n")))
@@ -535,46 +537,38 @@ int parse_check_output(
   }
 
   /* save long output */
-  if (long_output && (db1.buf && strcmp(db1.buf, ""))) {
-    if (escape_newlines_please == false)
-      *long_output = string::dup(db1.buf);
-    else {
-      /* escape newlines (and backslashes) in long output */
-      tempbuf = new char[strlen(db1.buf) * 2 + 1];
+  if (db1.buf && strcmp(db1.buf, "")) {
+    /* escape newlines (and backslashes) in long output */
+    tempbuf = new char[strlen(db1.buf) * 2 + 1];
 
-      for (x = 0, y = 0; db1.buf[x] != '\x0'; x++) {
-
-        if (db1.buf[x] == '\n') {
-          tempbuf[y++] = '\\';
-          tempbuf[y++] = 'n';
-        }
-        else if (db1.buf[x] == '\\') {
-          tempbuf[y++] = '\\';
-          tempbuf[y++] = '\\';
-        }
-        else
-          tempbuf[y++] = db1.buf[x];
+    for (x = 0, y = 0; db1.buf[x] != '\x0'; x++) {
+      if (db1.buf[x] == '\n') {
+        tempbuf[y++] = '\\';
+        tempbuf[y++] = 'n';
       }
-
-      tempbuf[y] = '\x0';
-      *long_output = string::dup(tempbuf);
-      delete[] tempbuf;
+      else if (db1.buf[x] == '\\') {
+        tempbuf[y++] = '\\';
+        tempbuf[y++] = '\\';
+      }
+      else
+        tempbuf[y++] = db1.buf[x];
     }
+
+    tempbuf[y] = '\x0';
+    object.set_long_output(tempbuf);
+    delete [] tempbuf;
   }
 
   /* save perf data */
-  if (perf_data && (db2.buf && strcmp(db2.buf, "")))
-    *perf_data = string::dup(db2.buf);
-
-  /* strip short output and perf data */
-  if (short_output)
-    strip(*short_output);
-  if (perf_data)
-    strip(*perf_data);
+  if (db2.buf && strcmp(db2.buf, "")) {
+    strip(db2.buf);
+    object.set_perfdata(db2.buf);
+  }
 
   /* free dynamic buffers */
   dbuf_free(&db1);
   dbuf_free(&db2);
+  delete [] buf;
 
   return (OK);
 }

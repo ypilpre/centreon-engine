@@ -1,6 +1,6 @@
 /*
-** Copyright 1999-2009 Ethan Galstad
-** Copyright 2011-2013 Merethis
+** Copyright 1999-2009      Ethan Galstad
+** Copyright 2011-2013,2017 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -23,6 +23,7 @@
 
 #  include <sys/time.h>
 #  include "com/centreon/engine/checks.hh"
+#  include "com/centreon/engine/checks/checkable.hh"
 #  include "com/centreon/engine/macros/defines.hh"
 #  include "com/centreon/engine/objects/command.hh"
 #  include "com/centreon/engine/objects/daterange.hh"
@@ -125,12 +126,8 @@ void free_notification_list();
 // frees memory associated with a host/service check result
 int free_check_result(check_result* info);
 int parse_check_output(
-      char* buf,
-      char** short_output,
-      char** long_output,
-      char** perf_data,
-      int escape_newlines_please,
-      int newlines_are_escaped);
+      com::centreon::engine::checks::checkable& object,
+      std::string const& buffer);
 
 #  ifdef __cplusplus
 }

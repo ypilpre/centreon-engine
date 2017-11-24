@@ -1189,19 +1189,10 @@ int checker::_execute_sync(host* hst) {
   hst->set_execution_time(execution_time);
   hst->set_check_type(HOST_CHECK_ACTIVE);
 
-  // Get plugin output.
-  char* tmp_plugin_output(string::dup(res.output));
-
   // Parse the output: short and long output, and perf data.
-  // XXX
-  // parse_check_output(
-  //   tmp_plugin_output,
-  //   &hst->plugin_output,
-  //   &hst->long_plugin_output,
-  //   &hst->perf_data,
-  //   true,
-  //   true);
-  // delete[] tmp_plugin_output;
+  parse_check_output(
+    *hst,
+    res.output);
 
   // A NULL host check command means we should assume the host is UP.
   if (!hst->get_check_command()) {
