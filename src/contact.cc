@@ -516,27 +516,27 @@ void contact::set_service_notification_period(timeperiod* tp) {
 }
 
 bool contact::notify_on_service_critical() const {
-  return (_service_notified_states & notifier::on_critical);
+  return (_service_notified_states & notifier::ON_CRITICAL);
 }
 
 bool contact::notify_on_service_recovery() const {
-  return (_service_notified_states & notifier::on_recovery);
+  return (_service_notified_states & notifier::ON_RECOVERY);
 }
 
 bool contact::notify_on_service_warning() const {
-  return (_service_notified_states & notifier::on_warning);
+  return (_service_notified_states & notifier::ON_WARNING);
 }
 
 bool contact::notify_on_host_recovery() const {
-  return (_host_notified_states & (1 << notifier::on_recovery));
+  return (_host_notified_states & (1 << notifier::ON_RECOVERY));
 }
 
 bool contact::notify_on_host_down() const {
-  return (_host_notified_states & (1 << notifier::on_down));
+  return (_host_notified_states & (1 << notifier::ON_DOWN));
 }
 
 bool contact::notify_on_host_unreachable() const {
-  return (_host_notified_states & (1 << notifier::on_unreachable));
+  return (_host_notified_states & (1 << notifier::ON_UNREACHABLE));
 }
 
 bool contact::contains_illegal_object_chars() const {
