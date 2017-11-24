@@ -38,7 +38,6 @@ set(
   "${SRC_DIR}/globals.cc"
   "${SRC_DIR}/logging.cc"
   "${SRC_DIR}/macros.cc"
-  "${SRC_DIR}/member.cc"
   "${SRC_DIR}/object.cc"
   "${SRC_DIR}/scheduler.cc"
   "${SRC_DIR}/service.cc"
