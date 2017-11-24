@@ -78,14 +78,14 @@ using namespace com::centreon::engine::notifications;
  *
  *  @return A pointer to the newly created contact.
  */
-contact* contact::add_contact(
-                char const* name,
-                char const* alias,
-                char const* email,
-                char const* pager,
-                char const* const* addresses,
-                char const* svc_notification_period,
-                char const* host_notification_period,
+contact*      contact::add_contact(
+                std::string const& name,
+                std::string const& alias,
+                std::string const& email,
+                std::string const& pager,
+                std::vector<std::string> const& addresses,
+                std::string const& svc_notification_period,
+                std::string const& host_notification_period,
                 int notify_service_ok,
                 int notify_service_critical,
                 int notify_service_warning,
@@ -104,16 +104,16 @@ contact* contact::add_contact(
                 int retain_nonstatus_information,
                 std::string const& timezone) {
   // Make sure we have the data we need.
-  if (!name || !name[0]) {
+  if (name.empty()) {
     logger(log_config_error, basic)
-      << "Error: Contact name is NULL";
+      << "Error: Contact name is empty";
     return (NULL);
   }
 
   // Check if the contact already exists.
   umap<std::string, shared_ptr<contact> >::const_iterator
     it(configuration::applier::state::instance().contacts().find(name));
-  if (it == configuration::applier::state::instance().contacts().end()) {
+  if (it != configuration::applier::state::instance().contacts().end()) {
     logger(log_config_error, basic)
       << "Error: Contact '" << name << "' has already been defined";
     return (NULL);
@@ -170,7 +170,7 @@ contact* contact::add_contact(
     obj.clear();
   }
 
-  return (obj.get());
+  return obj.get();
 }
 
 /**
@@ -182,13 +182,13 @@ contact::contact() {}
  * Constructor.
  */
 contact::contact(
-           char const* name,
-           char const* alias,
-           char const* email,
-           char const* pager,
-           char const* const* addresses,
-           char const* svc_notification_period,
-           char const* host_notification_period,
+           std::string const& name,
+           std::string const& alias,
+           std::string const& email,
+           std::string const& pager,
+           std::vector<std::string> const& addresses,
+           std::string const& svc_notification_period,
+           std::string const& host_notification_period,
            int notify_service_ok,
            int notify_service_critical,
            int notify_service_warning,
@@ -206,7 +206,7 @@ contact::contact(
            int retain_status_information,
            int retain_nonstatus_information,
            std::string const& timezone)
-  : _name(name), _email(email),
+  : _name(name), _email(email), _address(addresses),
     _host_notification_period_name(host_notification_period),
     _host_notification_period(0),
     _service_notification_period(0),
@@ -233,13 +233,10 @@ contact::contact(
     _service_notifications_enabled(service_notifications_enabled > 0),
     _timezone(timezone) {
 
-  if (!alias || !alias[0])
+  if (alias.empty())
     _alias = name;
   else
     _alias = alias;
-
-  for (unsigned int x(0); x < MAX_CONTACT_ADDRESSES; ++x)
-    _address.push_back(addresses[x]);
 
   // Notify event broker.
   timeval tv(get_broker_timestamp(NULL));
@@ -280,6 +277,8 @@ contact& contact::operator=(contact const& other) {
  * Destructor.
  */
 contact::~contact() {
+  logger(dbg_functions, basic)
+    << "contact: destructor";
 }
 
 /**

@@ -49,13 +49,14 @@ class contactgroup;
 class                           contact {
  public:
   static contact*               add_contact(
-                                  char const* name,
-                                  char const* alias = NULL,
-                                  char const* email = NULL,
-                                  char const* pager = NULL,
-                                  char const* const* addresses = NULL,
-                                  char const* svc_notification_period = NULL,
-                                  char const* host_notification_period = NULL,
+                                  std::string const& name,
+                                  std::string const& alias = "",
+                                  std::string const& email = "",
+                                  std::string const& pager = "",
+                                  std::vector<std::string> const& addresses
+                                    = std::vector<std::string>(),
+                                  std::string const& svc_notification_period = "",
+                                  std::string const& host_notification_period = "",
                                   int notify_service_ok = 0,
                                   int notify_service_critical = 0,
                                   int notify_service_warning = 0,
@@ -75,30 +76,31 @@ class                           contact {
                                   std::string const& timezone = "");
 
                                 contact(
-                                  char const* name,
-                                  char const* alias,
-                                  char const* email,
-                                  char const* pager,
-                                  char const* const* addresses,
-                                  char const* svc_notification_period,
-                                  char const* host_notification_period,
-                                  int notify_service_ok,
-                                  int notify_service_critical,
-                                  int notify_service_warning,
-                                  int notify_service_unknown,
-                                  int notify_service_flapping,
-                                  int notify_service_downtime,
-                                  int notify_host_up,
-                                  int notify_host_down,
-                                  int notify_host_unreachable,
-                                  int notify_host_flapping,
-                                  int notify_host_downtime,
-                                  int host_notifications_enabled,
-                                  int service_notifications_enabled,
-                                  int can_submit_commands,
-                                  int retain_status_information,
-                                  int retain_nonstatus_information,
-                                  std::string const& timezone);
+                                  std::string const& name,
+                                  std::string const& alias = "",
+                                  std::string const& email = "",
+                                  std::string const& pager = "",
+                                  std::vector<std::string> const& addresses
+                                    = std::vector<std::string>(),
+                                  std::string const& svc_notification_period = "",
+                                  std::string const& host_notification_period = "",
+                                  int notify_service_ok = 0,
+                                  int notify_service_critical = 0,
+                                  int notify_service_warning = 0,
+                                  int notify_service_unknown = 0,
+                                  int notify_service_flapping = 0,
+                                  int notify_service_downtime = 0,
+                                  int notify_host_up = 0,
+                                  int notify_host_down = 0,
+                                  int notify_host_unreachable = 0,
+                                  int notify_host_flapping = 0,
+                                  int notify_host_downtime = 0,
+                                  int host_notifications_enabled = 0,
+                                  int service_notifications_enabled = 0,
+                                  int can_submit_commands = 0,
+                                  int retain_status_information = 0,
+                                  int retain_nonstatus_information = 0,
+                                  std::string const& timezone = "");
                                 contact();
                                 contact(contact const& other);
   virtual                       ~contact();
