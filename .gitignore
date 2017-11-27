@@ -1,0 +1,11 @@
+*.a
+*.swp
+CMakeCache.txt
+CMakeFiles
+Makefile
+centengine
+centenginestats
+cmake_install.cmake
+externalcmd.so
+test-coverage
+ut
