@@ -44,8 +44,6 @@ class                          contactgroup {
                                  std::string const& name,
                                  std::string const& alias = "");
                                contactgroup(
-                               contactgroup();
-                               contactgroup(contactgroup const& other);
                                  std::string const& name,
                                  std::string const& alias = "");
   virtual                      ~contactgroup();

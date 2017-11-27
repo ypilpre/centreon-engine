@@ -60,7 +60,7 @@ contactgroup* contactgroup::add_contactgroup(
   // Check if the contact group already exist.
   umap<std::string, shared_ptr<contactgroup> >::const_iterator
     it(configuration::applier::state::instance().contactgroups().find(name));
-  if (it == configuration::applier::state::instance().contactgroups().end()) {
+  if (it != configuration::applier::state::instance().contactgroups().end()) {
     logger(log_config_error, basic)
       << "Error: Contactgroup '" << name << "' has already been defined";
     return (NULL);
@@ -94,7 +94,6 @@ contactgroup* contactgroup::add_contactgroup(
 /**
  * Constructor.
  */
-contactgroup::contactgroup() {}
 
 /**
  * Constructor.
@@ -114,7 +113,6 @@ contactgroup::contactgroup(
  *
  * @param[in] other Object to copy.
  */
-contactgroup::contactgroup(contactgroup const& other) {}
 
 /**
  * Assignment operator.
@@ -130,8 +128,7 @@ contactgroup& contactgroup::operator=(contactgroup const& other) {
 /**
  * Destructor.
  */
-contactgroup::~contactgroup() {
-}
+contactgroup::~contactgroup() {}
 
 bool contactgroup::check(int* w, int* e) {
   (void)w;
@@ -143,8 +140,12 @@ bool contactgroup::check(int* w, int* e) {
          end(get_members().end());
          it != end;
          ++it) {
-    contact* temp_contact(find_contact(it->first.c_str()));
-    if (!temp_contact) {
+    shared_ptr<contact> ctct;
+    umap<std::string, shared_ptr<contact> >::const_iterator
+      itf(configuration::applier::state::instance().contacts().find(it->first));
+    if (itf != configuration::applier::state::instance().contacts().end())
+      ctct = itf->second;
+    if (!ctct.get()) {
       logger(log_verification_error, basic)
         << "Error: Contact '" << it->first
         << "' specified in contact group '" << get_name()
@@ -153,29 +154,8 @@ bool contactgroup::check(int* w, int* e) {
     }
 
     // Save the contact pointer for later.
-    it->second = temp_contact;
+    it->second = ctct;
   }
-//  for (contactsmember* temp_contactsmember(cg->members);
-//       temp_contactsmember;
-//       temp_contactsmember = temp_contactsmember->next) {
-//    contact* temp_contact(
-//               find_contact(temp_contactsmember->contact_name));
-//    if (!temp_contact) {
-//      logger(log_verification_error, basic)
-//        << "Error: Contact '" << temp_contactsmember->contact_name
-//        << "' specified in contact group '" << cg->group_name
-//        << "' is not defined anywhere!";
-//      errors++;
-//    }
-//
-//    // Save a pointer to this contact group for faster contact/group
-//    // membership lookups later.
-//    else
-//      add_object_to_objectlist(&temp_contact->contactgroups_ptr, cg);
-//
-//    // Save the contact pointer for later.
-//    temp_contactsmember->contact_ptr = temp_contact;
-//  }
 
   // Check for illegal characters in contact group name.
   if (contains_illegal_object_chars()) {
