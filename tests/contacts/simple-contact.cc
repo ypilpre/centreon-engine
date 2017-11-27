@@ -107,6 +107,32 @@ TEST_F(SimpleContact, TestContactCheck) {
 }
 
 // Given a contact
+// When adding a service notification period by its name without a corresponding
+// notification period definition
+// Then the check method returns false with 1 warning and 3 errors.
+TEST_F(SimpleContact, AddServiceNotificationTimeperiod) {
+  engine::contact* c(engine::contact::add_contact("test"));
+  c->set_service_notification_period_name("notif_period");
+  int w = 0, e = 0;
+  ASSERT_FALSE(c->check(&w, &e));
+  ASSERT_EQ(w, 1);
+  ASSERT_EQ(e, 3);
+}
+
+// Given a contact
+// When adding a host notification period by its name without a corresponding
+// notification period definition
+// Then the check method returns false with 1 warning and 3 errors.
+TEST_F(SimpleContact, AddHostNotificationTimeperiod) {
+  engine::contact* c(engine::contact::add_contact("test"));
+  c->set_host_notification_period_name("notif_period");
+  int w = 0, e = 0;
+  ASSERT_FALSE(c->check(&w, &e));
+  ASSERT_EQ(w, 1);
+  ASSERT_EQ(e, 3);
+}
+
+// Given a contact
 // When adding a host notification command with an null/empty name
 // Then an exception is thrown.
 TEST_F(SimpleContact, AddHostNotificationCommand) {

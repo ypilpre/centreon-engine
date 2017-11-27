@@ -394,7 +394,7 @@ bool contact::check(int* w, int* e) {
     }
 
   /* check service notification timeperiod */
-  if (get_service_notification_period() == NULL) {
+  if (get_service_notification_period_name().empty()) {
     logger(log_verification_error, basic)
       << "Warning: Contact '" << get_name() << "' has no service "
       "notification time period defined!";
@@ -415,7 +415,7 @@ bool contact::check(int* w, int* e) {
   }
 
   /* check host notification timeperiod */
-  if (get_host_notification_period() == NULL) {
+  if (get_host_notification_period_name().empty()) {
     logger(log_verification_error, basic)
       << "Warning: Contact '" << get_name() << "' has no host "
       "notification time period defined!";
