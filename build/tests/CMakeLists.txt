@@ -34,6 +34,7 @@ if (WITH_TESTING)
     "${TESTS_DIR}/configuration/object.cc"
     "${TESTS_DIR}/configuration/service.cc"
     "${TESTS_DIR}/contacts/simple-contact.cc"
+    "${TESTS_DIR}/contacts/simple-contactgroup.cc"
     "${TESTS_DIR}/downtime_finder.cc"
     "${TESTS_DIR}/main.cc"
     "${TESTS_DIR}/notifications/notifier/simple_notification.cc"
