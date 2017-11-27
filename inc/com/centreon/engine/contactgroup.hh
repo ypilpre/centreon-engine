@@ -41,13 +41,13 @@ namespace configuration {
 class                          contactgroup {
  public:
   static contactgroup*         add_contactgroup(
-                                 char const* name,
-                                 char const* alias);
+                                 std::string const& name,
+                                 std::string const& alias = "");
                                contactgroup(
-                                 char const* name,
-                                 char const* alias);
                                contactgroup();
                                contactgroup(contactgroup const& other);
+                                 std::string const& name,
+                                 std::string const& alias = "");
   virtual                      ~contactgroup();
   contactgroup&                operator=(contactgroup const& other);
   bool                         operator<(contactgroup const& other) const;

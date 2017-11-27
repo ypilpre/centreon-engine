@@ -48,12 +48,12 @@ using namespace com::centreon::engine::logging;
  *  @param[in] alias Contact group alias.
  */
 contactgroup* contactgroup::add_contactgroup(
-                              char const* name,
-                              char const* alias) {
+                              std::string const& name,
+                              std::string const& alias) {
   // Make sure we have the data we need.
-  if (!name || !name[0]) {
+  if (name.empty()) {
     logger(log_config_error, basic)
-      << "Error: Contactgroup name is NULL";
+      << "Error: Contactgroup name is empty";
     return (NULL);
   }
 
@@ -100,10 +100,10 @@ contactgroup::contactgroup() {}
  * Constructor.
  */
 contactgroup::contactgroup(
-                char const* name,
-                char const* alias)
+                std::string const& name,
+                std::string const& alias)
   : _name(name) {
-  if (!alias || !alias[0])
+  if (alias.empty())
     _alias = name;
   else
     _alias = alias;
