@@ -217,17 +217,6 @@ contact::contact(
     _modified_attributes(MODATTR_NONE),
     _modified_host_attributes(MODATTR_NONE),
     _modified_service_attributes(MODATTR_NONE),
-    _notify_on_host_down(notify_host_down > 0),
-    _notify_on_host_downtime(notify_host_downtime > 0),
-    _notify_on_host_flapping(notify_host_flapping > 0),
-    _notify_on_host_recovery(notify_host_up > 0),
-    _notify_on_host_unreachable(notify_host_unreachable > 0),
-    _notify_on_service_critical(notify_service_critical > 0),
-    _notify_on_service_downtime(notify_service_downtime > 0),
-    _notify_on_service_flapping(notify_service_flapping > 0),
-    _notify_on_service_recovery(notify_service_ok > 0),
-    _notify_on_service_unknown(notify_service_unknown > 0),
-    _notify_on_service_warning(notify_service_warning > 0),
     _retain_nonstatus_information(retain_nonstatus_information > 0),
     _retain_status_information(retain_status_information > 0),
     _service_notifications_enabled(service_notifications_enabled > 0),
@@ -237,6 +226,21 @@ contact::contact(
     _alias = name;
   else
     _alias = alias;
+
+  _service_notified_states =
+      ((notify_service_ok > 0)       ? notifier::ON_RECOVERY : 0)
+    | ((notify_service_critical > 0) ? notifier::ON_CRITICAL : 0)
+    | ((notify_service_warning > 0)  ? notifier::ON_WARNING  : 0)
+    | ((notify_service_unknown > 0)  ? notifier::ON_UNKNOWN  : 0)
+    | ((notify_service_flapping > 0) ? notifier::ON_FLAPPING : 0)
+    | ((notify_service_downtime > 0) ? notifier::ON_DOWNTIME : 0);
+
+  _host_notified_states =
+      ((notify_host_up > 0)          ? notifier::ON_RECOVERY    : 0)
+    | ((notify_host_down > 0)        ? notifier::ON_DOWN        : 0)
+    | ((notify_host_unreachable > 0) ? notifier::ON_UNREACHABLE : 0)
+    | ((notify_host_flapping > 0)    ? notifier::ON_FLAPPING    : 0)
+    | ((notify_host_downtime > 0)    ? notifier::ON_DOWNTIME    : 0);
 
   // Notify event broker.
   timeval tv(get_broker_timestamp(NULL));
@@ -527,15 +531,15 @@ bool contact::notify_on_service_warning() const {
 }
 
 bool contact::notify_on_host_recovery() const {
-  return (_host_notified_states & (1 << notifier::ON_RECOVERY));
+  return (_host_notified_states & notifier::ON_RECOVERY);
 }
 
 bool contact::notify_on_host_down() const {
-  return (_host_notified_states & (1 << notifier::ON_DOWN));
+  return (_host_notified_states & notifier::ON_DOWN);
 }
 
 bool contact::notify_on_host_unreachable() const {
-  return (_host_notified_states & (1 << notifier::ON_UNREACHABLE));
+  return (_host_notified_states & notifier::ON_UNREACHABLE);
 }
 
 bool contact::contains_illegal_object_chars() const {
@@ -737,39 +741,9 @@ void contact::update_config(configuration::contact const& obj) {
   configuration::applier::modify_if_different(_email, obj.email());
   configuration::applier::modify_if_different(_pager, obj.pager());
   configuration::applier::modify_if_different(_address, obj.address());
-  configuration::applier::modify_if_different(
-    _notify_on_service_unknown,
-    static_cast<bool>(obj.service_notification_options() & configuration::service::unknown));
-  configuration::applier::modify_if_different(
-    _notify_on_service_warning,
-   static_cast<bool>(obj.service_notification_options() & configuration::service::warning));
-  configuration::applier::modify_if_different(
-    _notify_on_service_critical,
-    static_cast<bool>(obj.service_notification_options() & configuration::service::critical));
-  configuration::applier::modify_if_different(
-    _notify_on_service_recovery,
-    static_cast<bool>(obj.service_notification_options() & configuration::service::ok));
-  configuration::applier::modify_if_different(
-    _notify_on_service_flapping,
-    static_cast<bool>(obj.service_notification_options() & configuration::service::flapping));
-  configuration::applier::modify_if_different(
-    _notify_on_service_downtime,
-    static_cast<bool>(obj.service_notification_options() & configuration::service::downtime));
-  configuration::applier::modify_if_different(
-    _notify_on_host_down,
-    static_cast<bool>(obj.host_notification_options() & configuration::host::down));
-  configuration::applier::modify_if_different(
-    _notify_on_host_unreachable,
-    static_cast<bool>(obj.host_notification_options() & configuration::host::unreachable));
-  configuration::applier::modify_if_different(
-    _notify_on_host_recovery,
-    static_cast<bool>(obj.host_notification_options() & configuration::host::up));
-  configuration::applier::modify_if_different(
-    _notify_on_host_flapping,
-    static_cast<bool>(obj.host_notification_options() & configuration::host::flapping));
-  configuration::applier::modify_if_different(
-    _notify_on_host_downtime,
-    static_cast<bool>(obj.host_notification_options() & configuration::host::downtime));
+  configuration::applier::modify_if_different(_service_notified_states, obj.service_notification_options());
+  configuration::applier::modify_if_different(_host_notified_states, obj.host_notification_options());
+
   configuration::applier::modify_if_different(
     _host_notification_period_name, obj.host_notification_period());
   configuration::applier::modify_if_different(

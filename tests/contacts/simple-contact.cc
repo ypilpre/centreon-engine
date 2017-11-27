@@ -149,3 +149,45 @@ TEST_F(SimpleContact, ContactWithHostCommand) {
   ASSERT_EQ(w, 2);
   ASSERT_EQ(e, 2);
 }
+
+// Given a contact
+// When he is notified on a host recovery
+// Then he should be notified on host down or on host unreachable.
+TEST_F(SimpleContact, ContactWithRecoveryHostNotification) {
+  engine::contact* c(engine::contact::add_contact(
+        "test",
+        "",
+        "",
+        "",
+        std::vector<std::string>(),
+        "",
+        "",
+        0, 0, 0, 0, 0, 0, // services notifications
+        1, 0, 0, 0, 0,    // hosts notifications
+        1, 1, 0, 0, 0, ""));
+  int w(0), e(0);
+  ASSERT_FALSE(c->check(&w, &e));
+  ASSERT_EQ(w, 3);
+  ASSERT_EQ(e, 2);
+}
+
+// Given a contact
+// When he is notified on a service recovery
+// Then he should be notified on service warning or critical.
+TEST_F(SimpleContact, ContactWithRecoveryServiceNotification) {
+  engine::contact* c(engine::contact::add_contact(
+        "test",
+        "",
+        "",
+        "",
+        std::vector<std::string>(),
+        "",
+        "",
+        1, 0, 0, 0, 0, 0, // services notifications
+        0, 0, 0, 0, 0,    // hosts notifications
+        1, 1, 0, 0, 0, ""));
+  int w(0), e(0);
+  ASSERT_FALSE(c->check(&w, &e));
+  ASSERT_EQ(w, 3);
+  ASSERT_EQ(e, 2);
+}

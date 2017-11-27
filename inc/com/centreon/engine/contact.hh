@@ -234,24 +234,13 @@ class                           contact {
   unsigned long                 _modified_service_attributes;
   time_t                        _last_host_notification;
   time_t                        _last_service_notification;
-  int                           _service_notified_states;
-  int                           _host_notified_states;
+  unsigned int                  _service_notified_states;
+  unsigned int                  _host_notified_states;
   std::list<shared_ptr<contactgroup> >
                                 _contact_groups;
 
   customvariablesmember_struct* _custom_variables;
-  bool                          _notify_on_host_down;
-  bool                          _notify_on_host_downtime;
-  bool                          _notify_on_host_flapping;
-  bool                          _notify_on_host_recovery;
-  bool                          _notify_on_host_unreachable;
   bool                          _host_notifications_enabled;
-  bool                          _notify_on_service_critical;
-  bool                          _notify_on_service_downtime;
-  bool                          _notify_on_service_flapping;
-  bool                          _notify_on_service_recovery;
-  bool                          _notify_on_service_unknown;
-  bool                          _notify_on_service_warning;
   bool                          _service_notifications_enabled;
   bool                          _retain_nonstatus_information;
   bool                          _retain_status_information;
