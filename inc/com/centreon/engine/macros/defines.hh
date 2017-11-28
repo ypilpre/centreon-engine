@@ -21,6 +21,7 @@
 #ifndef CCE_MACROS_DEFINES_HH_
 # define CCE_MACROS_DEFINES_HH_
 
+# include "com/centreon/engine/contact.hh"
 # include "com/centreon/engine/contactgroup.hh"
 # include "com/centreon/engine/objects/customvariablesmember.hh"
 # include "com/centreon/engine/objects/hostgroup.hh"
@@ -28,7 +29,6 @@
 
 // Forward declarations
 CCE_BEGIN()
-  class contact;
   class host;
   class service;
 CCE_END()

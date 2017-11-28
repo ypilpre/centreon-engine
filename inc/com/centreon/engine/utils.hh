@@ -29,6 +29,10 @@
 #  include "com/centreon/engine/objects/daterange.hh"
 #  include "com/centreon/engine/objects/timeperiod.hh"
 
+CCE_BEGIN()
+  class contact;
+CCE_END()
+
 // DBUF structure - dynamic string storage
 typedef struct  dbuf_struct {
   char*         buf;
@@ -128,6 +132,11 @@ int free_check_result(check_result* info);
 int parse_check_output(
       com::centreon::engine::checks::checkable& object,
       std::string const& buffer);
+
+com::centreon::engine::contact& find_contact(std::string const& name);
+com::centreon::engine::contactgroup& find_contactgroup(std::string const& name);
+command_struct* find_command(std::string const& name);
+timeperiod* find_timeperiod(std::string const& name);
 
 #  ifdef __cplusplus
 }

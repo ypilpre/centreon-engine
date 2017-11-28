@@ -52,6 +52,7 @@ namespace retention {
 
 class contact;
 class contactgroup;
+class service;
 
 namespace           configuration {
   namespace         applier {
@@ -136,11 +137,11 @@ namespace           configuration {
                     hostgroups_find(configuration::hostgroup::key_type const& k) const;
       umap<std::string, shared_ptr<hostgroup_struct> >::iterator
                     hostgroups_find(configuration::hostgroup::key_type const& k);
-      umap<std::pair<std::string, std::string>, shared_ptr<::service> > const&
+      umap<std::pair<std::string, std::string>, shared_ptr<engine::service> > const&
                     services() const throw ();
-      umap<std::pair<std::string, std::string>, shared_ptr<::service> >&
+      umap<std::pair<std::string, std::string>, shared_ptr<engine::service> >&
                     services() throw ();
-      shared_ptr<::service>
+      shared_ptr<engine::service>
                     services_find(configuration::service::key_type const& k) const;
       umultimap<std::pair<std::string, std::string>, shared_ptr<servicedependency_struct> > const&
                     servicedependencies() const throw ();
@@ -234,7 +235,7 @@ namespace           configuration {
                     _lock;
       processing_state
                     _processing_state;
-      umap<std::pair<std::string, std::string>, shared_ptr<::service> >
+      umap<std::pair<std::string, std::string>, shared_ptr<engine::service> >
                     _services;
       umultimap<std::pair<std::string, std::string>, shared_ptr<servicedependency_struct> >
                     _servicedependencies;

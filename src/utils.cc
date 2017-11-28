@@ -1003,4 +1003,56 @@ void free_memory(nagios_macros* mac) {
   return;
 }
 
-/* free a notification list that was created */
+com::centreon::engine::contact& find_contact(std::string const& name) {
+  umap<std::string, shared_ptr<com::centreon::engine::contact> >::iterator
+    it(configuration::applier::state::instance().contacts().find(name));
+  if (it == configuration::applier::state::instance().contacts().end())
+    throw (not_found_error() << "Could not find contact '" << name << "'");
+
+  return it->second.get();
+}
+
+com::centreon::engine::contactgroup& find_contactgroup(std::string const& name) {
+  umap<std::string, shared_ptr<com::centreon::engine::contactgroup> >::iterator
+    it(configuration::applier::state::instance().contactgroups().find(name));
+  if (it == configuration::applier::state::instance().contactgroups().end())
+    throw (not_found_error() << "Could not find contactgroup '" << name << "'");
+
+  return it->second.get();
+}
+
+/**
+ *  Given a command name, find a command from the list in memory.
+ *
+ *  @param[in] name Command name.
+ *
+ *  @return Command object if found, NULL otherwise.
+ */
+command_struct* find_command(std::string const& name) {
+  if (!name)
+    return (NULL);
+
+  umap<std::string, shared_ptr<command_struct> >::const_iterator
+    it(state::instance().commands().find(name));
+  if (it != state::instance().commands().end())
+    return (it->second.get());
+  return (NULL);
+}
+
+/**
+ *  Given a timeperiod name, find the timeperiod from the list in memory.
+ *
+ *  @param[in] name Timeperiod name.
+ *
+ *  @return Timeperiod object if found, NULL otherwise.
+ */
+timeperiod* find_timeperiod(std::string const& name) {
+  if (name.empty())
+    return (NULL);
+
+  umap<std::string, shared_ptr<timeperiod_struct> >::const_iterator
+    it(state::instance().timeperiods().find(name));
+  if (it != state::instance().timeperiods().end())
+    return (it->second.get());
+  return (NULL);
+}
