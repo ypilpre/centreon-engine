@@ -148,12 +148,8 @@ void applier::host::_update(
     // XXX
     // if (state.check_flapping_recovery_notification().is_set())
     //   obj.set_check_flapping_recovery_notification(*state.check_flapping_recovery_notification());
-    // if (state.state_history().is_set()) {
-    //   utils::set_state_history(
-    //     *state.state_history(),
-    //     obj.state_history);
-    //   obj.state_history_index = 0;
-    // }
+    if (state.state_history().is_set())
+      utils::set_state_history(*state.state_history(), obj);
   }
 
   if (obj.get_retain_nonstate_info()) {
@@ -161,6 +157,7 @@ void applier::host::_update(
       obj.set_acknowledged(*state.problem_has_been_acknowledged());
     if (state.acknowledgement_type().is_set())
       obj.set_acknowledgement_type(*state.acknowledgement_type());
+    // XXX
     // if (state.notifications_enabled().is_set()
     //     && (obj.get_modified_attributes() & MODATTR_NOTIFICATIONS_ENABLED))
     //   obj.set_notifications_enabled(*state.notifications_enabled());

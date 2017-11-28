@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2013 Merethis
+** Copyright 2011-2013,2017 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -44,15 +44,16 @@ bool utils::is_command_exist(std::string const& command_line) {
 /**
  *  Set the state history array.
  *
- *  @param[in]  values        The values to set.
- *  @param[out] state_history The array to fill.
+ *  @param[in]  values  The values to set.
+ *  @param[out] object  The target object.
  */
 void utils::set_state_history(
        std::vector<int> const& values,
-       int state_history[]) {
+       checks::checkable& object) {
   unsigned int end(MAX_STATE_HISTORY_ENTRIES);
   if (end > values.size())
     end = values.size();
   for (unsigned int i(0); i < end; ++i)
-    state_history[i] = values[i];
+    object.add_historical_state(values[i]);
+  return ;
 }

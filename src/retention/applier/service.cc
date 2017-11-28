@@ -154,12 +154,8 @@ void applier::service::_update(
       obj.set_percent_state_change(*state.percent_state_change());
     // if (state.check_flapping_recovery_notification().is_set())
     //   obj.set_check_flapping_recovery_notification(*state.check_flapping_recovery_notification());
-    // if (state.state_history().is_set()) {
-    //   utils::set_state_history(
-    //     *state.state_history(),
-    //     obj.state_history);
-    //   obj.state_history_index = 0;
-    // }
+    if (state.state_history().is_set())
+      utils::set_state_history(*state.state_history(), obj);
   }
 
   if (obj.get_retain_nonstate_info()) {

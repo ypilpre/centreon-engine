@@ -61,10 +61,12 @@ static void generate_host_total_services(
     unsigned long total_host_services_warning(0);
     unsigned long total_host_services_unknown(0);
     unsigned long total_host_services_critical(0);
-    for (servicesmember* temp_servicesmember = NULL; // XXX hst.services;
-         temp_servicesmember != NULL;
-         temp_servicesmember = temp_servicesmember->next) {
-      service* temp_service(temp_servicesmember->service_ptr);
+    for (service_set::const_iterator
+           it(hst.get_services().begin()),
+           end(hst.get_services().end());
+         it != end;
+         ++it) {
+      service* temp_service(*it);
       if (temp_service) {
         total_host_services++;
         switch (temp_service->get_current_state()) {
