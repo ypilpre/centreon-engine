@@ -20,9 +20,14 @@
 #ifndef CCE_OBJECTS_HOSTDEPENDENCY_HH
 #  define CCE_OBJECTS_HOSTDEPENDENCY_HH
 
-#  include "com/centreon/engine/host.hh"
+#  include "com/centreon/engine/namespace.hh"
 
 /* Forward declaration. */
+
+CCE_BEGIN()
+  class host;
+CCE_END()
+
 struct timeperiod_struct;
 
 typedef struct                  hostdependency_struct {
@@ -38,8 +43,8 @@ typedef struct                  hostdependency_struct {
   int                           circular_path_checked;
   int                           contains_circular_path;
 
-  host*                         master_host_ptr;
-  host*                         dependent_host_ptr;
+  com::centreon::engine::host*  master_host_ptr;
+  com::centreon::engine::host*  dependent_host_ptr;
   timeperiod_struct*            dependency_period_ptr;
   struct hostdependency_struct* next;
   struct hostdependency_struct* nexthash;

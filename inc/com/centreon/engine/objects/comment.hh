@@ -22,9 +22,12 @@
 #  define CCE_OBJECTS_COMMENTS_HH
 
 #  include <time.h>
-#  include "com/centreon/engine/contact.hh"
-#  include "com/centreon/engine/host.hh"
-#  include "com/centreon/engine/service.hh"
+
+// Forward declarations
+CCE_BEGIN()
+  class host;
+  class service;
+CCE_END()
 
 // Comment sources.
 #  define COMMENTSOURCE_INTERNAL  0
@@ -148,9 +151,9 @@ int      delete_all_service_comments(
            char const* host_name,
            char const* svc_description);
 int      delete_comment(unsigned int type, unsigned long comment_id);
-int      delete_host_acknowledgement_comments(host* hst);
+int      delete_host_acknowledgement_comments(com::centreon::engine::host* hst);
 int      delete_host_comment(unsigned long comment_id);
-int      delete_service_acknowledgement_comments(service* svc);
+int      delete_service_acknowledgement_comments(com::centreon::engine::service* svc);
 int      delete_service_comment(unsigned long comment_id);
 comment* find_comment(
            unsigned long comment_id,

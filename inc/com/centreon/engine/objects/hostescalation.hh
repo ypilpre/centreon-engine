@@ -20,7 +20,6 @@
 #ifndef CCE_OBJECTS_HOSTESCALATION_HH
 #  define CCE_OBJECTS_HOSTESCALATION_HH
 #  include <string>
-#  include "com/centreon/engine/host.hh"
 #  include "com/centreon/shared_ptr.hh"
 #  include "com/centreon/unordered_hash.hh"
 
@@ -28,6 +27,7 @@
 CCE_BEGIN()
   class contact;
   class contactgroup;
+  class host;
 CCE_END()
 
 struct timeperiod_struct;
@@ -47,7 +47,7 @@ typedef struct                   hostescalation_struct {
   umap<std::string, com::centreon::shared_ptr<com::centreon::engine::contact> >
                                  contacts;
 
-  host*                          host_ptr;
+  com::centreon::engine::host*   host_ptr;
   timeperiod_struct*             escalation_period_ptr;
   struct hostescalation_struct*  next;
   struct hostescalation_struct*  nexthash;

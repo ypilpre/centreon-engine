@@ -21,10 +21,14 @@
 #ifndef CCE_NEBSTRUCTS_HH
 #  define CCE_NEBSTRUCTS_HH
 
-#  include "com/centreon/engine/host.hh"
 #  include "com/centreon/engine/objects/command.hh"
 #  include "com/centreon/engine/objects/customvariablesmember.hh"
-#  include "com/centreon/engine/service.hh"
+
+// Forward declarations
+CCE_BEGIN()
+  class host;
+  class service;
+CCE_END()
 
 /* Acknowledgement structure. */
 typedef struct   nebstruct_acknowledgement_struct {
@@ -483,10 +487,10 @@ typedef struct   nebstruct_relation_struct {
   int            attr;
   struct timeval timestamp;
 
-  host*          hst;
-  service*       svc;
-  host*          dep_hst;
-  service*       dep_svc;
+  com::centreon::engine::host*          hst;
+  com::centreon::engine::service*       svc;
+  com::centreon::engine::host*          dep_hst;
+  com::centreon::engine::service*       dep_svc;
 }                nebstruct_relation_data;
 
 /* Retention data structure. */

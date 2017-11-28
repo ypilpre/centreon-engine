@@ -32,11 +32,12 @@
 #  include "com/centreon/engine/events/sched_info.hh"
 #  include "com/centreon/engine/events/timed_event.hh"
 #  include "com/centreon/engine/nebmods.hh"
-//#  include "com/centreon/engine/notifications.hh"
 #  include "com/centreon/engine/objects/comment.hh"
 #  include "com/centreon/engine/objects/downtime.hh"
 #  include "com/centreon/engine/objects/hostdependency.hh"
+#  include "com/centreon/engine/objects/hostescalation.hh"
 #  include "com/centreon/engine/objects/servicedependency.hh"
+#  include "com/centreon/engine/objects/serviceescalation.hh"
 #  include "com/centreon/engine/utils.hh"
 
 #  ifdef __cplusplus

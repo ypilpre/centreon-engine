@@ -30,6 +30,9 @@
 
 CCE_BEGIN()
 
+// Forward declaration
+class contact;
+
 namespace           notifications {
 
   /**

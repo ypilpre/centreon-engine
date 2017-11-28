@@ -21,13 +21,17 @@
 #ifndef CCE_MACROS_DEFINES_HH_
 # define CCE_MACROS_DEFINES_HH_
 
-# include "com/centreon/engine/contact.hh"
 # include "com/centreon/engine/contactgroup.hh"
-# include "com/centreon/engine/host.hh"
 # include "com/centreon/engine/objects/customvariablesmember.hh"
 # include "com/centreon/engine/objects/hostgroup.hh"
 # include "com/centreon/engine/objects/servicegroup.hh"
-# include "com/centreon/engine/service.hh"
+
+// Forward declarations
+CCE_BEGIN()
+  class contact;
+  class host;
+  class service;
+CCE_END()
 
 // Length Limitations
 # define MAX_COMMAND_ARGUMENTS                  32   // maximum number of $ARGx$ macros
@@ -209,9 +213,9 @@ struct                   nagios_macros {
   char*                  argv[MAX_COMMAND_ARGUMENTS];
   char*                  contactaddress[MAX_CONTACT_ADDRESSES];
   char*                  ondemand;
-  host*                  host_ptr;
+  com::centreon::engine::host*                  host_ptr;
   hostgroup*             hostgroup_ptr;
-  service*               service_ptr;
+  com::centreon::engine::service*               service_ptr;
   servicegroup*          servicegroup_ptr;
   com::centreon::engine::contact*               contact_ptr;
   com::centreon::engine::contactgroup*          contactgroup_ptr;
