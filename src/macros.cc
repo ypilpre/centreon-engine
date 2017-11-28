@@ -35,6 +35,7 @@
 #include "com/centreon/engine/timeperiod.hh"
 #include "com/centreon/engine/utils.hh"
 
+using namespace com::centreon;
 using namespace com::centreon::engine;
 using namespace com::centreon::engine::logging;
 
@@ -1637,7 +1638,7 @@ int set_contact_address_environment_vars_r(
     oss << "CONTACTADDRESS" << x;
     set_macro_environment_var(
       oss.str().c_str(),
-      mac->contact_ptr->get_address(x),
+      mac->contact_ptr->get_address(x).c_str(),
       set);
   }
 

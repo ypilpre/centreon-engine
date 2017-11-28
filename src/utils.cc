@@ -39,12 +39,14 @@
 #include "com/centreon/engine/checks/checker.hh"
 #include "com/centreon/engine/commands/raw.hh"
 #include "com/centreon/engine/commands/set.hh"
+#include "com/centreon/engine/configuration/applier/state.hh"
 #include "com/centreon/engine/events/defines.hh"
 #include "com/centreon/engine/events/loop.hh"
 #include "com/centreon/engine/globals.hh"
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/macros.hh"
 #include "com/centreon/engine/nebmods.hh"
+#include "com/centreon/engine/not_found.hh"
 #include "com/centreon/engine/objects/comment.hh"
 #include "com/centreon/engine/shared.hh"
 #include "com/centreon/engine/string.hh"
@@ -1003,22 +1005,36 @@ void free_memory(nagios_macros* mac) {
   return;
 }
 
+/**
+ *  Given a contact name, find a contact from the list in memory.
+ *
+ *  @param[in] name contact name.
+ *
+ *  @return contact object if found, an exception is thrown otherwise.
+ */
 com::centreon::engine::contact& find_contact(std::string const& name) {
   umap<std::string, shared_ptr<com::centreon::engine::contact> >::iterator
     it(configuration::applier::state::instance().contacts().find(name));
   if (it == configuration::applier::state::instance().contacts().end())
     throw (not_found_error() << "Could not find contact '" << name << "'");
 
-  return it->second.get();
+  return *it->second.get();
 }
 
+/**
+ *  Given a contact group name, find a contact group from the list in memory.
+ *
+ *  @param[in] name contact group name.
+ *
+ *  @return contactgroup object if found, an exception is thrown otherwise.
+ */
 com::centreon::engine::contactgroup& find_contactgroup(std::string const& name) {
   umap<std::string, shared_ptr<com::centreon::engine::contactgroup> >::iterator
     it(configuration::applier::state::instance().contactgroups().find(name));
   if (it == configuration::applier::state::instance().contactgroups().end())
     throw (not_found_error() << "Could not find contactgroup '" << name << "'");
 
-  return it->second.get();
+  return *it->second.get();
 }
 
 /**
@@ -1026,17 +1042,18 @@ com::centreon::engine::contactgroup& find_contactgroup(std::string const& name) 
  *
  *  @param[in] name Command name.
  *
- *  @return Command object if found, NULL otherwise.
+ *  @return Command object if found, an exception is thrown otherwise.
  */
-command_struct* find_command(std::string const& name) {
-  if (!name)
-    return (NULL);
+command_struct& find_command(std::string const& name) {
+  if (name.empty())
+    throw (not_found_error() << "Could not find a command with an empty name");
 
   umap<std::string, shared_ptr<command_struct> >::const_iterator
-    it(state::instance().commands().find(name));
-  if (it != state::instance().commands().end())
-    return (it->second.get());
-  return (NULL);
+    it(configuration::applier::state::instance().commands().find(name));
+  if (it == configuration::applier::state::instance().commands().end())
+    throw (not_found_error() << "Could not find command '" << name << "'");
+
+  return (*it->second.get());
 }
 
 /**
@@ -1044,15 +1061,17 @@ command_struct* find_command(std::string const& name) {
  *
  *  @param[in] name Timeperiod name.
  *
- *  @return Timeperiod object if found, NULL otherwise.
+ *  @return Timeperiod object if found, an exception is thrown otherwise.
  */
-timeperiod* find_timeperiod(std::string const& name) {
+timeperiod& find_timeperiod(std::string const& name) {
   if (name.empty())
-    return (NULL);
+    throw (not_found_error()
+      << "Could not find a timeperiod with an empty name");
 
   umap<std::string, shared_ptr<timeperiod_struct> >::const_iterator
-    it(state::instance().timeperiods().find(name));
-  if (it != state::instance().timeperiods().end())
-    return (it->second.get());
-  return (NULL);
+    it(configuration::applier::state::instance().timeperiods().find(name));
+  if (it == configuration::applier::state::instance().timeperiods().end())
+    throw (not_found_error() << "Could not find timeperiod '" << name << "'");
+
+  return (*it->second.get());
 }

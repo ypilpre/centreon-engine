@@ -101,10 +101,12 @@ namespace           notifications {
     umap<std::string, shared_ptr<engine::contactgroup> >&
                       get_contactgroups();
 
+    int               get_current_notification_id() const;
     int               get_current_notification_number() const;
     notification_type get_current_notification_type() const;
     time_t            get_last_notification() const;
     time_t            get_next_notification() const;
+    bool              get_no_more_notifications() const;
     int               get_pending_flex_downtime() const;
     bool              is_in_downtime() const;
     bool              is_state_notification_enabled(int state) const;

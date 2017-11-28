@@ -393,11 +393,11 @@ void set_service_flap(
 
   /* see if we should check to send a recovery notification out when flapping stops */
   // XXX
-  if (svc->current_state != STATE_OK
-      && svc->current_notification_number > 0)
-    svc->check_flapping_recovery_notification = true;
-  else
-    svc->check_flapping_recovery_notification = false;
+//  if (svc->current_state != STATE_OK
+//      && svc->current_notification_number > 0)
+//    svc->check_flapping_recovery_notification = true;
+//  else
+//    svc->check_flapping_recovery_notification = false;
 
   /* send a notification */
   if (allow_flapstart_notification) {
@@ -475,8 +475,8 @@ void clear_service_flap(
 
   /* should we send a recovery notification? */
   // XXX
-  if (svc->check_flapping_recovery_notification == true
-      && svc->current_state == STATE_OK)
+//  if (svc->check_flapping_recovery_notification == true
+//      && svc->current_state == STATE_OK)
           ////////////////
           // FIXME DBR  //
           ////////////////
@@ -489,7 +489,8 @@ void clear_service_flap(
 //      NOTIFICATION_OPTION_NONE);
 
   /* clear the recovery notification flag */
-  svc->check_flapping_recovery_notification = false;
+  // XXX
+//  svc->check_flapping_recovery_notification = false;
   return;
 }
 
@@ -556,14 +557,14 @@ void set_host_flap(
 
   /* see if we should check to send a recovery notification out when flapping stops */
   // XXX
-  if (hst->current_state != HOST_UP
-      && hst->current_notification_number > 0)
-    hst->check_flapping_recovery_notification = true;
-  else
-    hst->check_flapping_recovery_notification = false;
+  // if (hst->current_state != HOST_UP
+  //     && hst->current_notification_number > 0)
+  //   hst->check_flapping_recovery_notification = true;
+  // else
+  //   hst->check_flapping_recovery_notification = false;
 
   /* send a notification */
-  if (allow_flapstart_notification) {
+  // if (allow_flapstart_notification) {
           ////////////////
           // FIXME DBR  //
           ////////////////
@@ -574,7 +575,7 @@ void set_host_flap(
 //      NULL,
 //      NULL,
 //      NOTIFICATION_OPTION_NONE);
-  }
+  // }
 }
 
 /* handles a host that has stopped flapping */
@@ -636,8 +637,8 @@ void clear_host_flap(
 
   /* should we send a recovery notification? */
   // XXX
-  if (hst->check_flapping_recovery_notification
-      && hst->current_state == HOST_UP) {
+  // if (hst->check_flapping_recovery_notification
+  //     && hst->current_state == HOST_UP) {
           ////////////////
           // FIXME DBR  //
           ////////////////
@@ -648,10 +649,10 @@ void clear_host_flap(
 //      NULL,
 //      NULL,
 //      NOTIFICATION_OPTION_NONE);
-  }
+  // }
 
   /* clear the recovery notification flag */
-  hst->check_flapping_recovery_notification = false;
+  // hst->check_flapping_recovery_notification = false;
   return;
 }
 
@@ -885,8 +886,8 @@ void handle_host_flap_detection_disabled(host* hst) {
 
     /* should we send a recovery notification? */
     // XXX
-    if (hst->check_flapping_recovery_notification == true
-        && hst->current_state == HOST_UP) {
+    // if (hst->check_flapping_recovery_notification == true
+    //     && hst->current_state == HOST_UP) {
           ////////////////
           // FIXME DBR  //
           ////////////////
@@ -897,10 +898,10 @@ void handle_host_flap_detection_disabled(host* hst) {
 //        NULL,
 //        NULL,
 //        NOTIFICATION_OPTION_NONE);
-    }
+    // }
 
     /* clear the recovery notification flag */
-    hst->check_flapping_recovery_notification = false;
+    // hst->check_flapping_recovery_notification = false;
   }
 
   /* update host status */
@@ -1041,8 +1042,8 @@ void handle_service_flap_detection_disabled(service* svc) {
 
     /* should we send a recovery notification? */
     // XXX
-    if (svc->check_flapping_recovery_notification
-        && svc->current_state == STATE_OK) {
+    // if (svc->check_flapping_recovery_notification
+    //     && svc->current_state == STATE_OK) {
           ////////////////
           // FIXME DBR  //
           ////////////////
@@ -1053,10 +1054,10 @@ void handle_service_flap_detection_disabled(service* svc) {
 //        NULL,
 //        NULL,
 //        NOTIFICATION_OPTION_NONE);
-    }
+    // }
 
     /* clear the recovery notification flag */
-    svc->check_flapping_recovery_notification = false;
+    // svc->check_flapping_recovery_notification = false;
   }
 
   /* update service status */

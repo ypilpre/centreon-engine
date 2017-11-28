@@ -135,8 +135,8 @@ int parse_check_output(
 
 com::centreon::engine::contact& find_contact(std::string const& name);
 com::centreon::engine::contactgroup& find_contactgroup(std::string const& name);
-command_struct* find_command(std::string const& name);
-timeperiod* find_timeperiod(std::string const& name);
+command_struct& find_command(std::string const& name);
+timeperiod& find_timeperiod(std::string const& name);
 
 #  ifdef __cplusplus
 }

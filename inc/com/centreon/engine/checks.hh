@@ -22,6 +22,7 @@
 #  define CCE_CHECKS_HH
 
 #  include <sys/time.h>
+#  include "com/centreon/engine/namespace.hh"
 
 CCE_BEGIN()
   class host;

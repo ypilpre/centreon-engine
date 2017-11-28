@@ -1103,7 +1103,7 @@ int handle_host_state(host* hst) {
     }
 
     /* notify contacts about the recovery or problem if its a "hard" state */
-    if (hst->state_type == HARD_STATE) {
+    if (hst->get_current_state_type() == HARD_STATE) {
           ////////////////
           // FIXME DBR  //
           ////////////////

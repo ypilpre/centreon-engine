@@ -28,10 +28,10 @@
 #include "com/centreon/engine/deleter/customvariablesmember.hh"
 #include "com/centreon/engine/error.hh"
 #include "com/centreon/engine/logging/logger.hh"
+#include "com/centreon/engine/not_found.hh"
 #include "com/centreon/engine/notifications/notifier.hh"
 #include "com/centreon/engine/objects/customvariablesmember.hh"
 #include "com/centreon/engine/objects/timeperiod.hh"
-#include "find.hh"
 
 using namespace com::centreon;
 using namespace com::centreon::engine;
@@ -349,14 +349,17 @@ bool contact::check(int* w, int* e) {
       std::string buf(it->first);
       size_t index(buf.find(buf, '!'));
       std::string command_name(buf.substr(0, index));
-      command_struct* temp_command = find_command(command_name.c_str());
-
-      if (temp_command == NULL) {
+      command_struct* temp_command;
+      try {
+        temp_command = &find_command(command_name);
+      }
+      catch (not_found const& e) {
+        (void)e;
         logger(log_verification_error, basic)
           << "Error: Service notification command '"
           << command_name << "' specified for contact '"
           << get_name() << "' is not defined anywhere!";
-	errors++;
+	++errors;
       }
 
       /* save pointer to the command for later */
@@ -379,14 +382,17 @@ bool contact::check(int* w, int* e) {
       std::string buf(it->first);
       size_t index(buf.find('!'));
       std::string command_name(buf.substr(0, index));
-      command_struct* cmd = find_command(command_name.c_str());
-
-      if (cmd == NULL) {
+      command_struct* cmd;
+      try {
+        cmd = &find_command(command_name);
+      }
+      catch (not_found const& e) {
+        (void)e;
         logger(log_verification_error, basic)
           << "Error: Host notification command '" << command_name
           << "' specified for contact '" << get_name()
           << "' is not defined anywhere!";
-	errors++;
+	++errors;
       }
 
       /* save pointer to the command for later */
@@ -401,15 +407,18 @@ bool contact::check(int* w, int* e) {
     warnings++;
   }
   else {
-    timeperiod* temp_timeperiod(
-      find_timeperiod(get_service_notification_period_name().c_str()));
-    if (temp_timeperiod == NULL) {
+    timeperiod* temp_timeperiod;
+    try {
+      temp_timeperiod = &find_timeperiod(get_service_notification_period_name());
+    }
+    catch (not_found const& e) {
+      (void)e;
       logger(log_verification_error, basic)
         << "Error: Service notification period '"
         << get_service_notification_period_name()
         << "' specified for contact '" << get_name()
         << "' is not defined anywhere!";
-      errors++;
+      ++errors;
     }
     set_service_notification_period(temp_timeperiod);
   }
@@ -422,15 +431,18 @@ bool contact::check(int* w, int* e) {
     warnings++;
   }
   else {
-    timeperiod* temp_timeperiod
-      = find_timeperiod(get_host_notification_period_name().c_str());
-    if (temp_timeperiod == NULL) {
+    timeperiod* temp_timeperiod;
+    try {
+      temp_timeperiod = &find_timeperiod(get_host_notification_period_name());
+    }
+    catch (not_found const& e) {
+      (void)e;
       logger(log_verification_error, basic)
         << "Error: Host notification period '"
         << get_host_notification_period_name()
         << "' specified for contact '" << get_name()
         << "' is not defined anywhere!";
-      errors++;
+      ++errors;
     }
 
     /* save the pointer to the host notification timeperiod for later */
