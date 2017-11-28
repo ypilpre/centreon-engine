@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2014 Merethis
+** Copyright 2011-2014,2017 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -40,24 +40,12 @@ customvariablesmember* add_custom_variable_to_contact(
                          contact_struct* cntct,
                          char const* varname,
                          char const* varvalue);
-customvariablesmember* add_custom_variable_to_host(
-                         host_struct* hst,
-                         char const* varname,
-                         char const* varvalue);
 customvariablesmember* add_custom_variable_to_object(
                          customvariablesmember** object_ptr,
                          char const* varname,
                          char const* varvalue);
-customvariablesmember* add_custom_variable_to_service(
-                         service_struct* svc,
-                         char const* varname,
-                         char const* varvalue);
 void                   remove_all_custom_variables_from_contact(
                          contact_struct* cntct);
-void                   remove_all_custom_variables_from_host(
-                         host_struct* hst);
-void                   remove_all_custom_variables_from_service(
-                         service_struct* svc);
 
 #  ifdef __cplusplus
 }
@@ -91,5 +79,3 @@ CCE_END()
 #  endif /* C++ */
 
 #endif // !CCE_OBJECTS_CUSTOMVARIABLESMEMBER_HH
-
-

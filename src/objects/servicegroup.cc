@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2013 Merethis
+** Copyright 2011-2013,2017 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -168,7 +168,7 @@ int is_host_member_of_servicegroup(servicegroup* group, host* hst) {
        member;
        member = member->next)
     if (member->service_ptr
-        && (member->service_ptr->host_ptr == hst))
+        && (member->service_ptr->get_host() == hst))
       return (true);
   return (false);
 }

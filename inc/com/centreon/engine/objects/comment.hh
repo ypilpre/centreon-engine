@@ -1,6 +1,6 @@
 /*
-** Copyright 1999-2010 Ethan Galstad
-** Copyright 2011-2013 Merethis
+** Copyright 1999-2010      Ethan Galstad
+** Copyright 2011-2013,2017 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -23,8 +23,8 @@
 
 #  include <time.h>
 #  include "com/centreon/engine/contact.hh"
-#  include "com/centreon/engine/objects/host.hh"
-#  include "com/centreon/engine/objects/service.hh"
+#  include "com/centreon/engine/host.hh"
+#  include "com/centreon/engine/service.hh"
 
 // Comment sources.
 #  define COMMENTSOURCE_INTERNAL  0

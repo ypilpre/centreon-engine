@@ -1,6 +1,6 @@
 /*
-** Copyright 2002-2006 Ethan Galstad
-** Copyright 2011-2013 Merethis
+** Copyright 2002-2006      Ethan Galstad
+** Copyright 2011-2013,2017 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -21,7 +21,17 @@
 #ifndef CCE_CONFIG_HH
 #  define CCE_CONFIG_HH
 
-#  include "com/centreon/engine/objects.hh"
+#  include "com/centreon/engine/host.hh"
+#  include "com/centreon/engine/objects/contact.hh"
+#  include "com/centreon/engine/objects/contactgroup.hh"
+#  include "com/centreon/engine/objects/hostdependency.hh"
+#  include "com/centreon/engine/objects/hostescalation.hh"
+#  include "com/centreon/engine/objects/hostgroup.hh"
+#  include "com/centreon/engine/objects/servicedependency.hh"
+#  include "com/centreon/engine/objects/serviceescalation.hh"
+#  include "com/centreon/engine/objects/servicegroup.hh"
+#  include "com/centreon/engine/objects/timeperiod.hh"
+#  include "com/centreon/engine/service.hh"
 
 #  ifdef __cplusplus
 extern "C" {

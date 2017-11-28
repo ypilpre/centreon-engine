@@ -1,6 +1,6 @@
 /*
-** Copyright 2000-2004 Ethan Galstad
-** Copyright 2011-2013 Merethis
+** Copyright 2000-2004      Ethan Galstad
+** Copyright 2011-2013,2017 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -33,7 +33,7 @@ int update_service_performance_data(service* svc) {
     return (OK);
 
   /* should we process performance data for this service? */
-  if (svc->process_performance_data == false)
+  if (!svc->get_process_perfdata())
     return (OK);
 
   /* process the performance data! */
@@ -48,7 +48,7 @@ int update_host_performance_data(host* hst) {
     return (OK);
 
   /* should we process performance data for this host? */
-  if (hst->process_performance_data == false)
+  if (!hst->get_process_perfdata())
     return (OK);
 
   /* process the performance data! */

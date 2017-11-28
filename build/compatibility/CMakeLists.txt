@@ -1,5 +1,5 @@
 ##
-## Copyright 2011-2013 Merethis
+## Copyright 2011-2013,2017 Centreon
 ##
 ## This file is part of Centreon Engine.
 ##
@@ -34,12 +34,11 @@ set(
   "${SRC_DIR}/check_result.cc"
   "${SRC_DIR}/common.cc"
   "${SRC_DIR}/embedded_perl.cc"
-  "${SRC_DIR}/find.cc"
+  # "${SRC_DIR}/find.cc"
   "${SRC_DIR}/globals.cc"
   "${SRC_DIR}/logging.cc"
   "${SRC_DIR}/mmap.cc"
   "${SRC_DIR}/sighandlers.cc"
-  "${SRC_DIR}/skiplist.cc"
   "${SRC_DIR}/utils.cc"
 
   # Headers.
@@ -52,24 +51,20 @@ set(
   "${INC_DIR}/embedded_perl.h"
   "${INC_DIR}/epn_nagios.h"
   "${INC_DIR}/events.h"
-  "${INC_DIR}/find.hh"
+  # "${INC_DIR}/find.hh"
   "${INC_DIR}/locations.h"
-  "${INC_DIR}/logging.h"
   "${INC_DIR}/macros.h"
   "${INC_DIR}/mmap.h"
-  "${INC_DIR}/nagios.h"
   "${INC_DIR}/nebcallbacks.h"
   "${INC_DIR}/neberrors.h"
   "${INC_DIR}/nebmods.h"
   "${INC_DIR}/nebmodules.h"
   "${INC_DIR}/nebstructs.h"
   "${INC_DIR}/netutils.h"
-  "${INC_DIR}/objects.h"
   "${INC_DIR}/perfdata.h"
   "${INC_DIR}/protoapi.h"
   "${INC_DIR}/shared.h"
   "${INC_DIR}/sighandlers.h"
-  "${INC_DIR}/skiplist.h"
   "${INC_DIR}/sretention.h"
   "${INC_DIR}/statusdata.h"
   "${INC_DIR}/xcddefault.h"

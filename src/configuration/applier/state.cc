@@ -45,7 +45,10 @@
 #include "com/centreon/engine/globals.hh"
 #include "com/centreon/engine/logging.hh"
 #include "com/centreon/engine/logging/logger.hh"
-#include "com/centreon/engine/objects.hh"
+#include "com/centreon/engine/not_found.hh"
+#include "com/centreon/engine/objects/command.hh"
+#include "com/centreon/engine/objects/contactsmember.hh"
+#include "com/centreon/engine/objects/contactgroupsmember.hh"
 #include "com/centreon/engine/retention/applier/state.hh"
 #include "com/centreon/engine/retention/state.hh"
 #include "com/centreon/engine/version.hh"
@@ -364,7 +367,7 @@ umap<std::string, shared_ptr<engine::contactgroup> >::iterator applier::state::c
  *
  *  @return The current hosts.
  */
-umap<std::string, shared_ptr<host_struct> > const& applier::state::hosts() const throw () {
+umap<std::string, shared_ptr<::host> > const& applier::state::hosts() const throw () {
   return (_hosts);
 }
 
@@ -373,7 +376,7 @@ umap<std::string, shared_ptr<host_struct> > const& applier::state::hosts() const
  *
  *  @return The current hosts.
  */
-umap<std::string, shared_ptr<host_struct> >& applier::state::hosts() throw () {
+umap<std::string, shared_ptr<::host> >& applier::state::hosts() throw () {
   return (_hosts);
 }
 
@@ -382,23 +385,14 @@ umap<std::string, shared_ptr<host_struct> >& applier::state::hosts() throw () {
  *
  *  @param[in] k Host key (host name).
  *
- *  @return Iterator to the host object if found, hosts().end() if it
- *          was not.
+ *  @return Host pointer if found. Will throw not_found if not found.
  */
-umap<std::string, shared_ptr<host_struct> >::const_iterator applier::state::hosts_find(configuration::host::key_type const& k) const {
-  return (_hosts.find(k));
-}
-
-/**
- *  Find a host from its key.
- *
- *  @param[in] k Host key (host name).
- *
- *  @return Iterator to the host object if found, hosts().end() if it
- *          was not.
- */
-umap<std::string, shared_ptr<host_struct> >::iterator applier::state::hosts_find(configuration::host::key_type const& k) {
-  return (_hosts.find(k));
+shared_ptr<::host> applier::state::hosts_find(configuration::host::key_type const& k) const {
+  umap<std::string, shared_ptr<::host> >::const_iterator
+    it(_hosts.find(k));
+  if (it == _hosts.end())
+    throw (not_found_error() << "Could not find host '" << k << "'");
+  return (it->second);
 }
 
 /**
@@ -633,7 +627,7 @@ umap<std::string, shared_ptr<hostgroup_struct> >::iterator applier::state::hostg
  *
  *  @return The current services.
  */
-umap<std::pair<std::string, std::string>, shared_ptr<service_struct> > const& applier::state::services() const throw () {
+umap<std::pair<std::string, std::string>, shared_ptr<::service> > const& applier::state::services() const throw () {
   return (_services);
 }
 
@@ -642,32 +636,23 @@ umap<std::pair<std::string, std::string>, shared_ptr<service_struct> > const& ap
  *
  *  @return The current services.
  */
-umap<std::pair<std::string, std::string>, shared_ptr<service_struct> >& applier::state::services() throw () {
+umap<std::pair<std::string, std::string>, shared_ptr<::service> >& applier::state::services() throw () {
   return (_services);
 }
 
 /**
  *  Find a service by its key.
  *
- *  @param[in] k Pair of host name / service description.
+ *  @param[in] k  Pair of host name / service description.
  *
- *  @return Iterator to the element if found, services().end()
- *          otherwise.
+ *  @return Pointer to element if found. Throw not_found if not found.
  */
-umap<std::pair<std::string, std::string>, shared_ptr<service_struct> >::const_iterator applier::state::services_find(configuration::service::key_type const& k) const {
-  return (_services.find(k));
-}
-
-/**
- *  Find a service by its key.
- *
- *  @param[in] k Pair of host name / service description.
- *
- *  @return Iterator to the element if found, services().end()
- *          otherwise.
- */
-umap<std::pair<std::string, std::string>, shared_ptr<service_struct> >::iterator applier::state::services_find(configuration::service::key_type const& k) {
-  return (_services.find(k));
+shared_ptr<::service> applier::state::services_find(configuration::service::key_type const& k) const {
+  umap<std::pair<std::string, std::string>, shared_ptr<::service> >::const_iterator
+    it(_services.find(k));
+  if (it == _services.end())
+    throw (not_found() << "Could not find service '" << k.second << "' on host '" << k.first << "'");
+  return (it->second);
 }
 
 /**
@@ -931,23 +916,15 @@ umap<std::string, shared_ptr<timeperiod_struct> >& applier::state::timeperiods()
  *
  *  @param[in] k Time period name.
  *
- *  @return Iterator to the element if found, timeperiods().end()
- *          otherwise.
+ *  @return Pointer to the element if found. Throw if not.
  */
-umap<std::string, shared_ptr<timeperiod_struct> >::const_iterator applier::state::timeperiods_find(configuration::timeperiod::key_type const& k) const {
-  return (_timeperiods.find(k));
-}
-
-/**
- *  Find a time period from its key.
- *
- *  @param[in] k Time period name.
- *
- *  @return Iterator to the element if found, timeperiods().end()
- *          otherwise.
- */
-umap<std::string, shared_ptr<timeperiod_struct> >::iterator applier::state::timeperiods_find(configuration::timeperiod::key_type const& k) {
-  return (_timeperiods.find(k));
+shared_ptr<timeperiod_struct> applier::state::timeperiods_find(configuration::timeperiod::key_type const& k) const {
+  umap<std::string, shared_ptr<timeperiod_struct> >::const_iterator
+    it(_timeperiods.find(k));
+  if (it == _timeperiods.end())
+    throw (not_found_error()
+           << "Could not find timeperiod '" << k << "'");
+  return (it->second);
 }
 
 /**
@@ -1196,7 +1173,7 @@ void applier::state::_apply(configuration::state const& new_cfg) {
     std::string temp_command_name(config->global_host_event_handler().substr(
                                     0,
                                     config->global_host_event_handler().find_first_of('!')));
-    command_struct* temp_command(::find_command(temp_command_name.c_str()));
+    command_struct* temp_command(&::find_command(temp_command_name.c_str()));
     if (!temp_command) {
       logger(log_verification_error, basic)
         << "Error: Global host event handler command '"
@@ -1212,7 +1189,7 @@ void applier::state::_apply(configuration::state const& new_cfg) {
     std::string temp_command_name(config->global_service_event_handler().substr(
                                     0,
                                     config->global_service_event_handler().find_first_of('!')));
-    command_struct* temp_command(::find_command(temp_command_name.c_str()));
+    command_struct* temp_command(&::find_command(temp_command_name.c_str()));
     if (!temp_command) {
       logger(log_verification_error, basic)
         << "Error: Global service event handler command '"
@@ -1232,7 +1209,7 @@ void applier::state::_apply(configuration::state const& new_cfg) {
     std::string temp_command_name(config->ocsp_command().substr(
                                     0,
                                     config->ocsp_command().find_first_of('!')));
-    command_struct* temp_command(::find_command(temp_command_name.c_str()));
+    command_struct* temp_command(&::find_command(temp_command_name.c_str()));
     if (!temp_command) {
       logger(log_verification_error, basic)
         << "Error: Obsessive compulsive service processor command '"
@@ -1247,7 +1224,7 @@ void applier::state::_apply(configuration::state const& new_cfg) {
     std::string temp_command_name(config->ochp_command().substr(
                                     0,
                                     config->ochp_command().find_first_of('!')));
-    command_struct* temp_command(::find_command(temp_command_name.c_str()));
+    command_struct* temp_command(&::find_command(temp_command_name.c_str()));
     if (!temp_command) {
       logger(log_verification_error, basic)
         << "Error: Obsessive compulsive host processor command '"
@@ -1724,7 +1701,7 @@ void applier::state::_processing(
              end(diff_hosts.added().end());
            it != end;
            ++it) {
-        umap<std::string, shared_ptr<host_struct> >::const_iterator
+        umap<std::string, shared_ptr<::host> >::const_iterator
           hst(hosts().find(it->host_name()));
         if (hst != hosts().end())
           log_host_state(INITIAL_STATES, hst->second.get());
@@ -1734,7 +1711,7 @@ void applier::state::_processing(
              end(diff_services.added().end());
            it != end;
            ++it) {
-        umap<std::pair<std::string, std::string>, shared_ptr<service_struct> >::const_iterator
+        umap<std::pair<std::string, std::string>, shared_ptr<::service> >::const_iterator
           svc(services().find(std::make_pair(
                                      *it->hosts().begin(),
                                      it->service_description())));

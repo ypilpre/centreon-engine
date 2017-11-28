@@ -1,6 +1,6 @@
 /*
-** Copyright 2001-2007 Ethan Galstad
-** Copyright 2011-2013 Merethis
+** Copyright 2001-2007      Ethan Galstad
+** Copyright 2011-2013,2017 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -19,9 +19,13 @@
 */
 
 #include "com/centreon/engine/common.hh"
+#include "com/centreon/engine/configuration/applier/state.hh"
 #include "com/centreon/engine/globals.hh"
+#include "com/centreon/engine/not_found.hh"
 #include "com/centreon/engine/objects/downtime.hh"
 #include "com/centreon/engine/xdddefault.hh"
+
+using namespace com::centreon::engine;
 
 /******************************************************************/
 /*********** DOWNTIME INITIALIZATION/CLEANUP FUNCTIONS ************/
@@ -66,15 +70,28 @@ int xdddefault_validate_downtime_data() {
     save = true;
 
     /* delete downtimes with invalid host names */
-    if (find_host(temp_downtime->host_name) == NULL)
+    try {
+      configuration::applier::state::instance().hosts_find(
+        temp_downtime->host_name);
+    }
+    catch (not_found const& e) {
+      (void)e;
       save = false;
+    }
 
     /* delete downtimes with invalid service descriptions */
-    if (temp_downtime->type == SERVICE_DOWNTIME
-        && find_service(
-             temp_downtime->host_name,
-             temp_downtime->service_description) == NULL)
-      save = false;
+    if (temp_downtime->type == SERVICE_DOWNTIME) {
+      try {
+        configuration::applier::state::instance().services_find(
+          std::make_pair(
+                 temp_downtime->host_name,
+                 temp_downtime->service_description));
+      }
+      catch (not_found const& e) {
+        (void)e;
+        save = false;
+      }
+    }
 
     /* delete downtimes that have expired */
     if (temp_downtime->end_time < time(NULL))

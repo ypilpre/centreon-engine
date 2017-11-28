@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2013 Merethis
+** Copyright 2011-2013,2017 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -54,11 +54,11 @@ void applier::comment::apply(list_comment const& lst) {
  */
 void applier::comment::_add_host_comment(
        retention::comment const& obj) throw () {
-  umap<std::string, shared_ptr<host_struct> >::const_iterator
+  umap<std::string, shared_ptr<::host> >::const_iterator
     it(configuration::applier::state::instance().hosts().find(obj.host_name()));
   if (it == configuration::applier::state::instance().hosts().end())
     return;
-  host_struct* hst(it->second.get());
+  host* hst(it->second.get());
 
   // add the comment.
   add_comment(
@@ -78,7 +78,7 @@ void applier::comment::_add_host_comment(
   // acknowledgement comments get deleted if they're not persistent
   // and the original problem is no longer acknowledged.
   if (obj.entry_type() == ACKNOWLEDGEMENT_COMMENT) {
-    if (!hst->problem_has_been_acknowledged && !obj.persistent())
+    if (!hst->is_acknowledged() && !obj.persistent())
       delete_comment(HOST_COMMENT, obj.comment_id());
   }
   // non-persistent comments don't last past restarts UNLESS
@@ -94,16 +94,13 @@ void applier::comment::_add_host_comment(
  */
 void applier::comment::_add_service_comment(
        retention::comment const& obj) throw () {
-  if (!is_host_exist(obj.host_name()))
-    return;
-
   std::pair<std::string, std::string>
     id(std::make_pair(obj.host_name(), obj.service_description()));
-  umap<std::pair<std::string, std::string>, shared_ptr<service_struct> >::const_iterator
+  umap<std::pair<std::string, std::string>, shared_ptr<::service> >::const_iterator
     it_svc(configuration::applier::state::instance().services().find(id));
   if (it_svc == configuration::applier::state::instance().services().end())
     return;
-  service_struct* svc(&*it_svc->second);
+  service* svc(&*it_svc->second);
 
   // add the comment.
   add_comment(
@@ -123,7 +120,7 @@ void applier::comment::_add_service_comment(
   // acknowledgement comments get deleted if they're not persistent
   // and the original problem is no longer acknowledged.
   if (obj.entry_type() == ACKNOWLEDGEMENT_COMMENT) {
-    if (!svc->problem_has_been_acknowledged && !obj.persistent())
+    if (!svc->is_acknowledged() && !obj.persistent())
       delete_comment(SERVICE_COMMENT, obj.comment_id());
   }
   // non-persistent comments don't last past restarts UNLESS

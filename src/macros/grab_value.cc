@@ -23,6 +23,9 @@
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/macros/grab_value.hh"
 #include "com/centreon/engine/macros.hh"
+#include "com/centreon/engine/not_found.hh"
+#include "com/centreon/engine/objects/hostsmember.hh"
+#include "com/centreon/engine/objects/servicesmember.hh"
 #include "com/centreon/engine/string.hh"
 #include "com/centreon/unordered_hash.hh"
 #include "com/centreon/engine/configuration/applier/state.hh"
@@ -62,7 +65,19 @@ static int handle_host_macro(
   if (arg2 == NULL) {
     // Find the host for on-demand macros
     // or use saved host pointer.
-    host* hst(arg1 ? find_host(arg1) : mac->host_ptr);
+    host* hst(NULL);
+    if (arg1) {
+      try {
+        hst = configuration::applier::state::instance().hosts_find(
+                arg1).get();
+      }
+      catch (not_found const& e) {
+        hst = NULL;
+      }
+    }
+    else
+      hst = mac->host_ptr;
+
     if (hst)
       // Get the host macro value.
       retval = grab_standard_host_macro_r(
@@ -76,7 +91,7 @@ static int handle_host_macro(
   }
   // A host macro with a hostgroup name and delimiter.
   else {
-    hostgroup* hg(find_hostgroup(arg1));
+    hostgroup* hg(&find_hostgroup(arg1));
     if (hg) {
       size_t delimiter_len(strlen(arg2));
 
@@ -148,7 +163,7 @@ static int handle_hostgroup_macro(
 
   // Use the saved hostgroup pointer
   // or find the hostgroup for on-demand macros.
-  hostgroup* hg(arg1 ? find_hostgroup(arg1) : mac->hostgroup_ptr);
+  hostgroup* hg(arg1 ? &find_hostgroup(arg1) : mac->hostgroup_ptr);
   if (hg) {
     // Get the hostgroup macro value.
     retval = grab_standard_hostgroup_macro_r(
@@ -205,10 +220,12 @@ static int handle_service_macro(
       if (!mac->host_ptr)
         retval = ERROR;
       else if (arg2) {
-        service* svc(find_service(mac->host_ptr->name, arg2));
-        if (!svc)
-          retval = ERROR;
-        else
+        try {
+          service* svc(configuration::applier::state::instance().services_find(
+                         std::make_pair(
+                                mac->host_ptr->get_host_name(),
+                                arg2)).get());
+
           // Get the service macro value.
           retval = grab_standard_service_macro_r(
                      mac,
@@ -216,14 +233,20 @@ static int handle_service_macro(
                      svc,
                      output,
                      free_macro);
+        }
+        catch (not_found const& e) {
+          retval = ERROR;
+        }
       }
       else
         retval = ERROR;
     }
     else if (arg1 && arg2) {
       // On-demand macro with both host and service name.
-      service* svc(find_service(arg1, arg2));
-      if (svc)
+      try {
+        service* svc(configuration::applier::state::instance().services_find(
+                       std::make_pair(arg1, arg2)).get());
+
         // Get the service macro value.
         retval = grab_standard_service_macro_r(
                    mac,
@@ -231,10 +254,11 @@ static int handle_service_macro(
                    svc,
                    output,
                    free_macro);
-      // Else we have a service macro with a
-      // servicegroup name and a delimiter...
-      else {
-        servicegroup* sg(find_servicegroup(arg1));
+      }
+      catch (not_found const& e) {
+        // Else we have a service macro with a
+        // servicegroup name and a delimiter...
+        servicegroup* sg(&find_servicegroup(arg1));
         if (!sg)
           retval = ERROR;
         else {
@@ -244,7 +268,7 @@ static int handle_service_macro(
           for (servicesmember* temp_servicesmember = sg->members;
                temp_servicesmember != NULL;
                temp_servicesmember = temp_servicesmember->next) {
-            svc = temp_servicesmember->service_ptr;
+            service* svc(temp_servicesmember->service_ptr);
             if (svc) {
               // Get the macro value for this service.
               char* buffer(NULL);
@@ -314,7 +338,7 @@ static int handle_servicegroup_macro(
 
   // Use the saved servicegroup pointer
   // or find the servicegroup for on-demand macros.
-  servicegroup* sg(arg1 ? find_servicegroup(arg1) : mac->servicegroup_ptr);
+  servicegroup* sg(arg1 ? &find_servicegroup(arg1) : mac->servicegroup_ptr);
   if (!sg)
     retval = ERROR;
   else {
@@ -357,7 +381,7 @@ static int handle_contact_macro(
   if (arg2 == NULL) {
     // Find the contact for on-demand macros
     // or use saved contact pointer.
-    contact* cntct(arg1 ? find_contact(arg1) : mac->contact_ptr);
+    contact* cntct(arg1 ? &find_contact(arg1) : mac->contact_ptr);
     if (!cntct)
       retval = ERROR;
     else {
@@ -373,7 +397,7 @@ static int handle_contact_macro(
   }
   // A contact macro with a contactgroup name and delimiter.
   else if (arg1 && arg2) {
-    contactgroup* cg(find_contactgroup(arg1));
+    contactgroup* cg(&find_contactgroup(arg1));
     if (!cg)
       retval = ERROR;
     else {
@@ -449,7 +473,7 @@ static int handle_contactgroup_macro(
 
   // Use the saved contactgroup pointer.
   // or find the contactgroup for on-demand macros.
-  contactgroup* cg(arg1 ? find_contactgroup(arg1) : mac->contactgroup_ptr);
+  contactgroup* cg(arg1 ? &find_contactgroup(arg1) : mac->contactgroup_ptr);
   if (!cg)
     retval = ERROR;
   else {
@@ -585,41 +609,42 @@ static int handle_summary_macro(
     unsigned int hosts_unreachable(0);
     unsigned int hosts_unreachable_unhandled(0);
     unsigned int hosts_up(0);
-    for (host* temp_host = host_list;
-         temp_host != NULL;
-         temp_host = temp_host->next) {
-      // Filter totals based on contact if necessary.
-    ///////////////
-    // FIXME DBR //
-    ///////////////
-//      bool authorized(
-//             mac->contact_ptr
-//             ? temp_host->contains_contact(mac->contact_ptr)
-//             : true);
-      bool authorized(true); //FIXME DBR
+    for (umap<std::string, com::centreon::shared_ptr<::host> >::iterator
+           it(configuration::applier::state::instance().hosts().begin()),
+           end(configuration::applier::state::instance().hosts().end());
+         it != end;
+         ++it) {
+      host* temp_host(it->second.get());
 
+      // Filter totals based on contact if necessary.
+      bool authorized(
+             mac->contact_ptr
+             ? temp_host->contains_contact(mac->contact_ptr)
+             : true);
       if (authorized) {
         bool problem(true);
-        if ((temp_host->current_state == HOST_UP)
-            && (temp_host->has_been_checked == true))
+        if ((temp_host->get_current_state() == HOST_UP)
+            && temp_host->get_has_been_checked())
           hosts_up++;
-        else if (temp_host->current_state == HOST_DOWN) {
-          if (temp_host->scheduled_downtime_depth > 0)
+        else if (temp_host->get_current_state() == HOST_DOWN) {
+          // XXX
+          // if (temp_host->scheduled_downtime_depth > 0)
+          //   problem = false;
+          if (temp_host->is_acknowledged())
             problem = false;
-          if (temp_host->problem_has_been_acknowledged == true)
-            problem = false;
-          if (temp_host->checks_enabled == false)
+          if (!temp_host->get_active_checks_enabled())
             problem = false;
           if (problem)
             hosts_down_unhandled++;
           hosts_down++;
         }
-        else if (temp_host->current_state == HOST_UNREACHABLE) {
-          if (temp_host->scheduled_downtime_depth > 0)
+        else if (temp_host->get_current_state() == HOST_UNREACHABLE) {
+          // XXX
+          // if (temp_host->scheduled_downtime_depth > 0)
+          //   problem = false;
+          if (temp_host->is_acknowledged())
             problem = false;
-          if (temp_host->problem_has_been_acknowledged == true)
-            problem = false;
-          if (temp_host->checks_enabled == false)
+          if (!temp_host->get_active_checks_enabled())
             problem = false;
           if (problem)
             hosts_down_unhandled++;
@@ -641,69 +666,87 @@ static int handle_summary_macro(
     unsigned int services_unknown_unhandled(0);
     unsigned int services_warning(0);
     unsigned int services_warning_unhandled(0);
-    for (service* temp_service = service_list;
-         temp_service != NULL;
-         temp_service = temp_service->next) {
-      // Filter totals based on contact if necessary.
-//    ///////////////
-//    // FIXME DBR //
-//    ///////////////
-//      bool authorized(
-//             mac->contact_ptr
-//             ? is_contact_for_service(
-//                 temp_service,
-//                 mac->contact_ptr)
-//             : true);
-      bool authorized(true); //FIXME DBR
+    for (umap<std::pair<std::string, std::string>, com::centreon::shared_ptr<::service> >::iterator
+           it(configuration::applier::state::instance().services().begin()),
+           end(configuration::applier::state::instance().services().end());
+         it != end;
+         ++it) {
+      service* temp_service(it->second.get());
 
+      // Filter totals based on contact if necessary.
+      bool authorized(
+             mac->contact_ptr
+             // XXX
+             ? false
+             // ? is_contact_for_service(   FIXME DBR: il y a une méthode contains_contact
+             //     temp_service,
+             //     mac->contact_ptr)
+             : true);
       if (authorized) {
         bool problem(true);
-        if (temp_service->current_state == STATE_OK
-            && temp_service->has_been_checked == true)
+        if (temp_service->get_current_state() == STATE_OK
+            && temp_service->get_has_been_checked())
           services_ok++;
-        else if (temp_service->current_state == STATE_WARNING) {
-          host* temp_host(find_host(temp_service->host_name));
-          if (temp_host != NULL
-              && (temp_host->current_state == HOST_DOWN
-                  || temp_host->current_state == HOST_UNREACHABLE))
+        else if (temp_service->get_current_state() == STATE_WARNING) {
+          try {
+            host* temp_host(configuration::applier::state::instance().hosts_find(
+                              temp_service->get_host_name()).get());
+            if (temp_host->get_current_state() == HOST_DOWN
+                || temp_host->get_current_state() == HOST_UNREACHABLE)
+              problem = false;
+          }
+          catch (not_found const& e) {
+            (void)e;
+          }
+          // if (temp_service->scheduled_downtime_depth > 0)
+          //   problem = false;
+          if (temp_service->is_acknowledged())
             problem = false;
-          if (temp_service->scheduled_downtime_depth > 0)
-            problem = false;
-          if (temp_service->problem_has_been_acknowledged == true)
-            problem = false;
-          if (temp_service->checks_enabled == false)
+          if (!temp_service->get_active_checks_enabled())
             problem = false;
           if (problem)
             services_warning_unhandled++;
           services_warning++;
         }
-        else if (temp_service->current_state == STATE_UNKNOWN) {
-          host* temp_host(find_host(temp_service->host_name));
-          if (temp_host != NULL
-              && (temp_host->current_state == HOST_DOWN
-                  || temp_host->current_state == HOST_UNREACHABLE))
+        else if (temp_service->get_current_state() == STATE_UNKNOWN) {
+          try {
+            host* temp_host(configuration::applier::state::instance().hosts_find(
+                              temp_service->get_host_name()).get());
+            if (temp_host->get_current_state() == HOST_DOWN
+                || temp_host->get_current_state() == HOST_UNREACHABLE)
+              problem = false;
+          }
+          catch (not_found const& e) {
+            (void)e;
+          }
+          // XXX
+          // if (temp_service->scheduled_downtime_depth > 0)
+          //   problem = false;
+          if (temp_service->is_acknowledged())
             problem = false;
-          if (temp_service->scheduled_downtime_depth > 0)
-            problem = false;
-          if (temp_service->problem_has_been_acknowledged == true)
-            problem = false;
-          if (temp_service->checks_enabled == false)
+          if (!temp_service->get_active_checks_enabled())
             problem = false;
           if (problem)
             services_unknown_unhandled++;
           services_unknown++;
         }
-        else if (temp_service->current_state == STATE_CRITICAL) {
-          host* temp_host(find_host(temp_service->host_name));
-          if (temp_host != NULL
-              && (temp_host->current_state == HOST_DOWN
-                  || temp_host->current_state == HOST_UNREACHABLE))
+        else if (temp_service->get_current_state() == STATE_CRITICAL) {
+          try {
+            host* temp_host(configuration::applier::state::instance().hosts_find(
+                              temp_service->get_host_name()).get());
+            if (temp_host->get_current_state() == HOST_DOWN
+                || temp_host->get_current_state() == HOST_UNREACHABLE)
+              problem = false;
+          }
+          catch (not_found const& e) {
+            (void)e;
+          }
+          // XXX
+          // if (temp_service->scheduled_downtime_depth > 0)
+          //   problem = false;
+          if (temp_service->is_acknowledged())
             problem = false;
-          if (temp_service->scheduled_downtime_depth > 0)
-            problem = false;
-          if (temp_service->problem_has_been_acknowledged == true)
-            problem = false;
-          if (temp_service->checks_enabled == false)
+          if (!temp_service->get_active_checks_enabled())
             problem = false;
           if (problem)
             services_critical_unhandled++;
@@ -1156,7 +1199,7 @@ int grab_macro_value_r(
     else {
       /* on-demand contact macro with a contactgroup and a delimiter */
       if (arg[1] != NULL) {
-        if ((temp_contactgroup = find_contactgroup(arg[0])) == NULL)
+        if ((temp_contactgroup = &find_contactgroup(arg[0])) == NULL)
           return (ERROR);
 
         delimiter_len = strlen(arg[1]);
@@ -1169,8 +1212,13 @@ int grab_macro_value_r(
              ++it) {
           if ((temp_contact = it->second.get()) == NULL)
             continue;
-          if ((temp_contact = find_contact(it->first.c_str())) == NULL)
+          try {
+            temp_contact = &find_contact(it->first);
+          }
+          catch (not_found const& e) {
+            (void)e;
             continue;
+          }
 
           /* get the macro value for this contact */
           grab_contact_address_macro(x, temp_contact, &temp_buffer);
@@ -1198,7 +1246,7 @@ int grab_macro_value_r(
       /* else on-demand contact macro */
       else {
         /* find the contact */
-        if ((temp_contact = find_contact(arg[0])) == NULL) {
+        if ((temp_contact = &find_contact(arg[0])) == NULL) {
           delete[] buf;
           return (ERROR);
         }

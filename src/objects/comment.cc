@@ -1,6 +1,6 @@
 /*
-** Copyright 1999-2010 Ethan Galstad
-** Copyright 2011-2013 Merethis
+** Copyright 1999-2010      Ethan Galstad
+** Copyright 2011-2013,2017 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -419,10 +419,12 @@ int delete_host_acknowledgement_comments(host* hst) {
     return (ERROR);
 
   /* delete comments from memory */
-  for (temp_comment = get_first_comment_by_host(hst->name);
+  for (temp_comment = get_first_comment_by_host(hst->get_host_name().c_str());
        temp_comment != NULL;
        temp_comment = next_comment) {
-    next_comment = get_next_comment_by_host(hst->name, temp_comment);
+    next_comment = get_next_comment_by_host(
+                     hst->get_host_name().c_str(),
+                     temp_comment);
     if (temp_comment->comment_type == HOST_COMMENT
         && temp_comment->entry_type == ACKNOWLEDGEMENT_COMMENT
         && temp_comment->persistent == false)
@@ -468,8 +470,8 @@ int delete_service_acknowledgement_comments(service* svc) {
        temp_comment = next_comment) {
     next_comment = temp_comment->next;
     if (temp_comment->comment_type == SERVICE_COMMENT
-        && !strcmp(temp_comment->host_name, svc->host_name)
-        && !strcmp(temp_comment->service_description, svc->description)
+        && !strcmp(temp_comment->host_name, svc->get_host_name().c_str())
+        && !strcmp(temp_comment->service_description, svc->get_description().c_str())
         && temp_comment->entry_type == ACKNOWLEDGEMENT_COMMENT
         && temp_comment->persistent == false)
       delete_comment(SERVICE_COMMENT, temp_comment->comment_id);

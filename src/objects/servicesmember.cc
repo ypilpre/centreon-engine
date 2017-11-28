@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2013 Merethis
+** Copyright 2011-2013,2017 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -20,11 +20,10 @@
 #include "com/centreon/engine/broker.hh"
 #include "com/centreon/engine/deleter/servicesmember.hh"
 #include "com/centreon/engine/logging/logger.hh"
-#include "com/centreon/engine/objects/host.hh"
-#include "com/centreon/engine/objects/service.hh"
 #include "com/centreon/engine/objects/servicegroup.hh"
 #include "com/centreon/engine/objects/servicesmember.hh"
 #include "com/centreon/engine/objects/tool.hh"
+#include "com/centreon/engine/service.hh"
 #include "com/centreon/engine/shared.hh"
 #include "com/centreon/engine/string.hh"
 
@@ -79,51 +78,6 @@ std::ostream& operator<<(std::ostream& os, servicesmember const& obj) {
     os << "(" << chkstr(m->host_name) << ", "
        << chkstr(m->service_description) << (m->next ? "), " : ")");
   return (os);
-}
-
-/**
- *  Link a service to its host.
- *
- *  @param[in,out] hst Host.
- *  @param[in]     svc Service.
- *
- *  @return Host-service relation.
- */
-servicesmember* add_service_link_to_host(host* hst, service* svc) {
-  // Make sure we have the data we need.
-  if (!hst || !svc)
-    return (NULL);
-
-  // Allocate memory.
-  servicesmember* obj(new servicesmember);
-  memset(obj, 0, sizeof(*obj));
-
-  try {
-    // Initialize values.
-    obj->service_ptr = svc;
-
-    // Add the child entry to the host definition.
-    obj->next = hst->services;
-    hst->services = obj;
-
-    // Notify event broker.
-    timeval tv(get_broker_timestamp(NULL));
-    broker_relation_data(
-      NEBTYPE_PARENT_ADD,
-      NEBFLAG_NONE,
-      NEBATTR_NONE,
-      hst,
-      NULL,
-      NULL,
-      svc,
-      &tv);
-  }
-  catch (...) {
-    deleter::servicesmember(obj);
-    obj = NULL;
-  }
-
-  return (obj);
 }
 
 /**

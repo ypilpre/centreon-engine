@@ -1,8 +1,8 @@
 /*
-** Copyright 2007-2008 Ethan Galstad
-** Copyright 2007,2010 Andreas Ericsson
-** Copyright 2010      Max Schubert
-** Copyright 2011-2013 Merethis
+** Copyright 2007-2008      Ethan Galstad
+** Copyright 2007,2010      Andreas Ericsson
+** Copyright 2010           Max Schubert
+** Copyright 2011-2013,2017 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -77,8 +77,8 @@ void adjust_check_scheduling() {
         continue;
 
       // ignore forced checks.
-      if (hst->check_options & CHECK_OPTION_FORCE_EXECUTION)
-        continue;
+      if (hst->get_check_options() & CHECK_OPTION_FORCE_EXECUTION)
+        continue ;
 
       // does the last check "bump" into this one?
       if ((last_check_time + last_check_exec_time) > tmp->run_time)
@@ -98,8 +98,8 @@ void adjust_check_scheduling() {
         continue;
 
       // ignore forced checks.
-      if (svc->check_options & CHECK_OPTION_FORCE_EXECUTION)
-        continue;
+      if (svc->get_check_options() & CHECK_OPTION_FORCE_EXECUTION)
+        continue ;
 
       // does the last check "bump" into this one?
       if ((last_check_time + last_check_exec_time) > tmp->run_time)
@@ -152,11 +152,11 @@ void adjust_check_scheduling() {
         continue;
 
       // ignore forced checks.
-      if (hst->check_options & CHECK_OPTION_FORCE_EXECUTION)
+      if (hst->get_check_options() & CHECK_OPTION_FORCE_EXECUTION)
         continue;
 
       current_exec_time
-        = ((hst->execution_time
+        = ((hst->get_execution_time()
             + projected_host_check_overhead)
            * exec_time_factor);
     }
@@ -165,8 +165,8 @@ void adjust_check_scheduling() {
         continue;
 
       // ignore forced checks.
-      if (svc->check_options & CHECK_OPTION_FORCE_EXECUTION)
-        continue;
+      if (svc->get_check_options() & CHECK_OPTION_FORCE_EXECUTION)
+        continue ;
 
       // NOTE: service check execution time is not taken into
       // account, as service checks are run in parallel.
@@ -184,12 +184,12 @@ void adjust_check_scheduling() {
 
     if (tmp->event_type == EVENT_HOST_CHECK) {
       tmp->run_time = new_run_time;
-      hst->next_check = new_run_time;
+      hst->set_next_check(new_run_time);
       update_host_status(hst, false);
     }
     else {
       tmp->run_time = new_run_time;
-      svc->next_check = new_run_time;
+      svc->set_next_check(new_run_time);
       update_service_status(svc, false);
     }
 

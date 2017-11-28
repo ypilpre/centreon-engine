@@ -111,10 +111,8 @@ int log_service_event(service const* svc);
 int log_host_event(host const* hst);
 // logs initial/current host states
 void log_host_state(unsigned int type, host* hst);
-int log_host_states(unsigned int type, time_t* timestamp);
 // logs initial/current service states
 void log_service_state(unsigned int type, service* svc);
-int log_service_states(unsigned int type, time_t* timestamp);
 // rotates the main log file
 int rotate_log_file(time_t rotation_time);
 // records log file/version info

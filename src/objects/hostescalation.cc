@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2013 Merethis
+** Copyright 2011-2013,2017 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -141,7 +141,7 @@ bool operator<(
 std::ostream& operator<<(std::ostream& os, hostescalation const& obj) {
   char const* hst_str(NULL);
   if (obj.host_ptr)
-    hst_str = chkstr(obj.host_ptr->name);
+    hst_str = obj.host_ptr->get_host_name().c_str();
   char const* escalation_period_str(NULL);
   if (obj.escalation_period_ptr)
     escalation_period_str = chkstr(obj.escalation_period_ptr->name);

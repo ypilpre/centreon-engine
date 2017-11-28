@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2013 Merethis
+** Copyright 2011-2013,2017 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -111,39 +111,6 @@ std::ostream& operator<<(std::ostream& os, customvariablesmember const& obj) {
  */
 
 /**
- *  Adds a custom variable to a host
- *
- *  @param[in] hst      Host.
- *  @param[in] varname  Custom variable name.
- *  @param[in] varvalue Custom variable value.
- *
- *  @return New host custom variable.
- */
-customvariablesmember* add_custom_variable_to_host(
-                         host* hst,
-                         char const* varname,
-                         char const* varvalue) {
-  // Add custom variable to host.
-  customvariablesmember* retval(add_custom_variable_to_object(
-                                  &hst->custom_variables,
-                                  varname,
-                                  varvalue));
-
-  // Notify event broker.
-  timeval tv(get_broker_timestamp(NULL));
-  broker_custom_variable(
-    NEBTYPE_HOSTCUSTOMVARIABLE_ADD,
-    NEBFLAG_NONE,
-    NEBATTR_NONE,
-    hst,
-    varname,
-    varvalue,
-    &tv);
-
-  return (retval);
-}
-
-/**
  *  Adds a custom variable to an object.
  *
  *  @param[in] object_ptr Object's custom variables.
@@ -190,105 +157,10 @@ customvariablesmember* add_custom_variable_to_object(
 }
 
 /**
- *  Adds a custom variable to a service.
- *
- *  @param[in] svc      Service.
- *  @param[in] varname  Custom variable name.
- *  @param[in] varvalue Custom variable value.
- *
- *  @return New custom variable.
- */
-customvariablesmember* add_custom_variable_to_service(
-                         service* svc,
-                         char const* varname,
-                         char const* varvalue) {
-  // Add custom variable to service.
-  customvariablesmember* retval(add_custom_variable_to_object(
-                                  &svc->custom_variables,
-                                  varname,
-                                  varvalue));
-
-  // Notify event broker.
-  timeval tv(get_broker_timestamp(NULL));
-  broker_custom_variable(
-    NEBTYPE_SERVICECUSTOMVARIABLE_ADD,
-    NEBFLAG_NONE,
-    NEBATTR_NONE,
-    svc,
-    varname,
-    varvalue,
-    &tv);
-
-  return (retval);
-}
-
-/**
  *  Remove all custom variables of a contact.
  *
  *  @param[in,out] cntct  Target contact.
  */
-
-/**
- *  Remove all custom variables of a host.
- *
- *  @param[in,out] hst  Target host.
- */
-void remove_all_custom_variables_from_host(host_struct* hst) {
-  // Browse all custom vars.
-  customvariablesmember* m(hst->custom_variables);
-  hst->custom_variables = NULL;
-  while (m) {
-    // Point to next custom var.
-    customvariablesmember* to_delete(m);
-    m = m->next;
-
-    // Notify event broker.
-    timeval tv(get_broker_timestamp(NULL));
-    broker_custom_variable(
-      NEBTYPE_HOSTCUSTOMVARIABLE_DELETE,
-      NEBFLAG_NONE,
-      NEBATTR_NONE,
-      hst,
-      to_delete->variable_name,
-      to_delete->variable_value,
-      &tv);
-
-    // Delete custom variable.
-    deleter::customvariablesmember(to_delete);
-  }
-  return ;
-}
-
-/**
- *  Remove all custom variables of a service.
- *
- *  @param[in,out] svc  Target service.
- */
-void remove_all_custom_variables_from_service(service_struct* svc) {
-  // Browse all custom vars.
-  customvariablesmember* m(svc->custom_variables);
-  svc->custom_variables = NULL;
-  while (m) {
-    // Point to next custom var.
-    customvariablesmember* to_delete(m);
-    m = m->next;
-
-    // Notify event broker.
-    timeval tv(get_broker_timestamp(NULL));
-    broker_custom_variable(
-      NEBTYPE_SERVICECUSTOMVARIABLE_DELETE,
-      NEBFLAG_NONE,
-      NEBATTR_NONE,
-      svc,
-      to_delete->variable_name,
-      to_delete->variable_value,
-      &tv);
-
-    // Delete custom variable.
-    deleter::customvariablesmember(to_delete);
-  }
-  return ;
-}
 
 /**
  *  Update the custom variable value.

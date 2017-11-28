@@ -1,7 +1,7 @@
 /*
-** Copyright 1999-2009 Ethan Galstad
-** Copyright 2009-2010 Nagios Core Development Team and Community Contributors
-** Copyright 2011-2013 Merethis
+** Copyright 1999-2009      Ethan Galstad
+** Copyright 2009-2010      Nagios Core Development Team and Community Contributors
+** Copyright 2011-2013,2017 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -267,16 +267,16 @@ void loop::_dispatching() {
             << currently_running_service_checks << "/"
             << config->max_parallel_service_checks()
             << ") has been reached!  Nudging "
-            << temp_service->host_name << ":"
-            << temp_service->description << " by "
+            << temp_service->get_host_name() << ":"
+            << temp_service->get_description() << " by "
             << nudge_seconds << " seconds...";
           logger(log_runtime_warning, basic)
             << "\tMax concurrent service checks ("
             << currently_running_service_checks << "/"
             << config->max_parallel_service_checks()
             << ") has been reached.  Nudging "
-            << temp_service->host_name << ":"
-            << temp_service->description << " by "
+            << temp_service->get_host_name() << ":"
+            << temp_service->get_description() << " by "
             << nudge_seconds << " seconds...";
           run_event = false;
         }
@@ -290,7 +290,8 @@ void loop::_dispatching() {
         }
 
         // Forced checks override normal check logic.
-        if (temp_service->check_options & CHECK_OPTION_FORCE_EXECUTION)
+        if (temp_service->get_check_options()
+            & CHECK_OPTION_FORCE_EXECUTION)
           run_event = true;
 
         // Reschedule the check if we can't run it now.
@@ -308,24 +309,24 @@ void loop::_dispatching() {
           // We nudge the next check time when it is
           // due to too many concurrent service checks.
           if (nudge_seconds)
-            temp_service->next_check
-              = (time_t)(temp_service->next_check + nudge_seconds);
+            temp_service->set_next_check(
+              (time_t)(temp_service->get_next_check() + nudge_seconds));
           // Otherwise reschedule (TODO: This should be smarter as it
           // doesn't consider its timeperiod).
           else {
-            if ((SOFT_STATE == temp_service->state_type)
-                && (temp_service->current_state != STATE_OK))
-              temp_service->next_check
-                = (time_t)(temp_service->next_check
-                           + (temp_service->retry_interval
-                              * config->interval_length()));
+            if ((SOFT_STATE == temp_service->get_current_state_type())
+                && (temp_service->get_current_state() != STATE_OK))
+              temp_service->set_next_check(
+                (time_t)(temp_service->get_next_check()
+                         + (temp_service->get_retry_check_interval()
+                            * config->interval_length())));
             else
-              temp_service->next_check
-                = (time_t)(temp_service->next_check
-                           + (temp_service->check_interval
-                              * config->interval_length()));
+              temp_service->set_next_check(
+                (time_t)(temp_service->get_next_check()
+                         + (temp_service->get_normal_check_interval()
+                            * config->interval_length())));
           }
-          temp_event->run_time = temp_service->next_check;
+          temp_event->run_time = temp_service->get_next_check();
           reschedule_event(temp_event, &event_list_low, &event_list_low_tail);
           update_service_status(temp_service, false);
           run_event = false;
@@ -346,7 +347,8 @@ void loop::_dispatching() {
         }
 
         // Forced checks override normal check logic.
-        if (temp_host->check_options & CHECK_OPTION_FORCE_EXECUTION)
+        if (temp_host->get_check_options()
+            & CHECK_OPTION_FORCE_EXECUTION)
           run_event = true;
 
         // Reschedule the host check if we can't run it right now.
@@ -362,18 +364,18 @@ void loop::_dispatching() {
             &event_list_low_tail);
 
           // Reschedule.
-          if ((SOFT_STATE == temp_host->state_type)
-              && (temp_host->current_state != STATE_OK))
-            temp_host->next_check
-              = (time_t)(temp_host->next_check
-                         + (temp_host->retry_interval
-                            * config->interval_length()));
+          if ((SOFT_STATE == temp_host->get_current_state_type())
+              && (temp_host->get_current_state() != STATE_OK))
+            temp_host->set_next_check(
+              (time_t)(temp_host->get_next_check()
+                       + (temp_host->get_retry_check_interval()
+                          * config->interval_length())));
           else
-            temp_host->next_check
-              = (time_t)(temp_host->next_check
-                         + (temp_host->check_interval
-                            * config->interval_length()));
-          temp_event->run_time = temp_host->next_check;
+            temp_host->set_next_check(
+              (time_t)(temp_host->get_next_check()
+                       + (temp_host->get_normal_check_interval()
+                          * config->interval_length())));
+          temp_event->run_time = temp_host->get_next_check();
           reschedule_event(temp_event, &event_list_low, &event_list_low_tail);
           update_host_status(temp_host, false);
           run_event = false;

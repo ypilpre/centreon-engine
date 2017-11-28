@@ -1,6 +1,6 @@
 /*
-** Copyright 1999-2010      Ethan Galstad
-** Copyright 2011-2013,2016 Centreon
+** Copyright 1999-2010           Ethan Galstad
+** Copyright 2011-2013,2016-2017 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -23,11 +23,11 @@
 
 # include "com/centreon/engine/contact.hh"
 # include "com/centreon/engine/contactgroup.hh"
+# include "com/centreon/engine/host.hh"
 # include "com/centreon/engine/objects/customvariablesmember.hh"
-# include "com/centreon/engine/objects/host.hh"
 # include "com/centreon/engine/objects/hostgroup.hh"
-# include "com/centreon/engine/objects/service.hh"
 # include "com/centreon/engine/objects/servicegroup.hh"
+# include "com/centreon/engine/service.hh"
 
 // Length Limitations
 # define MAX_COMMAND_ARGUMENTS                  32   // maximum number of $ARGx$ macros

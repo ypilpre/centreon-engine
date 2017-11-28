@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2014 Merethis
+** Copyright 2011-2014,2017 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -23,13 +23,14 @@
 #  include "com/centreon/shared_ptr.hh"
 #  include "com/centreon/unordered_hash.hh"
 
+#  include "com/centreon/engine/service.hh"
+
 /* Forward declaration. */
 CCE_BEGIN()
   class contact;
   class contactgroup;
 CCE_END()
 
-struct service_struct;
 struct timeperiod_struct;
 
 typedef struct                     serviceescalation_struct {
@@ -49,7 +50,7 @@ typedef struct                     serviceescalation_struct {
   umap<std::string, com::centreon::shared_ptr<com::centreon::engine::contact> >
                                    contacts;
 
-  service_struct*                  service_ptr;
+  service*                         service_ptr;
   timeperiod_struct*               escalation_period_ptr;
   struct serviceescalation_struct* next;
   struct serviceescalation_struct* nexthash;

@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2013 Merethis
+** Copyright 2011-2013,2017 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -20,15 +20,17 @@
 #ifndef CCE_OBJECTS_SERVICESMEMBER_HH
 #  define CCE_OBJECTS_SERVICESMEMBER_HH
 
+#  include "com/centreon/engine/host.hh"
+#  include "com/centreon/engine/service.hh"
+
 /* Forward declaration. */
 struct host_struct;
-struct service_struct;
 struct servicegroup_struct;
 
 typedef struct                  servicesmember_struct {
   char*                         host_name;
   char*                         service_description;
-  service_struct*               service_ptr;
+  service*                      service_ptr;
   struct servicesmember_struct* next;
 }                               servicesmember;
 
@@ -36,9 +38,6 @@ typedef struct                  servicesmember_struct {
 extern "C" {
 #  endif /* C++ */
 
-servicesmember* add_service_link_to_host(
-                  host_struct* hst,
-                  service_struct* service_ptr);
 servicesmember* add_service_to_servicegroup(
                   servicegroup_struct* temp_servicegroup,
                   char const* host_name,
@@ -60,5 +59,3 @@ std::ostream& operator<<(std::ostream& os, servicesmember const& obj);
 #  endif /* C++ */
 
 #endif // !CCE_OBJECTS_SERVICESMEMBER_HH
-
-

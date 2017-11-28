@@ -1,6 +1,6 @@
 /*
-** Copyright 2002-2006 Ethan Galstad
-** Copyright 2011-2013 Merethis
+** Copyright 2002-2006      Ethan Galstad
+** Copyright 2011-2013,2017 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -22,8 +22,8 @@
 #  define CCE_SEHANDLERS_HH
 
 #  include "com/centreon/engine/macros/defines.hh"
-#  include "com/centreon/engine/objects/host.hh"
-#  include "com/centreon/engine/objects/service.hh"
+#  include "com/centreon/engine/host.hh"
+#  include "com/centreon/engine/service.hh"
 
 // Event Handler Types
 #  define HOST_EVENTHANDLER           0

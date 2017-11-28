@@ -21,14 +21,12 @@
 
 #include "com/centreon/engine/globals.hh"
 #include "com/centreon/engine/logging/logger.hh"
-#include "nagios.h"
+#include "com/centreon/engine/objects/defines.hh"
 
 using namespace com::centreon::engine;
 
 configuration::state* config(NULL);
 events::hash_timed_event quick_timed_event;
-std::map<std::string, host_other_properties> host_other_props;
-std::map<std::pair<std::string, std::string>, service_other_properties> service_other_props;
 std::map<std::string, hostgroup_other_properties> hostgroup_other_props;
 std::map<std::string, servicegroup_other_properties> servicegroup_other_props;
 
@@ -77,8 +75,6 @@ float               high_service_flap_threshold(30.0);
 float               low_host_flap_threshold(20.0);
 float               low_service_flap_threshold(20.0);
 float               sleep_time(0.5);
-host*               host_list(NULL);
-host*               host_list_tail(NULL);
 hostdependency*     hostdependency_list(NULL);
 hostdependency*     hostdependency_list_tail(NULL);
 hostescalation*     hostescalation_list(NULL);
@@ -109,15 +105,12 @@ nebcallback*        neb_callback_list[NEBCALLBACK_NUMITEMS];
 pthread_t           worker_threads[TOTAL_WORKER_THREADS];
 sched_info          scheduling_info;
 scheduled_downtime* scheduled_downtime_list(NULL);
-service*            service_list(NULL);
-service*            service_list_tail(NULL);
 servicedependency*  servicedependency_list(NULL);
 servicedependency*  servicedependency_list_tail(NULL);
 serviceescalation*  serviceescalation_list(NULL);
 serviceescalation*  serviceescalation_list_tail(NULL);
 servicegroup*       servicegroup_list(NULL);
 servicegroup*       servicegroup_list_tail(NULL);
-skiplist*           object_skiplists[NUM_OBJECT_SKIPLISTS];
 time_t              event_start((time_t)-1);
 time_t              last_command_check((time_t)-1);
 time_t              last_command_status_update((time_t)-1);

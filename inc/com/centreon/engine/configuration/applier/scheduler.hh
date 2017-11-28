@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2016 Centreon
+** Copyright 2011-2017 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -23,12 +23,12 @@
 #  include <vector>
 #  include "com/centreon/engine/configuration/applier/difference.hh"
 #  include "com/centreon/engine/configuration/state.hh"
+#  include "com/centreon/engine/host.hh"
 #  include "com/centreon/engine/namespace.hh"
+#  include "com/centreon/engine/service.hh"
 #  include "com/centreon/unordered_hash.hh"
 
 // Forward declaration.
-struct host_struct;
-struct service_struct;
 struct timed_event_struct;
 
 CCE_BEGIN()
@@ -74,21 +74,21 @@ namespace                 configuration {
                             void* data = NULL);
       void                _get_hosts(
                             set_host const& hst_added,
-                            std::vector<host_struct*>& new_hosts,
+                            std::vector<::host*>& new_hosts,
                             bool throw_if_not_found = true);
       void                _get_services(
                             set_service const& svc_added,
-                            std::vector<service_struct*>& new_services,
+                            std::vector<::service*>& new_services,
                             bool throw_if_not_found = true);
       void                _remove_misc_event(timed_event_struct*& evt);
       void                _schedule_host_events(
-                            std::vector<host_struct*> const& hosts);
+                            std::vector<::host*> const& hosts);
       void                _schedule_service_events(
-                            std::vector<service_struct*> const& services);
+                            std::vector<::service*> const& services);
       void                _unschedule_host_events(
-                            std::vector<host_struct*> const& hosts);
+                            std::vector<::host*> const& hosts);
       void                _unschedule_service_events(
-                            std::vector<service_struct*> const& services);
+                            std::vector<::service*> const& services);
 
       state*              _config;
       timed_event_struct* _evt_check_reaper;
