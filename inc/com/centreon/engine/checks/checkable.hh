@@ -118,6 +118,7 @@ namespace              checks {
     void               set_modified_attributes(int attributes);
     double             get_percent_state_change() const;
     void               set_percent_state_change(double change);
+    bool               is_in_downtime() const;
 
     // Event handler.
     command*           get_event_handler() const;
@@ -171,6 +172,7 @@ namespace              checks {
     bool               _has_been_checked;
     double             _high_flap_threshold;
     bool               _host_problem_at_last_check;
+    bool               _in_downtime;
     time_t             _last_check;
     int                _last_event_id;
     int                _last_hard_state;

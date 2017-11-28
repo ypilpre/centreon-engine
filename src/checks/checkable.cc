@@ -1024,3 +1024,7 @@ void checkable::_internal_copy(checkable const& other) {
   _timezone = other._timezone;
   return ;
 }
+
+bool checkable::is_in_downtime() const {
+  return _in_downtime;
+}

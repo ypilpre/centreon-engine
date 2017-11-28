@@ -18,6 +18,9 @@
 */
 
 #include "com/centreon/engine/configuration/service.hh"
+#include "com/centreon/engine/macros/grab_service.hh"
+#include "com/centreon/engine/macros/clear_service.hh"
+#include "com/centreon/engine/macros/clear_servicegroup.hh"
 #include "com/centreon/engine/service.hh"
 
 using namespace com::centreon::engine;
@@ -366,4 +369,13 @@ void service::_internal_copy(service const& other) {
   _stalk_on_warning = other._stalk_on_warning;
   _volatile = other._volatile;
   return ;
+}
+
+void service::_checkable_macro_builder(nagios_macros& mac) {
+  clear_service_macros_r(&mac);
+  clear_servicegroup_macros_r(&mac);
+
+  // Save pointer for later.
+  mac.service_ptr = this;
+  mac.servicegroup_ptr = NULL;
 }

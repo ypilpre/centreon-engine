@@ -87,6 +87,9 @@ class                        host : public monitorable {
   bool                       get_notify_on_unreachable() const;
   void                       set_notify_on_unreachable(bool notify);
 
+ protected:
+  void                       _checkable_macro_builder(nagios_macros& mac);
+
  private:
   void                       _internal_copy(host const& other);
 

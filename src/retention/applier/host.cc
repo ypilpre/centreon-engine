@@ -261,11 +261,12 @@ void applier::host::_update(
   }
 
   // calculate next possible notification time.
-  if (obj.get_current_state() != HOST_UP && obj.get_last_notification())
-    obj.set_next_notification(
-      get_next_host_notification_time(
-        &obj,
-        obj.get_last_notification()));
+  // FIXME DBR: What to do ???
+//  if (obj.get_current_state() != HOST_UP && obj.get_last_notification())
+//    obj.set_next_notification(
+//      get_next_host_notification_time(
+//        &obj,
+//        obj.get_last_notification()));
 
   // ADDED 01/23/2009 adjust current check attempts if host in hard
   // problem state (max attempts may have changed in config

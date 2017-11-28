@@ -47,8 +47,6 @@
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/not_found.hh"
 #include "com/centreon/engine/objects/command.hh"
-#include "com/centreon/engine/objects/contactsmember.hh"
-#include "com/centreon/engine/objects/contactgroupsmember.hh"
 #include "com/centreon/engine/retention/applier/state.hh"
 #include "com/centreon/engine/retention/state.hh"
 #include "com/centreon/engine/version.hh"

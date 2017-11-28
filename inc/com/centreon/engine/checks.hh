@@ -21,6 +21,7 @@
 #ifndef CCE_CHECKS_HH
 #  define CCE_CHECKS_HH
 
+#  include <cstdio>
 #  include <sys/time.h>
 #  include "com/centreon/engine/namespace.hh"
 

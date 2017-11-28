@@ -19,6 +19,7 @@
 
 #include "com/centreon/engine/configuration/applier/state.hh"
 #include "com/centreon/engine/globals.hh"
+#include "com/centreon/engine/not_found.hh"
 #include "com/centreon/engine/retention/applier/contact.hh"
 #include "com/centreon/engine/statusdata.hh"
 #include "com/centreon/engine/string.hh"
@@ -40,7 +41,7 @@ void applier::contact::apply(
        it != end;
        ++it) {
     try {
-      engine::contact cntct(*(find_contact((*it)->contact_name().c_str())));
+      engine::contact& cntct(find_contact((*it)->contact_name().c_str()));
       _update(config, **it, cntct);
     }
     catch (...) {
@@ -87,24 +88,31 @@ void applier::contact::_update(
     if (state.host_notification_period().is_set()) {
       if (obj.get_modified_host_attributes()
           & MODATTR_NOTIFICATION_TIMEPERIOD) {
-        if (!find_timeperiod(state.host_notification_period()->c_str()))
+        try {
+          find_timeperiod(state.host_notification_period());
+          obj.set_host_notification_period_name(
+                *state.host_notification_period());
+        }
+        catch (not_found const& e) {
+          (void)e;
           obj.set_modified_host_attributes(
               obj.get_modified_host_attributes()
               - MODATTR_NOTIFICATION_TIMEPERIOD);
-        else
-          obj.set_host_notification_period_name(
-                *state.host_notification_period());
+        }
       }
     }
     if (state.service_notification_period().is_set()) {
       if (obj.get_modified_service_attributes() & MODATTR_NOTIFICATION_TIMEPERIOD) {
-        if (!find_timeperiod(state.service_notification_period()->c_str()))
+        try {
+          find_timeperiod(state.service_notification_period());
+          obj.set_service_notification_period_name(
+            *state.service_notification_period());
+        }
+        catch (not_found const& e) {
           obj.set_modified_service_attributes(
             obj.get_modified_service_attributes()
             - MODATTR_NOTIFICATION_TIMEPERIOD);
-        else
-          obj.set_service_notification_period_name(
-            *state.service_notification_period());
+        }
       }
     }
     if (state.host_notifications_enabled().is_set()) {

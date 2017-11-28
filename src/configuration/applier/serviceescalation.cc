@@ -24,8 +24,6 @@
 #include "com/centreon/engine/configuration/applier/state.hh"
 #include "com/centreon/engine/error.hh"
 #include "com/centreon/engine/globals.hh"
-#include "com/centreon/engine/objects/contactsmember.hh"
-#include "com/centreon/engine/objects/contactgroupsmember.hh"
 
 using namespace com::centreon::engine::configuration;
 

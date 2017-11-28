@@ -22,6 +22,7 @@
 #  define CCE_OBJECTS_DOWTIME_HH
 
 #  include <time.h>
+#  include "com/centreon/engine/namespace.hh"
 
 // Forward declarations
 CCE_BEGIN()

@@ -21,6 +21,7 @@
 #include "com/centreon/engine/globals.hh"
 #include "com/centreon/engine/objects/comment.hh"
 #include "com/centreon/engine/retention/applier/comment.hh"
+#include "com/centreon/engine/service.hh"
 
 using namespace com::centreon::engine::retention;
 using namespace com::centreon::engine;

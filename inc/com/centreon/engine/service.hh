@@ -84,6 +84,9 @@ class                service : public monitorable {
   bool               get_notify_on_warning() const;
   void               set_notify_on_warning(bool notify);
 
+ protected:
+  void               _checkable_macro_builder(nagios_macros& mac);
+
  private:
   void               _internal_copy(service const& other);
 

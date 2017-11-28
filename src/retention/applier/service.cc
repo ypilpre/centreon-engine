@@ -267,11 +267,12 @@ void applier::service::_update(
   }
 
   // Calculate next possible notification time.
-  if (obj.get_current_state() != STATE_OK && obj.get_last_notification())
-    obj.set_next_notification(
-          get_next_service_notification_time(
-            &obj,
-            obj.get_last_notification()));
+  // FIXME DBR: What to do here ?????
+//  if (obj.get_current_state() != STATE_OK && obj.get_last_notification())
+//    obj.set_next_notification(
+//          get_next_service_notification_time(
+//            &obj,
+//            obj.get_last_notification()));
 
   // Fix old vars.
   if (!obj.get_has_been_checked()

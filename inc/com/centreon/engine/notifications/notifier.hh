@@ -108,6 +108,7 @@ namespace           notifications {
     time_t            get_next_notification() const;
     bool              get_no_more_notifications() const;
     int               get_pending_flex_downtime() const;
+    int               get_scheduled_downtime_depth() const;
     bool              is_in_downtime() const;
     bool              is_state_notification_enabled(int state) const;
     void              notify(
@@ -152,6 +153,7 @@ namespace           notifications {
 
     static notifier_filter
                       _filter[];
+    bool              _in_downtime;
     static macro_builder
                       _macro_builder[];
     static std::string

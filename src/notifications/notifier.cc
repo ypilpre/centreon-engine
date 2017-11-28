@@ -357,7 +357,7 @@ bool notifier::_problem_filter() {
   time_t now;
   time(&now);
   if (is_in_downtime()
-      || is_flapping()
+      || get_flapping()
       || !is_state_notification_enabled(get_current_state()))
     return false;
 
@@ -444,6 +444,11 @@ bool notifier::contains_contact(std::string const& username) const {
       return true;
   }
   return false;
+}
+
+bool notifier::is_acknowledged() const {
+  // FIXME DBR: to implement...
+  return true;
 }
 
 #if 0

@@ -366,3 +366,9 @@ void host::_internal_copy(host const& other) {
   _stalk_on_up = other._stalk_on_up;
   return ;
 }
+
+void host::_checkable_macro_builder(nagios_macros& mac) {
+  // Save pointer to host.
+  mac.host_ptr = this;
+  mac.hostgroup_ptr = NULL;
+}
