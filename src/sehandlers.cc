@@ -25,6 +25,7 @@
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/macros.hh"
 #include "com/centreon/engine/neberrors.hh"
+#include "com/centreon/engine/notifications/notifier.hh"
 #include "com/centreon/engine/objects/comment.hh"
 #include "com/centreon/engine/objects/downtime.hh"
 #include "com/centreon/engine/perfdata.hh"
@@ -32,6 +33,7 @@
 #include "com/centreon/engine/utils.hh"
 
 using namespace com::centreon::engine::logging;
+using namespace com::centreon::engine::notifications;
 
 /******************************************************************/
 /************* OBSESSIVE COMPULSIVE HANDLER FUNCTIONS *************/
@@ -1061,19 +1063,19 @@ int handle_host_state(host* hst) {
     }
 
     /* reset the acknowledgement flag if necessary */
-    if (hst->get_acknowledgement_type() == ACKNOWLEDGEMENT_NORMAL) {
+    if (hst->get_acknowledgement_type() == notifier::ACKNOWLEDGEMENT_NORMAL) {
 
       hst->set_acknowledged(false);
-      hst->set_acknowledgement_type(ACKNOWLEDGEMENT_NONE);
+      hst->set_acknowledgement_type(notifier::ACKNOWLEDGEMENT_NONE);
 
       /* remove any non-persistant comments associated with the ack */
       delete_host_acknowledgement_comments(hst);
     }
-    else if (hst->get_acknowledgement_type() == ACKNOWLEDGEMENT_STICKY
+    else if (hst->get_acknowledgement_type() == notifier::ACKNOWLEDGEMENT_STICKY
              && hst->get_current_state() == HOST_UP) {
 
       hst->set_acknowledged(false);
-      hst->set_acknowledgement_type(ACKNOWLEDGEMENT_NONE);
+      hst->set_acknowledgement_type(notifier::ACKNOWLEDGEMENT_NONE);
 
       /* remove any non-persistant comments associated with the ack */
       delete_host_acknowledgement_comments(hst);
@@ -1084,7 +1086,8 @@ int handle_host_state(host* hst) {
     hst->set_next_notification((time_t)0);
 
     /* reset notification suppression option */
-    hst->set_no_more_notifications(false);
+    // FIXME DBR: this should be managed by notifier.
+    //hst->set_no_more_notifications(false);
 
     /* write the host state change to the main log file */
     if (hst->get_current_state_type() == HARD_STATE
@@ -1095,7 +1098,7 @@ int handle_host_state(host* hst) {
     /* check for start of flexible (non-fixed) scheduled downtime */
     /* CHANGED 08-05-2010 EG flex downtime can now start on soft states */
     /*if(hst->state_type==HARD_STATE) */
-    check_pending_flex_host_downtime(hst);
+    hst->check_pending_flex_downtime();
 
     if (hst->get_current_state() == HOST_UP) {
       hst->set_recovery_been_sent(false);

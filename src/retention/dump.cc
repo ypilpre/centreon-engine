@@ -96,7 +96,7 @@ std::ostream& dump::contact(std::ostream& os, engine::contact const& obj) {
     "service_notification_period=" << (obj.get_service_notification_period() ? obj.get_service_notification_period_name() : "") << "\n"
     "service_notifications_enabled=" << obj.is_service_notifications_enabled() << "\n";
 
-  dump::customvariables(os, *obj.get_custom_variables());
+  dump::customvariables(os, *obj.get_customvars());
   os << "}\n";
   return os;
 }
@@ -149,23 +149,24 @@ std::ostream& dump::customvariables(
  *  @return The output stream.
  */
 std::ostream& dump::downtime(std::ostream& os, scheduled_downtime_struct const& obj) {
-  if (obj.type == HOST_DOWNTIME)
-    os << "hostdowntime {\n";
-  else
-    os << "servicedowntime {\n";
-  os << "host_name=" << obj.host_name << "\n";
-  if (obj.type == SERVICE_DOWNTIME)
-    os << "service_description=" << obj.service_description << "\n";
-  os << "author=" << obj.author << "\n"
-    "comment=" << obj.comment << "\n"
-    "duration=" << obj.duration << "\n"
-    "end_time=" << static_cast<unsigned long>(obj.end_time) << "\n"
-    "entry_time=" << static_cast<unsigned long>(obj.entry_time) << "\n"
-    "fixed=" << obj.fixed << "\n"
-    "start_time=" << static_cast<unsigned long>(obj.start_time) << "\n"
-    "triggered_by=" << obj.triggered_by << "\n"
-    "downtime_id=" << obj.downtime_id << "\n"
-    "}\n";
+  // FIXME DBR: HOST_DOWNTIME no more defined
+//  if (obj.type == HOST_DOWNTIME)
+//    os << "hostdowntime {\n";
+//  else
+//    os << "servicedowntime {\n";
+//  os << "host_name=" << obj.host_name << "\n";
+//  if (obj.type == SERVICE_DOWNTIME)
+//    os << "service_description=" << obj.service_description << "\n";
+//  os << "author=" << obj.author << "\n"
+//    "comment=" << obj.comment << "\n"
+//    "duration=" << obj.duration << "\n"
+//    "end_time=" << static_cast<unsigned long>(obj.end_time) << "\n"
+//    "entry_time=" << static_cast<unsigned long>(obj.entry_time) << "\n"
+//    "fixed=" << obj.fixed << "\n"
+//    "start_time=" << static_cast<unsigned long>(obj.start_time) << "\n"
+//    "triggered_by=" << obj.triggered_by << "\n"
+//    "downtime_id=" << obj.downtime_id << "\n"
+//    "}\n";
   return (os);
 }
 

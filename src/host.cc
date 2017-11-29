@@ -65,6 +65,15 @@ host& host::operator=(host const& other) {
 **************************************/
 
 /**
+ *  Get the ip address.
+ *
+ *  @return a string representing the ip address.
+ */
+std::string const& host::get_address() const {
+  return _address;
+}
+
+/**
  *  Get circular path checking status.
  *
  *  @return Circular path checking status.
@@ -159,6 +168,18 @@ std::list<host*> const& host::get_parents() const {
  */
 void host::add_service(service* svc) {
   // XXX
+}
+
+std::list<service*>& host::get_services() {
+  // XXX
+  static std::list<service*> retval;
+  return retval;
+}
+
+std::list<service*> const& host::get_services() const {
+  // XXX
+  static std::list<service*> retval;
+  return retval;
 }
 
 /**************************************

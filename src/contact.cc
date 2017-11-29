@@ -568,11 +568,11 @@ std::list<shared_ptr<contactgroup> >& contact::get_contactgroups() {
   return _contact_groups;
 }
 
-customvariablesmember_struct const* contact::get_custom_variables() const {
+customvariablesmember_struct const* contact::get_customvars() const {
   return _custom_variables;
 }
 
-customvariablesmember_struct* contact::get_custom_variables() {
+customvariablesmember_struct* contact::get_customvars() {
   return _custom_variables;
 }
 

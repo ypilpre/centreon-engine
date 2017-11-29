@@ -19,6 +19,7 @@
 
 #include <memory>
 #include <sstream>
+#include "com/centreon/engine/downtime.hh"
 #include "com/centreon/engine/globals.hh"
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/notifications/notifier.hh"
@@ -395,6 +396,10 @@ bool notifier::_recovery_filter() {
   return true;
 }
 
+int notifier::get_current_notification_id() const {
+  return _current_notification_id;
+}
+
 /**
  * Getter to the notification number.
  *
@@ -448,7 +453,61 @@ bool notifier::contains_contact(std::string const& username) const {
 
 bool notifier::is_acknowledged() const {
   // FIXME DBR: to implement...
+  return false;
+}
+
+int notifier::get_acknowledgement_type() const {
+  // FIXME DBR: to implement...
+  return 0;
+}
+
+void notifier::set_acknowledged(bool acked) {
+  // FIXME DBR: to implement...
+}
+
+void notifier::set_acknowledgement_type(notifier::acknowledgement_type type) {
+  // FIXME DBR: to implement...
+}
+
+void notifier::set_initial_notif_time(time_t initial) {
+  // FIXME DBR: to implement...
+}
+
+void notifier::set_recovery_been_sent(bool sent) {
+  // FIXME DBR: to implement...
+}
+
+bool notifier::get_recovery_been_sent() const {
+  // FIXME DBR: to implement...
+  return false;
+}
+
+void notifier::set_current_notification_number(int number) {
+  // FIXME DBR: to implement...
+}
+
+int notifier::get_pending_flex_downtime() const {
+  // FIXME DBR: to implement...
+  return 0;
+}
+
+bool notifier::check_pending_flex_downtime() {
+  // FIXME DBR: to implement...
   return true;
+}
+
+time_t notifier::get_next_notification() const {
+  // FIXME DBR: to implement...
+  return 0;
+}
+
+bool notifier::get_no_more_notifications() const {
+  // FIXME DBR: to implement...
+  return true;
+}
+
+int notifier::get_scheduled_downtime_depth() const {
+  return 0;
 }
 
 #if 0

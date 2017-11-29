@@ -71,7 +71,6 @@ std::ostream& operator<<(std::ostream& os, hostgroup const& obj);
 
 CCE_BEGIN()
 
-hostgroup&    find_hostgroup(std::string const& name);
 bool          is_hostgroup_exist(std::string const& name) throw ();
 unsigned int  get_hostgroup_id(char const* name);
 

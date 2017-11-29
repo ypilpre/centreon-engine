@@ -192,9 +192,9 @@ class                           contact {
                                   char const* varvalue);
 
   void                          clear_custom_variables();
-  customvariablesmember_struct* get_custom_variables();
+  customvariablesmember_struct* get_customvars();
   customvariablesmember_struct const*
-                                get_custom_variables() const;
+                                get_customvars() const;
 
   unsigned long                 get_modified_attributes() const;
   void                          set_modified_attributes(unsigned long attr);

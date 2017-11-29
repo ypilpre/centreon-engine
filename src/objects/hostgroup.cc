@@ -173,23 +173,6 @@ int is_host_member_of_hostgroup(hostgroup* group, host* hst) {
 }
 
 /**
- *  Get hostgroup by name.
- *
- *  @param[in] name The hostgroup name.
- *
- *  @return The struct hostgroup or throw exception if the
- *          hostgroup is not found.
- */
-hostgroup& engine::find_hostgroup(std::string const& name) {
-  umap<std::string, shared_ptr<hostgroup_struct> >::const_iterator
-    it(state::instance().hostgroups().find(name));
-  if (it == state::instance().hostgroups().end())
-    throw (engine_error() << "Host group '"
-           << name << "' was not found");
-  return (*it->second);
-}
-
-/**
  *  Get if hostgroup exist.
  *
  *  @param[in] name The hostgroup name.

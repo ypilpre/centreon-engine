@@ -75,7 +75,6 @@ std::ostream& operator<<(std::ostream& os, servicegroup const& obj);
 
 CCE_BEGIN()
 
-servicegroup& find_servicegroup(std::string const& name);
 bool          is_servicegroup_exist(std::string const& name) throw ();
 unsigned int  get_servicegroup_id(char const* name);
 

@@ -382,7 +382,8 @@ int main(int argc, char* argv[]) {
         initialize_comment_data();
 
         // Initialize scheduled downtime data.
-        initialize_downtime_data();
+        // FIXME DBR: this function no more exists
+        //initialize_downtime_data();
 
         // Initialize check statistics.
         init_check_stats();

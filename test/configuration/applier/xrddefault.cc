@@ -1777,8 +1777,9 @@ int xrddefault_read_state_information() {
   delete[] inputbuf;
   mmap_fclose(thefile);
 
-  if (sort_downtime() != OK)
-    return (ERROR);
+  // FIXME DBR: no more defined...
+//  if (sort_downtime() != OK)
+//    return (ERROR);
   if (sort_comments() != OK)
     return (ERROR);
 

@@ -389,7 +389,7 @@ void raw::_build_custom_contact_macro_environment(
   // Build custom contact variable.
   contact* hst(macros.contact_ptr);
   if (hst) {
-    for (customvariablesmember* customvar(hst->get_custom_variables());
+    for (customvariablesmember* customvar(hst->get_customvars());
          customvar;
          customvar = customvar->next)
       if (customvar->variable_name) {

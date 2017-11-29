@@ -21,11 +21,13 @@
 #include "com/centreon/engine/common.hh"
 #include "com/centreon/engine/configuration/applier/state.hh"
 #include "com/centreon/engine/globals.hh"
+#include "com/centreon/engine/notifications/notifier.hh"
 #include "com/centreon/engine/not_found.hh"
 #include "com/centreon/engine/objects/downtime.hh"
 #include "com/centreon/engine/xdddefault.hh"
 
 using namespace com::centreon::engine;
+using namespace com::centreon::engine::notifications;
 
 /******************************************************************/
 /*********** DOWNTIME INITIALIZATION/CLEANUP FUNCTIONS ************/
@@ -36,7 +38,8 @@ int xdddefault_initialize_downtime_data() {
   scheduled_downtime* temp_downtime = NULL;
 
   /* clean up the old downtime data */
-  xdddefault_validate_downtime_data();
+  // FIXME DBR: does not compile
+  //xdddefault_validate_downtime_data();
 
   /* find the new starting index for downtime id if its missing */
   if (next_downtime_id == 0L) {
@@ -80,28 +83,30 @@ int xdddefault_validate_downtime_data() {
     }
 
     /* delete downtimes with invalid service descriptions */
-    if (temp_downtime->type == SERVICE_DOWNTIME) {
-      try {
-        configuration::applier::state::instance().services_find(
-          std::make_pair(
-                 temp_downtime->host_name,
-                 temp_downtime->service_description));
-      }
-      catch (not_found const& e) {
-        (void)e;
-        save = false;
-      }
-    }
+    //FIXME DBR : SERVICE_DOWNTIME is no more defined
+//    if (temp_downtime->type == SERVICE_DOWNTIME) {
+//      try {
+//        configuration::applier::state::instance().services_find(
+//          std::make_pair(
+//                 temp_downtime->host_name,
+//                 temp_downtime->service_description));
+//      }
+//      catch (not_found const& e) {
+//        (void)e;
+//        save = false;
+//      }
+//    }
 
     /* delete downtimes that have expired */
     if (temp_downtime->end_time < time(NULL))
       save = false;
 
+    //FIXME DBR: delete_downtime does not exist anymore
     /* delete the downtime */
-    if (save == false) {
-      update_file = true;
-      delete_downtime(temp_downtime->type, temp_downtime->downtime_id);
-    }
+//    if (save == false) {
+//      update_file = true;
+//      delete_downtime(temp_downtime->type, temp_downtime->downtime_id);
+//    }
   }
 
   /* remove triggered downtimes without valid parents */
@@ -115,15 +120,17 @@ int xdddefault_validate_downtime_data() {
     if (temp_downtime->triggered_by == 0)
       continue;
 
-    if (find_host_downtime(temp_downtime->triggered_by) == NULL
-        && find_service_downtime(temp_downtime->triggered_by) == NULL)
-      save = false;
+    //FIXME DBR: find_host_downtime needs to be rewritten
+//    if (find_host_downtime(temp_downtime->triggered_by) == NULL
+//        && find_service_downtime(temp_downtime->triggered_by) == NULL)
+//      save = false;
 
     /* delete the downtime */
-    if (save == false) {
-      update_file = true;
-      delete_downtime(temp_downtime->type, temp_downtime->downtime_id);
-    }
+    //FIXME DBR: delete_downtime does not exist anymore
+//    if (save == false) {
+//      update_file = true;
+//      delete_downtime(temp_downtime->type, temp_downtime->downtime_id);
+//    }
   }
 
   /* update downtime file */
@@ -149,21 +156,23 @@ int xdddefault_add_new_host_downtime(
       unsigned long duration,
       unsigned long* downtime_id) {
   /* find the next valid downtime id */
-  while (find_host_downtime(next_downtime_id) != NULL)
-    next_downtime_id++;
+  // FIXME DBR: find_host_downtime does not exist anymore
+//  while (find_host_downtime(next_downtime_id) != NULL)
+//    next_downtime_id++;
 
   /* add downtime to list in memory */
-  add_host_downtime(
-    host_name,
-    entry_time,
-    author,
-    comment,
-    start_time,
-    end_time,
-    fixed,
-    triggered_by,
-    duration,
-    next_downtime_id);
+  // FIXME DBR: add_host_downtime needs to be reimplemented
+//  add_host_downtime(
+//    host_name,
+//    entry_time,
+//    author,
+//    comment,
+//    start_time,
+//    end_time,
+//    fixed,
+//    triggered_by,
+//    duration,
+//    next_downtime_id);
 
   /* update downtime file */
   xdddefault_save_downtime_data();
@@ -191,22 +200,24 @@ int xdddefault_add_new_service_downtime(
       unsigned long duration,
       unsigned long* downtime_id) {
   /* find the next valid downtime id */
-  while (find_service_downtime(next_downtime_id) != NULL)
-    next_downtime_id++;
+  //FIXME DBR: find_service_downtime does not exist anymore
+//  while (find_service_downtime(next_downtime_id) != NULL)
+//    next_downtime_id++;
 
   /* add downtime to list in memory */
-  add_service_downtime(
-    host_name,
-    service_description,
-    entry_time,
-    author,
-    comment,
-    start_time,
-    end_time,
-    fixed,
-    triggered_by,
-    duration,
-    next_downtime_id);
+  //FIXME DBR: add_service_downtime does not exist anymore
+//  add_service_downtime(
+//    host_name,
+//    service_description,
+//    entry_time,
+//    author,
+//    comment,
+//    start_time,
+//    end_time,
+//    fixed,
+//    triggered_by,
+//    duration,
+//    next_downtime_id);
 
   /* update downtime file */
   xdddefault_save_downtime_data();
@@ -226,12 +237,16 @@ int xdddefault_add_new_service_downtime(
 
 /* deletes a scheduled host downtime entry */
 int xdddefault_delete_host_downtime(unsigned long downtime_id) {
-  return (xdddefault_delete_downtime(HOST_DOWNTIME, downtime_id));
+  //FIXME DBR: HOST_DOWNTIME is no more defined
+  //return (xdddefault_delete_downtime(HOST_DOWNTIME, downtime_id));
+  return 0;
 }
 
 /* deletes a scheduled service downtime entry */
 int xdddefault_delete_service_downtime(unsigned long downtime_id) {
-  return (xdddefault_delete_downtime(SERVICE_DOWNTIME, downtime_id));
+  //FIXME DBR: SERVICE_DOWNTIME is no more defined
+  //return (xdddefault_delete_downtime(SERVICE_DOWNTIME, downtime_id));
+  return 0;
 }
 
 /* deletes a scheduled host or service downtime entry */
