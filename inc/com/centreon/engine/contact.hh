@@ -25,6 +25,7 @@
 #  include "com/centreon/engine/namespace.hh"
 #  include "com/centreon/engine/objects/timeperiod.hh"
 #  include "com/centreon/shared_ptr.hh"
+#  include "com/centreon/engine/customvar.hh"
 #  include "com/centreon/unordered_hash.hh"
 
 #  define MAX_CONTACT_ADDRESSES 6
@@ -32,9 +33,9 @@
 
 /* Forward declaration. */
 struct command_struct;
-struct customvariablesmember_struct;
 
 CCE_BEGIN()
+
 
 namespace configuration {
   class contact;
@@ -192,10 +193,8 @@ class                           contact {
                                   char const* varvalue);
 
   void                          clear_custom_variables();
-  customvariablesmember_struct* get_customvars();
-  customvariablesmember_struct const*
-                                get_customvars() const;
-
+  customvar_set const&          get_customvars() const;
+  void                          set_customvar(customvar const& var);
   unsigned long                 get_modified_attributes() const;
   void                          set_modified_attributes(unsigned long attr);
   std::string const&            get_timezone() const;
@@ -205,9 +204,6 @@ class                           contact {
 
   bool                          get_retain_status_information() const;
   bool                          get_retain_nonstatus_information() const;
-  bool                          update_custom_variable(
-                                  std::string const& varname,
-                                  std::string const& varvalue);
 
  private:
 
@@ -239,7 +235,7 @@ class                           contact {
   std::list<shared_ptr<contactgroup> >
                                 _contact_groups;
 
-  customvariablesmember_struct* _custom_variables;
+  customvar_set                 _vars;
   bool                          _host_notifications_enabled;
   bool                          _service_notifications_enabled;
   bool                          _retain_nonstatus_information;

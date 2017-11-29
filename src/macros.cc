@@ -1261,8 +1261,6 @@ void copy_constant_macros(char** dest) {
 
 /* clear all macros that are not "constant" (i.e. they change throughout the course of monitoring) */
 int clear_volatile_macros_r(nagios_macros* mac) {
-  customvariablesmember* this_customvariablesmember = NULL;
-  customvariablesmember* next_customvariablesmember = NULL;
   unsigned int x = 0;
 
   for (x = 0; x < MACRO_X_COUNT; x++) {
@@ -1315,37 +1313,13 @@ int clear_volatile_macros_r(nagios_macros* mac) {
   clear_argv_macros_r(mac);
 
   /* clear custom host variables */
-  for (this_customvariablesmember = mac->custom_host_vars;
-       this_customvariablesmember != NULL;
-       this_customvariablesmember = next_customvariablesmember) {
-    next_customvariablesmember = this_customvariablesmember->next;
-    delete[] this_customvariablesmember->variable_name;
-    delete[] this_customvariablesmember->variable_value;
-    delete this_customvariablesmember;
-  }
-  mac->custom_host_vars = NULL;
+  mac->custom_host_vars.clear();
 
   /* clear custom service variables */
-  for (this_customvariablesmember = mac->custom_service_vars;
-       this_customvariablesmember != NULL;
-       this_customvariablesmember = next_customvariablesmember) {
-    next_customvariablesmember = this_customvariablesmember->next;
-    delete[] this_customvariablesmember->variable_name;
-    delete[] this_customvariablesmember->variable_value;
-    delete this_customvariablesmember;
-  }
-  mac->custom_service_vars = NULL;
+  mac->custom_service_vars.clear();
 
   /* clear custom contact variables */
-  for (this_customvariablesmember = mac->custom_contact_vars;
-       this_customvariablesmember != NULL;
-       this_customvariablesmember = next_customvariablesmember) {
-    next_customvariablesmember = this_customvariablesmember->next;
-    delete[] this_customvariablesmember->variable_name;
-    delete[] this_customvariablesmember->variable_value;
-    delete this_customvariablesmember;
-  }
-  mac->custom_contact_vars = NULL;
+  mac->custom_contact_vars.clear();
 
   return (OK);
 }
@@ -1357,8 +1331,6 @@ int clear_volatile_macros() {
 /* clear contact macros */
 int clear_contact_macros_r(nagios_macros* mac) {
   unsigned int x;
-  customvariablesmember* this_customvariablesmember = NULL;
-  customvariablesmember* next_customvariablesmember = NULL;
 
   for (x = 0; x < MACRO_X_COUNT; x++) {
     switch (x) {
@@ -1383,15 +1355,7 @@ int clear_contact_macros_r(nagios_macros* mac) {
   }
 
   /* clear custom contact variables */
-  for (this_customvariablesmember = mac->custom_contact_vars;
-       this_customvariablesmember != NULL;
-       this_customvariablesmember = next_customvariablesmember) {
-    next_customvariablesmember = this_customvariablesmember->next;
-    delete[] this_customvariablesmember->variable_name;
-    delete[] this_customvariablesmember->variable_value;
-    delete this_customvariablesmember;
-  }
-  mac->custom_contact_vars = NULL;
+  custom_contact_vars.clear();
 
   /* clear pointers */
   mac->contact_ptr = NULL;

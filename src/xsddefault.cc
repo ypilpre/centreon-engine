@@ -378,10 +378,14 @@ int xsddefault_save_status_data() {
          "\thost_notifications_enabled=" << cntct->is_host_notifications_enabled() << "\n"
          "\tservice_notifications_enabled=" << cntct->is_service_notifications_enabled() << "\n";
     // custom variables
-    for (customvariablesmember* cvarm = cntct->get_customvars(); cvarm; cvarm = cvarm->next) {
-      if (cvarm->variable_name)
-        stream << "\t_" << cvarm->variable_name << "=" << cvarm->has_been_modified << ";"
-               << (cvarm->variable_value ? cvarm->variable_value : "") << "\n";
+    for (customvar_set::const_iterator
+           it(cntct->get_customvars().begin()),
+           end(cntct->get_customvars().end());
+         it != end;
+         ++it) {
+      customvar var(it->second);
+      stream << "\t_" << var.get_name() << "=" << var.get_modified() << ";"
+             << var.get_value() << "\n";
     }
     stream << "\t}\n\n";
   }
