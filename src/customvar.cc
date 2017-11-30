@@ -37,6 +37,11 @@ customvar::customvar(customvar const& other) {
   _value = other._value;
 }
 
+customvar::customvar( std::string const& name, std::string const& value)
+  : _name(name),
+    _value(value),
+    _modified(false) {}
+
 /**
  *  Destructor.
  */

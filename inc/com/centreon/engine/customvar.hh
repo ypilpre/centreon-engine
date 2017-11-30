@@ -34,6 +34,9 @@ CCE_BEGIN()
  */
 class                customvar {
  public:
+                     customvar(
+                       std::string const& name,
+                       std::string const& value);
                      customvar();
                      customvar(customvar const& other);
                      ~customvar();

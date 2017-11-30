@@ -130,7 +130,7 @@ int grab_custom_object_macro_r(
       char** output);
 
 // cleans macros characters before insertion into output string
-char const* clean_macro_chars(char* macro,int options);
+std::string& clean_macro_chars(std::string const& macro, int options);
 
 // URL encode a string
 char* get_url_encoded_string(char* input);

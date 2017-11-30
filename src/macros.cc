@@ -932,33 +932,49 @@ int grab_custom_object_macro(
 /******************************************************************/
 
 /* cleans illegal characters in macros before output */
-char const* clean_macro_chars(char* macro, int options) {
-  if (macro == NULL)
-    return ("");
+std::string clean_macro_chars(std::string& macro, int options) {
+  std::string retval;
+  retval.reserve(macro.size());
+  for (size_t i = 0; i < macro.size(); ++i) {
+    /* allow non-ASCII characters (Japanese, etc) */
+    int ch(macro[i] & 0xff);
+    if (ch < 32 || ch == 127)
+      continue;
 
-  int len((int)strlen(macro));
-
-  /* strip illegal characters out of macro */
-  if (options & STRIP_ILLEGAL_MACRO_CHARS) {
-    int y(0);
-    for (int x(0); x < len; x++) {
-      /*ch=(int)macro[x]; */
-      /* allow non-ASCII characters (Japanese, etc) */
-      int ch(macro[x] & 0xff);
-
-      /* illegal ASCII characters */
-      if (ch < 32 || ch == 127)
-        continue;
-
-      /* illegal user-specified characters */
-      if (config->illegal_output_chars().find(ch) == std::string::npos)
-        macro[y++] = macro[x];
-    }
-
-    macro[y++] = '\x0';
+    /* illegal user-specified characters */
+    if (config->illegal_output_chars().find(ch) == std::string::npos)
+      retval += macro[i];
+    return retval;
   }
-  return (macro);
 }
+
+//char const* clean_macro_chars(char* macro, int options) {
+//  if (macro == NULL)
+//    return ("");
+//
+//  int len((int)strlen(macro));
+//
+//  /* strip illegal characters out of macro */
+//  if (options & STRIP_ILLEGAL_MACRO_CHARS) {
+//    int y(0);
+//    for (int x(0); x < len; x++) {
+//      /*ch=(int)macro[x]; */
+//      /* allow non-ASCII characters (Japanese, etc) */
+//      int ch(macro[x] & 0xff);
+//
+//      /* illegal ASCII characters */
+//      if (ch < 32 || ch == 127)
+//        continue;
+//
+//      /* illegal user-specified characters */
+//      if (config->illegal_output_chars().find(ch) == std::string::npos)
+//        macro[y++] = macro[x];
+//    }
+//
+//    macro[y++] = '\x0';
+//  }
+//  return (macro);
+//}
 
 /* encodes a string in proper URL format */
 char* get_url_encoded_string(char* input) {
@@ -1355,7 +1371,7 @@ int clear_contact_macros_r(nagios_macros* mac) {
   }
 
   /* clear custom contact variables */
-  custom_contact_vars.clear();
+  mac->custom_contact_vars.clear();
 
   /* clear pointers */
   mac->contact_ptr = NULL;
@@ -1494,7 +1510,6 @@ int set_argv_macro_environment_vars(int set) {
 
 /* sets or unsets custom host/service/contact macro environment variables */
 int set_custom_macro_environment_vars_r(nagios_macros* mac, int set) {
-  customvariablesmember* temp_customvariablesmember = NULL;
   host* temp_host = NULL;
   service* temp_service = NULL;
   contact* temp_contact = NULL;
@@ -1508,22 +1523,22 @@ int set_custom_macro_environment_vars_r(nagios_macros* mac, int set) {
          it != end;
          ++it) {
       std::string var("_HOST");
-      var.append(it->second.get_name());
-      add_custom_variable_to_object(
-        &mac->custom_host_vars,
-        var.c_str(),
-        it->second.get_value().c_str());
+      var.append(it->first);
+      mac->custom_host_vars[var] = customvar(var, it->second.get_value());
     }
   }
   /* set variables */
-  for (temp_customvariablesmember = mac->custom_host_vars;
-       temp_customvariablesmember != NULL;
-       temp_customvariablesmember = temp_customvariablesmember->next) {
+  for (customvar_set::iterator
+         it(mac->custom_host_vars.begin()),
+         end(mac->custom_host_vars.end());
+       it != end;
+       ++it) {
+    customvar& var(it->second);
     set_macro_environment_var(
-      temp_customvariablesmember->variable_name,
+      var.get_name().c_str(),
       clean_macro_chars(
-        temp_customvariablesmember->variable_value,
-        STRIP_ILLEGAL_MACRO_CHARS | ESCAPE_MACRO_CHARS),
+        var.get_value(),
+        STRIP_ILLEGAL_MACRO_CHARS | ESCAPE_MACRO_CHARS).c_str(),
       set);
   }
 
@@ -1537,48 +1552,51 @@ int set_custom_macro_environment_vars_r(nagios_macros* mac, int set) {
          ++it) {
       std::string var("_SERVICE");
       var.append(it->second.get_name());
-      add_custom_variable_to_object(
-        &mac->custom_service_vars,
-        var.c_str(),
-        it->second.get_value().c_str());
+      mac->custom_service_vars[var] = customvar(var, it->second.get_value());
     }
   }
   /* set variables */
-  for (temp_customvariablesmember = mac->custom_service_vars;
-       temp_customvariablesmember != NULL;
-       temp_customvariablesmember = temp_customvariablesmember->next)
+  for (customvar_set::iterator
+         it(mac->custom_service_vars.begin()),
+         end(mac->custom_service_vars.end());
+       it != end;
+       ++it) {
+    customvar& var(it->second);
     set_macro_environment_var(
-      temp_customvariablesmember->variable_name,
+      var.get_name().c_str(),
       clean_macro_chars(
-        temp_customvariablesmember->variable_value,
-        STRIP_ILLEGAL_MACRO_CHARS | ESCAPE_MACRO_CHARS),
+        var.get_value(),
+        STRIP_ILLEGAL_MACRO_CHARS | ESCAPE_MACRO_CHARS).c_str(),
       set);
+  }
 
-  // XXX  ---  MKE => commented / DBR => not commented
-  // /***** CUSTOM CONTACT VARIABLES *****/
-  // /* generate variables and save them for later */
-  // if ((temp_contact = mac->contact_ptr) && set == true) {
-  //   for (temp_customvariablesmember = temp_contact->custom_variables;
-  //        temp_customvariablesmember != NULL;
-  //        temp_customvariablesmember = temp_customvariablesmember->next) {
-  //     std::string var("_CONTACT");
-  //     var.append(temp_customvariablesmember->variable_name);
-  //     add_custom_variable_to_object(
-  //       &mac->custom_contact_vars,
-  //       var.c_str(),
-  //       temp_customvariablesmember->variable_value);
-  //   }
-  // }
-  // /* set variables */
-  // for (temp_customvariablesmember = mac->custom_contact_vars;
-  //      temp_customvariablesmember != NULL;
-  //      temp_customvariablesmember = temp_customvariablesmember->next)
-  //   set_macro_environment_var(
-  //     temp_customvariablesmember->variable_name,
-  //     clean_macro_chars(
-  //       temp_customvariablesmember->variable_value,
-  //       STRIP_ILLEGAL_MACRO_CHARS | ESCAPE_MACRO_CHARS),
-  //     set);
+  /***** CUSTOM CONTACT VARIABLES *****/
+  /* generate variables and save them for later */
+  if ((temp_contact = mac->contact_ptr) && set == true) {
+    for (customvar_set::const_iterator
+           it(temp_contact->get_customvars().begin()),
+           end(temp_contact->get_customvars().end());
+         it != end;
+         ++it) {
+      std::string var("_CONTACT");
+      var.append(it->second.get_name());
+      mac->custom_contact_vars[var] = customvar(var, it->second.get_value());
+    }
+  }
+  /* set variables */
+  for (customvar_set::iterator
+         it(mac->custom_contact_vars.begin()),
+         end(mac->custom_contact_vars.end());
+       it != end;
+       ++it) {
+    customvar& var(it->second);
+    set_macro_environment_var(
+      var.get_name().c_str(),
+      clean_macro_chars(
+        var.get_name(),
+        STRIP_ILLEGAL_MACRO_CHARS | ESCAPE_MACRO_CHARS).c_str(),
+      set);
+  }
 
   return (OK);
 }
