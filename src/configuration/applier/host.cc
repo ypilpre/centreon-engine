@@ -508,11 +508,12 @@ void applier::host::remove_object(
     delete_all_host_comments(obj.host_name().c_str());
 
     // Remove host downtimes.
-    delete_downtime_by_hostname_service_description_start_time_comment(
-      obj.host_name().c_str(),
-      NULL,
-      (time_t)0,
-      NULL);
+    //FIXME DBR: this function does not exist anymore
+//    delete_downtime_by_hostname_service_description_start_time_comment(
+//      obj.host_name().c_str(),
+//      NULL,
+//      (time_t)0,
+//      NULL);
 
     // Remove events related to this host.
     applier::scheduler::instance().remove_host(obj);

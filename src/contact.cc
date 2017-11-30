@@ -25,12 +25,10 @@
 #include "com/centreon/engine/configuration/applier/state.hh"
 #include "com/centreon/engine/configuration/contact.hh"
 #include "com/centreon/engine/contact.hh"
-#include "com/centreon/engine/deleter/customvariablesmember.hh"
 #include "com/centreon/engine/error.hh"
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/not_found.hh"
 #include "com/centreon/engine/notifications/notifier.hh"
-#include "com/centreon/engine/objects/customvariablesmember.hh"
 #include "com/centreon/engine/objects/timeperiod.hh"
 
 using namespace com::centreon;
@@ -568,12 +566,31 @@ std::list<shared_ptr<contactgroup> >& contact::get_contactgroups() {
   return _contact_groups;
 }
 
-customvariablesmember_struct const* contact::get_custom_variables() const {
-  return _custom_variables;
+customvar_set const& contact::get_customvars() const {
+  return _vars;
 }
 
-customvariablesmember_struct* contact::get_custom_variables() {
-  return _custom_variables;
+void contact::set_customvar(customvar const& var) {
+  bool add(false);
+
+  if (_vars.find(var.get_name()) == _vars.end())
+    add = true;
+
+  _vars[var.get_name()] = var;
+
+  if (add) {
+    // Notify event broker.
+    timeval tv(get_broker_timestamp(NULL));
+
+    broker_custom_variable(
+        NEBTYPE_CONTACTCUSTOMVARIABLE_ADD,
+        NEBFLAG_NONE,
+        NEBATTR_NONE,
+        this,
+        var.get_name().c_str(),
+        var.get_value().c_str(),
+        &tv);
+  }
 }
 
 std::string const& contact::get_timezone() const {
@@ -700,53 +717,6 @@ void contact::add_service_notification_command(char const* command_name) {
   _service_notification_commands[command_name] = shared_ptr<command_struct>(0);
 }
 
-/**
- *  Adds a custom variable to this contact.
- *
- *  @param[in] varname  Custom variable name.
- *  @param[in] varvalue Custom variable value.
- *
- */
-void contact::add_custom_variable(char const* varname, char const* varvalue) {
-  // Add custom variable to contact.
-  customvariablesmember* retval(add_custom_variable_to_object(
-                                  &_custom_variables,
-                                  varname,
-                                  varvalue));
-
-  if (retval == NULL) {
-    throw (engine_error()
-             << "Error: Unable to add custom variable to contact");
-  }
-  // Notify event broker.
-  timeval tv(get_broker_timestamp(NULL));
-
-  broker_custom_variable(
-    NEBTYPE_CONTACTCUSTOMVARIABLE_ADD,
-    NEBFLAG_NONE,
-    NEBATTR_NONE,
-    this,
-    varname,
-    varvalue,
-    &tv);
-}
-
-bool contact::update_custom_variable(
-  std::string const& varname,
-  std::string const& varvalue) {
-
-  for (customvariablesmember* m(_custom_variables); m; m = m->next) {
-    if (varname == m->variable_name) {
-      if (varvalue != m->variable_value) {
-        string::setstr(m->variable_value, varvalue);
-        m->has_been_modified = true;
-      }
-      return true;
-    }
-  }
-  return false;
-}
-
 void contact::update_config(configuration::contact const& obj) {
   configuration::applier::modify_if_different(
     _alias, obj.alias().empty() ? obj.contact_name() : obj.alias());
@@ -784,12 +754,10 @@ void contact::clear_service_notification_commands() {
 
 void contact::clear_custom_variables() {
   // Browse all custom vars.
-  customvariablesmember* m(_custom_variables);
-  _custom_variables = NULL;
-  while (m) {
-    // Point to next custom var.
-    customvariablesmember* to_delete(m);
-    m = m->next;
+  for (customvar_set::iterator
+         it(_vars.begin()),
+         end(_vars.end());
+       it != end;) {
 
     // Notify event broker.
     timeval tv(get_broker_timestamp(NULL));
@@ -798,12 +766,11 @@ void contact::clear_custom_variables() {
       NEBFLAG_NONE,
       NEBATTR_NONE,
       this,
-      to_delete->variable_name,
-      to_delete->variable_value,
+      it->second.get_name().c_str(),
+      it->second.get_value().c_str(),
       &tv);
 
-    // Delete custom variable.
-    deleter::customvariablesmember(to_delete);
+    it = _vars.erase(it);
   }
 }
 

@@ -23,7 +23,7 @@
 
 # include "com/centreon/engine/contact.hh"
 # include "com/centreon/engine/contactgroup.hh"
-# include "com/centreon/engine/objects/customvariablesmember.hh"
+# include "com/centreon/engine/customvar.hh"
 # include "com/centreon/engine/objects/hostgroup.hh"
 # include "com/centreon/engine/objects/servicegroup.hh"
 
@@ -219,9 +219,9 @@ struct                   nagios_macros {
   servicegroup*          servicegroup_ptr;
   com::centreon::engine::contact*               contact_ptr;
   com::centreon::engine::contactgroup*          contactgroup_ptr;
-  customvariablesmember* custom_host_vars;
-  customvariablesmember* custom_service_vars;
-  customvariablesmember* custom_contact_vars;
+  com::centreon::engine::customvar_set         custom_host_vars;
+  com::centreon::engine::customvar_set         custom_service_vars;
+  com::centreon::engine::customvar_set         custom_contact_vars;
 };
 
 typedef struct nagios_macros nagios_macros;

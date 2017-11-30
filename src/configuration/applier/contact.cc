@@ -181,7 +181,7 @@ void applier::contact::add_object(configuration::contact const& obj) {
        it != end;
        ++it)
     try {
-      c->add_custom_variable(it->first.c_str(), it->second.c_str());
+      c->set_customvar(customvar(it->first, it->second));
     }
     catch (std::exception const& e) {
       throw (engine_error()
@@ -320,7 +320,7 @@ void applier::contact::modify_object(
          it != end;
          ++it)
       try {
-        c->add_custom_variable(it->first.c_str(), it->second.c_str());
+        c->set_customvar(customvar(it->first, it->second));
       }
       catch (std::exception const& e) {
         throw (engine_error()

@@ -959,7 +959,8 @@ void free_memory(nagios_macros* mac) {
   free_comment_data();
 
   // Free memory allocated to downtimes.
-  free_downtime_data();
+  // FIXME DBR: downtimes need to be rewritten
+//  free_downtime_data();
 
   // Free memory for the high priority event list.
   for (timed_event* this_event(event_list_high); this_event;) {
@@ -1075,3 +1076,92 @@ timeperiod& find_timeperiod(std::string const& name) {
 
   return (*it->second.get());
 }
+
+/**
+ *  Given a host name, find the host from the list in memory.
+ *
+ *  @param[in] name host name.
+ *
+ *  @return host object if found, NULL otherwise.
+ */
+com::centreon::engine::host* find_host(std::string const& name) {
+  if (name.empty())
+    return NULL;
+
+  umap<std::string, shared_ptr<com::centreon::engine::host> >::const_iterator
+    it(configuration::applier::state::instance().hosts().find(name));
+  if (it == configuration::applier::state::instance().hosts().end())
+    return NULL;
+
+  return (it->second.get());
+}
+
+/**
+ *  Given a host name and a service description, find the service from the list
+ *  in memory.
+ *
+ *  @param[in] name host name.
+ *  @param[in] description service description.
+ *
+ *  @return service object if found, NULL otherwise.
+ */
+com::centreon::engine::service* find_service(
+                                  std::string const& host_name,
+                                  std::string const& description) {
+  if (host_name.empty() || description.empty())
+    return NULL;
+
+  umap<std::pair<std::string, std::string>,
+       shared_ptr<com::centreon::engine::service> >::const_iterator
+    it(configuration::applier::state::instance().services().find(
+      std::make_pair(host_name, description)));
+  if (it == configuration::applier::state::instance().services().end())
+    return NULL;
+
+  return (it->second.get());
+}
+
+/**
+ *  Get hostgroup by name.
+ *
+ *  @param[in] name The hostgroup name.
+ *
+ *  @return The struct hostgroup or throw exception if the
+ *          hostgroup is not found.
+ */
+hostgroup_struct& find_hostgroup(std::string const& name) {
+  if (name.empty())
+    throw (not_found_error()
+      << "Could not find a hostgroup with an empty name");
+
+  umap<std::string, shared_ptr<hostgroup_struct> >::const_iterator
+    it(configuration::applier::state::instance().hostgroups().find(name));
+  if (it == configuration::applier::state::instance().hostgroups().end())
+    throw (not_found_error()
+      << "Could not find a hostgroup with an empty name");
+
+  return (*it->second.get());
+}
+
+/**
+ *  Get servicegroup by name.
+ *
+ *  @param[in] name The servicegroup name.
+ *
+ *  @return The struct servicegroup or throw exception if the
+ *          servicegroup is not found.
+ */
+servicegroup_struct& find_servicegroup(std::string const& name) {
+  if (name.empty())
+    throw (not_found_error()
+      << "Could not find a servicegroup with an empty name");
+
+  umap<std::string, shared_ptr<servicegroup_struct> >::const_iterator
+    it(configuration::applier::state::instance().servicegroups().find(name));
+  if (it == configuration::applier::state::instance().servicegroups().end())
+    throw (not_found_error()
+      << "Could not find a servicegroup with an empty name");
+
+  return (*it->second.get());
+}
+

@@ -20,6 +20,7 @@
 #include "com/centreon/engine/configuration/applier/state.hh"
 #include "com/centreon/engine/flapping.hh"
 #include "com/centreon/engine/globals.hh"
+#include "com/centreon/engine/notifications/notifier.hh"
 #include "com/centreon/engine/objects/timeperiod.hh"
 #include "com/centreon/engine/retention/applier/service.hh"
 #include "com/centreon/engine/retention/applier/utils.hh"
@@ -28,6 +29,7 @@
 
 using namespace com::centreon::engine;
 using namespace com::centreon::engine::configuration::applier;
+using namespace com::centreon::engine::notifications;
 using namespace com::centreon::engine::retention;
 
 /**
@@ -161,7 +163,7 @@ void applier::service::_update(
     if (state.problem_has_been_acknowledged().is_set())
       obj.set_acknowledged(*state.problem_has_been_acknowledged());
     if (state.acknowledgement_type().is_set())
-      obj.set_acknowledgement_type(*state.acknowledgement_type());
+      obj.set_acknowledgement_type(static_cast<notifier::acknowledgement_type>(*state.acknowledgement_type()));
     // XXX
     // if (state.notifications_enabled().is_set()
     //     && (obj.get_modified_attributes() & MODATTR_NOTIFICATIONS_ENABLED))

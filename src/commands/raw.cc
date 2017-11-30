@@ -389,20 +389,19 @@ void raw::_build_custom_contact_macro_environment(
   // Build custom contact variable.
   contact* hst(macros.contact_ptr);
   if (hst) {
-    for (customvariablesmember* customvar(hst->get_custom_variables());
-         customvar;
-         customvar = customvar->next)
-      if (customvar->variable_name) {
-        char const* value(customvar->variable_value);
-        if (!value)
-          value = "";
-        std::string name("_CONTACT");
-        name.append(customvar->variable_name);
-        add_custom_variable_to_object(
-          &macros.custom_contact_vars,
-          name.c_str(),
-          value);
-      }
+    for (customvar_set::iterator
+           it(hst->get_customvars().begin()),
+           end(hst->get_customvars().end());
+         it != end;
+         ++it) {
+      char const* value(it->second.get_value().c_str());
+      std::string name("_CONTACT");
+      name.append(it->first);
+      add_custom_variable_to_object(
+        &macros.custom_contact_vars,
+        name.c_str(),
+        value);
+    }
   }
   // Set custom contact variable into the environement
   for (customvariablesmember* customvar(macros.custom_contact_vars);

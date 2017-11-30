@@ -38,6 +38,7 @@
 #include "com/centreon/engine/logging.hh"
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/neberrors.hh"
+#include "com/centreon/engine/notifications/notifier.hh"
 #include "com/centreon/engine/objects/comment.hh"
 #include "com/centreon/engine/objects/downtime.hh"
 #include "com/centreon/engine/objects/objectlist.hh"
@@ -54,6 +55,7 @@
 using namespace com::centreon;
 using namespace com::centreon::engine;
 using namespace com::centreon::engine::events;
+using namespace com::centreon::engine::notifications;
 using namespace com::centreon::engine::configuration::applier;
 using namespace com::centreon::engine::logging;
 
@@ -534,21 +536,22 @@ int handle_async_service_check_result(
     temp_service->set_next_notification((time_t)0);
 
     /* reset notification suppression option */
-    temp_service->set_no_more_notifications(false);
+    // FIXME DBR: why having this here ? This should be managed by notifier.
+//    temp_service->set_no_more_notifications(false);
 
-    if ((ACKNOWLEDGEMENT_NORMAL == temp_service->get_acknowledgement_type())
-	&& ((true == state_change) || (false == hard_state_change))) {
+    if ((notifier::ACKNOWLEDGEMENT_NORMAL == temp_service->get_acknowledgement_type())
+        && state_change || !hard_state_change) {
 
       temp_service->set_acknowledged(false);
-      temp_service->set_acknowledgement_type(ACKNOWLEDGEMENT_NONE);
+      temp_service->set_acknowledgement_type(notifier::ACKNOWLEDGEMENT_NONE);
 
       /* remove any non-persistant comments associated with the ack */
       delete_service_acknowledgement_comments(temp_service);
     }
-    else if (temp_service->get_acknowledgement_type() == ACKNOWLEDGEMENT_STICKY
+    else if (temp_service->get_acknowledgement_type() == notifier::ACKNOWLEDGEMENT_STICKY
              && temp_service->get_current_state() == STATE_OK) {
       temp_service->set_acknowledged(false);
-      temp_service->set_acknowledgement_type(ACKNOWLEDGEMENT_NONE);
+      temp_service->set_acknowledgement_type(notifier::ACKNOWLEDGEMENT_NONE);
 
       /* remove any non-persistant comments associated with the ack */
       delete_service_acknowledgement_comments(temp_service);
@@ -610,7 +613,7 @@ int handle_async_service_check_result(
 
     /* reset the acknowledgement flag (this should already have been done, but just in case...) */
     temp_service->set_acknowledged(false);
-    temp_service->set_acknowledgement_type(ACKNOWLEDGEMENT_NONE);
+    temp_service->set_acknowledgement_type(notifier::ACKNOWLEDGEMENT_NONE);
 
     /* verify the route to the host and send out host recovery notifications */
     if (temp_host->get_current_state() != HOST_UP) {
@@ -749,8 +752,10 @@ int handle_async_service_check_result(
       temp_service->set_initial_notif_time(0);
     }
     temp_service->set_acknowledged(false);
-    temp_service->set_acknowledgement_type(ACKNOWLEDGEMENT_NONE);
-    temp_service->set_no_more_notifications(false);
+    temp_service->set_acknowledgement_type(notifier::ACKNOWLEDGEMENT_NONE);
+
+    // FIXME DBR: This should be managed by notifier.
+    //temp_service->set_no_more_notifications(false);
 
     if (reschedule_check == true)
       next_service_check
@@ -1058,7 +1063,7 @@ int handle_async_service_check_result(
       /* we need to check for both, state_change (SOFT) and hard_state_change (HARD) values */
       if (((true == hard_state_change) || (true == state_change))
           && (temp_service->get_pending_flex_downtime() > 0))
-        check_pending_flex_service_downtime(temp_service);
+        temp_service->check_pending_flex_downtime();
 
       /* 10/04/07 check to see if the service and/or associate host is flapping */
       /* this should be done before a notification is sent out to ensure the host didn't just start flapping */

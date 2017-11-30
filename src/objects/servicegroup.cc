@@ -198,23 +198,6 @@ int is_service_member_of_servicegroup(
 }
 
 /**
- *  Get servicegroup by name.
- *
- *  @param[in] name The servicegroup name.
- *
- *  @return The struct servicegroup or throw exception if the
- *          servicegroup is not found.
- */
-servicegroup& engine::find_servicegroup(std::string const& name) {
-  umap<std::string, shared_ptr<servicegroup_struct> >::const_iterator
-    it(state::instance().servicegroups().find(name));
-  if (it == state::instance().servicegroups().end())
-    throw (engine_error() << "Service group "
-           << name << "' was not found");
-  return (*it->second);
-}
-
-/**
  *  Get if servicegroup exist.
  *
  *  @param[in] name The servicegroup name.

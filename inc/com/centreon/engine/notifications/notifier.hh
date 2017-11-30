@@ -32,6 +32,7 @@ CCE_BEGIN()
 
 // Forward declaration
 class contact;
+class downtime;
 
 namespace           notifications {
 
@@ -77,6 +78,11 @@ namespace           notifications {
       ON_CRITICAL = (1 << 9),
     };
 
+    enum              acknowledgement_type {
+      ACKNOWLEDGEMENT_NONE,
+      ACKNOWLEDGEMENT_NORMAL,
+      ACKNOWLEDGEMENT_STICKY
+    };
                       notifier();
                       notifier(notifier const& other);
     virtual           ~notifier();
@@ -108,6 +114,7 @@ namespace           notifications {
     time_t            get_next_notification() const;
     bool              get_no_more_notifications() const;
     int               get_pending_flex_downtime() const;
+    bool              check_pending_flex_downtime();
     int               get_scheduled_downtime_depth() const;
     bool              is_in_downtime() const;
     bool              is_state_notification_enabled(int state) const;
@@ -121,14 +128,16 @@ namespace           notifications {
     bool              should_be_escalated() const;
     bool              is_acknowledged() const;
     void              set_acknowledged(bool acked);
-    void              set_acknowledgement_type(int type);
+    void              set_acknowledgement_type(acknowledgement_type type);
     bool              get_recovery_been_sent() const;
     bool              set_notified_on_down(bool value);
     bool              set_notified_on_unreachable(bool value);
     void              set_current_notification_number(int number);
     void              set_initial_notif_time(time_t initial);
-    void              set_no_more_notifications(bool no_more);
+//    void              set_no_more_notifications(bool no_more);
     void              set_recovery_been_sent(bool sent);
+    void              set_notification_period_name(std::string const& name);
+    void              set_notification_period(timeperiod* name);
 
    protected:
     virtual void      _checkable_macro_builder(nagios_macros& mac) = 0;
@@ -136,8 +145,8 @@ namespace           notifications {
     time_t            _last_notification;
     time_t            _next_notification;
     long              _notification_interval;
-    int               _current_notification_number;
     int               _current_notification_id;
+    int               _current_notification_number;
     notification_type _type;
 
    private:

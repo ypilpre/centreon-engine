@@ -43,7 +43,8 @@ void applier::downtime::apply(list_downtime const& lst) {
   }
 
   // Sort all downtimes.
-  sort_downtime();
+  // FIXME DBR: no more defined...
+  //sort_downtime();
 }
 
 /**
@@ -53,18 +54,19 @@ void applier::downtime::apply(list_downtime const& lst) {
  */
 void applier::downtime::_add_host_downtime(
        retention::downtime const& obj) throw () {
-  add_host_downtime(
-    obj.host_name().c_str(),
-    obj.entry_time(),
-    obj.author().c_str(),
-    obj.comment_data().c_str(),
-    obj.start_time(),
-    obj.end_time(),
-    obj.fixed(),
-    obj.triggered_by(),
-    obj.duration(),
-    obj.downtime_id());
-  register_downtime(HOST_DOWNTIME, obj.downtime_id());
+  // FIXME DBR: HOST_DOWNTIME is no more defined
+//  add_host_downtime(
+//    obj.host_name().c_str(),
+//    obj.entry_time(),
+//    obj.author().c_str(),
+//    obj.comment_data().c_str(),
+//    obj.start_time(),
+//    obj.end_time(),
+//    obj.fixed(),
+//    obj.triggered_by(),
+//    obj.duration(),
+//    obj.downtime_id());
+//  register_downtime(HOST_DOWNTIME, obj.downtime_id());
 }
 
 /**
@@ -74,17 +76,18 @@ void applier::downtime::_add_host_downtime(
  */
 void applier::downtime::_add_service_downtime(
        retention::downtime const& obj) throw () {
-  add_service_downtime(
-    obj.host_name().c_str(),
-    obj.service_description().c_str(),
-    obj.entry_time(),
-    obj.author().c_str(),
-    obj.comment_data().c_str(),
-    obj.start_time(),
-    obj.end_time(),
-    obj.fixed(),
-    obj.triggered_by(),
-    obj.duration(),
-    obj.downtime_id());
-  register_downtime(SERVICE_DOWNTIME, obj.downtime_id());
+  // FIXME DBR: SERVICE_DOWNTIME is no more defined
+//  add_service_downtime(
+//    obj.host_name().c_str(),
+//    obj.service_description().c_str(),
+//    obj.entry_time(),
+//    obj.author().c_str(),
+//    obj.comment_data().c_str(),
+//    obj.start_time(),
+//    obj.end_time(),
+//    obj.fixed(),
+//    obj.triggered_by(),
+//    obj.duration(),
+//    obj.downtime_id());
+//  register_downtime(SERVICE_DOWNTIME, obj.downtime_id());
 }

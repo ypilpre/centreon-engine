@@ -147,7 +147,7 @@ void applier::contact::_update(
   // Adjust modified attributes if no custom variable has been changed.
   if (obj.get_modified_attributes() & MODATTR_CUSTOM_VARIABLE) {
     bool at_least_one_modified(false);
-    for (customvariablesmember* member(obj.get_custom_variables());
+    for (customvariablesmember* member(obj.get_customvars());
          member;
          member = member->next)
       if (member->has_been_modified)

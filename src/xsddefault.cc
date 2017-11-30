@@ -378,10 +378,14 @@ int xsddefault_save_status_data() {
          "\thost_notifications_enabled=" << cntct->is_host_notifications_enabled() << "\n"
          "\tservice_notifications_enabled=" << cntct->is_service_notifications_enabled() << "\n";
     // custom variables
-    for (customvariablesmember* cvarm = cntct->get_custom_variables(); cvarm; cvarm = cvarm->next) {
-      if (cvarm->variable_name)
-        stream << "\t_" << cvarm->variable_name << "=" << cvarm->has_been_modified << ";"
-               << (cvarm->variable_value ? cvarm->variable_value : "") << "\n";
+    for (customvar_set::const_iterator
+           it(cntct->get_customvars().begin()),
+           end(cntct->get_customvars().end());
+         it != end;
+         ++it) {
+      customvar var(it->second);
+      stream << "\t_" << var.get_name() << "=" << var.get_modified() << ";"
+             << var.get_value() << "\n";
     }
     stream << "\t}\n\n";
   }
@@ -409,26 +413,27 @@ int xsddefault_save_status_data() {
   }
 
   // save all downtime
-  for (scheduled_downtime* dt = scheduled_downtime_list; dt; dt = dt->next) {
-    if (dt->type == HOST_DOWNTIME)
-      stream << "hostdowntime {\n";
-    else
-      stream << "servicedowntime {\n";
-    stream << "\thost_name=" << dt->host_name << "\n";
-    if (dt->type == SERVICE_DOWNTIME)
-      stream << "\tservice_description=" << dt->service_description << "\n";
-    stream
-      << "\tdowntime_id=" << dt->downtime_id << "\n"
-         "\tentry_time=" << static_cast<unsigned long>(dt->entry_time) << "\n"
-         "\tstart_time=" << static_cast<unsigned long>(dt->start_time) << "\n"
-         "\tend_time=" << static_cast<unsigned long>(dt->end_time) << "\n"
-         "\ttriggered_by=" << dt->triggered_by << "\n"
-         "\tfixed=" << dt->fixed << "\n"
-         "\tduration=" << dt->duration << "\n"
-         "\tauthor=" << dt->author << "\n"
-         "\tcomment=" << dt->comment << "\n"
-         "\t}\n\n";
-  }
+  // FIXME DBR: downtimes need to be reviewed
+//  for (scheduled_downtime* dt = scheduled_downtime_list; dt; dt = dt->next) {
+//    if (dt->type == HOST_DOWNTIME)
+//      stream << "hostdowntime {\n";
+//    else
+//      stream << "servicedowntime {\n";
+//    stream << "\thost_name=" << dt->host_name << "\n";
+//    if (dt->type == SERVICE_DOWNTIME)
+//      stream << "\tservice_description=" << dt->service_description << "\n";
+//    stream
+//      << "\tdowntime_id=" << dt->downtime_id << "\n"
+//         "\tentry_time=" << static_cast<unsigned long>(dt->entry_time) << "\n"
+//         "\tstart_time=" << static_cast<unsigned long>(dt->start_time) << "\n"
+//         "\tend_time=" << static_cast<unsigned long>(dt->end_time) << "\n"
+//         "\ttriggered_by=" << dt->triggered_by << "\n"
+//         "\tfixed=" << dt->fixed << "\n"
+//         "\tduration=" << dt->duration << "\n"
+//         "\tauthor=" << dt->author << "\n"
+//         "\tcomment=" << dt->comment << "\n"
+//         "\t}\n\n";
+//  }
 
   // Write data in buffer.
   stream.flush();

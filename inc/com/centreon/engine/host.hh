@@ -47,6 +47,7 @@ class                        host : public monitorable {
   host&                      operator=(host const& other);
 
   // Configuration.
+  std::string const&         get_address() const;
   int                        get_circular_path_checked() const;
   void                       set_circular_path_checked(int check_level);
   int                        get_initial_state() const;
@@ -60,6 +61,7 @@ class                        host : public monitorable {
   std::list<host*> const&    get_parents() const;
   void                       add_service(service* svc);
   void                       clear_services();
+  std::list<service*>&       get_services();
   std::list<service*> const& get_services() const;
 
   // State runtime.
@@ -94,6 +96,7 @@ class                        host : public monitorable {
   void                       _internal_copy(host const& other);
 
   std::list<host*>           _children;
+  std::string                _address;
   int                        _circular_path_checked;
   bool                       _flap_detection_on_down;
   bool                       _flap_detection_on_unreachable;
