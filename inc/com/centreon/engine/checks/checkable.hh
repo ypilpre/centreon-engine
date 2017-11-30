@@ -129,6 +129,7 @@ namespace              checks {
     void               set_event_handler_enabled(bool enable);
 
     // Flap detection.
+    static int const   historical_state_entries = 21;
     bool               get_flap_detection_enabled() const;
     void               set_flap_detection_enabled(bool enable);
     bool               get_flapping() const;
@@ -136,7 +137,7 @@ namespace              checks {
     double             get_low_flap_threshold() const;
     double             get_high_flap_threshold() const;
     void               add_historical_state(int state);
-    int                get_historical_state(int index);
+    int                get_historical_state(int index) const;
 
     // Freshness checks.
     bool               get_being_freshened() const;
@@ -171,6 +172,8 @@ namespace              checks {
     int                _freshness_threshold;
     bool               _has_been_checked;
     double             _high_flap_threshold;
+    int                _historical_states[historical_state_entries];
+    int                _historical_state_index;
     bool               _host_problem_at_last_check;
     bool               _in_downtime;
     time_t             _last_check;

@@ -1,7 +1,7 @@
 /*
-** Copyright 1999-2009      Ethan Galstad
-** Copyright 2009-2011      Nagios Core Development Team and Community Contributors
-** Copyright 2011-2013,2016 Centreon
+** Copyright 1999-2009           Ethan Galstad
+** Copyright 2009-2011           Nagios Core Development Team and Community Contributors
+** Copyright 2011-2013,2016-2017 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -32,9 +32,6 @@
 #  ifndef _THREAD_SAFE
 #    define _THREAD_SAFE
 #  endif /* !_THREAD_SAFE */
-
-/* Max number of old states to keep track of for flap detection. */
-#  define MAX_STATE_HISTORY_ENTRIES 21
 
 /* Commands. */
 #  define CMD_NONE                                             0

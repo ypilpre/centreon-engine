@@ -219,7 +219,7 @@ std::ostream& dump::host(std::ostream& os, ::host const& obj) {
     // XXX "check_flapping_recovery_notification=" << obj.check_flapping_recovery_notification << "\n"
     "check_latency=" << std::setprecision(3) << std::fixed << obj.get_latency() << "\n"
     "check_options=" << obj.get_check_options() << "\n"
-    // XXX "check_period=" << (obj.check_period ? obj.check_period : "") << "\n"
+    "check_period=" << (obj.get_check_period() ? obj.get_check_period()->name : "") << "\n"
     "check_type=" << obj.get_check_type() << "\n"
     "current_attempt=" << obj.get_current_attempt() << "\n"
     "current_event_id=" << obj.get_current_event_id() << "\n"
@@ -264,11 +264,11 @@ std::ostream& dump::host(std::ostream& os, ::host const& obj) {
     "state_type=" << obj.get_current_state_type() << "\n"
     "recovery_been_sent=" << obj.get_recovery_been_sent() << "\n";
 
-  // XXX
-  // os << "state_history=";
-  // for (unsigned int x(0); x < MAX_STATE_HISTORY_ENTRIES; ++x)
-  //   os << (x > 0 ? "," : "") << obj.state_history[(x + obj.state_history_index) % MAX_STATE_HISTORY_ENTRIES];
-  // os << "\n";
+  os << "state_history=";
+  os << obj.get_historical_state(0);
+  for (int i(1); i < checks::checkable::historical_state_entries; ++i)
+    os << "," << obj.get_historical_state(i);
+  os << "\n";
 
   // dump::customvariables(os, *obj.custom_variables);
   os << "}\n";
@@ -410,7 +410,7 @@ std::ostream& dump::service(std::ostream& os, ::service const& obj) {
     // XXX "check_flapping_recovery_notification=" << obj.check_flapping_recovery_notification << "\n"
     "check_latency=" << std::setprecision(3) << std::fixed << obj.get_latency() << "\n"
     "check_options=" << obj.get_check_options() << "\n"
-    // XXX "check_period=" << (obj.check_period ? obj.check_period : "") << "\n"
+    "check_period=" << (obj.get_check_period() ? obj.get_check_period()->name : "") << "\n"
     "check_type=" << obj.get_check_type() << "\n"
     "current_attempt=" << obj.get_current_attempt() << "\n"
     "current_event_id=" << obj.get_current_event_id() << "\n"
@@ -457,11 +457,11 @@ std::ostream& dump::service(std::ostream& os, ::service const& obj) {
     "state_type=" << obj.get_current_state_type() << "\n"
     "recovery_been_sent=" << obj.get_recovery_been_sent() << "\n";
 
-  // XXX
-  // os << "state_history=";
-  // for (unsigned int x(0); x < MAX_STATE_HISTORY_ENTRIES; ++x)
-  //   os << (x > 0 ? "," : "") << obj.state_history[(x + obj.state_history_index) % MAX_STATE_HISTORY_ENTRIES];
-  // os << "\n";
+  os << "state_history=";
+  os << obj.get_historical_state(0);
+  for (int i(1); i < checks::checkable::historical_state_entries; ++i)
+    os << "," << obj.get_historical_state(i);
+  os << "\n";
 
   // dump::customvariables(os, *obj.custom_variables);
   os << "}\n";

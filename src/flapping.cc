@@ -103,19 +103,19 @@ void check_for_service_flapping(
 
   /* calculate overall and curved percent state changes */
   last_state_history_value = svc->get_historical_state(0);
-  for (int i(1); i < MAX_STATE_HISTORY_ENTRIES; ++i) {
+  for (int i(1); i < checks::checkable::historical_state_entries; ++i) {
     if (last_state_history_value != svc->get_historical_state(i))
       curved_changes
         += (((double)(i - 1)
              * (high_curve_value - low_curve_value))
-            / ((double)(MAX_STATE_HISTORY_ENTRIES - 2))) + low_curve_value;
+            / ((double)(checks::checkable::historical_state_entries - 2))) + low_curve_value;
     last_state_history_value = svc->get_historical_state(i);
   }
 
   /* calculate overall percent change in state */
   curved_percent_change
     = (double)(((double)curved_changes * 100.0)
-               / (double)(MAX_STATE_HISTORY_ENTRIES - 1));
+               / (double)(checks::checkable::historical_state_entries - 1));
 
   svc->set_percent_state_change(curved_percent_change);
 
@@ -256,18 +256,18 @@ void check_for_host_flapping(
 
   /* calculate overall changes in state */
   last_state_history_value = hst->get_historical_state(0);
-  for (int i(1); i < MAX_STATE_HISTORY_ENTRIES; ++i) {
+  for (int i(1); i < checks::checkable::historical_state_entries; ++i) {
     if (last_state_history_value != hst->get_historical_state(i))
       curved_changes
         += (((double)(i - 1) * (high_curve_value - low_curve_value))
-            / ((double)(MAX_STATE_HISTORY_ENTRIES - 2))) + low_curve_value;
+            / ((double)(checks::checkable::historical_state_entries - 2))) + low_curve_value;
     last_state_history_value = hst->get_historical_state(i);
   }
 
   /* calculate overall percent change in state */
   curved_percent_change
     = (double)(((double)curved_changes * 100.0)
-               / (double)(MAX_STATE_HISTORY_ENTRIES - 1));
+               / (double)(checks::checkable::historical_state_entries - 1));
   hst->set_percent_state_change(curved_percent_change);
 
   logger(dbg_flapping, most)

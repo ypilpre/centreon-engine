@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2013,2016 Centreon
+** Copyright 2011-2013,2016-2017 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -17,6 +17,7 @@
 ** <http://www.gnu.org/licenses/>.
 */
 
+#include "com/centreon/engine/checks/checkable.hh"
 #include "com/centreon/engine/common.hh"
 #include "com/centreon/engine/retention/host.hh"
 #include "com/centreon/engine/string.hh"
@@ -1291,7 +1292,7 @@ bool host::_set_state_history(std::string const& value) {
   std::vector<int>& state_history(*_state_history);
   for (std::list<std::string>::const_iterator
          it(lst_history.begin()), end(lst_history.end());
-       it != end && x < MAX_STATE_HISTORY_ENTRIES;
+       it != end && x < checks::checkable::historical_state_entries;
        ++it) {
     int state(0);
     if (!string::to(it->c_str(), state)) {

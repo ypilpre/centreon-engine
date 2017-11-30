@@ -899,7 +899,9 @@ double checkable::get_high_flap_threshold() const {
  *  @param[in] state  New state to add to history.
  */
 void checkable::add_historical_state(int state) {
-  // XXX
+  _historical_states[_historical_state_index] = state;
+  _historical_state_index = (_historical_state_index + 1) % historical_state_entries;
+  return ;
 }
 
 /**
@@ -908,8 +910,8 @@ void checkable::add_historical_state(int state) {
  *  @param[in] index  State index from 0 (oldest) to the max number of
  *                    historical states - 1 (newest).
  */
-int checkable::get_historical_state(int index) {
-  // XXX
+int checkable::get_historical_state(int index) const {
+  return (_historical_states[(_historical_state_index + index) % historical_state_entries]);
 }
 
 /**************************************

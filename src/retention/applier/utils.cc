@@ -50,10 +50,7 @@ bool utils::is_command_exist(std::string const& command_line) {
 void utils::set_state_history(
        std::vector<int> const& values,
        checks::checkable& object) {
-  unsigned int end(MAX_STATE_HISTORY_ENTRIES);
-  if (end > values.size())
-    end = values.size();
-  for (unsigned int i(0); i < end; ++i)
+  for (int i(0), end(values.size()); i < end; ++i)
     object.add_historical_state(values[i]);
   return ;
 }
