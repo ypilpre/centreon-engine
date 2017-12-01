@@ -932,7 +932,7 @@ int grab_custom_object_macro(
 /******************************************************************/
 
 /* cleans illegal characters in macros before output */
-std::string clean_macro_chars(std::string& macro, int options) {
+std::string clean_macro_chars(std::string const& macro, int options) {
   std::string retval;
   retval.reserve(macro.size());
   for (size_t i = 0; i < macro.size(); ++i) {
@@ -947,34 +947,6 @@ std::string clean_macro_chars(std::string& macro, int options) {
     return retval;
   }
 }
-
-//char const* clean_macro_chars(char* macro, int options) {
-//  if (macro == NULL)
-//    return ("");
-//
-//  int len((int)strlen(macro));
-//
-//  /* strip illegal characters out of macro */
-//  if (options & STRIP_ILLEGAL_MACRO_CHARS) {
-//    int y(0);
-//    for (int x(0); x < len; x++) {
-//      /*ch=(int)macro[x]; */
-//      /* allow non-ASCII characters (Japanese, etc) */
-//      int ch(macro[x] & 0xff);
-//
-//      /* illegal ASCII characters */
-//      if (ch < 32 || ch == 127)
-//        continue;
-//
-//      /* illegal user-specified characters */
-//      if (config->illegal_output_chars().find(ch) == std::string::npos)
-//        macro[y++] = macro[x];
-//    }
-//
-//    macro[y++] = '\x0';
-//  }
-//  return (macro);
-//}
 
 /* encodes a string in proper URL format */
 char* get_url_encoded_string(char* input) {

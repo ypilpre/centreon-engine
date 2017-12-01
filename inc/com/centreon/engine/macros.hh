@@ -37,10 +37,6 @@ CCE_BEGIN()
   class contactgroup;
 CCE_END()
 
-#  ifdef __cplusplus
-extern "C" {
-#  endif // C++
-
 int grab_hostgroup_macros(hostgroup* hg);
 int grab_servicegroup_macros(servicegroup* sg);
 int grab_contact_macros(com::centreon::engine::contact* cntct);
@@ -130,7 +126,7 @@ int grab_custom_object_macro_r(
       char** output);
 
 // cleans macros characters before insertion into output string
-std::string& clean_macro_chars(std::string const& macro, int options);
+std::string clean_macro_chars(std::string const& macro, int options);
 
 // URL encode a string
 char* get_url_encoded_string(char* input);
@@ -171,9 +167,5 @@ int set_macrox_environment_vars_r(nagios_macros* mac, int set);
 int set_argv_macro_environment_vars_r(nagios_macros* mac, int set);
 int set_custom_macro_environment_vars_r(nagios_macros* mac, int set);
 int set_contact_address_environment_vars_r(nagios_macros* mac, int set);
-
-#  ifdef __cplusplus
-}
-#  endif // C++
 
 #endif // !CCE_MACROS_HH
