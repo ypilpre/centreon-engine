@@ -193,22 +193,23 @@ int process_macros_r(
                 || (macro_options & ESCAPE_MACRO_CHARS))) {
 
           /* add the (cleaned) processed macro to the end of the already processed buffer */
-          if (selected_macro != NULL
-              && (cleaned_macro = clean_macro_chars(
-                                    selected_macro,
-                                    macro_options)) != NULL) {
-            *output_buffer = resize_string(
-                               *output_buffer,
-                               strlen(*output_buffer)
-                               + strlen(cleaned_macro)
-                               + 1);
-            strcat(*output_buffer, cleaned_macro);
+          // XXX
+          // if (selected_macro != NULL
+          //     && (cleaned_macro = clean_macro_chars(
+          //                           selected_macro,
+          //                           macro_options)) != NULL) {
+          //   *output_buffer = resize_string(
+          //                      *output_buffer,
+          //                      strlen(*output_buffer)
+          //                      + strlen(cleaned_macro)
+          //                      + 1);
+          //   strcat(*output_buffer, cleaned_macro);
 
-            logger(dbg_macros, basic)
-              << "  Cleaned macro.  Running output ("
-              << strlen(*output_buffer) << "): '"
-              << *output_buffer << "'";
-          }
+          //   logger(dbg_macros, basic)
+          //     << "  Cleaned macro.  Running output ("
+          //     << strlen(*output_buffer) << "): '"
+          //     << *output_buffer << "'";
+          // }
         }
         /* others are not cleaned */
         else {

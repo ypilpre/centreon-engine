@@ -22,9 +22,13 @@
 using namespace com::centreon::engine;
 
 /**
- *  Default constructor.
+ *  Constructor.
+ *
+ *  @param[in] name   Variable name.
+ *  @param[in] value  Variable value.
  */
-customvar::customvar() : _modified(false) {}
+customvar::customvar(std::string const& name, std::string const& value)
+  : _modified(false), _name(name), _value(value) {}
 
 /**
  *  Copy constructor.
@@ -36,11 +40,6 @@ customvar::customvar(customvar const& other) {
   _name = other._name;
   _value = other._value;
 }
-
-customvar::customvar( std::string const& name, std::string const& value)
-  : _name(name),
-    _value(value),
-    _modified(false) {}
 
 /**
  *  Destructor.

@@ -244,4 +244,8 @@ class                           contact {
 
 CCE_END()
 
+using com::centreon::engine::contact;
+
+typedef umap<std::string, contact*> contact_set;
+
 #endif // !CCE_CONTACT_HH

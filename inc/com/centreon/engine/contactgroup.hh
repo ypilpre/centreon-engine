@@ -20,6 +20,7 @@
 #ifndef CCE_CONTACTGROUP_HH
 #  define CCE_CONTACTGROUP_HH
 
+#  include <list>
 #  include "com/centreon/engine/namespace.hh"
 #  include "com/centreon/shared_ptr.hh"
 #  include "com/centreon/unordered_hash.hh"
@@ -74,5 +75,9 @@ class                          contactgroup {
 };
 
 CCE_END()
+
+using com::centreon::engine::contactgroup;
+
+typedef std::list<contactgroup*> contactgroup_set;
 
 #endif // !CCE_CONTACTGROUP_HH

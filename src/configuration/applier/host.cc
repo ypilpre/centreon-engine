@@ -81,8 +81,9 @@ void applier::host::add_object(
     << "Creating new host '" << obj.host_name() << "'.";
 
   // Create host.
+  shared_ptr<::host> h;
   try {
-    shared_ptr<::host> h(new ::host(obj));
+    h = new ::host(obj);
     config->hosts().insert(obj);
   }
   catch (std::exception const& e) {
@@ -92,73 +93,27 @@ void applier::host::add_object(
            << "Could not register host '" << obj.host_name() << "'");
   }
 
-  // XXX
-  // host_other_props[obj.host_name()].initial_notif_time = 0;
-  // host_other_props[obj.host_name()].should_reschedule_current_check = false;
-  // host_other_props[obj.host_name()].timezone = obj.timezone();
-  // host_other_props[obj.host_name()].host_id = obj.host_id();
-  // host_other_props[obj.host_name()].acknowledgement_timeout
-  //   = obj.get_acknowledgement_timeout() * config->interval_length();
-  // host_other_props[obj.host_name()].last_acknowledgement = 0;
-  // host_other_props[obj.host_name()].recovery_notification_delay
-  //   = obj.recovery_notification_delay();
-  // host_other_props[obj.host_name()].recovery_been_sent
-  //   = true;
+  // Custom variables.
+  for (map_customvar::const_iterator
+         it(obj.customvariables().begin()),
+         end(obj.customvariables().end());
+       it != end;
+       ++it) {
+    customvar var(it->first, it->second);
+    h->set_customvar(var);
+  }
 
-  // // Contacts.
-  // for (set_string::const_iterator
-  //        it(obj.contacts().begin()),
-  //        end(obj.contacts().end());
-  //      it != end;
-  //      ++it)
-  //   if (!add_contact_to_host(h, it->c_str()))
-  //     throw (engine_error() << "Could not add contact '"
-  //            << *it << "' to host '" << obj.host_name() << "'");
-
-  // // Contact groups.
-  // for (set_string::const_iterator
-  //        it(obj.contactgroups().begin()),
-  //        end(obj.contactgroups().end());
-  //      it != end;
-  //      ++it)
-  //   if (!add_contactgroup_to_host(h, it->c_str()))
-  //     throw (engine_error() << "Could not add contact group '"
-  //            << *it << "' to host '" << obj.host_name() << "'");
-
-  // // Custom variables.
-  // for (map_customvar::const_iterator
-  //        it(obj.customvariables().begin()),
-  //        end(obj.customvariables().end());
-  //      it != end;
-  //      ++it)
-  //   if (!add_custom_variable_to_host(
-  //          h,
-  //          it->first.c_str(),
-  //          it->second.c_str()))
-  //     throw (engine_error() << "Could not add custom variable '"
-  //            << it->first << "' to host '" << obj.host_name() << "'");
-
-  // // Parents.
-  // for (set_string::const_iterator
-  //        it(obj.parents().begin()),
-  //        end(obj.parents().end());
-  //      it != end;
-  //      ++it)
-  //   if (!add_parent_host_to_host(h, it->c_str()))
-  //     throw (engine_error() << "Could not add parent '"
-  //            << *it << "' to host '" << obj.host_name() << "'");
-
-  // // Notify event broker.
-  // timeval tv(get_broker_timestamp(NULL));
-  // broker_adaptive_host_data(
-  //   NEBTYPE_HOST_ADD,
-  //   NEBFLAG_NONE,
-  //   NEBATTR_NONE,
-  //   h,
-  //   CMD_NONE,
-  //   MODATTR_ALL,
-  //   MODATTR_ALL,
-  //   &tv);
+  // Notify event broker.
+  timeval tv(get_broker_timestamp(NULL));
+  broker_adaptive_host_data(
+    NEBTYPE_HOST_ADD,
+    NEBFLAG_NONE,
+    NEBATTR_NONE,
+    h.get(),
+    CMD_NONE,
+    MODATTR_ALL,
+    MODATTR_ALL,
+    &tv);
 
   return ;
 }
@@ -213,31 +168,31 @@ void applier::host::expand_objects(configuration::state& s) {
  */
 void applier::host::modify_object(
                       configuration::host const& obj) {
+  // Logging.
+  logger(logging::dbg_config, logging::more)
+    << "Modifying host '" << obj.host_name() << "'.";
+
+  // Find the configuration object.
+  set_host::iterator it_cfg(config->hosts_find(obj.key()));
+  if (it_cfg == config->hosts().end())
+    throw (engine_error() << "Cannot modify non-existing host '"
+           << obj.host_name() << "'");
+
+  // Find host object.
+  umap<std::string, shared_ptr<::host> >::iterator
+    it_obj(applier::state::instance().hosts().find(obj.key()));
+  if (it_obj == applier::state::instance().hosts().end())
+    throw (engine_error() << "Could not modify non-existing "
+           << "host object '" << obj.host_name() << "'");
+  ::host* h(it_obj->second.get());
+
+  // Update the global configuration set.
+  configuration::host obj_old(*it_cfg);
+  config->hosts().erase(it_cfg);
+  config->hosts().insert(obj);
+
+  // Modify properties.
   // XXX
-  // // Logging.
-  // logger(logging::dbg_config, logging::more)
-  //   << "Modifying host '" << obj.host_name() << "'.";
-
-  // // Find the configuration object.
-  // set_host::iterator it_cfg(config->hosts_find(obj.key()));
-  // if (it_cfg == config->hosts().end())
-  //   throw (engine_error() << "Cannot modify non-existing host '"
-  //          << obj.host_name() << "'");
-
-  // // Find host object.
-  // umap<std::string, shared_ptr<host_struct> >::iterator
-  //   it_obj(applier::state::instance().hosts_find(obj.key()));
-  // if (it_obj == applier::state::instance().hosts().end())
-  //   throw (engine_error() << "Could not modify non-existing "
-  //          << "host object '" << obj.host_name() << "'");
-  // host_struct* h(it_obj->second.get());
-
-  // // Update the global configuration set.
-  // configuration::host obj_old(*it_cfg);
-  // config->hosts().erase(it_cfg);
-  // config->hosts().insert(obj);
-
-  // // Modify properties.
   // modify_if_different(
   //   h->display_name,
   //   NULL_IF_EMPTY(obj.display_name()));

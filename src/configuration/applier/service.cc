@@ -91,8 +91,9 @@ void applier::service::add_object(
   // Add service to the global configuration set.
 
   // Create service.
+  shared_ptr<::service> svc;
   try {
-    shared_ptr<::service> svc(new ::service(obj));
+    svc = new ::service(obj);
     config->services().insert(obj);
   }
   catch (std::exception const& e) {
@@ -103,80 +104,27 @@ void applier::service::add_object(
            << "' of host '" << *obj.hosts().begin() << "'");
   }
 
-  // service_other_props[std::make_pair(
-  //                            *obj.hosts().begin(),
-  //                            obj.service_description())].initial_notif_time = 0;
-  // service_other_props[std::make_pair(
-  //                            *obj.hosts().begin(),
-  //                            obj.service_description())].timezone = obj.timezone();
-  // service_other_props[std::make_pair(
-  //                            *obj.hosts().begin(),
-  //                            obj.service_description())].host_id = obj.host_id();
-  // service_other_props[std::make_pair(
-  //                            *obj.hosts().begin(),
-  //                            obj.service_description())].service_id = obj.service_id();
-  // service_other_props[std::make_pair(
-  //                            *obj.hosts().begin(),
-  //                            obj.service_description())].acknowledgement_timeout
-  //   = obj.get_acknowledgement_timeout() * config->interval_length();
-  // service_other_props[std::make_pair(
-  //                            *obj.hosts().begin(),
-  //                            obj.service_description())].last_acknowledgement = 0;
-  // service_other_props[std::make_pair(
-  //                            *obj.hosts().begin(),
-  //                            obj.service_description())].recovery_notification_delay = obj.recovery_notification_delay();
-  // service_other_props[std::make_pair(
-  //                            *obj.hosts().begin(),
-  //                            obj.service_description())].recovery_been_sent = true;
+  // Add custom variables.
+  for (map_customvar::const_iterator
+         it(obj.customvariables().begin()),
+         end(obj.customvariables().end());
+       it != end;
+       ++it) {
+    customvar var(it->first, it->second);
+    svc->set_customvar(var);
+  }
 
-  // // Add contacts.
-  // for (set_string::const_iterator
-  //        it(obj.contacts().begin()),
-  //        end(obj.contacts().end());
-  //      it != end;
-  //      ++it)
-  //   if (!add_contact_to_service(svc, it->c_str()))
-  //     throw (engine_error() << "Could not add contact '"
-  //            << *it << "' to service '" << obj.service_description()
-  //            << "' of host '" << *obj.hosts().begin() << "'");
-
-  // // Add contactgroups.
-  // for (set_string::const_iterator
-  //        it(obj.contactgroups().begin()),
-  //        end(obj.contactgroups().end());
-  //      it != end;
-  //      ++it)
-  //   if (!add_contactgroup_to_service(svc, it->c_str()))
-  //     throw (engine_error() << "Could not add contact group '"
-  //            << *it << "' to service '" << obj.service_description()
-  //            << "' of host '" << *obj.hosts().begin() << "'");
-
-  // // Add custom variables.
-  // for (map_customvar::const_iterator
-  //        it(obj.customvariables().begin()),
-  //        end(obj.customvariables().end());
-  //      it != end;
-  //      ++it)
-  //   if (!add_custom_variable_to_service(
-  //          svc,
-  //          it->first.c_str(),
-  //          it->second.c_str()))
-  //     throw (engine_error() << "Could not add custom variable '"
-  //            << it->first << "' to service '"
-  //            << obj.service_description() << "' of host '"
-  //            << *obj.hosts().begin() << "'");
-
-  // // Notify event broker.
-  // timeval tv(get_broker_timestamp(NULL));
-  // broker_adaptive_service_data(
-  //   NEBTYPE_SERVICE_ADD,
-  //   NEBFLAG_NONE,
-  //   NEBATTR_NONE,
-  //   svc,
-  //   CMD_NONE,
-  //   MODATTR_ALL,
-  //   MODATTR_ALL,
-  //   &tv);
+  // Notify event broker.
+  timeval tv(get_broker_timestamp(NULL));
+  broker_adaptive_service_data(
+    NEBTYPE_SERVICE_ADD,
+    NEBFLAG_NONE,
+    NEBATTR_NONE,
+    svc.get(),
+    CMD_NONE,
+    MODATTR_ALL,
+    MODATTR_ALL,
+    &tv);
 
   return ;
 }
@@ -263,37 +211,37 @@ void applier::service::expand_objects(configuration::state& s) {
  */
 void applier::service::modify_object(
                          configuration::service const& obj) {
+  std::string const& host_name(*obj.hosts().begin());
+  std::string const& service_description(obj.service_description());
+
+  // Logging.
+  logger(logging::dbg_config, logging::more)
+    << "Modifying new service '" << service_description
+    << "' of host '" << host_name << "'.";
+
+  // Find the configuration object.
+  set_service::iterator it_cfg(config->services_find(obj.key()));
+  if (it_cfg == config->services().end())
+    throw (engine_error() << "Cannot modify non-existing "
+           "service '" << service_description << "' of host '"
+           << host_name << "'");
+
+  // Find service object.
+  umap<std::pair<std::string, std::string>, shared_ptr<::service> >::iterator
+    it_obj(applier::state::instance().services().find(obj.key()));
+  if (it_obj == applier::state::instance().services().end())
+    throw (engine_error() << "Could not modify non-existing "
+           << "service object '" << service_description
+           << "' of host '" << host_name << "'");
+  ::service* s(it_obj->second.get());
+
+  // Update the global configuration set.
+  configuration::service obj_old(*it_cfg);
+  config->services().erase(it_cfg);
+  config->services().insert(obj);
+
+  // Modify properties.
   // XXX
-  // std::string const& host_name(*obj.hosts().begin());
-  // std::string const& service_description(obj.service_description());
-
-  // // Logging.
-  // logger(logging::dbg_config, logging::more)
-  //   << "Modifying new service '" << service_description
-  //   << "' of host '" << host_name << "'.";
-
-  // // Find the configuration object.
-  // set_service::iterator it_cfg(config->services_find(obj.key()));
-  // if (it_cfg == config->services().end())
-  //   throw (engine_error() << "Cannot modify non-existing "
-  //          "service '" << service_description << "' of host '"
-  //          << host_name << "'");
-
-  // // Find service object.
-  // umap<std::pair<std::string, std::string>, shared_ptr<service_struct> >::iterator
-  //   it_obj(applier::state::instance().services_find(obj.key()));
-  // if (it_obj == applier::state::instance().services().end())
-  //   throw (engine_error() << "Could not modify non-existing "
-  //          << "service object '" << service_description
-  //          << "' of host '" << host_name << "'");
-  // service_struct* s(it_obj->second.get());
-
-  // // Update the global configuration set.
-  // configuration::service obj_old(*it_cfg);
-  // config->services().erase(it_cfg);
-  // config->services().insert(obj);
-
-  // // Modify properties.
   // modify_if_different(
   //   s->display_name,
   //   NULL_IF_EMPTY(obj.display_name()));

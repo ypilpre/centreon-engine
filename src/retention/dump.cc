@@ -96,7 +96,7 @@ std::ostream& dump::contact(std::ostream& os, engine::contact const& obj) {
     "service_notification_period=" << (obj.get_service_notification_period() ? obj.get_service_notification_period_name() : "") << "\n"
     "service_notifications_enabled=" << obj.is_service_notifications_enabled() << "\n";
 
-  dump::customvariables(os, *obj.get_customvars());
+  // XXX dump::customvariables(os, *obj.get_customvars());
   os << "}\n";
   return os;
 }
@@ -228,7 +228,7 @@ std::ostream& dump::host(std::ostream& os, ::host const& obj) {
     "current_notification_number=" << obj.get_current_notification_number() << "\n"
     "current_problem_id=" << obj.get_current_problem_id() << "\n"
     "current_state=" << obj.get_current_state() << "\n"
-    // XXX "event_handler=" << (obj.event_handler ? obj.event_handler : "") << "\n"
+    "event_handler=" << obj.get_event_handler_args() << "\n"
     "event_handler_enabled=" << obj.get_event_handler_enabled() << "\n"
     "flap_detection_enabled=" << obj.get_flap_detection_enabled() << "\n"
     "has_been_checked=" << obj.get_has_been_checked() << "\n"
@@ -271,7 +271,7 @@ std::ostream& dump::host(std::ostream& os, ::host const& obj) {
     os << "," << obj.get_historical_state(i);
   os << "\n";
 
-  // dump::customvariables(os, *obj.custom_variables);
+  // XXX dump::customvariables(os, *obj.custom_variables);
   os << "}\n";
   return (os);
 }
@@ -419,7 +419,7 @@ std::ostream& dump::service(std::ostream& os, ::service const& obj) {
     "current_notification_number=" << obj.get_current_notification_number() << "\n"
     "current_problem_id=" << obj.get_current_problem_id() << "\n"
     "current_state=" << obj.get_current_state() << "\n"
-    // XXX "event_handler=" << (obj.event_handler ? obj.event_handler : "") << "\n"
+    "event_handler=" << obj.get_event_handler_args() << "\n"
     "event_handler_enabled=" << obj.get_event_handler_enabled() << "\n"
     "flap_detection_enabled=" << obj.get_flap_detection_enabled() << "\n"
     "has_been_checked=" << obj.get_has_been_checked() << "\n"
