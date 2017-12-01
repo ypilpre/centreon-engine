@@ -112,10 +112,14 @@ void notifier::clear_contactgroups() {
  *
  * @return a boolean
  */
-bool notifier::are_notifications_enabled() const {
-  return config->enable_notifications();
+bool notifier::get_notifications_enabled() const {
+  return _notifications_enabled;
+  //return config->enable_notifications();
 }
 
+void notifier::set_notifications_enabled(bool enabled) {
+  _notifications_enabled = enabled;
+}
 /**
  *  Tell if the current notification is escalated
  *
@@ -138,7 +142,7 @@ void notifier::notify(
   if (users_to_notify.empty())
     return ;
 
-  if (are_notifications_enabled()) {
+  if (get_notifications_enabled()) {
     notifier_filter should_notify = _get_filter(type);
     if ((this->*should_notify)()) {
       nagios_macros mac;
@@ -942,7 +946,7 @@ int check_service_notification_viability(
   }
 
   /* are notifications temporarily disabled for this service? */
-  if (svc->notifications_enabled == false) {
+  if (!svc->get_notifications_enabled()) {
     logger(dbg_notifications, more)
       << "Notifications are temporarily disabled for "
       "this service, so we won't send one out.";
