@@ -131,13 +131,8 @@ void applier::contact::_update(
              it(state.customvariables().begin()),
              end(state.customvariables().end());
            it != end;
-           ++it) {
-        obj.update_custom_variable(it->first, it->second);
-//        update_customvariable(
-//          obj.custom_variables,
-//          it->first,
-//          it->second);
-      }
+           ++it)
+        obj.set_customvar(customvar(it->first, it->second));
     }
   }
   // Adjust modified attributes if necessary.
@@ -147,11 +142,16 @@ void applier::contact::_update(
   // Adjust modified attributes if no custom variable has been changed.
   if (obj.get_modified_attributes() & MODATTR_CUSTOM_VARIABLE) {
     bool at_least_one_modified(false);
-    for (customvariablesmember* member(obj.get_customvars());
-         member;
-         member = member->next)
-      if (member->has_been_modified)
+    for (customvar_set::const_iterator
+           it(obj.get_customvars().begin()),
+           end(obj.get_customvars().end());
+         it != end;
+         ++it) {
+      if (it->second.get_modified()) {
         at_least_one_modified = true;
+        break;
+      }
+    }
     if (!at_least_one_modified)
       obj.set_modified_attributes(
         obj.get_modified_attributes()
