@@ -2267,19 +2267,19 @@ int cmd_change_object_custom_var(int cmd, char* args) {
     varname[x] = toupper(varname[x]);
 
   /* find the proper variable */
-  for (; temp_customvariablesmember != NULL;
-       temp_customvariablesmember = temp_customvariablesmember->next) {
-
+  //FIXME DBR: this can not change as before. We don't have a pointer to customvars
+  // So we cannot change one of its values like this...
+  for (customvar_set::const_iterator
+         it(temp_customvars.begin()),
+         end(temp_customvars.end());
+       it != end;
+       ++it) {
     /* we found the variable, so update the value */
-    if (!strcmp(varname, temp_customvariablesmember->variable_name)) {
+    if (!strcmp(varname, it->first.c_str())) {
 
       /* update the value */
-      delete[] temp_customvariablesmember->variable_value;
-      temp_customvariablesmember->variable_value = string::dup(varvalue);
-
-      /* mark the variable value as having been changed */
-      temp_customvariablesmember->has_been_modified = true;
-
+      /* and mark the variable value as having been changed */
+      temp_customvars[varname] = customvar(varname, varvalue, true);
       break;
     }
   }
@@ -2392,7 +2392,7 @@ void enable_service_checks(service* svc) {
   unsigned long attr(MODATTR_ACTIVE_CHECKS_ENABLED);
 
   /* checks are already enabled */
-  if (svc->get_activechecks_enabled())
+  if (svc->get_active_checks_enabled())
     return;
 
   /* set the attribute modified flag */
@@ -2403,18 +2403,18 @@ void enable_service_checks(service* svc) {
   svc->set_should_be_scheduled(true);
 
   /* services with no check intervals don't get checked */
-  if (svc->check_interval == 0)
+  if (svc->get_normal_check_interval() == 0)
     svc->set_should_be_scheduled(false);
 
   /* schedule a check for right now (or as soon as possible) */
   time(&preferred_time);
   if (check_time_against_period(
         preferred_time,
-        svc->check_period_ptr) == ERROR) {
+        svc->get_check_period()) == ERROR) {
     get_next_valid_time(
       preferred_time,
       &next_valid_time,
-      svc->check_period_ptr);
+      svc->get_check_period());
     svc->set_next_check(next_valid_time);
   }
   else
@@ -2506,14 +2506,14 @@ void enable_service_notifications(service* svc) {
   unsigned long attr(MODATTR_NOTIFICATIONS_ENABLED);
 
   /* no change */
-  if (svc->notifications_enabled)
+  if (svc->get_notifications_enabled())
     return;
 
   /* set the attribute modified flag */
   svc->set_modified_attributes(svc->get_modified_attributes() | attr);
 
   /* enable the service notifications... */
-  svc->notifications_enabled = true;
+  svc->set_notifications_enabled(true);
 
   /* send data to event broker */
   broker_adaptive_service_data(
@@ -2535,14 +2535,14 @@ void disable_service_notifications(service* svc) {
   unsigned long attr(MODATTR_NOTIFICATIONS_ENABLED);
 
   /* no change */
-  if (svc->notifications_enabled == false)
+  if (svc->get_notifications_enabled() == false)
     return;
 
   /* set the attribute modified flag */
   svc->set_modified_attributes(svc->get_modified_attributes() | attr);
 
   /* disable the service notifications... */
-  svc->notifications_enabled = false;
+  svc->set_notifications_enabled(false);
 
   /* send data to event broker */
   broker_adaptive_service_data(
@@ -2564,14 +2564,14 @@ void enable_host_notifications(host* hst) {
   unsigned long attr(MODATTR_NOTIFICATIONS_ENABLED);
 
   /* no change */
-  if (hst->notifications_enabled)
+  if (hst->get_notifications_enabled())
     return;
 
   /* set the attribute modified flag */
   hst->set_modified_attributes(hst->get_modified_attributes() | attr);
 
   /* enable the host notifications... */
-  hst->notifications_enabled = true;
+  hst->set_notifications_enabled(true);
 
   /* send data to event broker */
   broker_adaptive_host_data(
@@ -2593,14 +2593,14 @@ void disable_host_notifications(host* hst) {
   unsigned long attr(MODATTR_NOTIFICATIONS_ENABLED);
 
   /* no change */
-  if (hst->notifications_enabled == false)
+  if (hst->get_notifications_enabled() == false)
     return;
 
   /* set the attribute modified flag */
   hst->set_modified_attributes(hst->get_modified_attributes() | attr);
 
   /* disable the host notifications... */
-  hst->notifications_enabled = false;
+  hst->set_notifications_enabled(false);
 
   /* send data to event broker */
   broker_adaptive_host_data(
@@ -2634,12 +2634,13 @@ void enable_and_propagate_notifications(
     enable_host_notifications(hst);
 
   /* check all child hosts... */
-  for (temp_hostsmember = hst->child_hosts;
-       temp_hostsmember != NULL;
-       temp_hostsmember = temp_hostsmember->next) {
+  for (std::list<host*>::const_iterator
+         it(hst->get_children().begin()),
+         end(hst->get_children().end());
+       it != end;
+       ++it) {
 
-    if ((child_host = temp_hostsmember->host_ptr) == NULL)
-      continue;
+    child_host = *it;
 
     /* recurse... */
     enable_and_propagate_notifications(
@@ -2655,14 +2656,15 @@ void enable_and_propagate_notifications(
 
     /* enable notifications for all services on this host... */
     if (affect_services) {
-      for (temp_servicesmember = child_host->services;
-           temp_servicesmember != NULL;
-           temp_servicesmember = temp_servicesmember->next) {
-        if ((temp_service = temp_servicesmember->service_ptr) == NULL)
-          continue;
-        enable_service_notifications(temp_service);
-      }
+      for (std::list<service*>::iterator
+             it(child_host->get_services().begin()),
+             end(child_host->get_services().end());
+           it != end;
+           ++it)
+        (*it)->set_notifications_enabled(true);
+
     }
+
   }
 }
 
@@ -2675,7 +2677,6 @@ void disable_and_propagate_notifications(
        int affect_services) {
   host* child_host(NULL);
   service* temp_service(NULL);
-  servicesmember* temp_servicesmember(NULL);
   hostsmember* temp_hostsmember(NULL);
 
   if (hst == NULL)
@@ -2686,12 +2687,12 @@ void disable_and_propagate_notifications(
     disable_host_notifications(hst);
 
   /* check all child hosts... */
-  for (temp_hostsmember = hst->child_hosts;
-       temp_hostsmember != NULL;
-       temp_hostsmember = temp_hostsmember->next) {
-
-    if ((child_host = temp_hostsmember->host_ptr) == NULL)
-      continue;
+  for (std::list<host*>::const_iterator
+         it(hst->get_children().begin()),
+         end(hst->get_children().end());
+       it != end;
+       ++it) {
+    host* child_host(*it);
 
     /* recurse... */
     disable_and_propagate_notifications(
@@ -2707,12 +2708,12 @@ void disable_and_propagate_notifications(
 
     /* disable notifications for all services on this host... */
     if (affect_services) {
-      for (temp_servicesmember = child_host->services;
-           temp_servicesmember != NULL;
-           temp_servicesmember = temp_servicesmember->next) {
-        if ((temp_service = temp_servicesmember->service_ptr) == NULL)
-          continue;
-        disable_service_notifications(temp_service);
+      for (std::list<service*>::const_iterator
+             sit(child_host->get_services().begin()),
+             send(child_host->get_services().end());
+           it != end;
+           ++it) {
+        disable_service_notifications(*sit);
       }
     }
   }
@@ -2733,12 +2734,12 @@ void schedule_and_propagate_downtime(
   hostsmember* temp_hostsmember(NULL);
 
   /* check all child hosts... */
-  for (temp_hostsmember = temp_host->child_hosts;
-       temp_hostsmember != NULL;
-       temp_hostsmember = temp_hostsmember->next) {
-
-    if ((child_host = temp_hostsmember->host_ptr) == NULL)
-      continue;
+  for (std::list<host*>::const_iterator
+         it(temp_host->get_children().begin()),
+         end(temp_host->get_children().end());
+       it != end;
+       ++it) {
+    host* child_host(*it);
 
     /* recurse... */
     schedule_and_propagate_downtime(
@@ -2755,7 +2756,7 @@ void schedule_and_propagate_downtime(
     /* schedule downtime for this host */
     schedule_downtime(
       HOST_DOWNTIME,
-      child_host->name,
+      child_host->get_host_name().c_str(),
       NULL,
       entry_time,
       author,
@@ -2782,16 +2783,17 @@ void acknowledge_host_problem(
     return;
 
   /* set the acknowledgement flag */
-  hst->problem_has_been_acknowledged = true;
+  hst->set_acknowledged(true);
 
   /* set the acknowledgement type */
-  hst->acknowledgement_type = (type == ACKNOWLEDGEMENT_STICKY)
-    ? ACKNOWLEDGEMENT_STICKY : ACKNOWLEDGEMENT_NORMAL;
+  hst->set_acknowledgement_type((type == notifier::ACKNOWLEDGEMENT_STICKY)
+         ? notifier::ACKNOWLEDGEMENT_STICKY : notifier::ACKNOWLEDGEMENT_NORMAL);
 
   /* schedule acknowledgement expiration */
+  // FIXME DBR
   time_t current_time(time(NULL));
-  host_other_props[hst->name].last_acknowledgement = current_time;
-  schedule_acknowledgement_expiration(hst);
+  hst->set_last_acknowledgement(current_time);
+//  schedule_acknowledgement_expiration(hst);
 
   /* send data to event broker */
   broker_acknowledgement_data(
@@ -2826,7 +2828,7 @@ void acknowledge_host_problem(
   /* add a comment for the acknowledgement */
   add_new_host_comment(
     ACKNOWLEDGEMENT_COMMENT,
-    hst->name,
+    hst->get_host_name().c_str(),
     current_time,
     ack_author,
     ack_data,
@@ -2850,18 +2852,18 @@ void acknowledge_service_problem(
     return;
 
   /* set the acknowledgement flag */
-  svc->problem_has_been_acknowledged = true;
+  svc->set_acknowledged(true);
 
   /* set the acknowledgement type */
-  svc->acknowledgement_type = (type == ACKNOWLEDGEMENT_STICKY)
-    ? ACKNOWLEDGEMENT_STICKY : ACKNOWLEDGEMENT_NORMAL;
+  svc->set_acknowledgement_type((type == notifier::ACKNOWLEDGEMENT_STICKY)
+    ? notifier::ACKNOWLEDGEMENT_STICKY : notifier::ACKNOWLEDGEMENT_NORMAL);
 
   /* schedule acknowledgement expiration */
   time_t current_time(time(NULL));
-  service_other_props[std::make_pair(
-                             svc->host_ptr->name,
-                             svc->description)].last_acknowledgement = current_time;
-  schedule_acknowledgement_expiration(svc);
+  svc->set_last_acknowledgement(current_time);
+
+  //FIXME DBR
+  //schedule_acknowledgement_expiration(svc);
 
   /* send data to event broker */
   broker_acknowledgement_data(
@@ -2896,8 +2898,8 @@ void acknowledge_service_problem(
   /* add a comment for the acknowledgement */
   add_new_service_comment(
     ACKNOWLEDGEMENT_COMMENT,
-    svc->host_name,
-    svc->description,
+    svc->get_host_name().c_str(),
+    svc->get_description().c_str(),
     current_time,
     ack_author,
     ack_data,
@@ -2911,7 +2913,7 @@ void acknowledge_service_problem(
 /* removes a host acknowledgement */
 void remove_host_acknowledgement(host* hst) {
   /* set the acknowledgement flag */
-  hst->problem_has_been_acknowledged = false;
+  hst->set_acknowledged(false);
 
   /* update the status log with the host info */
   update_host_status(hst, false);
@@ -2923,7 +2925,7 @@ void remove_host_acknowledgement(host* hst) {
 /* removes a service acknowledgement */
 void remove_service_acknowledgement(service* svc) {
   /* set the acknowledgement flag */
-  svc->problem_has_been_acknowledged = false;
+  svc->set_acknowledged(false);
 
   /* update the status log with the service info */
   update_service_status(svc, false);
@@ -3057,14 +3059,14 @@ void enable_passive_service_checks(service* svc) {
   unsigned long attr(MODATTR_PASSIVE_CHECKS_ENABLED);
 
   /* no change */
-  if (svc->accept_passive_service_checks)
+  if (svc->get_passive_checks_enabled())
     return;
 
   /* set the attribute modified flag */
   svc->set_modified_attributes(svc->get_modified_attributes() | attr);
 
   /* set the passive check flag */
-  svc->accept_passive_service_checks = true;
+  svc->set_passive_checks_enabled(true);
 
   /* send data to event broker */
   broker_adaptive_service_data(
@@ -3086,14 +3088,14 @@ void disable_passive_service_checks(service* svc) {
   unsigned long attr(MODATTR_PASSIVE_CHECKS_ENABLED);
 
   /* no change */
-  if (svc->accept_passive_service_checks == false)
+  if (!svc->get_passive_checks_enabled())
     return;
 
   /* set the attribute modified flag */
   svc->set_modified_attributes(svc->get_modified_attributes() | attr);
 
   /* set the passive check flag */
-  svc->accept_passive_service_checks = false;
+  svc->set_passive_checks_enabled(false);
 
   /* send data to event broker */
   broker_adaptive_service_data(
@@ -3234,14 +3236,14 @@ void enable_passive_host_checks(host* hst) {
   unsigned long attr(MODATTR_PASSIVE_CHECKS_ENABLED);
 
   /* no change */
-  if (hst->accept_passive_host_checks)
+  if (hst->get_passive_checks_enabled())
     return;
 
   /* set the attribute modified flag */
   hst->set_modified_attributes(hst->get_modified_attributes() | attr);
 
   /* set the passive check flag */
-  hst->accept_passive_host_checks = true;
+  hst->set_passive_checks_enabled(true);
 
   /* send data to event broker */
   broker_adaptive_host_data(
@@ -3263,14 +3265,14 @@ void disable_passive_host_checks(host* hst) {
   unsigned long attr(MODATTR_PASSIVE_CHECKS_ENABLED);
 
   /* no change */
-  if (hst->accept_passive_host_checks == false)
+  if (!hst->get_passive_checks_enabled())
     return;
 
   /* set the attribute modified flag */
   hst->set_modified_attributes(hst->get_modified_attributes() | attr);
 
   /* set the passive check flag */
-  hst->accept_passive_host_checks = false;
+  hst->set_passive_checks_enabled(false);
 
   /* send data to event broker */
   broker_adaptive_host_data(
@@ -3354,14 +3356,14 @@ void enable_service_event_handler(service* svc) {
   unsigned long attr(MODATTR_EVENT_HANDLER_ENABLED);
 
   /* no change */
-  if (svc->event_handler_enabled)
+  if (svc->get_event_handler_enabled())
     return;
 
   /* set the attribute modified flag */
   svc->set_modified_attributes(svc->get_modified_attributes() | attr);
 
   /* set the event handler flag */
-  svc->event_handler_enabled = true;
+  svc->set_event_handler_enabled(true);
 
   /* send data to event broker */
   broker_adaptive_service_data(
@@ -3383,14 +3385,14 @@ void disable_service_event_handler(service* svc) {
   unsigned long attr(MODATTR_EVENT_HANDLER_ENABLED);
 
   /* no change */
-  if (svc->event_handler_enabled == false)
+  if (!svc->get_event_handler_enabled())
     return;
 
   /* set the attribute modified flag */
   svc->set_modified_attributes(svc->get_modified_attributes() | attr);
 
   /* set the event handler flag */
-  svc->event_handler_enabled = false;
+  svc->set_event_handler_enabled(false);
 
   /* send data to event broker */
   broker_adaptive_service_data(
@@ -3412,14 +3414,14 @@ void enable_host_event_handler(host* hst) {
   unsigned long attr(MODATTR_EVENT_HANDLER_ENABLED);
 
   /* no change */
-  if (hst->event_handler_enabled)
+  if (hst->get_event_handler_enabled())
     return;
 
   /* set the attribute modified flag */
   hst->set_modified_attributes(hst->get_modified_attributes() | attr);
 
   /* set the event handler flag */
-  hst->event_handler_enabled = true;
+  hst->set_event_handler_enabled(true);
 
   /* send data to event broker */
   broker_adaptive_host_data(
@@ -3441,14 +3443,14 @@ void disable_host_event_handler(host* hst) {
   unsigned long attr(MODATTR_EVENT_HANDLER_ENABLED);
 
   /* no change */
-  if (hst->event_handler_enabled == false)
+  if (!hst->get_event_handler_enabled())
     return;
 
   /* set the attribute modified flag */
   hst->set_modified_attributes(hst->get_modified_attributes() | attr);
 
   /* set the event handler flag */
-  hst->event_handler_enabled = false;
+  hst->set_event_handler_enabled(false);
 
   /* send data to event broker */
   broker_adaptive_host_data(
@@ -3513,13 +3515,13 @@ void enable_host_checks(host* hst) {
   hst->set_should_be_scheduled(true);
 
   /* hosts with no check intervals don't get checked */
-  if (hst->check_interval == 0)
+  if (hst->get_normal_check_interval() == 0)
     hst->set_should_be_scheduled(false);
 
   /* schedule a check for right now (or as soon as possible) */
   time(&preferred_time);
-  if (check_time_against_period(preferred_time, hst->check_period_ptr) == ERROR) {
-    get_next_valid_time(preferred_time, &next_valid_time, hst->check_period_ptr);
+  if (check_time_against_period(preferred_time, hst->get_check_period()) == ERROR) {
+    get_next_valid_time(preferred_time, &next_valid_time, hst->get_check_period());
     hst->set_next_check(next_valid_time);
   }
   else
@@ -3848,14 +3850,14 @@ void start_obsessing_over_service(service* svc) {
   unsigned long attr(MODATTR_OBSESSIVE_HANDLER_ENABLED);
 
   /* no change */
-  if (svc->obsess_over_service)
+  if (svc->get_ocp_enabled())
     return;
 
   /* set the attribute modified flag */
   svc->set_modified_attributes(svc->get_modified_attributes() | attr);
 
   /* set the obsess over service flag */
-  svc->obsess_over_service = true;
+  svc->set_ocp_enabled(true);
 
   /* send data to event broker */
   broker_adaptive_service_data(
@@ -3877,14 +3879,14 @@ void stop_obsessing_over_service(service* svc) {
   unsigned long attr(MODATTR_OBSESSIVE_HANDLER_ENABLED);
 
   /* no change */
-  if (svc->obsess_over_service == false)
+  if (!svc->get_ocp_enabled())
     return;
 
   /* set the attribute modified flag */
   svc->set_modified_attributes(svc->get_modified_attributes() | attr);
 
   /* set the obsess over service flag */
-  svc->obsess_over_service = false;
+  svc->set_ocp_enabled(false);
 
   /* send data to event broker */
   broker_adaptive_service_data(
@@ -3906,14 +3908,14 @@ void start_obsessing_over_host(host* hst) {
   unsigned long attr(MODATTR_OBSESSIVE_HANDLER_ENABLED);
 
   /* no change */
-  if (hst->obsess_over_host)
+  if (hst->get_ocp_enabled())
     return;
 
   /* set the attribute modified flag */
   hst->set_modified_attributes(hst->get_modified_attributes() | attr);
 
   /* set the obsess over host flag */
-  hst->obsess_over_host = true;
+  hst->set_ocp_enabled(true);
 
   /* send data to event broker */
   broker_adaptive_host_data(
@@ -3935,14 +3937,14 @@ void stop_obsessing_over_host(host* hst) {
   unsigned long attr(MODATTR_OBSESSIVE_HANDLER_ENABLED);
 
   /* no change */
-  if (hst->obsess_over_host == false)
+  if (!hst->get_ocp_enabled())
     return;
 
   /* set the attribute modified flag */
   hst->set_modified_attributes(hst->get_modified_attributes() | attr);
 
   /* set the obsess over host flag */
-  hst->obsess_over_host = false;
+  hst->set_ocp_enabled(false);
 
   /* send data to event broker */
   broker_adaptive_host_data(
@@ -3962,7 +3964,7 @@ void stop_obsessing_over_host(host* hst) {
 /* sets the current notification number for a specific host */
 void set_host_notification_number(host* hst, int num) {
   /* set the notification number */
-  hst->current_notification_number = num;
+  hst->set_current_notification_number(num);
 
   /* update the status log with the host info */
   update_host_status(hst, false);
@@ -3971,7 +3973,7 @@ void set_host_notification_number(host* hst, int num) {
 /* sets the current notification number for a specific service */
 void set_service_notification_number(service* svc, int num) {
   /* set the notification number */
-  svc->current_notification_number = num;
+  svc->set_current_notification_number(num);
 
   /* update the status log with the service info */
   update_service_status(svc, false);

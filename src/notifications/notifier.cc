@@ -514,6 +514,10 @@ int notifier::get_scheduled_downtime_depth() const {
   return 0;
 }
 
+void notifier::set_last_acknowledgement(time_t last_acknowledgement) {
+  _last_acknowledgement = last_acknowledgement;
+}
+
 #if 0
 #include "com/centreon/engine/broker.hh"
 #include "com/centreon/engine/configuration/applier/state.hh"
