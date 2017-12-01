@@ -36,7 +36,8 @@ class                customvar {
  public:
                      customvar(
                        std::string const& name = "",
-                       std::string const& value = "");
+                       std::string const& value = "",
+                       bool modified = false);
                      customvar(customvar const& other);
                      ~customvar();
   customvar&         operator=(customvar const& other);

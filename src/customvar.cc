@@ -27,8 +27,8 @@ using namespace com::centreon::engine;
  *  @param[in] name   Variable name.
  *  @param[in] value  Variable value.
  */
-customvar::customvar(std::string const& name, std::string const& value)
-  : _modified(false), _name(name), _value(value) {}
+customvar::customvar(std::string const& name, std::string const& value, bool modified)
+  : _modified(modified), _name(name), _value(value) {}
 
 /**
  *  Copy constructor.
