@@ -298,7 +298,6 @@
 
 // Forward declaration.
 struct command_struct;
-struct customvariablesmember_struct;
 struct timed_event_struct;
 struct timeperiod_struct;
 

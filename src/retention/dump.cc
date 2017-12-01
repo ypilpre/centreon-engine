@@ -19,8 +19,6 @@
 
 #include <fstream>
 #include <iomanip>
-#include "com/centreon/engine/configuration/applier/state.hh"
-#include "com/centreon/engine/objects/customvariablesmember.hh"
 #include "com/centreon/engine/broker.hh"
 #include "com/centreon/engine/configuration/applier/state.hh"
 #include "com/centreon/engine/error.hh"
@@ -96,7 +94,7 @@ std::ostream& dump::contact(std::ostream& os, engine::contact const& obj) {
     "service_notification_period=" << (obj.get_service_notification_period() ? obj.get_service_notification_period_name() : "") << "\n"
     "service_notifications_enabled=" << obj.is_service_notifications_enabled() << "\n";
 
-  // XXX dump::customvariables(os, *obj.get_customvars());
+  dump::customvariables(os, obj.get_customvars());
   os << "}\n";
   return os;
 }
@@ -128,15 +126,13 @@ std::ostream& dump::contacts(std::ostream& os) {
  */
 std::ostream& dump::customvariables(
                 std::ostream& os,
-                customvariablesmember_struct const& obj) {
-  for (customvariablesmember const* member(&obj);
-       member;
-       member = member->next)
-    if (member->variable_name)
-      os << "_" << member->variable_name << "="
-         << member->has_been_modified << ","
-         << (member->variable_value ? member->variable_value : "")
-         << "\n";
+                customvar_set const& obj) {
+  for (customvar_set::const_iterator it(obj.begin()), end(obj.end());
+       it != end;
+       ++it)
+    os << "_" << it->second.get_name() << "="
+       << it->second.get_modified() << ","
+       << it->second.get_value() << "\n";
   return (os);
 }
 
@@ -271,7 +267,7 @@ std::ostream& dump::host(std::ostream& os, ::host const& obj) {
     os << "," << obj.get_historical_state(i);
   os << "\n";
 
-  // XXX dump::customvariables(os, *obj.custom_variables);
+  dump::customvariables(os, obj.get_customvars());
   os << "}\n";
   return (os);
 }
@@ -464,7 +460,7 @@ std::ostream& dump::service(std::ostream& os, ::service const& obj) {
     os << "," << obj.get_historical_state(i);
   os << "\n";
 
-  // dump::customvariables(os, *obj.custom_variables);
+  dump::customvariables(os, obj.get_customvars());
   os << "}\n";
   return (os);
 }

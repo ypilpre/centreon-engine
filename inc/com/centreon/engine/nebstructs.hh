@@ -22,7 +22,6 @@
 #  define CCE_NEBSTRUCTS_HH
 
 #  include "com/centreon/engine/objects/command.hh"
-#  include "com/centreon/engine/objects/customvariablesmember.hh"
 
 // Forward declarations
 CCE_BEGIN()
