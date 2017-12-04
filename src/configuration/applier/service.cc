@@ -583,7 +583,7 @@ void applier::service::resolve_object(
                                  obj.check_command().find_first_of('!')));
       try {
         // Set resolved command and arguments.
-        svc.set_check_command(&find_command(command_name));
+        svc.set_check_command(find_command(command_name));
         svc.set_check_command_args(obj.check_command());
       }
       catch (not_found const& e) {
@@ -633,7 +633,7 @@ void applier::service::resolve_object(
 
       try {
         // Get command.
-        svc.set_event_handler(&find_command(command_name));
+        svc.set_event_handler(find_command(command_name));
         svc.set_event_handler_args(obj.event_handler());
       }
       catch (not_found const& e) {

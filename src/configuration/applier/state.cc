@@ -1171,8 +1171,12 @@ void applier::state::_apply(configuration::state const& new_cfg) {
     std::string temp_command_name(config->global_host_event_handler().substr(
                                     0,
                                     config->global_host_event_handler().find_first_of('!')));
-    command_struct* temp_command(&::find_command(temp_command_name.c_str()));
-    if (!temp_command) {
+    shared_ptr<command_struct> temp_command;
+    try {
+      temp_command = ::find_command(temp_command_name.c_str());
+    }
+    catch (not_found const& e) {
+      (void)e;
       logger(log_verification_error, basic)
         << "Error: Global host event handler command '"
         << temp_command_name << "' is not defined anywhere!";
@@ -1180,15 +1184,19 @@ void applier::state::_apply(configuration::state const& new_cfg) {
     }
 
     // Save the pointer to the command for later.
-    global_host_event_handler_ptr = temp_command;
+    global_host_event_handler_ptr = temp_command.get();
   }
   if (!config->global_service_event_handler().empty()) {
     // Check the event handler command.
     std::string temp_command_name(config->global_service_event_handler().substr(
                                     0,
                                     config->global_service_event_handler().find_first_of('!')));
-    command_struct* temp_command(&::find_command(temp_command_name.c_str()));
-    if (!temp_command) {
+
+    shared_ptr<command_struct> temp_command;
+    try {
+      temp_command = ::find_command(temp_command_name.c_str());
+    }
+    catch (not_found const& e) {
       logger(log_verification_error, basic)
         << "Error: Global service event handler command '"
         << temp_command_name << "' is not defined anywhere!";
@@ -1196,7 +1204,7 @@ void applier::state::_apply(configuration::state const& new_cfg) {
     }
 
     // Save the pointer to the command for later.
-    global_service_event_handler_ptr = temp_command;
+    global_service_event_handler_ptr = temp_command.get();
   }
 
   // Check obsessive processor commands...
@@ -1207,8 +1215,13 @@ void applier::state::_apply(configuration::state const& new_cfg) {
     std::string temp_command_name(config->ocsp_command().substr(
                                     0,
                                     config->ocsp_command().find_first_of('!')));
-    command_struct* temp_command(&::find_command(temp_command_name.c_str()));
-    if (!temp_command) {
+
+    shared_ptr<command_struct> temp_command;
+    try {
+      temp_command = ::find_command(temp_command_name.c_str());
+    }
+    catch (not_found const& e) {
+      (void)e;
       logger(log_verification_error, basic)
         << "Error: Obsessive compulsive service processor command '"
         << temp_command_name << "' is not defined anywhere!";
@@ -1216,14 +1229,18 @@ void applier::state::_apply(configuration::state const& new_cfg) {
     }
 
     // Save the pointer to the command for later.
-    ocsp_command_ptr = temp_command;
+    ocsp_command_ptr = temp_command.get();
   }
   if (!config->ochp_command().empty()) {
     std::string temp_command_name(config->ochp_command().substr(
                                     0,
                                     config->ochp_command().find_first_of('!')));
-    command_struct* temp_command(&::find_command(temp_command_name.c_str()));
-    if (!temp_command) {
+    shared_ptr<command_struct> temp_command;
+    try {
+      temp_command = ::find_command(temp_command_name.c_str());
+    }
+    catch (not_found const& e) {
+      (void)e;
       logger(log_verification_error, basic)
         << "Error: Obsessive compulsive host processor command '"
         << temp_command_name << "' is not defined anywhere!";
@@ -1231,7 +1248,7 @@ void applier::state::_apply(configuration::state const& new_cfg) {
     }
 
     // Save the pointer to the command for later.
-    ochp_command_ptr = temp_command;
+    ochp_command_ptr = temp_command.get();
   }
 }
 

@@ -1045,16 +1045,16 @@ com::centreon::engine::contactgroup& find_contactgroup(std::string const& name) 
  *
  *  @return Command object if found, an exception is thrown otherwise.
  */
-command_struct& find_command(std::string const& name) {
+shared_ptr<command_struct>& find_command(std::string const& name) {
   if (name.empty())
     throw (not_found_error() << "Could not find a command with an empty name");
 
-  umap<std::string, shared_ptr<command_struct> >::const_iterator
+  umap<std::string, shared_ptr<command_struct> >::iterator
     it(configuration::applier::state::instance().commands().find(name));
   if (it == configuration::applier::state::instance().commands().end())
     throw (not_found_error() << "Could not find command '" << name << "'");
 
-  return (*it->second.get());
+  return (it->second);
 }
 
 /**

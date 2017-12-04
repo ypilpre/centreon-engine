@@ -28,6 +28,7 @@
 #  include "com/centreon/engine/objects/command.hh"
 #  include "com/centreon/engine/objects/daterange.hh"
 #  include "com/centreon/engine/objects/timeperiod.hh"
+#  include "com/centreon/shared_ptr.hh"
 
 CCE_BEGIN()
   class contact;
@@ -135,7 +136,7 @@ int parse_check_output(
 
 com::centreon::engine::contact& find_contact(std::string const& name);
 com::centreon::engine::contactgroup& find_contactgroup(std::string const& name);
-command_struct& find_command(std::string const& name);
+com::centreon::shared_ptr<command_struct>& find_command(std::string const& name);
 timeperiod& find_timeperiod(std::string const& name);
 com::centreon::engine::host* find_host(std::string const& name);
 hostgroup_struct& find_hostgroup(std::string const& name);

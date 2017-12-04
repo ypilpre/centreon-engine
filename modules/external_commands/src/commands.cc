@@ -1858,7 +1858,7 @@ int cmd_change_object_char_var(int cmd, char* args) {
   host* temp_host(NULL);
   contact* temp_contact(NULL);
   timeperiod* temp_timeperiod(NULL);
-  command_struct* temp_command(NULL);
+  shared_ptr<command_struct> temp_command;
   char* host_name(NULL);
   char* svc_description(NULL);
   char* contact_name(NULL);
@@ -1981,7 +1981,7 @@ int cmd_change_object_char_var(int cmd, char* args) {
     /* make sure the command exists */
     temp_ptr2 = my_strtok(temp_ptr, "!");
     try {
-      temp_command = &find_command(temp_ptr2);
+      temp_command = find_command(temp_ptr2);
     }
     catch (not_found const& e) {
       (void)e;
@@ -2002,13 +2002,13 @@ int cmd_change_object_char_var(int cmd, char* args) {
 
   case CMD_CHANGE_GLOBAL_HOST_EVENT_HANDLER:
     config->global_host_event_handler(temp_ptr);
-    global_host_event_handler_ptr = temp_command;
+    global_host_event_handler_ptr = temp_command.get();
     attr = MODATTR_EVENT_HANDLER_COMMAND;
     break;
 
   case CMD_CHANGE_GLOBAL_SVC_EVENT_HANDLER:
     config->global_service_event_handler(temp_ptr);
-    global_service_event_handler_ptr = temp_command;
+    global_service_event_handler_ptr = temp_command.get();
     attr = MODATTR_EVENT_HANDLER_COMMAND;
     break;
 

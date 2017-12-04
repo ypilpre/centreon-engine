@@ -86,7 +86,7 @@ void checkable::set_active_checks_enabled(bool enable) {
  *  @return Check command of this object. NULL for none.
  */
 command* checkable::get_check_command() const {
-  return (_check_command);
+  return (_check_command.get());
 }
 
 /**
@@ -94,7 +94,7 @@ command* checkable::get_check_command() const {
  *
  *  @param[in] cmd  Check command object.
  */
-void checkable::set_check_command(command* cmd) {
+void checkable::set_check_command(shared_ptr<command> cmd) {
   _check_command = cmd;
   return ;
 }
@@ -780,7 +780,7 @@ void checkable::set_percent_state_change(double change) {
  *  @return Event handler object. NULL if none.
  */
 command* checkable::get_event_handler() const {
-  return (_event_handler);
+  return (_event_handler.get());
 }
 
 /**
@@ -788,7 +788,7 @@ command* checkable::get_event_handler() const {
  *
  *  @param[in] cmd  Event handler object.
  */
-void checkable::set_event_handler(command* cmd) {
+void checkable::set_event_handler(shared_ptr<command> cmd) {
   _event_handler = cmd;
   return ;
 }

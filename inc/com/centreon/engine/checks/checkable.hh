@@ -23,6 +23,7 @@
 #  include "com/centreon/engine/namespace.hh"
 #  include "com/centreon/engine/objects/command.hh"
 #  include "com/centreon/engine/objects/timeperiod.hh"
+#  include "com/centreon/shared_ptr.hh"
 
 CCE_BEGIN()
 
@@ -44,7 +45,7 @@ namespace              checks {
     bool               get_active_checks_enabled() const;
     void               set_active_checks_enabled(bool enable);
     command*           get_check_command() const;
-    void               set_check_command(command* cmd);
+    void               set_check_command(com::centreon::shared_ptr<command> cmd);
     std::string const& get_check_command_args() const;
     void               set_check_command_args(std::string const& args);
     timeperiod*        get_check_period() const;
@@ -122,7 +123,8 @@ namespace              checks {
 
     // Event handler.
     command*           get_event_handler() const;
-    void               set_event_handler(command* cmd);
+    void               set_event_handler(
+                         com::centreon::shared_ptr<command> cmd);
     std::string const& get_event_handler_args() const;
     void               set_event_handler_args(std::string const& args);
     bool               get_event_handler_enabled() const;
@@ -154,7 +156,8 @@ namespace              checks {
 
     bool               _active_checks_enabled;
     bool               _being_freshened;
-    command*           _check_command;
+    com::centreon::shared_ptr<command>
+                       _check_command;
     std::string        _check_command_args;
     int                _check_options;
     timeperiod*        _check_period;
@@ -164,7 +167,8 @@ namespace              checks {
     int                _current_problem_id;
     int                _current_state;
     int                _current_state_type;
-    command*           _event_handler;
+    com::centreon::shared_ptr<command>
+                       _event_handler;
     std::string        _event_handler_args;
     bool               _event_handler_enabled;
     bool               _executing;

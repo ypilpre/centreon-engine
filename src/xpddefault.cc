@@ -27,14 +27,17 @@
 #include "com/centreon/engine/common.hh"
 #include "com/centreon/engine/events/defines.hh"
 #include "com/centreon/engine/globals.hh"
+#include "com/centreon/engine/host.hh"
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/macros.hh"
+#include "com/centreon/engine/not_found.hh"
 #include "com/centreon/engine/objects/command.hh"
-#include "com/centreon/engine/host.hh"
 #include "com/centreon/engine/service.hh"
 #include "com/centreon/engine/string.hh"
 #include "com/centreon/engine/xpddefault.hh"
+#include "com/centreon/shared_ptr.hh"
 
+using namespace com::centreon;
 using namespace com::centreon::engine;
 using namespace com::centreon::engine::logging;
 
@@ -62,7 +65,7 @@ static pthread_mutex_t xpddefault_service_perfdata_fp_lock;
 // initializes performance data.
 int xpddefault_initialize_performance_data() {
   char* temp_command_name(NULL);
-  command* temp_command(NULL);
+  shared_ptr<command> temp_command;
 
   // reset vars.
   xpddefault_host_perfdata_command_ptr = NULL;
@@ -89,7 +92,12 @@ int xpddefault_initialize_performance_data() {
     // get the command name, leave any arguments behind.
     temp_command_name = my_strtok(temp_buffer, "!");
 
-    if ((temp_command = &find_command(temp_command_name)) == NULL) {
+    try {
+      temp_command = find_command(temp_command_name);
+    }
+    catch (not_found const& e) {
+      (void) e;
+      temp_command.clear();
       logger(log_runtime_warning, basic)
         << "Warning: Host performance command '" << temp_command_name
         << "' was not found - host performance data will not "
@@ -98,7 +106,7 @@ int xpddefault_initialize_performance_data() {
     delete[] temp_buffer;
 
     // save the command pointer for later.
-    xpddefault_host_perfdata_command_ptr = temp_command;
+    xpddefault_host_perfdata_command_ptr = temp_command.get();
   }
 
   if (!config->service_perfdata_command().empty()) {
@@ -107,7 +115,12 @@ int xpddefault_initialize_performance_data() {
     // get the command name, leave any arguments behind.
     temp_command_name = my_strtok(temp_buffer, "!");
 
-    if ((temp_command = &find_command(temp_command_name)) == NULL) {
+    try {
+      temp_command = find_command(temp_command_name);
+    }
+    catch (not_found const& e) {
+      (void)e;
+      temp_command.clear();
       logger(log_runtime_warning, basic)
         << "Warning: Service performance command '" << temp_command_name
         << "' was not found - service performance data will not "
@@ -118,7 +131,7 @@ int xpddefault_initialize_performance_data() {
     delete[] temp_buffer;
 
     // save the command pointer for later.
-    xpddefault_service_perfdata_command_ptr = temp_command;
+    xpddefault_service_perfdata_command_ptr = temp_command.get();
   }
 
   if (!config->host_perfdata_file_processing_command().empty()) {
@@ -127,7 +140,12 @@ int xpddefault_initialize_performance_data() {
 
     // get the command name, leave any arguments behind.
     temp_command_name = my_strtok(temp_buffer, "!");
-    if ((temp_command = &find_command(temp_command_name)) == NULL) {
+    try {
+      temp_command = find_command(temp_command_name);
+    }
+    catch (not_found const& e) {
+      (void)e;
+      temp_command.clear();
       logger(log_runtime_warning, basic)
         << "Warning: Host performance file processing command '"
         << temp_command_name << "' was not found - host performance "
@@ -138,7 +156,7 @@ int xpddefault_initialize_performance_data() {
     delete[] temp_buffer;
 
     // save the command pointer for later.
-    xpddefault_host_perfdata_file_processing_command_ptr = temp_command;
+    xpddefault_host_perfdata_file_processing_command_ptr = temp_command.get();
   }
 
   if (!config->service_perfdata_file_processing_command().empty()) {
@@ -147,7 +165,12 @@ int xpddefault_initialize_performance_data() {
 
     // get the command name, leave any arguments behind.
     temp_command_name = my_strtok(temp_buffer, "!");
-    if ((temp_command = &find_command(temp_command_name)) == NULL) {
+    try {
+      temp_command = find_command(temp_command_name);
+    }
+    catch (not_found const& e) {
+      (void)e;
+      temp_command.clear();
       logger(log_runtime_warning, basic)
         << "Warning: Service performance file processing command '"
         << temp_command_name << "' was not found - service performance "
@@ -159,7 +182,7 @@ int xpddefault_initialize_performance_data() {
 
     // save the command pointer for later.
     xpddefault_service_perfdata_file_processing_command_ptr
-      = temp_command;
+      = temp_command.get();
   }
 
   return (OK);

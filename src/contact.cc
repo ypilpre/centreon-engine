@@ -347,9 +347,9 @@ bool contact::check(int* w, int* e) {
       std::string buf(it->first);
       size_t index(buf.find(buf, '!'));
       std::string command_name(buf.substr(0, index));
-      command_struct* temp_command;
+      shared_ptr<command_struct> temp_command;
       try {
-        temp_command = &find_command(command_name);
+        temp_command = find_command(command_name);
       }
       catch (not_found const& e) {
         (void)e;
@@ -380,9 +380,9 @@ bool contact::check(int* w, int* e) {
       std::string buf(it->first);
       size_t index(buf.find('!'));
       std::string command_name(buf.substr(0, index));
-      command_struct* cmd;
+      shared_ptr<command_struct> cmd;
       try {
-        cmd = &find_command(command_name);
+        cmd = find_command(command_name);
       }
       catch (not_found const& e) {
         (void)e;
