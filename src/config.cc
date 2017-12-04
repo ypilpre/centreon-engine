@@ -29,10 +29,9 @@
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/not_found.hh"
 #include "com/centreon/engine/objects/commandsmember.hh"
-#include "com/centreon/engine/objects/hostsmember.hh"
 #include "com/centreon/engine/objects/objectlist.hh"
-#include "com/centreon/engine/objects/servicesmember.hh"
 #include "com/centreon/engine/objects/timeperiodexclusion.hh"
+#include "com/centreon/engine/service.hh"
 #include "com/centreon/engine/string.hh"
 
 using namespace com::centreon;
@@ -296,22 +295,22 @@ int check_servicegroup(servicegroup* sg, int* w, int* e) {
   int errors(0);
 
   // Check all group members.
-  for (servicesmember* temp_servicesmember(sg->members);
-       temp_servicesmember;
-       temp_servicesmember = temp_servicesmember->next) {
+  for (service_map::iterator
+         it(sg->members.begin()),
+         end(sg->members.end());
+       it != end;
+       ++it) {
     service* temp_service(NULL);
     try {
       temp_service = configuration::applier::state::instance().services_find(
-        std::make_pair(
-               temp_servicesmember->host_name,
-               temp_servicesmember->service_description)).get();
+        it->first).get();
     }
     catch (not_found const& e) {
       (void)e;
       logger(log_verification_error, basic)
         << "Error: Service '"
-        << temp_servicesmember->service_description
-        << "' on host '" << temp_servicesmember->host_name
+        << it->first.second
+        << "' on host '" << it->first.first
         << "' specified in service group '" << sg->group_name
         << "' is not defined anywhere!";
       ++errors;
@@ -319,11 +318,11 @@ int check_servicegroup(servicegroup* sg, int* w, int* e) {
 
     // Add service to group and group to service links.
     temp_service->add_servicegroup(sg);
-    temp_servicesmember->service_ptr = temp_service;
+    it->second = shared_ptr<service>(temp_service);
   }
 
   // Check for illegal characters in servicegroup name.
-  if (contains_illegal_object_chars(sg->group_name) == true) {
+  if (contains_illegal_object_chars(sg->group_name)) {
     logger(log_verification_error, basic)
       << "Error: The name of servicegroup '" << sg->group_name
       << "' contains one or more illegal characters.";
@@ -349,20 +348,22 @@ int check_servicegroup(servicegroup* sg, int* w, int* e) {
 int check_hostgroup(hostgroup* hg, int* w, int* e) {
   (void)w;
   int errors(0);
+  host* temp_host;
 
   // Check all group members.
-  for (hostsmember* temp_hostsmember(hg->members);
-       temp_hostsmember;
-       temp_hostsmember = temp_hostsmember->next) {
-    host* temp_host(NULL);
+  for (umap<std::string, shared_ptr<host> >::iterator
+         it(hg->members.begin()),
+         end(hg->members.end());
+       it != end;
+       ++it) {
     try {
-      temp_host = configuration::applier::state::instance().hosts_find(
-                    temp_hostsmember->host_name).get();
+      shared_ptr<host> temp_host
+        = configuration::applier::state::instance().hosts_find(it->first);
     }
     catch (not_found const& e) {
       (void)e;
       logger(log_verification_error, basic)
-        << "Error: Host '" << temp_hostsmember->host_name
+        << "Error: Host '" << temp_host->get_host_name()
         << "' specified in host group '" << hg->group_name
         << "' is not defined anywhere!";
       ++errors;
@@ -370,7 +371,7 @@ int check_hostgroup(hostgroup* hg, int* w, int* e) {
 
     // Add host to group and group to service links.
     temp_host->add_hostgroup(hg);
-    temp_hostsmember->host_ptr = temp_host;
+    it->second = temp_host;
   }
 
   // Check for illegal characters in hostgroup name.

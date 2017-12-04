@@ -18,10 +18,8 @@
 */
 
 #include "com/centreon/engine/deleter/listmember.hh"
-#include "com/centreon/engine/deleter/servicesmember.hh"
 #include "com/centreon/engine/deleter/servicegroup.hh"
 #include "com/centreon/engine/objects/servicegroup.hh"
-#include "com/centreon/engine/objects/servicesmember.hh"
 
 using namespace com::centreon::engine;
 
@@ -36,7 +34,8 @@ void deleter::servicegroup(void* ptr) throw () {
 
   servicegroup_struct* obj(static_cast<servicegroup_struct*>(ptr));
 
-  listmember(obj->members, &servicesmember);
+  obj->members.clear();
+  //listmember(obj->members, &servicesmember);
 
   delete[] obj->group_name;
   obj->group_name = NULL;

@@ -115,5 +115,6 @@ CCE_END()
 using com::centreon::engine::service;
 
 typedef std::list<service*> service_set;
+typedef umap<std::pair<std::string, std::string>, com::centreon::shared_ptr<service> > service_map;
 
 #endif // !CCE_SERVICE_HH

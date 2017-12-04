@@ -23,11 +23,9 @@
 #include "com/centreon/engine/configuration/applier/servicegroup.hh"
 #include "com/centreon/engine/configuration/applier/state.hh"
 #include "com/centreon/engine/deleter/listmember.hh"
-#include "com/centreon/engine/deleter/servicesmember.hh"
 #include "com/centreon/engine/error.hh"
 #include "com/centreon/engine/globals.hh"
 #include "com/centreon/engine/logging/logger.hh"
-#include "com/centreon/engine/objects/servicesmember.hh"
 
 using namespace com::centreon::engine::configuration;
 
@@ -199,21 +197,24 @@ void applier::servicegroup::modify_object(
   // Were members modified ?
   if (obj.members() != old_cfg.members()) {
     // Delete all old service group members.
-    for (servicesmember* m(it_obj->second->members);
-         m;
-         m = m->next) {
+    for (service_map::iterator
+           it(it_obj->second->members.begin()),
+           end(it_obj->second->members.end());
+         it != end;
+         ++it) {
       timeval tv(get_broker_timestamp(NULL));
       broker_group_member(
         NEBTYPE_SERVICEGROUPMEMBER_DELETE,
         NEBFLAG_NONE,
         NEBATTR_NONE,
-        m,
+        it->second.get(),
         sg,
         &tv);
     }
-    deleter::listmember(
-      it_obj->second->members,
-      &deleter::servicesmember);
+    it_obj->second->members.clear();
+//    deleter::listmember(
+//      it_obj->second->members,
+//      &deleter::servicesmember);
 
     // Create new service group members.
     for (set_pair_string::const_iterator

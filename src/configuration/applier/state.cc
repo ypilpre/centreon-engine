@@ -281,7 +281,7 @@ umap<std::string, shared_ptr<commands::connector> >& applier::state::connectors(
  *
  *  @return The current contacts.
  */
-umap<std::string, shared_ptr<engine::contact> > const& applier::state::contacts() const throw () {
+contact_set const& applier::state::contacts() const throw () {
   return (_contacts);
 }
 
@@ -290,7 +290,7 @@ umap<std::string, shared_ptr<engine::contact> > const& applier::state::contacts(
  *
  *  @return The current contacts.
  */
-umap<std::string, shared_ptr<engine::contact> >& applier::state::contacts() throw () {
+contact_set& applier::state::contacts() throw () {
   return (_contacts);
 }
 
@@ -302,7 +302,7 @@ umap<std::string, shared_ptr<engine::contact> >& applier::state::contacts() thro
  *  @return Iterator to the element if found, contacts().end()
  *          otherwise.
  */
-umap<std::string, shared_ptr<engine::contact> >::const_iterator applier::state::contacts_find(configuration::contact::key_type const& k) const {
+contact_set::const_iterator applier::state::contacts_find(configuration::contact::key_type const& k) const {
   return (_contacts.find(k));
 }
 
@@ -314,7 +314,7 @@ umap<std::string, shared_ptr<engine::contact> >::const_iterator applier::state::
  *  @return Iterator to the element if found, contacts().end()
  *          otherwise.
  */
-umap<std::string, shared_ptr<engine::contact> >::iterator applier::state::contacts_find(configuration::contact::key_type const& k) {
+contact_set::iterator applier::state::contacts_find(configuration::contact::key_type const& k) {
   return (_contacts.find(k));
 }
 

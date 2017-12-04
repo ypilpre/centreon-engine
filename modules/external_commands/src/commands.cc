@@ -344,7 +344,6 @@ int cmd_schedule_check(int cmd, char* args) {
   char* temp_ptr(NULL);
   host* temp_host(NULL);
   service* temp_service(NULL);
-  servicesmember* temp_servicesmember(NULL);
   char* host_name(NULL);
   char* svc_description(NULL);
   time_t delay_time(0);
@@ -425,7 +424,6 @@ int cmd_schedule_check(int cmd, char* args) {
 int cmd_schedule_host_service_checks(int cmd, char* args, int force) {
   char* temp_ptr(NULL);
   service* temp_service(NULL);
-  servicesmember* temp_servicesmember(NULL);
   host* temp_host(NULL);
   char* host_name(NULL);
   time_t delay_time(0);
@@ -908,14 +906,12 @@ int cmd_remove_acknowledgement(int cmd, char* args) {
 
 /* schedules downtime for a specific host or service */
 int cmd_schedule_downtime(int cmd, time_t entry_time, char* args) {
-  servicesmember* temp_servicesmember(NULL);
   service* temp_service(NULL);
   host* temp_host(NULL);
   host* last_host(NULL);
   hostgroup_struct* temp_hostgroup(NULL);
-  hostsmember* temp_hgmember(NULL);
+  host* temp_hg;
   servicegroup_struct* temp_servicegroup(NULL);
-  servicesmember* temp_sgmember(NULL);
   char* host_name(NULL);
   char* hostgroup_name(NULL);
   char* servicegroup_name(NULL);
@@ -1100,12 +1096,15 @@ int cmd_schedule_downtime(int cmd, time_t entry_time, char* args) {
     break;
 
   case CMD_SCHEDULE_HOSTGROUP_HOST_DOWNTIME:
-    for (temp_hgmember = temp_hostgroup->members;
-         temp_hgmember != NULL;
-         temp_hgmember = temp_hgmember->next)
+    for (umap<std::string, shared_ptr<host> >::const_iterator
+           it(temp_hostgroup->members.begin()),
+           end(temp_hostgroup->members.end());
+         it != end;
+         ++it) {
+      temp_hg = it->second.get();
       schedule_downtime(
         HOST_DOWNTIME,
-        temp_hgmember->host_name,
+        temp_hg->get_host_name().c_str(),
         NULL,
         entry_time,
         author,
@@ -1116,13 +1115,16 @@ int cmd_schedule_downtime(int cmd, time_t entry_time, char* args) {
         triggered_by,
         duration,
         &downtime_id);
+    }
     break;
 
   case CMD_SCHEDULE_HOSTGROUP_SVC_DOWNTIME:
-    for (temp_hgmember = temp_hostgroup->members;
-         temp_hgmember != NULL;
-         temp_hgmember = temp_hgmember->next) {
-      if ((temp_host = temp_hgmember->host_ptr) == NULL)
+    for (umap<std::string, shared_ptr<host> >::const_iterator
+           it(temp_hostgroup->members.begin()),
+           end(temp_hostgroup->members.end());
+         it != end;
+         ++it) {
+      if ((temp_hg = it->second.get()) == NULL)
         continue;
       for (std::list<service*>::iterator
              it(temp_host->get_services().begin()),
@@ -1148,40 +1150,46 @@ int cmd_schedule_downtime(int cmd, time_t entry_time, char* args) {
     break;
 
   case CMD_SCHEDULE_SERVICEGROUP_HOST_DOWNTIME:
-    last_host = NULL;
-    for (temp_sgmember = temp_servicegroup->members;
-         temp_sgmember != NULL;
-         temp_sgmember = temp_sgmember->next) {
-      temp_host = find_host(temp_sgmember->host_name);
-      if (temp_host == NULL)
-        continue;
-      if (last_host == temp_host)
-        continue;
-      schedule_downtime(
-        HOST_DOWNTIME,
-        temp_sgmember->host_name,
-        NULL,
-        entry_time,
-        author,
-        comment_data,
-        start_time,
-        end_time,
-        fixed,
-        triggered_by,
-        duration,
-        &downtime_id);
-      last_host = temp_host;
+    {
+      std::set<host*> hst_set;
+      for (service_map::const_iterator
+             it(temp_servicegroup->members.begin()),
+             end(temp_servicegroup->members.end());
+           it != end;
+           ++it) {
+        temp_host = it->second->get_host();
+        if (temp_host == NULL)
+          continue;
+        if (hst_set.find(temp_host) == hst_set.end()) {
+          schedule_downtime(
+            HOST_DOWNTIME,
+            temp_host->get_host_name().c_str(),
+            NULL,
+            entry_time,
+            author,
+            comment_data,
+            start_time,
+            end_time,
+            fixed,
+            triggered_by,
+            duration,
+            &downtime_id);
+          hst_set.insert(temp_host);
+        }
+      }
     }
     break;
 
   case CMD_SCHEDULE_SERVICEGROUP_SVC_DOWNTIME:
-    for (temp_sgmember = temp_servicegroup->members;
-         temp_sgmember != NULL;
-         temp_sgmember = temp_sgmember->next)
+    for (service_map::iterator
+           it(temp_servicegroup->members.begin()),
+           end(temp_servicegroup->members.end());
+         it != end;
+         ++it) {
       schedule_downtime(
         SERVICE_DOWNTIME,
-        temp_sgmember->host_name,
-        temp_sgmember->service_description,
+        it->first.first.c_str(),
+        it->first.second.c_str(),
         entry_time, author,
         comment_data,
         start_time,
@@ -1190,6 +1198,7 @@ int cmd_schedule_downtime(int cmd, time_t entry_time, char* args) {
         triggered_by,
         duration,
         &downtime_id);
+    }
     break;
 
   case CMD_SCHEDULE_AND_PROPAGATE_HOST_DOWNTIME:
@@ -1410,9 +1419,8 @@ int cmd_delete_downtime_by_host_name(int cmd, char* args) {
 int cmd_delete_downtime_by_hostgroup_name(int cmd, char* args) {
   char *temp_ptr(NULL);
   char *end_ptr(NULL);
-  host *temp_host(NULL);
   hostgroup *temp_hostgroup(NULL);
-  hostsmember *temp_member(NULL);
+  host* temp_host;
   char *service_description(NULL);
   char *downtime_comment(NULL);
   char *host_name(NULL);
@@ -1480,10 +1488,13 @@ int cmd_delete_downtime_by_hostgroup_name(int cmd, char* args) {
     }
   }
 
-  for (temp_member = temp_hostgroup->members;
-       temp_member != NULL;
-       temp_member = temp_member->next) {
-    if (NULL == (temp_host = temp_member->host_ptr))
+  for (umap<std::string, shared_ptr<host> >::const_iterator
+         it(temp_hostgroup->members.begin()),
+         end(temp_hostgroup->members.end());
+       it != end;
+       ++it) {
+    temp_host = it->second.get();
+    if (temp_host == NULL)
       continue ;
     if ((host_name != NULL) && strcmp(temp_host->get_host_name().c_str(), host_name))
       continue ;
@@ -2626,8 +2637,6 @@ void enable_and_propagate_notifications(
        int affect_services) {
   host* child_host(NULL);
   service* temp_service(NULL);
-  servicesmember* temp_servicesmember(NULL);
-  hostsmember* temp_hostsmember(NULL);
 
   /* enable notification for top level host */
   if (affect_top_host && level == 0)
@@ -2677,7 +2686,6 @@ void disable_and_propagate_notifications(
        int affect_services) {
   host* child_host(NULL);
   service* temp_service(NULL);
-  hostsmember* temp_hostsmember(NULL);
 
   if (hst == NULL)
     return;
@@ -2731,7 +2739,6 @@ void schedule_and_propagate_downtime(
        unsigned long triggered_by,
        unsigned long duration) {
   host* child_host(NULL);
-  hostsmember* temp_hostsmember(NULL);
 
   /* check all child hosts... */
   for (std::list<host*>::const_iterator

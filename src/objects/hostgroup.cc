@@ -24,7 +24,6 @@
 #include "com/centreon/engine/globals.hh"
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/objects/hostgroup.hh"
-#include "com/centreon/engine/objects/hostsmember.hh"
 #include "com/centreon/engine/objects/tool.hh"
 #include "com/centreon/engine/shared.hh"
 #include "com/centreon/engine/string.hh"
@@ -49,7 +48,8 @@ bool operator==(
        hostgroup const& obj2) throw () {
   return (is_equal(obj1.group_name, obj2.group_name)
           && is_equal(obj1.alias, obj2.alias)
-          && is_equal(obj1.members, obj2.members)
+          && obj1.members == obj2.members
+          //&& is_equal(obj1.members, obj2.members)
           && is_equal(obj1.notes, obj2.notes)
           && is_equal(obj1.notes_url, obj2.notes_url)
           && is_equal(obj1.action_url, obj2.action_url));
@@ -164,12 +164,14 @@ int is_host_member_of_hostgroup(hostgroup* group, host* hst) {
   if (!group || !hst)
     return (false);
 
-  for (hostsmember* member(group->members);
-       member;
-       member = member->next)
-    if (member->host_ptr == hst)
-      return (true);
-  return (false);
+  for (umap<std::string, shared_ptr<host> >::iterator
+         it(group->members.begin()),
+         end(group->members.end());
+       it != end;
+       ++it)
+    if (it->second.get() == hst)
+      return true;
+  return false;
 }
 
 /**
@@ -196,4 +198,44 @@ unsigned int engine::get_hostgroup_id(char const* name) {
   std::map<std::string, hostgroup_other_properties>::const_iterator
     found(hostgroup_other_props.find(name));
   return (found != hostgroup_other_props.end() ? found->second.hostgroup_id : 0);
+}
+
+/**
+ *  Add a new host to a host group.
+ *
+ *  @param[in] temp_hostgroup Host group object.
+ *  @param[in] host_name      Host name.
+ *
+ *  @return Host group membership.
+ */
+host* com::centreon::engine::add_host_to_hostgroup(
+                               hostgroup_struct* grp,
+                               std::string const& host_name) {
+  // Make sure we have the data we need.
+  if (!grp || host_name.empty()) {
+    logger(log_config_error, basic)
+      << "Error: Hostgroup is NULL or host name is empty";
+    return (NULL);
+  }
+
+  shared_ptr<host> obj(new host(host_name));
+  grp->members[host_name] = obj;
+
+  try {
+    // Notify event broker.
+    timeval tv(get_broker_timestamp(NULL));
+    broker_group_member(
+      NEBTYPE_HOSTGROUPMEMBER_ADD,
+      NEBFLAG_NONE,
+      NEBATTR_NONE,
+      obj.get(),
+      grp,
+      &tv);
+  }
+  catch (...) {
+    grp->members.erase(host_name);
+    return NULL;
+  }
+
+  return (obj.get());
 }

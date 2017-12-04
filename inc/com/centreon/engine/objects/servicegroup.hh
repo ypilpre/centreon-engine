@@ -20,15 +20,22 @@
 #ifndef CCE_OBJECTS_SERVICEGROUP_HH
 #  define CCE_OBJECTS_SERVICEGROUP_HH
 
+#  include "com/centreon/shared_ptr.hh"
+#  include "com/centreon/unordered_hash.hh"
+
 /* Forward declaration. */
+CCE_BEGIN()
+  class service;
+CCE_END()
+
 struct host_struct;
 struct service_struct;
-struct servicesmember_struct;
 
 typedef struct                servicegroup_struct {
   char*                       group_name;
   char*                       alias;
-  servicesmember_struct*      members;
+  umap<std::pair<std::string, std::string>, com::centreon::shared_ptr<com::centreon::engine::service> >
+                              members;
   char*                       notes;
   char*                       notes_url;
   char*                       action_url;
@@ -74,6 +81,11 @@ bool          operator!=(
 std::ostream& operator<<(std::ostream& os, servicegroup const& obj);
 
 CCE_BEGIN()
+
+bool          add_service_to_servicegroup(
+                servicegroup_struct* grp,
+                std::string const& host_name,
+                std::string const& description);
 
 bool          is_servicegroup_exist(std::string const& name) throw ();
 unsigned int  get_servicegroup_id(char const* name);

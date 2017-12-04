@@ -18,10 +18,8 @@
 */
 
 #include "com/centreon/engine/deleter/hostgroup.hh"
-#include "com/centreon/engine/deleter/hostsmember.hh"
 #include "com/centreon/engine/deleter/listmember.hh"
 #include "com/centreon/engine/objects/hostgroup.hh"
-#include "com/centreon/engine/objects/hostsmember.hh"
 
 using namespace com::centreon::engine;
 
@@ -36,7 +34,7 @@ void deleter::hostgroup(void* ptr) throw () {
 
   hostgroup_struct* obj(static_cast<hostgroup_struct*>(ptr));
 
-  listmember(obj->members, &hostsmember);
+  obj->members.clear();
 
   delete[] obj->group_name;
   obj->group_name = NULL;

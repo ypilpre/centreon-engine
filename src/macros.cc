@@ -27,9 +27,7 @@
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/macros.hh"
 #include "com/centreon/engine/not_found.hh"
-#include "com/centreon/engine/objects/hostsmember.hh"
 #include "com/centreon/engine/objects/objectlist.hh"
-#include "com/centreon/engine/objects/servicesmember.hh"
 #include "com/centreon/engine/shared.hh"
 #include "com/centreon/engine/string.hh"
 #include "com/centreon/engine/timeperiod.hh"
@@ -113,9 +111,7 @@ int grab_custom_macro_value_r(
       char const* arg2,
       char** output) {
   hostgroup* temp_hostgroup = NULL;
-  hostsmember* temp_hostsmember = NULL;
   servicegroup* temp_servicegroup = NULL;
-  servicesmember* temp_servicesmember = NULL;
   contactgroup* temp_contactgroup = NULL;
   int delimiter_len = 0;
   char* temp_buffer = NULL;
@@ -158,12 +154,13 @@ int grab_custom_macro_value_r(
       delimiter_len = strlen(arg2);
 
       /* concatenate macro values for all hostgroup members */
-      for (temp_hostsmember = temp_hostgroup->members;
-           temp_hostsmember != NULL;
-           temp_hostsmember = temp_hostsmember->next) {
-
-        if ((temp_host = temp_hostsmember->host_ptr) == NULL)
-          continue ;
+      for (umap<std::string, shared_ptr<host> >::iterator
+             it(temp_hostgroup->members.begin()),
+             end(temp_hostgroup->members.end());
+           it != end;
+           ++it) {
+        if ((temp_host = it->second.get()) == NULL)
+          continue;
 
         /* get the macro value for this host */
         grab_custom_macro_value_r(
@@ -238,11 +235,13 @@ int grab_custom_macro_value_r(
         delimiter_len = strlen(arg2);
 
         /* concatenate macro values for all servicegroup members */
-        for (temp_servicesmember = temp_servicegroup->members;
-             temp_servicesmember != NULL;
-             temp_servicesmember = temp_servicesmember->next) {
+        for (service_map::const_iterator
+               it(temp_servicegroup->members.begin()),
+               end(temp_servicegroup->members.end());
+             it != end;
+             ++it) {
 
-          if ((temp_service = temp_servicesmember->service_ptr) == NULL)
+          if ((temp_service = it->second.get()) == NULL)
             continue;
 
           /* get the macro value for this service */
@@ -486,7 +485,6 @@ int grab_standard_hostgroup_macro_r(
       int macro_type,
       hostgroup* temp_hostgroup,
       char** output) {
-  hostsmember* temp_hostsmember = NULL;
   char* temp_buffer = NULL;
   unsigned int temp_len = 0;
   unsigned int init_len = 0;
@@ -507,15 +505,16 @@ int grab_standard_hostgroup_macro_r(
 
   case MACRO_HOSTGROUPMEMBERS:
     /* make the calculations for total string length */
-    for (temp_hostsmember = temp_hostgroup->members;
-         temp_hostsmember != NULL;
-         temp_hostsmember = temp_hostsmember->next) {
-      if (temp_hostsmember->host_name == NULL)
-        continue;
+    for (umap<std::string, shared_ptr<host> >::const_iterator
+           it(temp_hostgroup->members.begin()),
+           end(temp_hostgroup->members.end());
+         it != end;
+         ++it) {
+      host* temp_host = it->second.get();
       if (temp_len == 0)
-        temp_len += strlen(temp_hostsmember->host_name) + 1;
+        temp_len += temp_host->get_host_name().length() + 1;
       else
-        temp_len += strlen(temp_hostsmember->host_name) + 2;
+        temp_len += temp_host->get_host_name().length() + 2;
     }
     /* allocate or reallocate the memory buffer */
     if (*output == NULL)
@@ -526,16 +525,17 @@ int grab_standard_hostgroup_macro_r(
       *output = resize_string(*output, temp_len);
     }
     /* now fill in the string with the member names */
-    for (temp_hostsmember = temp_hostgroup->members;
-         temp_hostsmember != NULL;
-         temp_hostsmember = temp_hostsmember->next) {
-      if (temp_hostsmember->host_name == NULL)
-        continue;
+    for (umap<std::string, shared_ptr<host> >::const_iterator
+           it(temp_hostgroup->members.begin()),
+           end(temp_hostgroup->members.end());
+         it != end;
+         ++it) {
+      host* temp_host = it->second.get();
       temp_buffer = *output + init_len;
       if (init_len == 0)      /* If our buffer didn't contain anything, we just need to write "%s,%s" */
-        init_len += sprintf(temp_buffer, "%s", temp_hostsmember->host_name);
+        init_len += sprintf(temp_buffer, "%s", temp_host->get_host_name().c_str());
       else
-        init_len += sprintf(temp_buffer, ",%s", temp_hostsmember->host_name);
+        init_len += sprintf(temp_buffer, ",%s", temp_host->get_host_name().c_str());
     }
     break;
 
@@ -604,7 +604,7 @@ int grab_standard_servicegroup_macro_r(
       int macro_type,
       servicegroup* temp_servicegroup,
       char** output) {
-  servicesmember* temp_servicesmember = NULL;
+  service* temp_service(NULL);
   char* temp_buffer = NULL;
   unsigned int temp_len = 0;
   unsigned int init_len = 0;
@@ -625,22 +625,16 @@ int grab_standard_servicegroup_macro_r(
 
   case MACRO_SERVICEGROUPMEMBERS:
     /* make the calculations for total string length */
-    for (temp_servicesmember = temp_servicegroup->members;
-         temp_servicesmember != NULL;
-         temp_servicesmember = temp_servicesmember->next) {
-      if (temp_servicesmember->host_name == NULL
-          || temp_servicesmember->service_description == NULL)
-        continue;
-      if (temp_len == 0) {
-        temp_len +=
-          strlen(temp_servicesmember->host_name) +
-          strlen(temp_servicesmember->service_description) + 2;
-      }
-      else {
-        temp_len +=
-          strlen(temp_servicesmember->host_name) +
-          strlen(temp_servicesmember->service_description) + 3;
-      }
+    for (service_map::const_iterator
+           it(temp_servicegroup->members.begin()),
+           end(temp_servicegroup->members.end());
+         it != end;
+         ++it) {
+      temp_service = it->second.get();
+      if (temp_len != 0)
+        ++temp_len;
+      temp_len += temp_service->get_host_name().length()
+                  + temp_service->get_description().length() + 2;
     }
     /* allocate or reallocate the memory buffer */
     if (*output == NULL)
@@ -651,25 +645,25 @@ int grab_standard_servicegroup_macro_r(
       *output = resize_string(*output, temp_len);
     }
     /* now fill in the string with the group members */
-    for (temp_servicesmember = temp_servicegroup->members;
-         temp_servicesmember != NULL;
-         temp_servicesmember = temp_servicesmember->next) {
-      if (temp_servicesmember->host_name == NULL
-          || temp_servicesmember->service_description == NULL)
-        continue;
+    for (service_map::const_iterator
+           it(temp_servicegroup->members.begin()),
+           end(temp_servicegroup->members.end());
+         it != end;
+         ++it) {
+      temp_service = it->second.get();
       temp_buffer = *output + init_len;
       if (init_len == 0)      /* If our buffer didn't contain anything, we just need to write "%s,%s" */
         init_len += sprintf(
                       temp_buffer,
                       "%s,%s",
-                      temp_servicesmember->host_name,
-                      temp_servicesmember->service_description);
+                      temp_service->get_host_name().c_str(),
+                      temp_service->get_description().c_str());
       else                    /* Now we need to write ",%s,%s" */
         init_len += sprintf(
                       temp_buffer,
                       ",%s,%s",
-                      temp_servicesmember->host_name,
-                      temp_servicesmember->service_description);
+                      temp_service->get_host_name().c_str(),
+                      temp_service->get_description().c_str());
     }
     break;
   case MACRO_SERVICEGROUPACTIONURL:

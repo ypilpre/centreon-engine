@@ -723,35 +723,43 @@ void processing::_wrapper_disable_all_notifications_beyond_host(host* hst) {
 }
 
 void processing::_wrapper_enable_host_svc_notifications(host* hst) {
-  for (servicesmember* member = hst->services;
-       member != NULL;
-       member = member->next)
-    if (member->service_ptr)
-      enable_service_notifications(member->service_ptr);
+  for (service_set::const_iterator
+         it(hst->get_services().begin()),
+         end(hst->get_services().end());
+       it != end;
+       ++it)
+    if (*it)
+      enable_service_notifications(*it);
 }
 
 void processing::_wrapper_disable_host_svc_notifications(host* hst) {
-  for (servicesmember* member = hst->services;
-       member != NULL;
-       member = member->next)
-    if (member->service_ptr)
-      disable_service_notifications(member->service_ptr);
+  for (service_set::const_iterator
+         it(hst->get_services().begin()),
+         end(hst->get_services().end());
+       it != end;
+       ++it)
+    if (*it)
+      disable_service_notifications(*it);
 }
 
 void processing::_wrapper_disable_host_svc_checks(host* hst) {
-  for (servicesmember* member = hst->services;
-       member != NULL;
-       member = member->next)
-    if (member->service_ptr)
-      disable_service_checks(member->service_ptr);
+  for (service_set::const_iterator
+         it(hst->get_services().begin()),
+         end(hst->get_services().end());
+       it != end;
+       ++it)
+    if (*it)
+      disable_service_checks(*it);
 }
 
 void processing::_wrapper_enable_host_svc_checks(host* hst) {
-  for (servicesmember* member = hst->services;
-       member != NULL;
-       member = member->next)
-    if (member->service_ptr)
-      enable_service_checks(member->service_ptr);
+  for (service_set::const_iterator
+         it(hst->get_services().begin()),
+         end(hst->get_services().end());
+       it != end;
+       ++it)
+    if (*it)
+      enable_service_checks(*it);
 }
 
 void processing::_wrapper_set_host_notification_number(
@@ -782,51 +790,63 @@ void processing::_wrapper_send_custom_host_notification(
 }
 
 void processing::_wrapper_enable_service_notifications(host* hst) {
-  for (servicesmember* member = hst->services;
-       member != NULL;
-       member = member->next)
-    if (member->service_ptr)
-      enable_service_notifications(member->service_ptr);
+  for (service_set::const_iterator
+         it(hst->get_services().begin()),
+         end(hst->get_services().end());
+       it != end;
+       ++it)
+    if (*it)
+      enable_service_notifications(*it);
 }
 
 void processing::_wrapper_disable_service_notifications(host* hst) {
-  for (servicesmember* member = hst->services;
-       member != NULL;
-       member = member->next)
-    if (member->service_ptr)
-      disable_service_notifications(member->service_ptr);
+  for (service_set::const_iterator
+         it(hst->get_services().begin()),
+         end(hst->get_services().end());
+       it != end;
+       ++it)
+    if (*it)
+      disable_service_notifications(*it);
 }
 
 void processing::_wrapper_enable_service_checks(host* hst) {
-  for (servicesmember* member = hst->services;
-       member != NULL;
-       member = member->next)
-    if (member->service_ptr)
-      enable_service_checks(member->service_ptr);
+  for (service_set::const_iterator
+         it(hst->get_services().begin()),
+         end(hst->get_services().end());
+       it != end;
+       ++it)
+    if (*it)
+      enable_service_checks(*it);
 }
 
 void processing::_wrapper_disable_service_checks(host* hst) {
-  for (servicesmember* member = hst->services;
-       member != NULL;
-       member = member->next)
-    if (member->service_ptr)
-      disable_service_checks(member->service_ptr);
+  for (service_set::const_iterator
+         it(hst->get_services().begin()),
+         end(hst->get_services().end());
+       it != end;
+       ++it)
+    if (*it)
+      disable_service_checks(*it);
 }
 
 void processing::_wrapper_enable_passive_service_checks(host* hst) {
-  for (servicesmember* member = hst->services;
-       member != NULL;
-       member = member->next)
-    if (member->service_ptr)
-      enable_passive_service_checks(member->service_ptr);
+  for (service_set::const_iterator
+         it(hst->get_services().begin()),
+         end(hst->get_services().end());
+       it != end;
+       ++it)
+    if (*it)
+      enable_passive_service_checks(*it);
 }
 
 void processing::_wrapper_disable_passive_service_checks(host* hst) {
-  for (servicesmember* member = hst->services;
-       member != NULL;
-       member = member->next)
-    if (member->service_ptr)
-      disable_passive_service_checks(member->service_ptr);
+  for (service_set::const_iterator
+         it(hst->get_services().begin()),
+         end(hst->get_services().end());
+       it != end;
+       ++it)
+    if (*it)
+      disable_passive_service_checks(*it);
 }
 
 void processing::_wrapper_set_service_notification_number(

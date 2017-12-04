@@ -91,13 +91,12 @@ namespace           configuration {
                     connectors_find(configuration::connector::key_type const& k) const;
       umap<std::string, shared_ptr<commands::connector> >::iterator
                     connectors_find(configuration::connector::key_type const& k);
-      umap<std::string, shared_ptr<com::centreon::engine::contact> > const&
+      contact_set const&
                     contacts() const throw ();
-      umap<std::string, shared_ptr<com::centreon::engine::contact> >&
-                    contacts() throw ();
-      umap<std::string, shared_ptr<com::centreon::engine::contact> >::const_iterator
+      contact_set&  contacts() throw ();
+      contact_set::const_iterator
                     contacts_find(configuration::contact::key_type const& k) const;
-      umap<std::string, shared_ptr<com::centreon::engine::contact> >::iterator
+      contact_set::iterator
                     contacts_find(configuration::contact::key_type const& k);
       umap<std::string, shared_ptr<com::centreon::engine::contactgroup> > const&
                     contactgroups() const throw ();

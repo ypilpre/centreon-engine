@@ -22,13 +22,12 @@
 #include "com/centreon/engine/configuration/applier/hostgroup.hh"
 #include "com/centreon/engine/configuration/applier/object.hh"
 #include "com/centreon/engine/configuration/applier/state.hh"
-#include "com/centreon/engine/deleter/hostsmember.hh"
 #include "com/centreon/engine/deleter/listmember.hh"
 #include "com/centreon/engine/error.hh"
 #include "com/centreon/engine/globals.hh"
 #include "com/centreon/engine/logging/logger.hh"
-#include "com/centreon/engine/objects/hostsmember.hh"
 
+using namespace com::centreon::engine;
 using namespace com::centreon::engine::configuration;
 
 /**
@@ -106,12 +105,12 @@ void applier::hostgroup::add_object(
          it(obj.members().begin()),
          end(obj.members().end());
        it != end;
-       ++it)
-    if (!add_host_to_hostgroup(hg, it->c_str()))
+       ++it) {
+    if (!add_host_to_hostgroup(hg, *it))
       throw (engine_error() << "Could not add host member '"
              << *it << "' to host group '" << obj.hostgroup_name()
              << "'");
-
+  }
   return ;
 }
 
@@ -192,21 +191,36 @@ void applier::hostgroup::modify_object(
   // Were members modified ?
   if (obj.members() != old_cfg.members()) {
     // Delete all old host group members.
-    for (hostsmember* m(it_obj->second->members);
-         m;
-         m = m->next) {
+    for (umap<std::string, shared_ptr<engine::host> >::iterator
+           it(it_obj->second->members.begin()),
+           end(it_obj->second->members.end());
+         it != end;
+         ++it) {
       timeval tv(get_broker_timestamp(NULL));
       broker_group_member(
         NEBTYPE_HOSTGROUPMEMBER_DELETE,
         NEBFLAG_NONE,
         NEBATTR_NONE,
-        m,
+        it->second.get(),
         hg,
         &tv);
     }
-    deleter::listmember(
-      (*it_obj).second->members,
-      &deleter::hostsmember);
+//    for (hostsmember* m(it_obj->second->members);
+//         m;
+//         m = m->next) {
+//      timeval tv(get_broker_timestamp(NULL));
+//      broker_group_member(
+//        NEBTYPE_HOSTGROUPMEMBER_DELETE,
+//        NEBFLAG_NONE,
+//        NEBATTR_NONE,
+//        m,
+//        hg,
+//        &tv);
+//    }
+    (*it_obj).second->members.clear();
+//    deleter::listmember(
+//      (*it_obj).second->members,
+//      &deleter::hostsmember);
 
     // Create new host group members.
     for (set_string::const_iterator
@@ -216,7 +230,7 @@ void applier::hostgroup::modify_object(
          ++it)
       if (!add_host_to_hostgroup(
              hg,
-             it->c_str()))
+             *it))
         throw (engine_error() << "Could not add host member '"
                << *it << "' to host group '" << obj.hostgroup_name()
                << "'");

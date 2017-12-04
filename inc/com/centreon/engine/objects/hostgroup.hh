@@ -20,14 +20,22 @@
 #ifndef CCE_OBJECTS_HOSTGROUP_HH
 #  define CCE_OBJECTS_HOSTGROUP_HH
 
+#  include "com/centreon/engine/namespace.hh"
+#  include "com/centreon/shared_ptr.hh"
+#  include "com/centreon/unordered_hash.hh"
+
 /* Forward declaration. */
-struct host_struct;
+CCE_BEGIN()
+  class host;
+CCE_END()
+
 struct hostsmember_struct;
 
 typedef struct             hostgroup_struct {
   char*                    group_name;
   char*                    alias;
-  hostsmember_struct*      members;
+  umap<std::string, com::centreon::shared_ptr<com::centreon::engine::host> >
+                           members;
   char*                    notes;
   char*                    notes_url;
   char*                    action_url;
@@ -52,14 +60,13 @@ hostgroup* add_hostgroup(
              char const* action_url);
 int        is_host_member_of_hostgroup(
              hostgroup_struct* group,
-             host_struct* hst);
+             com::centreon::engine::host* hst);
 
 #  ifdef __cplusplus
 }
 
 #    include <ostream>
 #    include <string>
-#    include "com/centreon/engine/namespace.hh"
 
 bool          operator==(
                 hostgroup const& obj1,
@@ -70,6 +77,10 @@ bool          operator!=(
 std::ostream& operator<<(std::ostream& os, hostgroup const& obj);
 
 CCE_BEGIN()
+
+host*         add_host_to_hostgroup(
+                hostgroup_struct* grp,
+                std::string const& host_name);
 
 bool          is_hostgroup_exist(std::string const& name) throw ();
 unsigned int  get_hostgroup_id(char const* name);

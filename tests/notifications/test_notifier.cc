@@ -8,7 +8,7 @@ void test_notifier::set_in_downtime(bool downtime) {
 }
 
 void test_notifier::set_is_flapping(bool flapping) {
-  _is_flapping = true;
+  _flapping = true;
 }
 
 void test_notifier::set_current_notification_type(notifier::notification_type type) {

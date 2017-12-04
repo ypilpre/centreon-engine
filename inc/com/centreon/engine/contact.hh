@@ -242,10 +242,11 @@ class                           contact {
   bool                          _retain_status_information;
 };
 
+typedef umap<std::string, shared_ptr<contact> > contact_set;
+
 CCE_END()
 
 using com::centreon::engine::contact;
 
-typedef umap<std::string, contact*> contact_set;
 
 #endif // !CCE_CONTACT_HH

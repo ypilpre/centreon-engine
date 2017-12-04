@@ -24,8 +24,6 @@
 #include "com/centreon/engine/macros/grab_value.hh"
 #include "com/centreon/engine/macros.hh"
 #include "com/centreon/engine/not_found.hh"
-#include "com/centreon/engine/objects/hostsmember.hh"
-#include "com/centreon/engine/objects/servicesmember.hh"
 #include "com/centreon/engine/string.hh"
 #include "com/centreon/unordered_hash.hh"
 #include "com/centreon/engine/configuration/applier/state.hh"
@@ -96,10 +94,12 @@ static int handle_host_macro(
       size_t delimiter_len(strlen(arg2));
 
       // Concatenate macro values for all hostgroup members.
-      for (hostsmember* temp_hostsmember = hg->members;
-           temp_hostsmember != NULL;
-           temp_hostsmember = temp_hostsmember->next) {
-        host* hst(temp_hostsmember->host_ptr);
+      for (umap<std::string, shared_ptr<host> >::iterator
+             it(hg->members.begin()),
+             end(hg->members.end());
+           it != end;
+           ++it) {
+        host* hst(it->second.get());
         if (hst) {
           // Get the macro value for this host.
           char* buffer(NULL);
@@ -265,10 +265,12 @@ static int handle_service_macro(
           size_t delimiter_len(strlen(arg2));
 
           // Concatenate macro values for all servicegroup members.
-          for (servicesmember* temp_servicesmember = sg->members;
-               temp_servicesmember != NULL;
-               temp_servicesmember = temp_servicesmember->next) {
-            service* svc(temp_servicesmember->service_ptr);
+          for (service_map::iterator
+                 it(sg->members.begin()),
+                 end(sg->members.end());
+               it != end;
+               ++it) {
+            service* svc(it->second.get());
             if (svc) {
               // Get the macro value for this service.
               char* buffer(NULL);

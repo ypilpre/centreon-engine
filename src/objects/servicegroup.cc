@@ -24,7 +24,6 @@
 #include "com/centreon/engine/globals.hh"
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/objects/servicegroup.hh"
-#include "com/centreon/engine/objects/servicesmember.hh"
 #include "com/centreon/engine/objects/tool.hh"
 #include "com/centreon/engine/shared.hh"
 #include "com/centreon/engine/string.hh"
@@ -49,7 +48,8 @@ bool operator==(
        servicegroup const& obj2) throw () {
   return (is_equal(obj1.group_name, obj2.group_name)
           && is_equal(obj1.alias, obj2.alias)
-          && is_equal(obj1.members, obj2.members)
+          && obj1.members == obj2.members
+          //&& is_equal(obj1.members, obj2.members)
           && is_equal(obj1.notes, obj2.notes)
           && is_equal(obj1.notes_url, obj2.notes_url)
           && is_equal(obj1.action_url, obj2.action_url));
@@ -164,13 +164,22 @@ int is_host_member_of_servicegroup(servicegroup* group, host* hst) {
   if (!group || !hst)
     return (false);
 
-  for (servicesmember* member(group->members);
-       member;
-       member = member->next)
-    if (member->service_ptr
-        && (member->service_ptr->get_host() == hst))
-      return (true);
-  return (false);
+  for (service_map::const_iterator
+         it(group->members.begin()),
+         end(group->members.end());
+       it != end;
+       ++it) {
+    if (it->second.get() && it->second->get_host() == hst)
+      return true;
+  }
+  return false;
+//  for (servicesmember* member(group->members);
+//       member;
+//       member = member->next)
+//    if (member->service_ptr
+//        && (member->service_ptr->get_host() == hst))
+//      return (true);
+//  return (false);
 }
 
 /**
@@ -189,12 +198,14 @@ int is_service_member_of_servicegroup(
   if (!group || !svc)
     return (false);
 
-  for (servicesmember* member(group->members);
-       member;
-       member = member->next)
-    if (member->service_ptr == svc)
-      return (true);
-  return (false);
+  for (service_map::const_iterator
+         it(group->members.begin()),
+         end(group->members.end());
+       it != end;
+       ++it)
+    if (it->second.get() == svc)
+      return true;
+  return false;
 }
 
 /**
@@ -221,4 +232,48 @@ unsigned int engine::get_servicegroup_id(char const* name) {
   std::map<std::string, servicegroup_other_properties>::const_iterator
     found(servicegroup_other_props.find(name));
   return (found != servicegroup_other_props.end() ? found->second.servicegroup_id : 0);
+}
+
+/**
+ *  Add a new service to a service group.
+ *
+ *  @param[in,out] temp_servicegroup Target service group.
+ *  @param[in]     host_name         Host name.
+ *  @param[in]     svc_description   Service description.
+ *
+ *  @return true on success.
+ */
+bool com::centreon::engine::add_service_to_servicegroup(
+                                  servicegroup_struct* grp,
+                                  std::string const& host_name,
+                                  std::string const& svc_description) {
+  bool retval = true;
+  // Make sure we have the data we need.
+  if (!grp
+      || host_name.empty()
+      || svc_description.empty()) {
+    logger(log_config_error, basic)
+      << "Error: Servicegroup is NULL or host name / description are empty";
+    return (NULL);
+  }
+
+  grp->members[make_pair(host_name, svc_description)] = shared_ptr<service>();
+
+  try {
+    // Notify event broker.
+    timeval tv(get_broker_timestamp(NULL));
+    broker_group_member(
+      NEBTYPE_SERVICEGROUPMEMBER_ADD,
+      NEBFLAG_NONE,
+      NEBATTR_NONE,
+      NULL,
+      grp,
+      &tv);
+  }
+  catch (...) {
+    grp->members.erase(make_pair(host_name, svc_description));
+    retval = false;
+  }
+
+  return retval;
 }

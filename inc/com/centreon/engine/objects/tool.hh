@@ -49,6 +49,19 @@ inline std::string      chkobj(umap<std::string, T> const& obj) throw () {
   return oss.str();
 }
 
+template<typename T>
+inline std::string      chkobj(umap<std::pair<std::string, std::string>, T> const& obj) throw () {
+  std::ostringstream oss;
+  typename umap<std::pair<std::string, std::string>, T>::const_iterator it(obj.begin()), end(obj.end());
+  if (it != end) {
+    oss << '(' << it->first.first << ", " << it->first.second << ')';
+  }
+  for (; it != end; ++it)
+    oss << ", (" << it->first.first << ", " << it->first.second << ')';
+
+  return oss.str();
+}
+
 inline bool             is_equal(
                           char const* str1,
                           char const* str2) throw () {

@@ -25,6 +25,7 @@
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/modules/external_commands/commands.hh"
 #include "com/centreon/engine/modules/external_commands/compatibility.hh"
+#include "com/centreon/engine/not_found.hh"
 #include "com/centreon/engine/retention/applier/state.hh"
 #include "com/centreon/engine/retention/dump.hh"
 #include "com/centreon/engine/retention/parser.hh"
@@ -997,11 +998,9 @@ int process_hostgroup_command(int cmd,
                               time_t entry_time,
                               char* args) {
   char* hostgroup_name = NULL;
-  hostgroup* temp_hostgroup = NULL;
-  hostsmember* temp_member = NULL;
+  hostgroup_struct* temp_hostgroup = NULL;
   host* temp_host = NULL;
   service* temp_service = NULL;
-  servicesmember* temp_servicesmember = NULL;
 
   (void)entry_time;
 
@@ -1010,15 +1009,21 @@ int process_hostgroup_command(int cmd,
     return (ERROR);
 
   /* find the hostgroup */
-  if ((temp_hostgroup = find_hostgroup(hostgroup_name)) == NULL)
+  try {
+    temp_hostgroup = &find_hostgroup(hostgroup_name);
+  }
+  catch (not_found const& e) {
+    (void)e;
     return (ERROR);
+  }
 
   /* loop through all hosts in the hostgroup */
-  for (temp_member = temp_hostgroup->members;
-       temp_member != NULL;
-       temp_member = temp_member->next) {
-
-    if ((temp_host = (host*)temp_member->host_ptr) == NULL)
+  for (umap<std::string, shared_ptr<host> >::const_iterator
+         it(temp_hostgroup->members.begin()),
+         end(temp_hostgroup->members.end());
+       it != end;
+       ++it) {
+    if ((temp_host = it->second.get()) == NULL)
       continue;
 
     switch (cmd) {
@@ -1050,10 +1055,12 @@ int process_hostgroup_command(int cmd,
     default:
 
       /* loop through all services on the host */
-      for (temp_servicesmember = temp_host->services;
-           temp_servicesmember != NULL;
-           temp_servicesmember = temp_servicesmember->next) {
-        if ((temp_service = temp_servicesmember->service_ptr) == NULL)
+      for (service_set::const_iterator
+             it(temp_host->get_services().begin()),
+             end(temp_host->get_services().end());
+           it != end;
+           ++it) {
+        if ((temp_service = *it) == NULL)
           continue;
 
         switch (cmd) {
@@ -1098,7 +1105,6 @@ int process_host_command(int cmd,
   char* host_name = NULL;
   host* temp_host = NULL;
   service* temp_service = NULL;
-  servicesmember* temp_servicesmember = NULL;
   char* str = NULL;
   char* buf[2] = { NULL, NULL };
   int intval = 0;
@@ -1140,10 +1146,12 @@ int process_host_command(int cmd,
 
   case CMD_ENABLE_HOST_SVC_NOTIFICATIONS:
   case CMD_DISABLE_HOST_SVC_NOTIFICATIONS:
-    for (temp_servicesmember = temp_host->services;
-         temp_servicesmember != NULL;
-         temp_servicesmember = temp_servicesmember->next) {
-      if ((temp_service = temp_servicesmember->service_ptr) == NULL)
+    for (service_set::const_iterator
+           it(temp_host->get_services().begin()),
+           end(temp_host->get_services().end());
+         it != end;
+         ++it) {
+      if ((temp_service = *it) == NULL)
         continue;
       if (cmd == CMD_ENABLE_HOST_SVC_NOTIFICATIONS)
         enable_service_notifications(temp_service);
@@ -1154,10 +1162,12 @@ int process_host_command(int cmd,
 
   case CMD_ENABLE_HOST_SVC_CHECKS:
   case CMD_DISABLE_HOST_SVC_CHECKS:
-    for (temp_servicesmember = temp_host->services;
-         temp_servicesmember != NULL;
-         temp_servicesmember = temp_servicesmember->next) {
-      if ((temp_service = temp_servicesmember->service_ptr) == NULL)
+    for (service_set::const_iterator
+           it(temp_host->get_services().begin()),
+           end(temp_host->get_services().end());
+         it != end;
+         ++it) {
+      if ((temp_service = *it) == NULL)
         continue;
       if (cmd == CMD_ENABLE_HOST_SVC_CHECKS)
         enable_service_checks(temp_service);
@@ -1349,8 +1359,7 @@ int process_servicegroup_command(int cmd,
                                  time_t entry_time,
                                  char* args) {
   char* servicegroup_name = NULL;
-  servicegroup* temp_servicegroup = NULL;
-  servicesmember* temp_member = NULL;
+  servicegroup_struct* temp_servicegroup = NULL;
   host* temp_host = NULL;
   host* last_host = NULL;
   service* temp_service = NULL;
@@ -1362,8 +1371,12 @@ int process_servicegroup_command(int cmd,
     return (ERROR);
 
   /* find the servicegroup */
-  if ((temp_servicegroup = find_servicegroup(servicegroup_name)) == NULL)
+  try {
+    temp_servicegroup = &find_servicegroup(servicegroup_name);
+  }
+  catch (not_found const& e) {
     return (ERROR);
+  }
 
   switch (cmd) {
 
@@ -1375,11 +1388,12 @@ int process_servicegroup_command(int cmd,
   case CMD_DISABLE_SERVICEGROUP_PASSIVE_SVC_CHECKS:
 
     /* loop through all servicegroup members */
-    for (temp_member = temp_servicegroup->members;
-         temp_member != NULL;
-         temp_member = temp_member->next) {
-
-      temp_service = find_service(temp_member->host_name, temp_member->service_description);
+    for (service_map::const_iterator
+           it(temp_servicegroup->members.begin()),
+           end(temp_servicegroup->members.end());
+         it != end;
+         ++it) {
+      temp_service = find_service(it->first.first, it->first.second);
       if (temp_service == NULL)
         continue;
 
@@ -1422,48 +1436,52 @@ int process_servicegroup_command(int cmd,
   case CMD_ENABLE_SERVICEGROUP_PASSIVE_HOST_CHECKS:
   case CMD_DISABLE_SERVICEGROUP_PASSIVE_HOST_CHECKS:
     /* loop through all hosts that have services belonging to the servicegroup */
-    last_host = NULL;
-    for (temp_member = temp_servicegroup->members;
-         temp_member != NULL;
-         temp_member = temp_member->next) {
+    {
+      std::set<host*> hst_set;
+      for (service_map::const_iterator
+             it(temp_servicegroup->members.begin()),
+             end(temp_servicegroup->members.end());
+           it != end;
+           ++it) {
 
-      if ((temp_host = find_host(temp_member->host_name)) == NULL)
-        continue;
+        if ((temp_host = find_host(it->first.first)) == NULL)
+          continue;
 
-      if (temp_host == last_host)
-        continue;
+        if (hst_set.find(temp_host) != hst_set.end())
+          continue;
 
-      switch (cmd) {
+        switch (cmd) {
 
-      case CMD_ENABLE_SERVICEGROUP_HOST_NOTIFICATIONS:
-        enable_host_notifications(temp_host);
-        break;
+        case CMD_ENABLE_SERVICEGROUP_HOST_NOTIFICATIONS:
+          enable_host_notifications(temp_host);
+          break;
 
-      case CMD_DISABLE_SERVICEGROUP_HOST_NOTIFICATIONS:
-        disable_host_notifications(temp_host);
-        break;
+        case CMD_DISABLE_SERVICEGROUP_HOST_NOTIFICATIONS:
+          disable_host_notifications(temp_host);
+          break;
 
-      case CMD_ENABLE_SERVICEGROUP_HOST_CHECKS:
-        enable_host_checks(temp_host);
-        break;
+        case CMD_ENABLE_SERVICEGROUP_HOST_CHECKS:
+          enable_host_checks(temp_host);
+          break;
 
-      case CMD_DISABLE_SERVICEGROUP_HOST_CHECKS:
-        disable_host_checks(temp_host);
-        break;
+        case CMD_DISABLE_SERVICEGROUP_HOST_CHECKS:
+          disable_host_checks(temp_host);
+          break;
 
-      case CMD_ENABLE_SERVICEGROUP_PASSIVE_HOST_CHECKS:
-        enable_passive_host_checks(temp_host);
-        break;
+        case CMD_ENABLE_SERVICEGROUP_PASSIVE_HOST_CHECKS:
+          enable_passive_host_checks(temp_host);
+          break;
 
-      case CMD_DISABLE_SERVICEGROUP_PASSIVE_HOST_CHECKS:
-        disable_passive_host_checks(temp_host);
-        break;
+        case CMD_DISABLE_SERVICEGROUP_PASSIVE_HOST_CHECKS:
+          disable_passive_host_checks(temp_host);
+          break;
 
-      default:
-        break;
+        default:
+          break;
+        }
+
+        hst_set.insert(temp_host);
       }
-
-      last_host = temp_host;
     }
     break;
 
@@ -1486,8 +1504,13 @@ int process_contact_command(int cmd,
     return (ERROR);
 
   /* find the contact */
-  if ((temp_contact = find_contact(contact_name)) == NULL)
-    return (ERROR);
+  try {
+    temp_contact = &find_contact(contact_name);
+  }
+  catch (not_found const& e) {
+    (void)e;
+    return ERROR;
+  }
 
   switch (cmd) {
 
@@ -1527,8 +1550,13 @@ int process_contactgroup_command(int cmd,
     return (ERROR);
 
   /* find the contactgroup */
-  if ((temp_contactgroup = find_contactgroup(contactgroup_name)) == NULL)
-    return (ERROR);
+  try {
+    temp_contactgroup = &find_contactgroup(contactgroup_name);
+  }
+  catch (not_found const& e) {
+    (void)e;
+    return ERROR;
+  }
 
   switch (cmd) {
 

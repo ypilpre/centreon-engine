@@ -150,6 +150,7 @@ namespace           notifications {
     int               _current_notification_id;
     int               _current_notification_number;
     notification_type _type;
+    bool              _in_downtime;
 
    private:
     notifier_filter   _get_filter(notification_type type) const;
@@ -165,7 +166,6 @@ namespace           notifications {
 
     static notifier_filter
                       _filter[];
-    bool              _in_downtime;
     static macro_builder
                       _macro_builder[];
     static std::string
