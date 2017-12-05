@@ -20,6 +20,9 @@
 #ifndef CCE_OBJECTS_COMMAND_HH
 #  define CCE_OBJECTS_COMMAND_HH
 
+#  include "com/centreon/shared_ptr.hh"
+#  include "com/centreon/unordered_hash.hh"
+
 typedef struct           command_struct {
   char*                  name;
   char*                  command_line;
@@ -51,6 +54,8 @@ std::ostream& operator<<(std::ostream& os, command const& obj);
 CCE_BEGIN()
 
 bool          is_command_exist(std::string const& name) throw ();
+
+typedef umap<std::string, shared_ptr<command_struct> > command_set;
 
 CCE_END()
 
