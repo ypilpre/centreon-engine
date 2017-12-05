@@ -31,6 +31,7 @@ if (WITH_TESTING)
   add_executable("ut"
     # Sources.
     "${TESTS_DIR}/configuration/contact.cc"
+    "${TESTS_DIR}/configuration/contactgroup.cc"
     "${TESTS_DIR}/configuration/host.cc"
     "${TESTS_DIR}/configuration/object.cc"
     "${TESTS_DIR}/configuration/service.cc"
