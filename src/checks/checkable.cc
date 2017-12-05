@@ -25,6 +25,7 @@ using namespace com::centreon::engine::checks;
  *  Default constructor.
  */
 checkable::checkable()
+  : _flapping(false)
   // XXX
 {}
 

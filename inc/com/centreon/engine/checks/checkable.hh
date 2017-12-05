@@ -148,9 +148,6 @@ namespace              checks {
     void               set_freshness_checks_enabled(bool enable);
     int                get_freshness_threshold() const;
 
-   protected:
-    bool               _flapping;
-
    private:
     void               _internal_copy(checkable const& other);
 
@@ -174,6 +171,7 @@ namespace              checks {
     bool               _executing;
     double             _execution_time;
     bool               _flap_detection_enabled;
+    bool               _flapping;
     bool               _freshness_checks_enabled;
     int                _freshness_threshold;
     bool               _has_been_checked;

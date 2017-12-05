@@ -75,7 +75,7 @@ TEST_F(SimpleNotification, ProblemWithDowntime) {
 // Then the filter method returns false and no notification is sent.
 TEST_F(SimpleNotification, ProblemDuringFlapping) {
 
-  _notifier->set_is_flapping(true);
+  _notifier->set_flapping(true);
   long last_notification = _notifier->get_last_notification();
   // When
   _notifier->notify(notifier::PROBLEM, "admin", "Test comment");

@@ -25,7 +25,6 @@ class test_notifier : public notifier {
  public:
        test_notifier();
   void set_in_downtime(bool downtime);
-  void set_is_flapping(bool flapping);
   void set_is_host(bool is_host);
   void set_notification_interval(long interval);
   void set_current_notification_number(int number);
