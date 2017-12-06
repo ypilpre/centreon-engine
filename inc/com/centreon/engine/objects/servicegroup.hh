@@ -43,6 +43,8 @@ typedef struct                servicegroup_struct {
   struct servicegroup_struct* nexthash;
 }                             servicegroup;
 
+typedef umap<std::string, servicegroup*> servicegroup_set;
+
 /* Other HOSTGROUP structure. */
 struct                        servicegroup_other_properties {
   unsigned int                servicegroup_id;
@@ -95,5 +97,3 @@ CCE_END()
 #  endif /* C++ */
 
 #endif // !CCE_OBJECTS_SERVICEGROUP_HH
-
-

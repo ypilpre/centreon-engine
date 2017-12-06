@@ -148,7 +148,16 @@ std::list<host*> const& host::get_children() const {
  *
  *  @param[in] hg  Host group.
  */
-void host::add_hostgroup(hostgroup_struct* hg) {
+void host::add_group(hostgroup_struct* hg) {
+  // XXX
+}
+
+/**
+ *  Get groups of this host.
+ *
+ *  @return Groups of this host.
+ */
+hostgroup_set const& host::get_groups() const {
   // XXX
 }
 

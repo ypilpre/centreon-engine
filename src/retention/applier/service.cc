@@ -164,10 +164,9 @@ void applier::service::_update(
       obj.set_acknowledged(*state.problem_has_been_acknowledged());
     if (state.acknowledgement_type().is_set())
       obj.set_acknowledgement_type(static_cast<notifier::acknowledgement_type>(*state.acknowledgement_type()));
-    // XXX
-    // if (state.notifications_enabled().is_set()
-    //     && (obj.get_modified_attributes() & MODATTR_NOTIFICATIONS_ENABLED))
-    //   obj.set_notifications_enabled(*state.notifications_enabled());
+    if (state.notifications_enabled().is_set()
+        && (obj.get_modified_attributes() & MODATTR_NOTIFICATIONS_ENABLED))
+      obj.set_notifications_enabled(*state.notifications_enabled());
     if (state.active_checks_enabled().is_set()
         && (obj.get_modified_attributes() & MODATTR_ACTIVE_CHECKS_ENABLED))
       obj.set_active_checks_enabled(*state.active_checks_enabled());

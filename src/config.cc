@@ -317,7 +317,7 @@ int check_servicegroup(servicegroup* sg, int* w, int* e) {
     }
 
     // Add service to group and group to service links.
-    temp_service->add_servicegroup(sg);
+    temp_service->add_group(sg);
     it->second = shared_ptr<service>(temp_service);
   }
 
@@ -370,7 +370,7 @@ int check_hostgroup(hostgroup* hg, int* w, int* e) {
     }
 
     // Add host to group and group to service links.
-    temp_host->add_hostgroup(hg);
+    temp_host->add_group(hg);
     it->second = temp_host;
   }
 

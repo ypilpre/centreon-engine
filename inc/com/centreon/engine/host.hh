@@ -57,7 +57,9 @@ class                        host : public monitorable {
 
   // Links with other objects.
   std::list<host*> const&    get_children() const;
-  void                       add_hostgroup(hostgroup_struct* hg);
+  void                       add_group(hostgroup_struct* hg);
+  umap<std::string, hostgroup_struct*> const&
+                             get_groups() const;
   std::list<host*> const&    get_parents() const;
   void                       add_service(service* svc);
   void                       clear_services();

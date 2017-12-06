@@ -126,16 +126,15 @@ static char* get_host_group_names(host& hst, nagios_macros* mac) {
 
   std::string buf;
   // Find all hostgroups this host is associated with.
-  for (objectlist* temp_objectlist = NULL; // XXX hst.hostgroups_ptr;
-       temp_objectlist != NULL;
-       temp_objectlist = temp_objectlist->next) {
-    hostgroup* temp_hostgroup(
-      static_cast<hostgroup*>(temp_objectlist->object_ptr));
-    if (temp_hostgroup) {
-      if (!buf.empty())
-        buf.append(",");
-      buf.append(temp_hostgroup->group_name);
-    }
+  for (hostgroup_set::const_iterator
+         it(hst.get_groups().begin()),
+         end(hst.get_groups().end());
+       it != end;
+       ++it) {
+    hostgroup* temp_hostgroup(it->second);
+    if (!buf.empty())
+      buf.append(",");
+    buf.append(temp_hostgroup->group_name);
   }
   return (string::dup(buf));
 }
@@ -369,9 +368,11 @@ struct grab_host_redirection {
     // // Notes.
     // routines[MACRO_HOSTNOTES].first = &get_recursive<host, &host::notes, 0>;
     // routines[MACRO_HOSTNOTES].second = true;
-    // // Group names.
-    // routines[MACRO_HOSTGROUPNAMES].first = &get_host_group_names;
-    // routines[MACRO_HOSTGROUPNAMES].second = true;
+    // Group names.
+    routines[MACRO_HOSTGROUPNAMES].first =
+      new function_grabber<host>(
+        (char const* (*)(host&, nagios_macros*))&get_host_group_names);
+    routines[MACRO_HOSTGROUPNAMES].second = true;
     // // Total services.
     // routines[MACRO_TOTALHOSTSERVICES].first = &get_host_total_services<MACRO_TOTALHOSTSERVICES>;
     // routines[MACRO_TOTALHOSTSERVICES].second = false;

@@ -58,7 +58,9 @@ class                service : public monitorable {
   // Links with other objects.
   host*              get_host() const;
   void               set_host(host* hst);
-  void               add_servicegroup(servicegroup_struct* sg);
+  void               add_group(servicegroup_struct* sg);
+  umap<std::string, servicegroup_struct*> const&
+                     get_groups() const;
 
   // State runtime.
   time_t             get_last_time_critical() const;

@@ -151,7 +151,16 @@ void service::set_host(host* hst) {
  *
  *  @param[in] sg  Service group.
  */
-void service::add_servicegroup(servicegroup_struct* sg) {
+void service::add_group(servicegroup_struct* sg) {
+  // XXX
+}
+
+/**
+ *  Get groups of this service.
+ *
+ *  @return Groups of this service.
+ */
+servicegroup_set const& service::get_groups() const {
   // XXX
 }
 

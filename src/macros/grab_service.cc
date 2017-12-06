@@ -72,16 +72,15 @@ static char* get_service_group_names(service& svc, nagios_macros* mac) {
 
   // Find all servicegroups this service is associated with.
   std::string buf;
-  for (objectlist* temp_objectlist = NULL; // XXXsvc.servicegroups_ptr;
-       temp_objectlist != NULL;
-       temp_objectlist = temp_objectlist->next) {
-    servicegroup* temp_servicegroup(
-      static_cast<servicegroup*>(temp_objectlist->object_ptr));
-    if (temp_servicegroup) {
-      if (!buf.empty())
-        buf.append(",");
-      buf.append(temp_servicegroup->group_name);
-    }
+  for (servicegroup_set::const_iterator
+         it(svc.get_groups().begin()),
+         end(svc.get_groups().end());
+       it != end;
+       ++it) {
+    servicegroup* temp_servicegroup(it->second);
+    if (!buf.empty())
+      buf.append(",");
+    buf.append(temp_servicegroup->group_name);
   }
   return (string::dup(buf));
 }
@@ -255,9 +254,11 @@ struct grab_service_redirection {
     // // Notes.
     // routines[MACRO_SERVICENOTES].first = &get_recursive<service, &service::notes, 0>;
     // routines[MACRO_SERVICENOTES].second = true;
-    // // Group names.
-    // routines[MACRO_SERVICEGROUPNAMES].first = &get_service_group_names;
-    // routines[MACRO_SERVICEGROUPNAMES].second = true;
+    // Group names.
+    routines[MACRO_SERVICEGROUPNAMES].first =
+      new function_grabber<service>(
+        (char const* (*)(service&, nagios_macros*))&get_service_group_names);
+    routines[MACRO_SERVICEGROUPNAMES].second = true;
     // // Acknowledgement author.
     // routines[MACRO_SERVICEACKAUTHOR].first = &get_macro_copy<service, MACRO_SERVICEACKAUTHOR>;
     // routines[MACRO_SERVICEACKAUTHOR].second = true;
