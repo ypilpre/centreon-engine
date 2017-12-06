@@ -30,11 +30,13 @@ if (WITH_TESTING)
   # Unit test executable.
   add_executable("ut"
     # Sources.
+    "${TESTS_DIR}/configuration/applier/applier-contact.cc"
     "${TESTS_DIR}/configuration/contact.cc"
     "${TESTS_DIR}/configuration/contactgroup.cc"
     "${TESTS_DIR}/configuration/host.cc"
     "${TESTS_DIR}/configuration/object.cc"
     "${TESTS_DIR}/configuration/service.cc"
+    "${TESTS_DIR}/contacts/contact-config.cc"
     "${TESTS_DIR}/contacts/simple-contact.cc"
     "${TESTS_DIR}/contacts/simple-contactgroup.cc"
     "${TESTS_DIR}/downtime_finder.cc"
