@@ -228,7 +228,7 @@ class                           contact {
   bool                          _retain_status_information;
 };
 
-typedef umap<std::string, shared_ptr<contact> > contact_set;
+typedef umap<std::string, shared_ptr<contact> > contact_map;
 
 CCE_END()
 

@@ -26,6 +26,7 @@
 #  include "com/centreon/concurrency/mutex.hh"
 #  include "com/centreon/engine/configuration/applier/difference.hh"
 #  include "com/centreon/engine/configuration/state.hh"
+#  include "com/centreon/engine/contactgroup.hh"
 #  include "com/centreon/engine/host.hh"
 #  include "com/centreon/engine/namespace.hh"
 #  include "com/centreon/shared_ptr.hh"
@@ -91,20 +92,20 @@ namespace           configuration {
                     connectors_find(configuration::connector::key_type const& k) const;
       umap<std::string, shared_ptr<commands::connector> >::iterator
                     connectors_find(configuration::connector::key_type const& k);
-      contact_set const&
+      contact_map const&
                     contacts() const throw ();
-      contact_set&  contacts() throw ();
-      contact_set::const_iterator
+      contact_map&  contacts() throw ();
+      contact_map::const_iterator
                     contacts_find(configuration::contact::key_type const& k) const;
-      contact_set::iterator
+      contact_map::iterator
                     contacts_find(configuration::contact::key_type const& k);
-      umap<std::string, shared_ptr<com::centreon::engine::contactgroup> > const&
+      contactgroup_map const&
                     contactgroups() const throw ();
-      umap<std::string, shared_ptr<com::centreon::engine::contactgroup> >&
+      contactgroup_map&
                     contactgroups() throw ();
-      umap<std::string, shared_ptr<com::centreon::engine::contactgroup> >::const_iterator
+      contactgroup_map::const_iterator
                     contactgroups_find(configuration::contactgroup::key_type const& k) const;
-      umap<std::string, shared_ptr<com::centreon::engine::contactgroup> >::iterator
+      contactgroup_map::iterator
                     contactgroups_find(configuration::contactgroup::key_type const& k);
       umap<std::string, shared_ptr<::host> > const&
                     hosts() const throw ();

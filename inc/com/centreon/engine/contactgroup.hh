@@ -78,6 +78,6 @@ CCE_END()
 
 using com::centreon::engine::contactgroup;
 
-typedef std::list<contactgroup*> contactgroup_set;
+typedef umap<std::string, shared_ptr<contactgroup> > contactgroup_map;
 
 #endif // !CCE_CONTACTGROUP_HH
