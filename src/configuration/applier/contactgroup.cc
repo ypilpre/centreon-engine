@@ -80,8 +80,8 @@ void applier::contactgroup::add_object(
 
   // Create contact group.
   engine::contactgroup* cg(engine::contactgroup::add_contactgroup(
-                            obj.contactgroup_name().c_str(),
-                            NULL_IF_EMPTY(obj.alias())));
+                            obj.contactgroup_name(),
+                            obj.alias()));
   if (!cg)
     throw (engine_error() << "Error: Could not register contact group '"
            << obj.contactgroup_name() << "'");

@@ -26,8 +26,6 @@
 typedef struct           command_struct {
   char*                  name;
   char*                  command_line;
-  struct command_struct* next;
-  struct command_struct* nexthash;
 }                        command;
 
 #  ifdef __cplusplus

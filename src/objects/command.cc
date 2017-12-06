@@ -116,10 +116,6 @@ command* add_command(char const* name, char const* value) {
     // Add new items to the configuration state.
     state::instance().commands()[id] = obj;
 
-    // Add new items to the list.
-    obj->next = command_list;
-    command_list = obj.get();
-
     // Notify event broker.
     timeval tv(get_broker_timestamp(NULL));
     broker_command_data(

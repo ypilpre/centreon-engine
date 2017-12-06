@@ -76,8 +76,10 @@ class                          contactgroup {
 
 CCE_END()
 
+using com::centreon::shared_ptr;
 using com::centreon::engine::contactgroup;
 
-typedef std::list<contactgroup*> contactgroup_set;
+typedef umap<std::string, shared_ptr<contactgroup> > contactgroup_map;
+typedef std::list<contactgroup*> contactgroup_list;
 
 #endif // !CCE_CONTACTGROUP_HH

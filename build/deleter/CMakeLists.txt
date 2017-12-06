@@ -28,7 +28,7 @@ set(
 
   # Sources.
   "${SRC_DIR}/command.cc"
-  "${SRC_DIR}/commandsmember.cc"
+#  "${SRC_DIR}/commandsmember.cc"
   "${SRC_DIR}/comment.cc"
   "${SRC_DIR}/daterange.cc"
   "${SRC_DIR}/downtime.cc"
@@ -48,7 +48,7 @@ set(
 
   # Headers.
   "${INC_DIR}/command.hh"
-  "${INC_DIR}/commandsmember.hh"
+#  "${INC_DIR}/commandsmember.hh"
   "${INC_DIR}/comment.hh"
   "${INC_DIR}/daterange.hh"
   "${INC_DIR}/downtime.hh"

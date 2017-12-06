@@ -707,9 +707,9 @@ void contact::add_host_notification_command(char const* command_name) {
   _host_notification_commands[command_name] = shared_ptr<command_struct>(0);
 }
 
-void contact::add_service_notification_command(char const* command_name) {
+void contact::add_service_notification_command(std::string const& command_name) {
   // Make sure we have the data we need.
-  if (!command_name || !command_name[0]) {
+  if (command_name.empty()) {
     throw (engine_error()
              << "Error: Service notification command is NULL");
   }
