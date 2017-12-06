@@ -174,9 +174,6 @@ void applier::command::remove_object(
   if (it != applier::state::instance().commands().end()) {
     command_struct* cmd(it->second.get());
 
-    // Remove command from its list.
-    unregister_object<command_struct>(&command_list, cmd);
-
     // Notify event broker.
     timeval tv(get_broker_timestamp(NULL));
     broker_command_data(

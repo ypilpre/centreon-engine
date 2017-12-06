@@ -58,8 +58,6 @@ char*               use_timezone(NULL);
 char**              macro_x(NULL);
 check_stats         check_statistics[MAX_CHECK_STATS_TYPES];
 circular_buffer     external_command_buffer;
-command*            command_list(NULL);
-command*            command_list_tail(NULL);
 command*            global_host_event_handler_ptr(NULL);
 command*            global_service_event_handler_ptr(NULL);
 command*            ochp_command_ptr(NULL);
