@@ -53,16 +53,6 @@ class ApplierContact : public ::testing::Test {
 
 };
 
-// Given a contactgroup applier and a configuration contactgroup
-// Then the add_object() of the applier creates the contactgroup.
-TEST_F(ApplierContact, NewContactgroupFromConfig) {
-  configuration::applier::contactgroup aply_grp;
-  configuration::contactgroup grp("test_group");
-  aply_grp.add_object(grp);
-  contactgroup_map const& cgs(configuration::applier::state::instance().contactgroups());
-  ASSERT_EQ(cgs.size(), 1);
-}
-
 // Given contactgroup / contact appliers
 // And a configuration contactgroup and a configuration contact
 // Then the appliers add_object add the contact group and the contact.
