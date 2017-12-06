@@ -697,22 +697,20 @@ void contact::set_service_notification_period_name(std::string const& name) {
   _service_notification_period_name = name;
 }
 
-void contact::add_host_notification_command(char const* command_name) {
+void contact::add_host_notification_command(std::string const& command_name) {
   // Make sure we have the data we need.
-  if (!command_name || !command_name[0]) {
+  if (command_name.empty())
     throw (engine_error()
-             << "Error: Host notification command is NULL");
-  }
+             << "Error: Host notification command is empty");
 
   _host_notification_commands[command_name] = shared_ptr<command_struct>(0);
 }
 
 void contact::add_service_notification_command(std::string const& command_name) {
   // Make sure we have the data we need.
-  if (command_name.empty()) {
+  if (command_name.empty())
     throw (engine_error()
-             << "Error: Service notification command is NULL");
-  }
+             << "Error: Service notification command is empty");
 
   _service_notification_commands[command_name] = shared_ptr<command_struct>(0);
 }

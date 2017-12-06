@@ -139,7 +139,7 @@ class                           contact {
   bool                          notify_on_host_unreachable() const;
   bool                          notify_on_host_warning() const;
   void                          add_host_notification_command(
-                                  char const* command_name);
+                                  std::string const& command_name);
   void                          clear_host_notification_commands();
 
   // services methods

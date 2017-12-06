@@ -147,7 +147,7 @@ void applier::contact::add_object(configuration::contact const& obj) {
        it != end;
        ++it)
     try {
-      c->add_host_notification_command(it->c_str());
+      c->add_host_notification_command(*it);
     }
     catch (std::exception const& e) {
       throw (engine_error()
@@ -163,7 +163,7 @@ void applier::contact::add_object(configuration::contact const& obj) {
        it != end;
        ++it)
     try {
-      c->add_service_notification_command(it->c_str());
+      c->add_service_notification_command(*it);
     }
     catch (std::exception const& e) {
       throw (engine_error()
@@ -277,7 +277,7 @@ void applier::contact::modify_object(
          it != end;
          ++it)
       try {
-        c->add_host_notification_command(it->c_str());
+        c->add_host_notification_command(*it);
       }
       catch (std::exception const& e) {
         throw (engine_error()
@@ -298,7 +298,7 @@ void applier::contact::modify_object(
          it != end;
          ++it)
       try {
-        c->add_service_notification_command(it->c_str());
+        c->add_service_notification_command(*it);
       }
       catch (std::exception const& e) {
         throw (engine_error()
@@ -400,24 +400,18 @@ void applier::contact::resolve_object(
     << "Resolving contact '" << obj.contact_name() << "'.";
 
   // Find contact.
-  umap<std::string, shared_ptr<engine::contact> >::iterator
-    it(applier::state::instance().contacts().find(obj.contact_name()));
-  if (applier::state::instance().contacts().end() == it)
+  contact_map::iterator
+    it(applier::state::instance().contacts_find(obj.contact_name()));
+  if (it == applier::state::instance().contacts().end())
     throw (engine_error()
            << "Cannot resolve non-existing contact '"
            << obj.contact_name() << "'");
 
   // Remove contact group links.
   it->second->get_contactgroups().clear();
-//  deleter::listmember(
-//    it->second->get_contactgroups(),
-//    &deleter::objectlist);
 
   // Resolve contact.
-  //if (!check_contact(it->second.get(), &config_warnings, &config_errors))
   if (!it->second->check(&config_warnings, &config_errors))
     throw (engine_error() << "Cannot resolve contact '"
-           << obj.contact_name() << "'");
-
-  return ;
+        << obj.contact_name() << "'");
 }
