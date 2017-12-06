@@ -49,9 +49,57 @@ class ConfigCommand : public ::testing::Test {
 
 };
 
-// When I create a configuration::contact with an empty name
+// When I create a configuration::command with an empty name
 // Then an exception is thrown.
 TEST_F(ConfigCommand, NewCommandWithNoName) {
-  configuration::contact ctct("");
-  ASSERT_THROW(ctct.check_validity(), std::exception);
+  configuration::command cmd("");
+  ASSERT_THROW(cmd.check_validity(), std::exception);
+}
+
+// When I create a configuration::command with an empty command_line
+// Then an exception is thrown.
+TEST_F(ConfigCommand, NewCommandWithNameButNoCmdLine) {
+  configuration::command cmd("cmd");
+  ASSERT_THROW(cmd.check_validity(), std::exception);
+}
+
+// When I create a configuration::command with a non empty command_line
+// Then I get it.
+TEST_F(ConfigCommand, NewCommandWithName) {
+  configuration::command cmd("cmd");
+  cmd.parse("command_line", "echo 1");
+  cmd.check_validity();
+  ASSERT_TRUE(cmd.key() == cmd.command_name());
+}
+
+// When I create a configuration::command with a non empty command_line
+// And I copy it
+// Then I get two equal commands.
+// When I change the second command_line
+// Then I get two distinct commands.
+// Then the order between the two commands is as expected.
+TEST_F(ConfigCommand, NewCommandFromAnother) {
+  configuration::command cmd("cmd");
+  cmd.parse("command_line", "echo 1");
+  configuration::command cmd1(cmd);
+  ASSERT_EQ(cmd, cmd1);
+  cmd1.parse("command_line", "echo 2");
+  ASSERT_TRUE(cmd != cmd1);
+  ASSERT_TRUE(cmd < cmd1);
+  cmd1.parse("command_name", "cmd1");
+  ASSERT_TRUE(cmd < cmd1);
+}
+
+// When I create a configuration::command with a non empty command_line
+// And I create a second one with just a name.
+// And I merge the first one into the second.
+// Then I get a second command with the same command line.
+TEST_F(ConfigCommand, CommandsMerge) {
+  configuration::command cmd("cmd");
+  cmd.parse("command_line", "echo 1");
+  cmd.parse("connector", "perl");
+  configuration::command cmd1("cmd1");
+  cmd1.merge(cmd);
+  ASSERT_TRUE(cmd.command_line() == cmd1.command_line());
+  ASSERT_TRUE(cmd.connector() == cmd1.connector());
 }
