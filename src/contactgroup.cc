@@ -35,11 +35,11 @@ using namespace com::centreon::engine;
 using namespace com::centreon::engine::logging;
 
 
-/**************************************                                         
-*                                     *                                         
-*           Public Methods            *                                         
-*                                     *                                         
-**************************************/                                         
+/**************************************
+*                                     *
+*           Public Methods            *
+*                                     *
+**************************************/
 
 /**
  *  Add a new contact group to the list in memory.

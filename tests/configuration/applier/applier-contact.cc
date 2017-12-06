@@ -21,9 +21,11 @@
 #include <gtest/gtest.h>
 #include "../../timeperiod/utils.hh"
 #include "com/centreon/engine/configuration/applier/contact.hh"
+#include "com/centreon/engine/configuration/applier/contactgroup.hh"
 #include "com/centreon/engine/configuration/applier/state.hh"
 #include "com/centreon/engine/configuration/contact.hh"
 #include "com/centreon/engine/configuration/state.hh"
+#include "com/centreon/engine/contactgroup.hh"
 #include "com/centreon/engine/notifications/notifier.hh"
 #include "com/centreon/shared_ptr.hh"
 
@@ -51,15 +53,30 @@ class ApplierContact : public ::testing::Test {
 
 };
 
+// Given a contactgroup applier and a configuration contactgroup
+// Then the add_object() of the applier creates the contactgroup.
+TEST_F(ApplierContact, NewContactgroupFromConfig) {
+  configuration::applier::contactgroup aply_grp;
+  configuration::contactgroup grp("test_group");
+  aply_grp.add_object(grp);
+  contactgroup_map const& cgs(configuration::applier::state::instance().contactgroups());
+  ASSERT_EQ(cgs.size(), 1);
+}
+
 // Given an empty name
 // When the add_contact function is called with it as argument,
 // Then it returns a NULL pointer.
 TEST_F(ApplierContact, NewContactFromConfig) {
   configuration::applier::contact aply;
+  configuration::applier::contactgroup aply_grp;
+  configuration::contactgroup grp("test_group");
   configuration::contact ctct("test");
+  ASSERT_TRUE(ctct.parse("contactgroups", "test_group"));
   ASSERT_TRUE(ctct.parse("host_notification_commands", "cmd1,cmd2"));
+  aply_grp.add_object(grp);
   aply.add_object(ctct);
-  contact_set const& sc(configuration::applier::state::instance().contacts());
+  aply.expand_objects(*config);
+  contact_map const& sc(configuration::applier::state::instance().contacts());
   ASSERT_EQ(sc.size(), 1);
   ASSERT_EQ(sc.begin()->first, "test");
   ASSERT_EQ(sc.begin()->second->get_name(), "test");

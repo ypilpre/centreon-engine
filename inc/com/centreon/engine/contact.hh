@@ -166,7 +166,7 @@ class                           contact {
   void                          enable_service_notifications();
   void                          disable_service_notifications();
   void                          add_service_notification_command(
-                                  char const* command_name);
+                                  std::string const& command_name);
   void                          clear_service_notification_commands();
 
   bool                          contains_illegal_object_chars() const;
