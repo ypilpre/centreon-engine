@@ -138,8 +138,8 @@ namespace           notifications {
     void              set_initial_notif_time(time_t initial);
 //    void              set_no_more_notifications(bool no_more);
     void              set_recovery_been_sent(bool sent);
-    void              set_notification_period_name(std::string const& name);
-    void              set_notification_period(timeperiod* name);
+    timeperiod*       get_notification_period() const;
+    void              set_notification_period(timeperiod* tperiod);
 
    protected:
     virtual void      _checkable_macro_builder(nagios_macros& mac) = 0;

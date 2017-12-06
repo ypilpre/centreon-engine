@@ -27,17 +27,15 @@
 
 using namespace com::centreon;
 using namespace com::centreon::engine;
-using namespace com::centreon::engine::checks;
-using namespace com::centreon::engine::configuration;
 using namespace com::centreon::engine::logging;
 using namespace com::centreon::engine::notifications;
 
 
-/**************************************                                         
-*                                     *                                         
-*           Public Methods            *                                         
-*                                     *                                         
-**************************************/                                         
+/**************************************
+*                                     *
+*           Public Methods            *
+*                                     *
+**************************************/
 
 /**
  * Constructor.
@@ -123,7 +121,7 @@ void notifier::set_notifications_enabled(bool enabled) {
 /**
  *  Tell if the current notification is escalated
  *
- *  @return a boolean 
+ *  @return a boolean
  */
 bool notifier::should_be_escalated() const {
 
@@ -179,7 +177,7 @@ void notifier::notify(
          is badly configured, maybe no contact is associated to this author */
       configuration::contact const* author_contact;
       if (!author.empty()) {
-        set_contact::const_iterator it = config->contacts_find(author);
+        configuration::set_contact::const_iterator it = config->contacts_find(author);
         if (it != config->contacts().end())
           author_contact = &(*it);
         else
@@ -478,6 +476,14 @@ void notifier::set_initial_notif_time(time_t initial) {
 }
 
 void notifier::set_recovery_been_sent(bool sent) {
+  // FIXME DBR: to implement...
+}
+
+timeperiod* notifier::get_notification_period() const {
+  // FIXME DBR: to implement...
+}
+
+void notifier::set_notification_period(timeperiod* tperiod) {
   // FIXME DBR: to implement...
 }
 
