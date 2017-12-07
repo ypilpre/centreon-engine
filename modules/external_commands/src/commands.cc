@@ -25,18 +25,19 @@
 #include <sys/time.h>
 #include "com/centreon/engine/broker.hh"
 #include "com/centreon/engine/checks/checker.hh"
+#include "com/centreon/engine/commands/set.hh"
 #include "com/centreon/engine/configuration/applier/state.hh"
 #include "com/centreon/engine/contact.hh"
 #include "com/centreon/engine/downtime_finder.hh"
 #include "com/centreon/engine/events/defines.hh"
 #include "com/centreon/engine/flapping.hh"
 #include "com/centreon/engine/globals.hh"
-#include "com/centreon/engine/not_found.hh"
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/modules/external_commands/commands.hh"
 #include "com/centreon/engine/modules/external_commands/internal.hh"
 #include "com/centreon/engine/modules/external_commands/processing.hh"
 #include "com/centreon/engine/modules/external_commands/utils.hh"
+#include "com/centreon/engine/not_found.hh"
 #include "com/centreon/engine/notifications/notifier.hh"
 #include "com/centreon/engine/objects/comment.hh"
 #include "com/centreon/engine/objects/downtime.hh"
@@ -1982,7 +1983,8 @@ int cmd_change_object_char_var(int cmd, char* args) {
     /* make sure the command exists */
     temp_ptr2 = my_strtok(temp_ptr, "!");
     try {
-      temp_command = find_command(temp_ptr2);
+      temp_command = set::instance().get_command(temp_ptr2);
+      //temp_command = find_command(temp_ptr2);
     }
     catch (not_found const& e) {
       (void)e;

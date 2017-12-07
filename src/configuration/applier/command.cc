@@ -30,6 +30,7 @@
 #include "com/centreon/engine/error.hh"
 #include "com/centreon/engine/globals.hh"
 #include "com/centreon/engine/logging/logger.hh"
+#include "com/centreon/engine/not_found.hh"
 
 using namespace com::centreon::engine;
 using namespace com::centreon::engine::configuration;
@@ -80,9 +81,8 @@ void applier::command::add_object(configuration::command const& obj) {
   config->commands().insert(obj);
 
   // Create real command object.
-  _create_command(obj);
-
-  return ;
+  if (!obj.command_line().empty())
+    _create_command(obj);
 }
 
 /**
@@ -148,10 +148,8 @@ void applier::command::remove_object(
     << "Removing command '" << obj.command_name() << "'.";
 
   // Find command.
-  umap<std::string, shared_ptr<commands::command> >::iterator
-    it(applier::state::instance().commands_find(obj.key()));
-  if (it != applier::state::instance().commands().end()) {
-    commands::command* cmd(it->second.get());
+  try {
+    shared_ptr<commands::command> cmd(commands::set::instance().get_command(obj.key()));
 
     // Notify event broker.
     timeval tv(get_broker_timestamp(NULL));
@@ -159,11 +157,12 @@ void applier::command::remove_object(
       NEBTYPE_COMMAND_DELETE,
       NEBFLAG_NONE,
       NEBATTR_NONE,
-      cmd,
+      cmd.get(),
       &tv);
 
-    // Erase command (will effectively delete the object).
-    applier::state::instance().commands().erase(it);
+  }
+  catch (not_found const& e) {
+    (void)e;
   }
 
   // Remove command objects.
@@ -171,8 +170,6 @@ void applier::command::remove_object(
 
   // Remove command from the global configuration set.
   config->commands().erase(obj);
-
-  return ;
 }
 
 /**

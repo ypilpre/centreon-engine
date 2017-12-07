@@ -53,6 +53,9 @@ void set::add_command(command const& cmd) {
  *  @param[in] cmd The new command.
  */
 void set::add_command(shared_ptr<command> cmd) {
+  if (cmd->get_name().empty())
+    throw (engine_error()
+           << "Command name is empty");
   _list[cmd->get_name()] = cmd;
   logger(dbg_commands, basic)
     << "added command " << cmd->get_name();
@@ -74,6 +77,15 @@ shared_ptr<commands::command> set::get_command(
     throw (engine_error()
            << "Command '" << cmd_name << "' was not found");
   return (it->second);
+}
+
+/**
+ *  Get commands.
+ *
+ *  @return The commands map.
+ */
+command_map const& set::get_commands() const {
+  return _list;
 }
 
 /**

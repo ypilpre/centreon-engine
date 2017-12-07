@@ -43,6 +43,9 @@ namespace       commands {
                             shared_ptr<command> cmd);
     shared_ptr<command>
                 get_command(std::string const& cmd_name);
+    command_map const&
+                get_commands() const;
+
     static set& instance();
     static void load();
     void        remove_command(std::string const& cmd_name);
