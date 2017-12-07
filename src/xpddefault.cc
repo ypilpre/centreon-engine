@@ -31,7 +31,6 @@
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/macros.hh"
 #include "com/centreon/engine/not_found.hh"
-#include "com/centreon/engine/objects/command.hh"
 #include "com/centreon/engine/service.hh"
 #include "com/centreon/engine/string.hh"
 #include "com/centreon/engine/xpddefault.hh"
@@ -39,16 +38,21 @@
 
 using namespace com::centreon;
 using namespace com::centreon::engine;
+using namespace com::centreon::engine::commands;
 using namespace com::centreon::engine::logging;
 
-static command*        xpddefault_host_perfdata_command_ptr(NULL);
-static command*        xpddefault_service_perfdata_command_ptr(NULL);
+static command*
+                       xpddefault_host_perfdata_command_ptr(NULL);
+static command*
+                       xpddefault_service_perfdata_command_ptr(NULL);
 
 static char*           xpddefault_host_perfdata_file_template(NULL);
 static char*           xpddefault_service_perfdata_file_template(NULL);
 
-static command*        xpddefault_host_perfdata_file_processing_command_ptr(NULL);
-static command*        xpddefault_service_perfdata_file_processing_command_ptr(NULL);
+static command*
+                       xpddefault_host_perfdata_file_processing_command_ptr(NULL);
+static command*
+                       xpddefault_service_perfdata_file_processing_command_ptr(NULL);
 
 static FILE*           xpddefault_host_perfdata_fp(NULL);
 static FILE*           xpddefault_service_perfdata_fp(NULL);

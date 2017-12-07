@@ -33,6 +33,7 @@
 
 using namespace com::centreon;
 using namespace com::centreon::engine;
+using namespace com::centreon::engine::commands;
 using namespace com::centreon::engine::logging;
 using namespace com::centreon::engine::notifications;
 
@@ -347,7 +348,7 @@ bool contact::check(int* w, int* e) {
       std::string buf(it->first);
       size_t index(buf.find(buf, '!'));
       std::string command_name(buf.substr(0, index));
-      shared_ptr<command_struct> temp_command;
+      shared_ptr<command> temp_command;
       try {
         temp_command = find_command(command_name);
       }
@@ -380,7 +381,7 @@ bool contact::check(int* w, int* e) {
       std::string buf(it->first);
       size_t index(buf.find('!'));
       std::string command_name(buf.substr(0, index));
-      shared_ptr<command_struct> cmd;
+      shared_ptr<command> cmd;
       try {
         cmd = find_command(command_name);
       }
@@ -703,7 +704,7 @@ void contact::add_host_notification_command(std::string const& command_name) {
     throw (engine_error()
              << "Error: Host notification command is empty");
 
-  _host_notification_commands[command_name] = shared_ptr<command_struct>(0);
+  _host_notification_commands[command_name] = shared_ptr<command>(0);
 }
 
 void contact::add_service_notification_command(std::string const& command_name) {
@@ -712,7 +713,7 @@ void contact::add_service_notification_command(std::string const& command_name) 
     throw (engine_error()
              << "Error: Service notification command is empty");
 
-  _service_notification_commands[command_name] = shared_ptr<command_struct>(0);
+  _service_notification_commands[command_name] = shared_ptr<command>(0);
 }
 
 void contact::update_config(configuration::contact const& obj) {

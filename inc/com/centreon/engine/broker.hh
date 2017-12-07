@@ -297,7 +297,12 @@
 #  define NEBATTR_DOWNTIME_STOP_CANCELLED          2
 
 // Forward declaration.
-struct command_struct;
+CCE_BEGIN()
+  namespace commands {
+    class command;
+  }
+CCE_END()
+
 struct timed_event_struct;
 struct timeperiod_struct;
 
@@ -386,7 +391,7 @@ void           broker_command_data(
                  int type,
                  int flags,
                  int attr,
-                 command_struct* cmd,
+                 com::centreon::engine::commands::command* cmd,
                  struct timeval const* timestamp);
 void           broker_comment_data(
                  int type,

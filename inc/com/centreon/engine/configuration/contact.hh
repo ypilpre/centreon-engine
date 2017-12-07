@@ -20,14 +20,11 @@
 #ifndef CCE_CONFIGURATION_CONTACT_HH
 #  define CCE_CONFIGURATION_CONTACT_HH
 
-#  include <set>
-#  include <string>
 #  include <vector>
 #  include "com/centreon/engine/configuration/group.hh"
 #  include "com/centreon/engine/configuration/object.hh"
 #  include "com/centreon/engine/objects/customvariable.hh"
 #  include "com/centreon/engine/opt.hh"
-#  include "com/centreon/engine/namespace.hh"
 
 typedef std::vector<std::string> tab_string;
 

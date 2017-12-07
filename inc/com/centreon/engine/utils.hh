@@ -23,15 +23,18 @@
 
 #  include <sys/time.h>
 #  include "com/centreon/engine/checks.hh"
-#  include "com/centreon/engine/checks/checkable.hh"
+#  include "com/centreon/engine/common.hh"
 #  include "com/centreon/engine/macros/defines.hh"
-#  include "com/centreon/engine/objects/command.hh"
 #  include "com/centreon/engine/objects/daterange.hh"
 #  include "com/centreon/engine/objects/timeperiod.hh"
 #  include "com/centreon/shared_ptr.hh"
 
+// Forward declarations
 CCE_BEGIN()
   class contact;
+  namespace checks {
+    class checkable;
+  }
 CCE_END()
 
 // DBUF structure - dynamic string storage
@@ -73,13 +76,13 @@ char const* my_ctime(time_t const* t);
 // thread-safe version of get_raw_command_line_r()
 int get_raw_command_line_r(
       nagios_macros* mac,
-      command* cmd_ptr,
+      com::centreon::engine::commands::command* cmd_ptr,
       char const* cmd,
       char** full_command,
       int macro_options);
 // given a raw command line, determine the actual command to run Manipulates global_macros.argv and is thus not threadsafe
 int get_raw_command_line(
-      command* cmd_ptr,
+      com::centreon::engine::commands::command* cmd_ptr,
       char* cmd,
       char** full_command,
       int macro_options);
@@ -136,7 +139,7 @@ int parse_check_output(
 
 com::centreon::engine::contact& find_contact(std::string const& name);
 com::centreon::engine::contactgroup& find_contactgroup(std::string const& name);
-com::centreon::shared_ptr<command_struct>& find_command(std::string const& name);
+shared_ptr<com::centreon::engine::commands::command>& find_command(std::string const& name);
 timeperiod& find_timeperiod(std::string const& name);
 com::centreon::engine::host* find_host(std::string const& name);
 hostgroup_struct& find_hostgroup(std::string const& name);

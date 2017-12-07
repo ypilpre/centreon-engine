@@ -79,14 +79,6 @@ void applier::command::add_object(configuration::command const& obj) {
   // Add command to the global configuration set.
   config->commands().insert(obj);
 
-  // Create compatibility command.
-  command_struct* c(add_command(
-                      obj.command_name(),
-                      obj.command_line()));
-  if (!c)
-    throw (engine_error() << "Could not register command '"
-           << obj.command_name() << "'");
-
   // Create real command object.
   _create_command(obj);
 
@@ -124,19 +116,20 @@ void applier::command::modify_object(
            << "command '" << obj.command_name() << "'");
 
   // Find command object.
-  umap<std::string, shared_ptr<command_struct> >::iterator
+  umap<std::string, shared_ptr<commands::command> >::iterator
     it_obj(applier::state::instance().commands_find(obj.key()));
   if (it_obj == applier::state::instance().commands().end())
     throw (engine_error() << "Could not modify non-existing "
            << "command object '" << obj.command_name() << "'");
-  command_struct* c(it_obj->second.get());
+  commands::command* c(it_obj->second.get());
 
   // Update the global configuration set.
   config->commands().erase(it_cfg);
   config->commands().insert(obj);
 
   // Modify command.
-  modify_if_different(c->command_line, obj.command_line());
+  if (c->get_command_line() != obj.command_line())
+    c->set_command_line(obj.command_line());
 
   // Command will be temporarily removed from the command set but
   // will be added back right after with _create_command. This does
@@ -169,10 +162,10 @@ void applier::command::remove_object(
     << "Removing command '" << obj.command_name() << "'.";
 
   // Find command.
-  umap<std::string, shared_ptr<command_struct> >::iterator
+  umap<std::string, shared_ptr<commands::command> >::iterator
     it(applier::state::instance().commands_find(obj.key()));
   if (it != applier::state::instance().commands().end()) {
-    command_struct* cmd(it->second.get());
+    commands::command* cmd(it->second.get());
 
     // Notify event broker.
     timeval tv(get_broker_timestamp(NULL));

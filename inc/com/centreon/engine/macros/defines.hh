@@ -207,6 +207,9 @@ CCE_END()
 # define ESCAPE_MACRO_CHARS                     2
 # define URL_ENCODE_MACRO_CHARS                 4
 
+// Max addresses count per contact
+#  define MAX_CONTACT_ADDRESSES 6
+
 // NAGIOS_MACROS structure
 struct                   nagios_macros {
   char*                  x[MACRO_X_COUNT];

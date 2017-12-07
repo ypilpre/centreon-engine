@@ -21,13 +21,19 @@
 #  define CCE_CHECKS_CHECKABLE_HH
 
 #  include "com/centreon/engine/namespace.hh"
-#  include "com/centreon/engine/objects/command.hh"
 #  include "com/centreon/engine/objects/timeperiod.hh"
 #  include "com/centreon/shared_ptr.hh"
 
 CCE_BEGIN()
 
+  // Forward declarations
+  namespace            commands {
+    class command;
+  }
+
 namespace              checks {
+
+  using com::centreon::shared_ptr;
 
   /**
    *  @class checkable checkable.hh "com/centreon/engine/checks/checkable.hh"
@@ -44,8 +50,8 @@ namespace              checks {
     // Check configuration.
     bool               get_active_checks_enabled() const;
     void               set_active_checks_enabled(bool enable);
-    command*           get_check_command() const;
-    void               set_check_command(com::centreon::shared_ptr<command> cmd);
+    commands::command* get_check_command() const;
+    void               set_check_command(shared_ptr<commands::command> cmd);
     std::string const& get_check_command_args() const;
     void               set_check_command_args(std::string const& args);
     timeperiod*        get_check_period() const;
@@ -122,9 +128,9 @@ namespace              checks {
     bool               is_in_downtime() const;
 
     // Event handler.
-    command*           get_event_handler() const;
+    commands::command* get_event_handler() const;
     void               set_event_handler(
-                         com::centreon::shared_ptr<command> cmd);
+                         com::centreon::shared_ptr<commands::command> cmd);
     std::string const& get_event_handler_args() const;
     void               set_event_handler_args(std::string const& args);
     bool               get_event_handler_enabled() const;
@@ -153,7 +159,7 @@ namespace              checks {
 
     bool               _active_checks_enabled;
     bool               _being_freshened;
-    com::centreon::shared_ptr<command>
+    com::centreon::shared_ptr<commands::command>
                        _check_command;
     std::string        _check_command_args;
     int                _check_options;
@@ -164,7 +170,7 @@ namespace              checks {
     int                _current_problem_id;
     int                _current_state;
     int                _current_state_type;
-    com::centreon::shared_ptr<command>
+    shared_ptr<commands::command>
                        _event_handler;
     std::string        _event_handler_args;
     bool               _event_handler_enabled;

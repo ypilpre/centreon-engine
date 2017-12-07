@@ -2756,7 +2756,7 @@ int handle_async_host_check_result_3x(
     temp_host->get_current_state_type(),
     start_time_hires,
     end_time_hires,
-    temp_host->get_check_command()->command_line.c_str(),
+    temp_host->get_check_command()->get_command_line().c_str(),
     temp_host->get_latency(),
     temp_host->get_execution_time(),
     config->host_check_timeout(),

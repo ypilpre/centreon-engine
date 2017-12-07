@@ -76,13 +76,13 @@ namespace           configuration {
       static void   load();
       static void   unload();
 
-      umap<std::string, shared_ptr<command_struct> > const&
+      command_map const&
                     commands() const throw ();
-      umap<std::string, shared_ptr<command_struct> >&
+      umap<std::string, shared_ptr<commands::command> >&
                     commands() throw ();
-      umap<std::string, shared_ptr<command_struct> >::const_iterator
+      umap<std::string, shared_ptr<commands::command> >::const_iterator
                     commands_find(configuration::command::key_type const& k) const;
-      umap<std::string, shared_ptr<command_struct> >::iterator
+      umap<std::string, shared_ptr<commands::command> >::iterator
                     commands_find(configuration::command::key_type const& k);
       umap<std::string, shared_ptr<commands::connector> > const&
                     connectors() const throw ();
@@ -213,7 +213,7 @@ namespace           configuration {
 
       state*        _config;
 
-      umap<std::string, shared_ptr<command_struct> >
+      umap<std::string, shared_ptr<commands::command> >
                     _commands;
       umap<std::string, shared_ptr<commands::connector> >
                     _connectors;

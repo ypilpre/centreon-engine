@@ -21,8 +21,6 @@
 #ifndef CCE_NEBSTRUCTS_HH
 #  define CCE_NEBSTRUCTS_HH
 
-#  include "com/centreon/engine/objects/command.hh"
-
 // Forward declarations
 CCE_BEGIN()
   class host;
@@ -156,7 +154,8 @@ typedef struct   nebstruct_command_struct {
   int            attr;
   struct timeval timestamp;
 
-  command*       cmd;
+  com::centreon::engine::commands::command*
+                 cmd;
 }                nebstruct_command_data;
 
 /* Comment data structure. */

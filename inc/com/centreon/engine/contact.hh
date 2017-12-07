@@ -22,18 +22,20 @@
 
 #  include <list>
 #  include <vector>
+#  include "com/centreon/engine/customvar.hh"
 #  include "com/centreon/engine/namespace.hh"
-#  include "com/centreon/engine/objects/command.hh"
 #  include "com/centreon/engine/objects/timeperiod.hh"
 #  include "com/centreon/shared_ptr.hh"
-#  include "com/centreon/engine/customvar.hh"
 #  include "com/centreon/unordered_hash.hh"
 
-#  define MAX_CONTACT_ADDRESSES 6
 
 
 CCE_BEGIN()
 
+// Forward declaration
+namespace commands {
+  class command;
+}
 
 namespace configuration {
   class contact;
@@ -228,11 +230,7 @@ class                           contact {
   bool                          _retain_status_information;
 };
 
-typedef umap<std::string, shared_ptr<contact> > contact_map;
 
 CCE_END()
-
-using com::centreon::engine::contact;
-
 
 #endif // !CCE_CONTACT_HH
