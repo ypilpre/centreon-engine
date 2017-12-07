@@ -649,13 +649,64 @@ void applier::service::resolve_object(
     }
 
     // Resolve contacts.
-    // XXX
+    for (set_string::const_iterator
+           it(obj.contacts().begin()),
+           end(obj.contacts().end());
+         it != end;
+         ++it)
+      try {
+        svc.add_contact(
+          configuration::applier::state::instance().contacts_find(
+            *it)->second);
+      }
+      catch (not_found const& e) {
+        (void)e;
+        logger(logging::log_verification_error, logging::basic)
+          << "Error: Contact '" << *it << "' specified in service '"
+          << svc.get_description() << "' for host '"
+          << svc.get_host_name() << "' is not defined anywhere!";
+        ++config_errors;
+        failure = true;
+      }
 
     // Resolve contact groups.
-    // XXX
+    for (set_string::const_iterator
+           it(obj.contactgroups().begin()),
+           end(obj.contactgroups().end());
+         it != end;
+         ++it)
+      try {
+        svc.add_contactgroup(
+          configuration::applier::state::instance().contactgroups_find(
+            *it)->second);
+      }
+      catch (not_found const& e) {
+        logger(logging::log_verification_error, logging::basic)
+          << "Error: Contact group '" << *it
+          << "' specified in service '" << svc.get_description()
+          << "' for host '" << svc.get_host_name()
+          << "' is not defined anywhere!";
+        ++config_errors;
+        failure = true;
+      }
 
     // Resolve notification period.
-    // XXX
+    if (!obj.notification_period().empty())
+      try {
+        svc.set_notification_period(
+          configuration::applier::state::instance().timeperiods_find(
+            obj.notification_period()).get());
+      }
+      catch (not_found const& e) {
+        (void)e;
+        logger(logging::log_verification_error, logging::basic)
+          << "Error: Notification period '" << obj.notification_period()
+          << "' specified for service '" << svc.get_description()
+          << "' on host '" << svc.get_host_name()
+          << "' is not defined anywhere!";
+        ++config_errors;
+        failure = true;
+      }
 
     // Check for sane recovery options.
     // XXX

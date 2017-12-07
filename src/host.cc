@@ -162,6 +162,16 @@ hostgroup_set const& host::get_groups() const {
 }
 
 /**
+ *  Add a parent to this host.
+ *
+ *  @param[in] hst  New parent.
+ */
+void host::add_parent(host* hst) {
+  _parents.push_back(hst);
+  return ;
+}
+
+/**
  *  Get parents.
  *
  *  @return List of parents.

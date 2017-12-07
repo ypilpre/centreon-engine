@@ -56,10 +56,12 @@ class                        host : public monitorable {
   bool                       get_stalk_on_up() const;
 
   // Links with other objects.
+  void                       add_children(host* hst);
   std::list<host*> const&    get_children() const;
   void                       add_group(hostgroup_struct* hg);
   umap<std::string, hostgroup_struct*> const&
                              get_groups() const;
+  void                       add_parent(host* hst);
   std::list<host*> const&    get_parents() const;
   void                       add_service(service* svc);
   void                       clear_services();
