@@ -391,7 +391,7 @@ void           broker_command_data(
                  int type,
                  int flags,
                  int attr,
-                 com::centreon::engine::commands::command* cmd,
+                 com::centreon::engine::commands::command const* cmd,
                  struct timeval const* timestamp);
 void           broker_comment_data(
                  int type,

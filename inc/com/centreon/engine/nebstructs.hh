@@ -154,7 +154,7 @@ typedef struct   nebstruct_command_struct {
   int            attr;
   struct timeval timestamp;
 
-  com::centreon::engine::commands::command*
+  com::centreon::engine::commands::command const*
                  cmd;
 }                nebstruct_command_data;
 

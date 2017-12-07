@@ -48,7 +48,8 @@ namespace             configuration {
                         configuration::command const& obj);
 
      private:
-      void            _create_command(
+      commands::command const*
+                      _create_command(
                         configuration::command const& obj);
     };
   }

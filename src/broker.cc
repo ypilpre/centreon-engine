@@ -418,7 +418,7 @@ void broker_command_data(
        int type,
        int flags,
        int attr,
-       command* cmd,
+       command const* cmd,
        struct timeval const* timestamp) {
   // Config check.
   if (!(config->event_broker_options() & BROKER_COMMAND_DATA))

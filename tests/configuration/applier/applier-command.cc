@@ -122,3 +122,25 @@ TEST_F(ApplierCommand, NewCommandWithConnectorFromConfig) {
   ASSERT_EQ(cc->get_name(), "cmd");
   ASSERT_EQ(cc->get_command_line(), "echo 1");
 }
+
+// Given some command and connector appliers already applied with
+// all objects created.
+// When the command is changed from the configuration,
+// Then the modify_object() method updated correctly the command.
+TEST_F(ApplierCommand, ModifyCommandWithConnector) {
+  configuration::applier::command aply;
+  configuration::applier::connector cnn_aply;
+  configuration::command cmd("cmd");
+  cmd.parse("command_line", "echo 1");
+  cmd.parse("connector", "perl");
+  configuration::connector cnn("perl");
+
+  cnn_aply.add_object(cnn);
+  aply.add_object(cmd);
+
+  cmd.parse("command_line", "date");
+  aply.modify_object(cmd);
+  shared_ptr<commands::command> cc(commands::set::instance().get_command("cmd"));
+  ASSERT_EQ(cc->get_name(), "cmd");
+  ASSERT_EQ(cc->get_command_line(), "date");
+}
