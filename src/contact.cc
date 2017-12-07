@@ -339,7 +339,7 @@ bool contact::check(int* w, int* e) {
     errors++;
   }
   else
-    for (command_set::iterator
+    for (command_map::iterator
            it(get_service_notification_commands().begin()),
            end(get_service_notification_commands().end());
            it != end;
@@ -372,7 +372,7 @@ bool contact::check(int* w, int* e) {
     errors++;
   }
   else
-    for (command_set::iterator
+    for (command_map::iterator
            it(get_host_notification_commands().begin()),
            end(get_host_notification_commands().end());
            it != end;
@@ -489,7 +489,7 @@ bool contact::check(int* w, int* e) {
  *
  *  @return an unordered map indexed by names of the host notification commands
  */
-command_set& contact::get_host_notification_commands() {
+command_map& contact::get_host_notification_commands() {
   return _host_notification_commands;
 }
 
@@ -498,7 +498,7 @@ command_set& contact::get_host_notification_commands() {
  *
  *  @return an unordered map indexed by names of the host notification commands
  */
-command_set const& contact::get_host_notification_commands() const {
+command_map const& contact::get_host_notification_commands() const {
   return _host_notification_commands;
 }
 
@@ -507,7 +507,7 @@ command_set const& contact::get_host_notification_commands() const {
  *
  *  @return an unordered map indexed by names of the service notification commands
  */
-command_set& contact::get_service_notification_commands() {
+command_map& contact::get_service_notification_commands() {
   return _service_notification_commands;
 }
 
@@ -516,7 +516,7 @@ command_set& contact::get_service_notification_commands() {
  *
  *  @return an unordered map indexed by names of the service notification commands
  */
-command_set const& contact::get_service_notification_commands() const {
+command_map const& contact::get_service_notification_commands() const {
   return _service_notification_commands;
 }
 

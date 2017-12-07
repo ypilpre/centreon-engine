@@ -113,8 +113,8 @@ class                           contact {
   bool                          check(int* w, int* e);
 
   // hosts methods
-  command_set const&            get_host_notification_commands() const;
-  command_set&                  get_host_notification_commands();
+  command_map const&            get_host_notification_commands() const;
+  command_map&                  get_host_notification_commands();
   timeperiod_struct*            get_host_notification_period() const;
   void                          set_host_notification_period(
                                   timeperiod* tp);
@@ -143,8 +143,8 @@ class                           contact {
   void                          clear_host_notification_commands();
 
   // services methods
-  command_set const&            get_service_notification_commands() const;
-  command_set&                  get_service_notification_commands();
+  command_map const&            get_service_notification_commands() const;
+  command_map&                  get_service_notification_commands();
   std::string const&            get_service_notification_period_name() const;
   void                          set_service_notification_period_name(
                                   std::string const& name);
@@ -205,8 +205,8 @@ class                           contact {
 
   std::vector<std::string>      _address;
   std::string                   _timezone;
-  command_set                   _host_notification_commands;
-  command_set                   _service_notification_commands;
+  command_map                   _host_notification_commands;
+  command_map                   _service_notification_commands;
   std::string                   _host_notification_period_name;
   timeperiod*                   _host_notification_period;
   std::string                   _service_notification_period_name;

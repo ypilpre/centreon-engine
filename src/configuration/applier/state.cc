@@ -197,7 +197,7 @@ applier::state::~state() throw() {
  *
  *  @return The current commands.
  */
-umap<std::string, shared_ptr<command_struct> > const& applier::state::commands() const throw () {
+command_map const& applier::state::commands() const throw () {
   return (_commands);
 }
 
@@ -206,7 +206,7 @@ umap<std::string, shared_ptr<command_struct> > const& applier::state::commands()
  *
  *  @return The current commands.
  */
-umap<std::string, shared_ptr<command_struct> >& applier::state::commands() throw () {
+command_map & applier::state::commands() throw () {
   return (_commands);
 }
 
@@ -218,7 +218,7 @@ umap<std::string, shared_ptr<command_struct> >& applier::state::commands() throw
  *  @return Iterator to the element if found, commands().end()
  *          otherwise.
  */
-umap<std::string, shared_ptr<command_struct> >::const_iterator applier::state::commands_find(configuration::command::key_type const& k) const {
+command_map::const_iterator applier::state::commands_find(configuration::command::key_type const& k) const {
   return (_commands.find(k));
 }
 
@@ -230,7 +230,7 @@ umap<std::string, shared_ptr<command_struct> >::const_iterator applier::state::c
  *  @return Iterator to the element if found, commands().end()
  *          otherwise.
  */
-umap<std::string, shared_ptr<command_struct> >::iterator applier::state::commands_find(configuration::command::key_type const& k) {
+command_map::iterator applier::state::commands_find(configuration::command::key_type const& k) {
   return (_commands.find(k));
 }
 
