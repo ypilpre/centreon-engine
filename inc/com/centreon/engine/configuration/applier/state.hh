@@ -107,11 +107,11 @@ namespace           configuration {
                     contactgroups_find(configuration::contactgroup::key_type const& k) const;
       contactgroup_map::iterator
                     contactgroups_find(configuration::contactgroup::key_type const& k);
-      umap<std::string, shared_ptr<::host> > const&
+      umap<std::string, shared_ptr< ::host> > const&
                     hosts() const throw ();
-      umap<std::string, shared_ptr<::host> >&
+      umap<std::string, shared_ptr< ::host> >&
                     hosts() throw ();
-      shared_ptr<::host>
+      shared_ptr< ::host>
                     hosts_find(configuration::host::key_type const& k) const;
       umultimap<std::string, shared_ptr<hostdependency_struct> > const&
                     hostdependencies() const throw ();
@@ -223,7 +223,7 @@ namespace           configuration {
                     _contactgroups;
       concurrency::condvar
                     _cv_lock;
-      umap<std::string, shared_ptr<::host> >
+      umap<std::string, shared_ptr< ::host> >
                     _hosts;
       umultimap<std::string, shared_ptr<hostdependency_struct> >
                     _hostdependencies;

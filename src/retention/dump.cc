@@ -280,7 +280,7 @@ std::ostream& dump::host(std::ostream& os, ::host const& obj) {
  *  @return The output stream.
  */
 std::ostream& dump::hosts(std::ostream& os) {
-  for (umap<std::string, com::centreon::shared_ptr<::host> >::iterator
+  for (umap<std::string, com::centreon::shared_ptr< ::host> >::iterator
          it(configuration::applier::state::instance().hosts().begin()),
          end(configuration::applier::state::instance().hosts().end());
        it != end;
@@ -473,7 +473,7 @@ std::ostream& dump::service(std::ostream& os, ::service const& obj) {
  *  @return The output stream.
  */
 std::ostream& dump::services(std::ostream& os) {
-  for (umap<std::pair<std::string, std::string>, com::centreon::shared_ptr<::service> >::iterator
+  for (umap<std::pair<std::string, std::string>, com::centreon::shared_ptr< ::service> >::iterator
          it(configuration::applier::state::instance().services().begin()),
          end(configuration::applier::state::instance().services().end());
        it != end;

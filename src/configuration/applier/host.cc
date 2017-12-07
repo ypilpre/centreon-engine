@@ -79,7 +79,7 @@ void applier::host::add_object(
     << "Creating new host '" << obj.host_name() << "'.";
 
   // Create host.
-  shared_ptr<::host> h;
+  shared_ptr< ::host> h;
   try {
     h = new ::host(obj);
     config->hosts().insert(obj);
@@ -177,7 +177,7 @@ void applier::host::modify_object(
            << obj.host_name() << "'");
 
   // Find host object.
-  umap<std::string, shared_ptr<::host> >::iterator
+  umap<std::string, shared_ptr< ::host> >::iterator
     it_obj(applier::state::instance().hosts().find(obj.key()));
   if (it_obj == applier::state::instance().hosts().end())
     throw (engine_error() << "Could not modify non-existing "
@@ -452,7 +452,7 @@ void applier::host::remove_object(
     << "Removing host '" << obj.host_name() << "'.";
 
   // Find host.
-  umap<std::string, shared_ptr<::host> >::iterator
+  umap<std::string, shared_ptr< ::host> >::iterator
     it(applier::state::instance().hosts().find(obj.key()));
   if (it != applier::state::instance().hosts().end()) {
     ::host* hst(it->second.get());

@@ -209,7 +209,7 @@ int xsddefault_save_status_data() {
        "\t}\n\n";
 
   /* save host status data */
-  for (umap<std::string, com::centreon::shared_ptr<::host> >::const_iterator
+  for (umap<std::string, com::centreon::shared_ptr< ::host> >::const_iterator
          it(configuration::applier::state::instance().hosts().begin()),
          end(configuration::applier::state::instance().hosts().end());
        it != end;
@@ -282,7 +282,7 @@ int xsddefault_save_status_data() {
   }
 
   // save service status data
-  for (umap<std::pair<std::string, std::string>, com::centreon::shared_ptr<::service> >::const_iterator
+  for (umap<std::pair<std::string, std::string>, com::centreon::shared_ptr< ::service> >::const_iterator
          it(configuration::applier::state::instance().services().begin()),
          end(configuration::applier::state::instance().services().end());
        it != end;

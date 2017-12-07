@@ -365,7 +365,7 @@ umap<std::string, shared_ptr<engine::contactgroup> >::iterator applier::state::c
  *
  *  @return The current hosts.
  */
-umap<std::string, shared_ptr<::host> > const& applier::state::hosts() const throw () {
+umap<std::string, shared_ptr< ::host> > const& applier::state::hosts() const throw () {
   return (_hosts);
 }
 
@@ -374,7 +374,7 @@ umap<std::string, shared_ptr<::host> > const& applier::state::hosts() const thro
  *
  *  @return The current hosts.
  */
-umap<std::string, shared_ptr<::host> >& applier::state::hosts() throw () {
+umap<std::string, shared_ptr< ::host> >& applier::state::hosts() throw () {
   return (_hosts);
 }
 
@@ -385,8 +385,8 @@ umap<std::string, shared_ptr<::host> >& applier::state::hosts() throw () {
  *
  *  @return Host pointer if found. Will throw not_found if not found.
  */
-shared_ptr<::host> applier::state::hosts_find(configuration::host::key_type const& k) const {
-  umap<std::string, shared_ptr<::host> >::const_iterator
+shared_ptr< ::host> applier::state::hosts_find(configuration::host::key_type const& k) const {
+  umap<std::string, shared_ptr< ::host> >::const_iterator
     it(_hosts.find(k));
   if (it == _hosts.end())
     throw (not_found_error() << "Could not find host '" << k << "'");
@@ -625,7 +625,7 @@ umap<std::string, shared_ptr<hostgroup_struct> >::iterator applier::state::hostg
  *
  *  @return The current services.
  */
-umap<std::pair<std::string, std::string>, shared_ptr<::service> > const& applier::state::services() const throw () {
+umap<std::pair<std::string, std::string>, shared_ptr< ::service> > const& applier::state::services() const throw () {
   return (_services);
 }
 
@@ -634,7 +634,7 @@ umap<std::pair<std::string, std::string>, shared_ptr<::service> > const& applier
  *
  *  @return The current services.
  */
-umap<std::pair<std::string, std::string>, shared_ptr<::service> >& applier::state::services() throw () {
+umap<std::pair<std::string, std::string>, shared_ptr< ::service> >& applier::state::services() throw () {
   return (_services);
 }
 
@@ -645,8 +645,8 @@ umap<std::pair<std::string, std::string>, shared_ptr<::service> >& applier::stat
  *
  *  @return Pointer to element if found. Throw not_found if not found.
  */
-shared_ptr<::service> applier::state::services_find(configuration::service::key_type const& k) const {
-  umap<std::pair<std::string, std::string>, shared_ptr<::service> >::const_iterator
+shared_ptr< ::service> applier::state::services_find(configuration::service::key_type const& k) const {
+  umap<std::pair<std::string, std::string>, shared_ptr< ::service> >::const_iterator
     it(_services.find(k));
   if (it == _services.end())
     throw (not_found() << "Could not find service '" << k.second << "' on host '" << k.first << "'");
@@ -1716,7 +1716,7 @@ void applier::state::_processing(
              end(diff_hosts.added().end());
            it != end;
            ++it) {
-        umap<std::string, shared_ptr<::host> >::const_iterator
+        umap<std::string, shared_ptr< ::host> >::const_iterator
           hst(hosts().find(it->host_name()));
         if (hst != hosts().end())
           log_host_state(INITIAL_STATES, hst->second.get());
@@ -1726,7 +1726,7 @@ void applier::state::_processing(
              end(diff_services.added().end());
            it != end;
            ++it) {
-        umap<std::pair<std::string, std::string>, shared_ptr<::service> >::const_iterator
+        umap<std::pair<std::string, std::string>, shared_ptr< ::service> >::const_iterator
           svc(services().find(std::make_pair(
                                      *it->hosts().begin(),
                                      it->service_description())));

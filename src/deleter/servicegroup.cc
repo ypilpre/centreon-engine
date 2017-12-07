@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2013 Merethis
+** Copyright 2011-2013,2017 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -17,9 +17,11 @@
 ** <http://www.gnu.org/licenses/>.
 */
 
+#include <string>
 #include "com/centreon/engine/deleter/listmember.hh"
 #include "com/centreon/engine/deleter/servicegroup.hh"
 #include "com/centreon/engine/objects/servicegroup.hh"
+#include "com/centreon/engine/service.hh"
 
 using namespace com::centreon::engine;
 

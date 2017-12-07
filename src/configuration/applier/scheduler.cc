@@ -76,9 +76,9 @@ void applier::scheduler::apply(
          end(diff_hosts.modified().end());
        it != end;
        ++it) {
-    umap<std::string, shared_ptr<::host> > const&
+    umap<std::string, shared_ptr< ::host> > const&
       hosts(applier::state::instance().hosts());
-    umap<std::string, shared_ptr<::host> >::const_iterator
+    umap<std::string, shared_ptr< ::host> >::const_iterator
       hst(hosts.find(it->host_name()));
     if (hst != hosts.end()) {
       bool has_event(quick_timed_event.find(
@@ -103,9 +103,9 @@ void applier::scheduler::apply(
          end(diff_services.modified().end());
        it != end;
        ++it) {
-    umap<std::pair<std::string, std::string>, shared_ptr<::service> > const&
+    umap<std::pair<std::string, std::string>, shared_ptr< ::service> > const&
       services(applier::state::instance().services());
-    umap<std::pair<std::string, std::string>, shared_ptr<::service> >::const_iterator
+    umap<std::pair<std::string, std::string>, shared_ptr< ::service> >::const_iterator
       svc(services.find(std::make_pair(
                                *it->hosts().begin(),
                                it->service_description())));
@@ -130,14 +130,14 @@ void applier::scheduler::apply(
 
   // Remove deleted host check from the scheduler.
   {
-    std::vector<::host*> old_hosts;
+    std::vector< ::host*> old_hosts;
     _get_hosts(hst_to_unschedule, old_hosts, false);
     _unschedule_host_events(old_hosts);
   }
 
   // Remove deleted service check from the scheduler.
   {
-    std::vector<::service*> old_services;
+    std::vector< ::service*> old_services;
     _get_services(svc_to_unschedule, old_services, false);
     _unschedule_service_events(old_services);
   }
@@ -169,14 +169,14 @@ void applier::scheduler::apply(
 
     // Get and schedule new hosts.
     {
-      std::vector<::host*> new_hosts;
+      std::vector< ::host*> new_hosts;
       _get_hosts(hst_to_schedule, new_hosts, true);
       _schedule_host_events(new_hosts);
     }
 
     // Get and schedule new services.
     {
-      std::vector<::service*> new_services;
+      std::vector< ::service*> new_services;
       _get_services(svc_to_schedule, new_services, true);
       _schedule_service_events(new_services);
     }
@@ -206,12 +206,12 @@ void applier::scheduler::load() {
  *  @param[in] h  Host configuration.
  */
 void applier::scheduler::remove_host(configuration::host const& h) {
-  umap<std::string, shared_ptr<::host> > const&
+  umap<std::string, shared_ptr< ::host> > const&
     hosts(applier::state::instance().hosts());
-  umap<std::string, shared_ptr<::host> >::const_iterator
+  umap<std::string, shared_ptr< ::host> >::const_iterator
     hst(hosts.find(h.host_name()));
   if (hst != hosts.end()) {
-    std::vector<::host*> hvec;
+    std::vector< ::host*> hvec;
     hvec.push_back(hst->second.get());
     _unschedule_host_events(hvec);
   }
@@ -225,14 +225,14 @@ void applier::scheduler::remove_host(configuration::host const& h) {
  */
 void applier::scheduler::remove_service(
                            configuration::service const& s) {
-  umap<std::pair<std::string, std::string>, shared_ptr<::service> > const&
+  umap<std::pair<std::string, std::string>, shared_ptr< ::service> > const&
     services(applier::state::instance().services());
-  umap<std::pair<std::string, std::string>, shared_ptr<::service> >::const_iterator
+  umap<std::pair<std::string, std::string>, shared_ptr< ::service> >::const_iterator
     svc(services.find(std::make_pair(
                              *s.hosts().begin(),
                              s.service_description())));
   if (svc != services.end()) {
-    std::vector<::service*> svec;
+    std::vector< ::service*> svec;
     svec.push_back(svc->second.get());
     _unschedule_service_events(svec);
   }
@@ -542,7 +542,7 @@ void applier::scheduler::_calculate_host_scheduling_params() {
   time_t const now(time(NULL));
 
   // get total hosts and total scheduled hosts.
-  for (umap<std::string, shared_ptr<::host> >::const_iterator
+  for (umap<std::string, shared_ptr< ::host> >::const_iterator
          it(applier::state::instance().hosts().begin()),
          end(applier::state::instance().hosts().end());
          it != end;
@@ -698,7 +698,7 @@ void applier::scheduler::_calculate_service_scheduling_params() {
   time_t const now(time(NULL));
 
   // get total services and total scheduled services.
-  for (umap<std::pair<std::string, std::string>, shared_ptr<::service> >::const_iterator
+  for (umap<std::pair<std::string, std::string>, shared_ptr< ::service> >::const_iterator
          it(applier::state::instance().services().begin()),
          end(applier::state::instance().services().end());
        it != end;
@@ -808,9 +808,9 @@ timed_event* applier::scheduler::_create_misc_event(
  */
 void applier::scheduler::_get_hosts(
        set_host const& hst_cfg,
-       std::vector<::host*>& hst_obj,
+       std::vector< ::host*>& hst_obj,
        bool throw_if_not_found) {
-  umap<std::string, shared_ptr<::host> > const&
+  umap<std::string, shared_ptr< ::host> > const&
     hosts(applier::state::instance().hosts());
   for (set_host::const_reverse_iterator
          it(hst_cfg.rbegin()),
@@ -818,7 +818,7 @@ void applier::scheduler::_get_hosts(
        it != end;
        ++it) {
     std::string const& host_name(it->host_name());
-    umap<std::string, shared_ptr<::host> >::const_iterator
+    umap<std::string, shared_ptr< ::host> >::const_iterator
       hst(hosts.find(host_name));
     if (hst == hosts.end()) {
       if (throw_if_not_found)
@@ -841,9 +841,9 @@ void applier::scheduler::_get_hosts(
  */
 void applier::scheduler::_get_services(
        set_service const& svc_cfg,
-       std::vector<::service*>& svc_obj,
+       std::vector< ::service*>& svc_obj,
        bool throw_if_not_found) {
-  umap<std::pair<std::string, std::string>, shared_ptr<::service> > const&
+  umap<std::pair<std::string, std::string>, shared_ptr< ::service> > const&
     services(applier::state::instance().services());
   for (set_service::const_reverse_iterator
          it(svc_cfg.rbegin()), end(svc_cfg.rend());
@@ -851,7 +851,7 @@ void applier::scheduler::_get_services(
        ++it) {
     std::string const& host_name(*it->hosts().begin());
     std::string const& service_description(it->service_description());
-    umap<std::pair<std::string, std::string>, shared_ptr<::service> >::const_iterator
+    umap<std::pair<std::string, std::string>, shared_ptr< ::service> >::const_iterator
       svc(services.find(std::make_pair(host_name, service_description)));
     if (svc == services.end()) {
       if (throw_if_not_found)
@@ -884,7 +884,7 @@ void applier::scheduler::_remove_misc_event(timed_event*& evt) {
  *  @param[in] hosts  The list of hosts to schedule.
  */
 void applier::scheduler::_schedule_host_events(
-                           std::vector<::host*> const& hosts) {
+                           std::vector< ::host*> const& hosts) {
   logger(dbg_events, most)
     << "Scheduling host checks...";
 
@@ -1010,7 +1010,7 @@ void applier::scheduler::_schedule_host_events(
  *  @param[in] services  The list of services to schedule.
  */
 void applier::scheduler::_schedule_service_events(
-                           std::vector<::service*> const& services) {
+                           std::vector< ::service*> const& services) {
   logger(dbg_events, most)
     << "Scheduling service checks...";
 
@@ -1136,8 +1136,8 @@ void applier::scheduler::_schedule_service_events(
  *  @param[in] hosts  The list of hosts to unschedule.
  */
 void applier::scheduler::_unschedule_host_events(
-                           std::vector<::host*> const& hosts) {
-  for (std::vector<::host*>::const_iterator
+                           std::vector< ::host*> const& hosts) {
+  for (std::vector< ::host*>::const_iterator
          it(hosts.begin()),
          end(hosts.end());
        it != end;
@@ -1167,8 +1167,8 @@ void applier::scheduler::_unschedule_host_events(
  *  @param[in] services  The list of services to unschedule.
  */
 void applier::scheduler::_unschedule_service_events(
-                           std::vector<::service*> const& services) {
-  for (std::vector<::service*>::const_iterator
+                           std::vector< ::service*> const& services) {
+  for (std::vector< ::service*>::const_iterator
          it(services.begin()),
          end(services.end());
        it != end;

@@ -129,14 +129,14 @@ int pre_flight_circular_check(int* w, int* e) {
   found = false;
 
   /* We clean the dsf status from previous check */
-  for (umap<std::string, com::centreon::shared_ptr<::host> >::iterator
+  for (umap<std::string, com::centreon::shared_ptr< ::host> >::iterator
          it(configuration::applier::state::instance().hosts().begin()),
          end(configuration::applier::state::instance().hosts().end());
        it != end;
        ++it)
     dfs_set_status(it->second.get(), DFS_UNCHECKED);
 
-  for (umap<std::string, com::centreon::shared_ptr<::host> >::iterator
+  for (umap<std::string, com::centreon::shared_ptr< ::host> >::iterator
          it(configuration::applier::state::instance().hosts().begin()),
          end(configuration::applier::state::instance().hosts().end());
        it != end;
@@ -144,7 +144,7 @@ int pre_flight_circular_check(int* w, int* e) {
     if (dfs_host_path(it->second.get()) == DFS_LOOPY)
       errors = 1;
 
-  for (umap<std::string, com::centreon::shared_ptr<::host> >::iterator
+  for (umap<std::string, com::centreon::shared_ptr< ::host> >::iterator
          it(configuration::applier::state::instance().hosts().begin()),
          end(configuration::applier::state::instance().hosts().end());
        it != end;

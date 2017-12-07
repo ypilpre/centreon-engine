@@ -580,7 +580,7 @@ void compensate_for_system_time_change(
   resort_event_list(&event_list_low, &event_list_low_tail);
 
   // adjust service timestamps.
-  for (umap<std::pair<std::string, std::string>, com::centreon::shared_ptr<::service> >::iterator
+  for (umap<std::pair<std::string, std::string>, com::centreon::shared_ptr< ::service> >::iterator
          it(configuration::applier::state::instance().services().begin()),
          end(configuration::applier::state::instance().services().end());
        it != end;
@@ -641,7 +641,7 @@ void compensate_for_system_time_change(
   }
 
   // adjust host timestamps.
-  for (umap<std::string, com::centreon::shared_ptr<::host> >::iterator
+  for (umap<std::string, com::centreon::shared_ptr< ::host> >::iterator
          it(configuration::applier::state::instance().hosts().begin()),
          end(configuration::applier::state::instance().hosts().end());
        it != end;

@@ -693,13 +693,13 @@ void enable_flap_detection_routines() {
   update_program_status(false);
 
   /* check for flapping */
-  for (umap<std::string, com::centreon::shared_ptr<::host> >::iterator
+  for (umap<std::string, com::centreon::shared_ptr< ::host> >::iterator
          it(configuration::applier::state::instance().hosts().begin()),
          end(configuration::applier::state::instance().hosts().end());
        it != end;
        ++it)
     check_for_host_flapping(it->second.get(), false, false, true);
-  for (umap<std::pair<std::string, std::string>, com::centreon::shared_ptr<::service> >::iterator
+  for (umap<std::pair<std::string, std::string>, com::centreon::shared_ptr< ::service> >::iterator
          it(configuration::applier::state::instance().services().begin()),
          end(configuration::applier::state::instance().services().end());
        it != end;
@@ -741,13 +741,13 @@ void disable_flap_detection_routines() {
   update_program_status(false);
 
   /* handle the details... */
-  for (umap<std::string, com::centreon::shared_ptr<::host> >::iterator
+  for (umap<std::string, com::centreon::shared_ptr< ::host> >::iterator
          it(configuration::applier::state::instance().hosts().begin()),
          end(configuration::applier::state::instance().hosts().end());
        it != end;
        ++it)
     handle_host_flap_detection_disabled(it->second.get());
-  for (umap<std::pair<std::string, std::string>, com::centreon::shared_ptr<::service> >::iterator
+  for (umap<std::pair<std::string, std::string>, com::centreon::shared_ptr< ::service> >::iterator
          it(configuration::applier::state::instance().services().begin()),
          end(configuration::applier::state::instance().services().end());
        it != end;

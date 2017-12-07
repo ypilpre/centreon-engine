@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2013 Merethis
+** Copyright 2011-2013,2017 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -19,6 +19,7 @@
 
 #include "com/centreon/engine/deleter/hostgroup.hh"
 #include "com/centreon/engine/deleter/listmember.hh"
+#include "com/centreon/engine/host.hh"
 #include "com/centreon/engine/objects/hostgroup.hh"
 
 using namespace com::centreon::engine;

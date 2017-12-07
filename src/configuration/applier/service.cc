@@ -91,7 +91,7 @@ void applier::service::add_object(
   // Add service to the global configuration set.
 
   // Create service.
-  shared_ptr<::service> svc;
+  shared_ptr< ::service> svc;
   try {
     svc = new ::service(obj);
     config->services().insert(obj);
@@ -227,7 +227,7 @@ void applier::service::modify_object(
            << host_name << "'");
 
   // Find service object.
-  umap<std::pair<std::string, std::string>, shared_ptr<::service> >::iterator
+  umap<std::pair<std::string, std::string>, shared_ptr< ::service> >::iterator
     it_obj(applier::state::instance().services().find(obj.key()));
   if (it_obj == applier::state::instance().services().end())
     throw (engine_error() << "Could not modify non-existing "
@@ -490,7 +490,7 @@ void applier::service::remove_object(
   // Find service.
   std::pair<std::string, std::string>
     id(std::make_pair(host_name, service_description));
-  umap<std::pair<std::string, std::string>, shared_ptr<::service> >::iterator
+  umap<std::pair<std::string, std::string>, shared_ptr< ::service> >::iterator
     it(applier::state::instance().services().find(obj.key()));
   if (it != applier::state::instance().services().end()) {
     ::service* svc(it->second.get());

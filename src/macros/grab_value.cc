@@ -611,7 +611,7 @@ static int handle_summary_macro(
     unsigned int hosts_unreachable(0);
     unsigned int hosts_unreachable_unhandled(0);
     unsigned int hosts_up(0);
-    for (umap<std::string, com::centreon::shared_ptr<::host> >::iterator
+    for (umap<std::string, com::centreon::shared_ptr< ::host> >::iterator
            it(configuration::applier::state::instance().hosts().begin()),
            end(configuration::applier::state::instance().hosts().end());
          it != end;
@@ -668,7 +668,7 @@ static int handle_summary_macro(
     unsigned int services_unknown_unhandled(0);
     unsigned int services_warning(0);
     unsigned int services_warning_unhandled(0);
-    for (umap<std::pair<std::string, std::string>, com::centreon::shared_ptr<::service> >::iterator
+    for (umap<std::pair<std::string, std::string>, com::centreon::shared_ptr< ::service> >::iterator
            it(configuration::applier::state::instance().services().begin()),
            end(configuration::applier::state::instance().services().end());
          it != end;
