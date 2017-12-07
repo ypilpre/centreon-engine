@@ -46,8 +46,8 @@ using namespace com::centreon::engine::string;
 bool operator==(
        command const& obj1,
        command const& obj2) throw () {
-  return (is_equal(obj1.name, obj2.name)
-          && is_equal(obj1.command_line, obj2.command_line));
+  return (obj1.name == obj2.name
+          && obj1.command_line == obj2.command_line);
 }
 
 /**
@@ -74,8 +74,8 @@ bool operator!=(
  */
 std::ostream& operator<<(std::ostream& os, command const& obj) {
   os << "command {\n"
-    "  name:         " << chkstr(obj.name) << "\n"
-    "  command_line: " << chkstr(obj.command_line) << "\n"
+    "  name:         " << obj.name << "\n"
+    "  command_line: " << obj.command_line << "\n"
     "}\n";
   return (os);
 }
@@ -88,17 +88,18 @@ std::ostream& operator<<(std::ostream& os, command const& obj) {
  *
  *  @return New command object.
  */
-command* add_command(char const* name, char const* value) {
+command* add_command(
+           std::string const& name,
+           std::string const& value) {
   // Make sure we have the data we need.
-  if (!name || !name[0] || !value || !value[0]) {
+  if (name.empty() || value.empty()) {
     logger(log_config_error, basic)
-      << "Error: Command name or command line is NULL";
+      << "Error: Command name or command line is empty";
     return (NULL);
   }
 
   // Check if the command already exist.
-  std::string id(name);
-  if (is_command_exist(id)) {
+  if (is_command_exist(name)) {
     logger(log_config_error, basic)
       << "Error: Command '" << name << "' has already been defined";
     return (NULL);
@@ -110,11 +111,11 @@ command* add_command(char const* name, char const* value) {
 
   try {
     // Duplicate vars.
-    obj->name = string::dup(name);
-    obj->command_line = string::dup(value);
+    obj->name = name;
+    obj->command_line = value;
 
     // Add new items to the configuration state.
-    state::instance().commands()[id] = obj;
+    state::instance().commands()[name] = obj;
 
     // Notify event broker.
     timeval tv(get_broker_timestamp(NULL));

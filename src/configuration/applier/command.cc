@@ -81,8 +81,8 @@ void applier::command::add_object(configuration::command const& obj) {
 
   // Create compatibility command.
   command_struct* c(add_command(
-                      obj.command_name().c_str(),
-                      obj.command_line().c_str()));
+                      obj.command_name(),
+                      obj.command_line()));
   if (!c)
     throw (engine_error() << "Could not register command '"
            << obj.command_name() << "'");
@@ -136,7 +136,7 @@ void applier::command::modify_object(
   config->commands().insert(obj);
 
   // Modify command.
-  modify_if_different(c->command_line, obj.command_line().c_str());
+  modify_if_different(c->command_line, obj.command_line());
 
   // Command will be temporarily removed from the command set but
   // will be added back right after with _create_command. This does

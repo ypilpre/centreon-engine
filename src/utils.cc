@@ -213,7 +213,7 @@ int get_raw_command_line_r(
   /* get the full command line */
   if (full_command != NULL) {
     *full_command
-      = string::dup(cmd_ptr->command_line ? cmd_ptr->command_line : "");
+      = string::dup(cmd_ptr->command_line);
   }
 
   /* get the command arguments */

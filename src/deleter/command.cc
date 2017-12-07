@@ -41,10 +41,5 @@ void deleter::command(void* ptr) throw () {
   catch (...) {
   }
 
-  delete[] obj->name;
-  obj->name = NULL;
-  delete[] obj->command_line;
-  obj->command_line = NULL;
-
   delete obj;
 }

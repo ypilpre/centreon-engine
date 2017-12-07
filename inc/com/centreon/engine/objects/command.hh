@@ -25,15 +25,15 @@
 #  include "com/centreon/unordered_hash.hh"
 
 typedef struct           command_struct {
-  char*                  name;
-  char*                  command_line;
+  std::string            name;
+  std::string            command_line;
 }                        command;
 
 #  ifdef __cplusplus
 extern "C" {
 #  endif /* C++ */
 
-command* add_command(char const* name, char const* value);
+command* add_command(std::string const& name, std::string const& value);
 
 #  ifdef __cplusplus
 }
