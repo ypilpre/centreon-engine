@@ -59,6 +59,7 @@ class                service : public monitorable {
   host*              get_host() const;
   void               set_host(host* hst);
   void               add_group(servicegroup_struct* sg);
+  void               clear_groups();
   umap<std::string, servicegroup_struct*> const&
                      get_groups() const;
 

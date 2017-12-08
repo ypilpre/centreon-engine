@@ -48,6 +48,7 @@ namespace             configuration {
                         configuration::hostescalation const& obj);
       void            resolve_object(
                         configuration::hostescalation const& obj);
+      void            unresolve_objects();
 
      private:
       void            _expand_hosts(

@@ -195,3 +195,10 @@ void applier::connector::resolve_object(
   (void)obj;
   return ;
 }
+
+/**
+ *  Do nothing.
+ */
+void applier::connector::unresolve_objects() {
+  return ;
+}

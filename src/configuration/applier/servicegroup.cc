@@ -312,6 +312,13 @@ void applier::servicegroup::resolve_object(
 }
 
 /**
+ *  Do nothing.
+ */
+void applier::servicegroup::unresolve_objects() {
+  return ;
+}
+
+/**
  *  Resolve members of a service group.
  *
  *  @param[in,out] obj  Service group object.

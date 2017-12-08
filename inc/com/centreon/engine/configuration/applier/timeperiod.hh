@@ -50,6 +50,7 @@ namespace         configuration {
       void        modify_object(configuration::timeperiod const& obj);
       void        remove_object(configuration::timeperiod const& obj);
       void        resolve_object(configuration::timeperiod const& obj);
+      void        unresolve_objects();
 
      private:
       void        _add_exclusions(

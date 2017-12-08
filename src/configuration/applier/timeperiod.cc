@@ -255,6 +255,13 @@ void applier::timeperiod::resolve_object(
 }
 
 /**
+ *  Do nothing.
+ */
+void applier::timeperiod::unresolve_objects() {
+  return ;
+}
+
+/**
  *  Add exclusions to a time period.
  *
  *  @param[in]  exclusions Exclusions.

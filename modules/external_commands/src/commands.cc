@@ -391,7 +391,7 @@ int cmd_schedule_check(int cmd, char* args) {
   /* schedule service checks */
   else if (cmd == CMD_SCHEDULE_HOST_SVC_CHECKS
            || cmd == CMD_SCHEDULE_FORCED_HOST_SVC_CHECKS) {
-    for (std::list<service* >::iterator
+    for (std::list<service* >::const_iterator
            it(temp_host->get_services().begin()),
            end(temp_host->get_services().end());
          it != end;
@@ -445,7 +445,7 @@ int cmd_schedule_host_service_checks(int cmd, char* args, int force) {
   delay_time = strtoul(temp_ptr, NULL, 10);
 
   /* reschedule all services on the specified host */
-  for (std::list<service*>::iterator
+  for (std::list<service*>::const_iterator
          it(temp_host->get_services().begin()),
          end(temp_host->get_services().end());
        it != end;
@@ -1127,7 +1127,7 @@ int cmd_schedule_downtime(int cmd, time_t entry_time, char* args) {
          ++it) {
       if ((temp_hg = it->second.get()) == NULL)
         continue;
-      for (std::list<service*>::iterator
+      for (std::list<service*>::const_iterator
              it(temp_host->get_services().begin()),
              end(temp_host->get_services().end());
            it != end;
@@ -2664,7 +2664,7 @@ void enable_and_propagate_notifications(
 
     /* enable notifications for all services on this host... */
     if (affect_services) {
-      for (std::list<service*>::iterator
+      for (std::list<service*>::const_iterator
              it(child_host->get_services().begin()),
              end(child_host->get_services().end());
            it != end;

@@ -415,3 +415,10 @@ void applier::contact::resolve_object(
     throw (engine_error() << "Cannot resolve contact '"
         << obj.contact_name() << "'");
 }
+
+/**
+ *  Do nothing.
+ */
+void applier::contact::unresolve_objects() {
+  return ;
+}

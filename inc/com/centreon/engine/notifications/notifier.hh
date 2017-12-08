@@ -140,6 +140,7 @@ namespace           notifications {
     void              set_recovery_been_sent(bool sent);
     timeperiod*       get_notification_period() const;
     void              set_notification_period(timeperiod* tperiod);
+    long              get_notification_interval() const;
 
    protected:
     virtual void      _checkable_macro_builder(nagios_macros& mac) = 0;
@@ -160,7 +161,6 @@ namespace           notifications {
 
     void              _problem_macro_builder(nagios_macros& mac);
     void              _recovery_macro_builder(nagios_macros& mac);
-    long              _get_notification_interval() const;
 
     time_t            _last_acknowledgement;
 

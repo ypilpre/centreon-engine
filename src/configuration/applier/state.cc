@@ -1778,6 +1778,7 @@ template <typename ConfigurationType, typename ApplierType>
 void applier::state::_resolve(
        std::set<ConfigurationType>& cfg) {
   ApplierType aplyr;
+  aplyr.unresolve_objects();
   for (typename std::set<ConfigurationType>::const_iterator
          it(cfg.begin()),
          end(cfg.end());

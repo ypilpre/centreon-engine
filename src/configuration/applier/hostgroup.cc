@@ -316,6 +316,13 @@ void applier::hostgroup::resolve_object(
 }
 
 /**
+ *  Do nothing.
+ */
+void applier::hostgroup::unresolve_objects() {
+  return ;
+}
+
+/**
  *  Resolve members of a host group.
  *
  *  @param[in]     s    Configuration being applied.

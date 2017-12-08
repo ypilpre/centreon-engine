@@ -46,6 +46,7 @@ namespace             configuration {
                         configuration::command const& obj);
       void            resolve_object(
                         configuration::command const& obj);
+      void            unresolve_objects();
 
      private:
       commands::command const*

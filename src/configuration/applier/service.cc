@@ -561,7 +561,6 @@ void applier::service::resolve_object(
       svc.set_host(hst);
       hst->add_service(&svc);
       // XXX
-      // ++hst->set_second->total_services;
       // hst->second->total_service_check_interval
       //   += static_cast<unsigned long>(it->second->check_interval);
     }
@@ -724,6 +723,30 @@ void applier::service::resolve_object(
            << *obj.hosts().begin() << "': " << e.what());
   }
 
+  return ;
+}
+
+/**
+ *  Remove all links to other objects in all service objects.
+ */
+void applier::service::unresolve_objects() {
+  for (umap<std::pair<std::string, std::string>, shared_ptr< ::service> >::iterator
+         it(applier::state::instance().services().begin()),
+         end(applier::state::instance().services().end());
+       it != end;
+       ++it) {
+    ::service& s(*it->second);
+    s.clear_contacts();
+    s.clear_contactgroups();
+    s.clear_groups();
+    s.set_check_command(NULL);
+    s.set_check_command_args("");
+    s.set_check_period(NULL);
+    s.set_event_handler(NULL);
+    s.set_event_handler_args("");
+    s.set_host(NULL);
+    s.set_notification_period(NULL);
+  }
   return ;
 }
 

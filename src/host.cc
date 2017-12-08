@@ -19,6 +19,7 @@
 
 #include "com/centreon/engine/configuration/host.hh"
 #include "com/centreon/engine/host.hh"
+#include "com/centreon/engine/service.hh"
 
 using namespace com::centreon::engine;
 
@@ -135,6 +136,22 @@ bool host::get_stalk_on_up() const {
 **************************************/
 
 /**
+ *  Add child to this host.
+ *
+ *  @param[in] hst  Child of this host.
+ */
+void host::add_child(host* hst) {
+  // XXX
+}
+
+/**
+ *  Clear child list of this host.
+ */
+void host::clear_children() {
+  // XXX
+}
+
+/**
  *  Get children.
  *
  *  @return List of children.
@@ -149,6 +166,13 @@ std::list<host*> const& host::get_children() const {
  *  @param[in] hg  Host group.
  */
 void host::add_group(hostgroup_struct* hg) {
+  // XXX
+}
+
+/**
+ *  Clear group list of this host.
+ */
+void host::clear_groups() {
   // XXX
 }
 
@@ -172,6 +196,13 @@ void host::add_parent(host* hst) {
 }
 
 /**
+ *  Clear parent list of this host.
+ */
+void host::clear_parents() {
+  // XXX
+}
+
+/**
  *  Get parents.
  *
  *  @return List of parents.
@@ -186,19 +217,36 @@ std::list<host*> const& host::get_parents() const {
  *  @param[in] svc  Service.
  */
 void host::add_service(service* svc) {
+  _total_service_check_interval += svc->get_normal_check_interval();
   // XXX
 }
 
-std::list<service*>& host::get_services() {
+/**
+ *  Clear the service list of this host.
+ */
+void host::clear_services() {
+  _total_service_check_interval = 0;
   // XXX
-  static std::list<service*> retval;
-  return retval;
 }
 
+/**
+ *  Get the list of services of this host.
+ *
+ *  @return List of services of this host.
+ */
 std::list<service*> const& host::get_services() const {
   // XXX
   static std::list<service*> retval;
   return retval;
+}
+
+/**
+ *  Get the total service check interval.
+ *
+ *  @return Total service check interval.
+ */
+int host::get_total_service_check_interval() const {
+  return (_total_service_check_interval);
 }
 
 /**************************************

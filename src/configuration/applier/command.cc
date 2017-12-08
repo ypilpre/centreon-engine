@@ -191,6 +191,13 @@ void applier::command::resolve_object(
 }
 
 /**
+ *  Do nothing.
+ */
+void applier::command::unresolve_objects() {
+  return ;
+}
+
+/**
  *  @brief Find real command object.
  *
  *  Create the commands::command object. This can be either a

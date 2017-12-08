@@ -282,6 +282,13 @@ void applier::hostescalation::resolve_object(
 }
 
 /**
+ *  Do nothing.
+ */
+void applier::hostescalation::unresolve_objects() {
+  return ;
+}
+
+/**
  *  Expand hosts.
  *
  *  @param[in]     hosts      Host list.

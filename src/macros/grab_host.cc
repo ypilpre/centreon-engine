@@ -169,7 +169,7 @@ static char* get_host_state(host& hst, nagios_macros* mac) {
  *  @return Newly allocated string with requested value in plain text.
  */
 template <unsigned int macro_id>
-static char* get_host_total_services(host& hst, nagios_macros* mac) {
+static char const* get_host_total_services(host& hst, nagios_macros* mac) {
   generate_host_total_services(hst, mac);
   return (mac->x[macro_id]);
 }
@@ -373,21 +373,31 @@ struct grab_host_redirection {
       new function_grabber<host>(
         (char const* (*)(host&, nagios_macros*))&get_host_group_names);
     routines[MACRO_HOSTGROUPNAMES].second = true;
-    // // Total services.
-    // routines[MACRO_TOTALHOSTSERVICES].first = &get_host_total_services<MACRO_TOTALHOSTSERVICES>;
-    // routines[MACRO_TOTALHOSTSERVICES].second = false;
-    // // Total services ok.
-    // routines[MACRO_TOTALHOSTSERVICESOK].first = &get_host_total_services<MACRO_TOTALHOSTSERVICESOK>;
-    // routines[MACRO_TOTALHOSTSERVICESOK].second = false;
-    // // Total services warning.
-    // routines[MACRO_TOTALHOSTSERVICESWARNING].first = &get_host_total_services<MACRO_TOTALHOSTSERVICESWARNING>;
-    // routines[MACRO_TOTALHOSTSERVICESWARNING].second = false;
-    // // Total services unknown.
-    // routines[MACRO_TOTALHOSTSERVICESUNKNOWN].first = &get_host_total_services<MACRO_TOTALHOSTSERVICESUNKNOWN>;
-    // routines[MACRO_TOTALHOSTSERVICESUNKNOWN].second = false;
-    // // Total services critical.
-    // routines[MACRO_TOTALHOSTSERVICESCRITICAL].first = &get_host_total_services<MACRO_TOTALHOSTSERVICESCRITICAL>;
-    // routines[MACRO_TOTALHOSTSERVICESCRITICAL].second = false;
+    // Total services.
+    routines[MACRO_TOTALHOSTSERVICES].first =
+      new function_grabber<host>(
+        &get_host_total_services<MACRO_TOTALHOSTSERVICES>);
+    routines[MACRO_TOTALHOSTSERVICES].second = false;
+    // Total services ok.
+    routines[MACRO_TOTALHOSTSERVICESOK].first =
+      new function_grabber<host>(
+        &get_host_total_services<MACRO_TOTALHOSTSERVICESOK>);
+    routines[MACRO_TOTALHOSTSERVICESOK].second = false;
+    // Total services warning.
+    routines[MACRO_TOTALHOSTSERVICESWARNING].first =
+      new function_grabber<host>(
+        &get_host_total_services<MACRO_TOTALHOSTSERVICESWARNING>);
+    routines[MACRO_TOTALHOSTSERVICESWARNING].second = false;
+    // Total services unknown.
+    routines[MACRO_TOTALHOSTSERVICESUNKNOWN].first =
+      new function_grabber<host>(
+        &get_host_total_services<MACRO_TOTALHOSTSERVICESUNKNOWN>);
+    routines[MACRO_TOTALHOSTSERVICESUNKNOWN].second = false;
+    // Total services critical.
+    routines[MACRO_TOTALHOSTSERVICESCRITICAL].first =
+      new function_grabber<host>(
+        &get_host_total_services<MACRO_TOTALHOSTSERVICESCRITICAL>);
+    routines[MACRO_TOTALHOSTSERVICESCRITICAL].second = false;
     // // Acknowledgement author.
     // routines[MACRO_HOSTACKAUTHOR].first = &get_macro_copy<host, MACRO_HOSTACKAUTHOR>;
     // routines[MACRO_HOSTACKAUTHOR].second = true;

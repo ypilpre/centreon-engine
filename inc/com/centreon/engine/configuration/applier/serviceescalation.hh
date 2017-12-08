@@ -50,6 +50,7 @@ namespace                configuration {
                            configuration::serviceescalation const& obj);
       void               resolve_object(
                            configuration::serviceescalation const& obj);
+      void               unresolve_objects();
 
      private:
       void               _expand_services(

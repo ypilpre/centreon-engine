@@ -201,20 +201,18 @@ void check_for_host_flapping(
   time(&current_time);
 
   /* period to wait for updating archived state info if we have no state change */
-  // // XXX
-  // if (hst->total_services == 0)
-  //   wait_threshold
-  //     = static_cast<unsigned long>(hst->notification_interval
-  //                                  * config->interval_length());
-  // else
-  //   wait_threshold
-  //     = static_cast<unsigned long>((hst->total_service_check_interval
-  //                                   * config->interval_length())
-  //                                  / hst->total_services);
-
-  update_history = update;
+  if (hst->get_services().empty())
+    wait_threshold
+      = static_cast<unsigned long>(hst->get_notification_interval()
+                                   * config->interval_length());
+  else
+    wait_threshold
+      = static_cast<unsigned long>((hst->get_total_service_check_interval()
+                                    * config->interval_length())
+                                   / hst->get_services().size());
 
   /* should we update state history for this state? */
+  update_history = update;
   if (update_history == true) {
     if (hst->get_current_state() == HOST_UP
         && !hst->get_flap_detection_on_up())

@@ -56,17 +56,20 @@ class                        host : public monitorable {
   bool                       get_stalk_on_up() const;
 
   // Links with other objects.
-  void                       add_children(host* hst);
+  void                       add_child(host* hst);
+  void                       clear_children();
   std::list<host*> const&    get_children() const;
   void                       add_group(hostgroup_struct* hg);
+  void                       clear_groups();
   umap<std::string, hostgroup_struct*> const&
                              get_groups() const;
   void                       add_parent(host* hst);
+  void                       clear_parents();
   std::list<host*> const&    get_parents() const;
   void                       add_service(service* svc);
   void                       clear_services();
-  std::list<service*>&       get_services();
   std::list<service*> const& get_services() const;
+  int                        get_total_service_check_interval() const;
 
   // State runtime.
   time_t                     get_last_time_down() const;
@@ -117,6 +120,7 @@ class                        host : public monitorable {
   bool                       _stalk_on_down;
   bool                       _stalk_on_unreachable;
   bool                       _stalk_on_up;
+  int                        _total_service_check_interval;
 };
 
 CCE_END()

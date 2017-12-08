@@ -156,6 +156,13 @@ void service::add_group(servicegroup_struct* sg) {
 }
 
 /**
+ *  Clear groups of this service.
+ */
+void service::clear_groups() {
+  // XXX
+}
+
+/**
  *  Get groups of this service.
  *
  *  @return Groups of this service.

@@ -507,27 +507,10 @@ void applier::host::resolve_object(
   logger(logging::dbg_config, logging::more)
     << "Resolving host '" << obj.host_name() << "'.";
 
-  // XXX : move in separate pre-resolution method
-  // // If it is the very first host to be resolved,
-  // // remove all the child backlinks of all the hosts.
-  // // It is necessary to do it only once to prevent the removal
-  // // of valid child backlinks.
-  // if (obj == *config->hosts().begin()) {
-  //   for (umap<std::string, shared_ptr<host_struct> >::iterator
-  //        it(applier::state::instance().hosts().begin()),
-  //        end(applier::state::instance().hosts().end()); it != end; ++it)
-  //     deleter::listmember(it->second->child_hosts, &deleter::hostsmember);
-  // }
-
   try {
     // Find host.
     ::host& hst(
               *applier::state::instance().hosts_find(obj.key()).get());
-
-    // XXX
-    // // Reset host counters.
-    // it->second->total_services = 0;
-    // it->second->total_service_check_interval = 0;
 
     // Make sure host has at least one service associated with it.
     // XXX
@@ -693,5 +676,31 @@ void applier::host::resolve_object(
            << obj.host_name() << "': " << e.what());
   }
 
+  return ;
+}
+
+/**
+ *  Remove all links to other objects in all host objects.
+ */
+void applier::host::unresolve_objects() {
+  for (umap<std::string, shared_ptr< ::host> >::iterator
+         it(applier::state::instance().hosts().begin()),
+         end(applier::state::instance().hosts().end());
+       it != end;
+       ++it) {
+    ::host& h(*it->second);
+    h.clear_children();
+    h.clear_contacts();
+    h.clear_contactgroups();
+    h.clear_groups();
+    h.clear_parents();
+    h.clear_services();
+    h.set_check_command(NULL);
+    h.set_check_command_args("");
+    h.set_check_period(NULL);
+    h.set_event_handler(NULL);
+    h.set_event_handler_args("");
+    h.set_notification_period(NULL);
+  }
   return ;
 }

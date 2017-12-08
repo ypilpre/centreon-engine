@@ -261,6 +261,13 @@ void applier::contactgroup::resolve_object(
 }
 
 /**
+ *  Do nothing.
+ */
+void applier::contactgroup::unresolve_objects() {
+  return ;
+}
+
+/**
  *  Resolve members of a contact group.
  *
  *  @param[in,out] s    Configuration being applied.

@@ -46,6 +46,7 @@ namespace             configuration {
                         configuration::service const& obj);
       void            resolve_object(
                         configuration::service const& obj);
+      void            unresolve_objects();
 
      private:
       void            _expand_service_memberships(

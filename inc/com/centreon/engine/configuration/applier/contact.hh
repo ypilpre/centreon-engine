@@ -42,6 +42,7 @@ namespace             configuration {
       void            modify_object(configuration::contact const& obj);
       void            remove_object(configuration::contact const& obj);
       void            resolve_object(configuration::contact const& obj);
+      void            unresolve_objects();
     };
   }
 }

@@ -372,7 +372,7 @@ bool notifier::_problem_filter() {
       && get_last_state() == get_current_state()) {
     /* No notification if the delay between previous notification and now
        is less than notification_interval */
-    if (now - get_last_notification() < _get_notification_interval())
+    if (now - get_last_notification() < get_notification_interval())
       return false;
 
   }
@@ -411,7 +411,7 @@ int notifier::get_current_notification_number() const {
   return _current_notification_number;
 }
 
-long notifier::_get_notification_interval() const {
+long notifier::get_notification_interval() const {
   return _notification_interval;
 }
 

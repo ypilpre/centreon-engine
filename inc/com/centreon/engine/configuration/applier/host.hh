@@ -45,6 +45,7 @@ namespace          configuration {
                      configuration::host const& obj);
       void         resolve_object(
                      configuration::host const& obj);
+      void         unresolve_objects();
     };
   }
 }

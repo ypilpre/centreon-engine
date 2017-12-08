@@ -296,6 +296,13 @@ void applier::serviceescalation::resolve_object(
 }
 
 /**
+ *  Do nothing.
+ */
+void applier::serviceescalation::unresolve_objects() {
+  return ;
+}
+
+/**
  *  Expand services.
  *
  *  @param[in]     hst      Hosts.

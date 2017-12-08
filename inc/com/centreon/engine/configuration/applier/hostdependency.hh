@@ -47,6 +47,7 @@ namespace             configuration {
                         configuration::hostdependency const& obj);
       void            resolve_object(
                         configuration::hostdependency const& obj);
+      void            unresolve_objects();
 
      private:
       void            _expand_hosts(
