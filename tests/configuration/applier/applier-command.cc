@@ -55,7 +55,7 @@ class ApplierCommand : public ::testing::Test {
 
 // Given a command applier
 // And a configuration command just with a name
-// Then the applier add_object addsthe command in the configuration set
+// Then the applier add_object adds the command in the configuration set
 // but not in the commands map (the command is unusable).
 TEST_F(ApplierCommand, UnusableCommandFromConfig) {
   configuration::applier::command aply;
@@ -63,7 +63,7 @@ TEST_F(ApplierCommand, UnusableCommandFromConfig) {
   aply.add_object(cmd);
   set_command s(config->commands());
   ASSERT_EQ(s.size(), 1);
-  command_map const& cm(configuration::applier::state::instance().commands());
+  command_map const& cm(commands::set::instance().get_commands());
   ASSERT_EQ(cm.size(), 0);
 }
 
@@ -121,6 +121,35 @@ TEST_F(ApplierCommand, NewCommandWithConnectorFromConfig) {
   shared_ptr<commands::command> cc(commands::set::instance().get_command("cmd"));
   ASSERT_EQ(cc->get_name(), "cmd");
   ASSERT_EQ(cc->get_command_line(), "echo 1");
+  aply.resolve_object(cmd);
+}
+
+// Given some command/connector appliers
+// And a configuration command
+// And a connector with the same name.
+// Then the applier add_object adds the command into the configuration set
+// but not in the commands map (the connector is not defined).
+TEST_F(ApplierCommand, NewCommandAndConnectorWithSameName) {
+  configuration::applier::command aply;
+  configuration::applier::connector cnn_aply;
+  configuration::command cmd("cmd");
+  cmd.parse("command_line", "echo 1");
+  configuration::connector cnn("cmd");
+  cnn.parse("connector_line", "echo 2");
+
+  cnn_aply.add_object(cnn);
+  aply.add_object(cmd);
+
+  set_command s(config->commands());
+  ASSERT_EQ(s.size(), 1);
+  shared_ptr<commands::command> cc(commands::set::instance().get_command("cmd"));
+  ASSERT_EQ(cc->get_name(), "cmd");
+  ASSERT_EQ(cc->get_command_line(), "echo 1");
+  aply.resolve_object(cmd);
+  shared_ptr<commands::connector> mycnn(find_connector("cmd"));
+  ASSERT_FALSE(mycnn.is_null());
+  shared_ptr<commands::command> mycmd(commands::set::instance().get_command("cmd"));
+  ASSERT_FALSE(mycmd.is_null());
 }
 
 // Given some command and connector appliers already applied with
@@ -143,4 +172,50 @@ TEST_F(ApplierCommand, ModifyCommandWithConnector) {
   shared_ptr<commands::command> cc(commands::set::instance().get_command("cmd"));
   ASSERT_EQ(cc->get_name(), "cmd");
   ASSERT_EQ(cc->get_command_line(), "date");
+}
+
+// When a non existing command is removed
+// Then an exception is thrown.
+TEST_F(ApplierCommand, RemoveNonExistingCommand) {
+  configuration::applier::command aply;
+  configuration::command cmd("cmd");
+  cmd.parse("command_line", "echo 1");
+
+  ASSERT_THROW(aply.remove_object(cmd), std::exception);
+}
+
+// Given simple command (without connector) applier already applied with
+// all objects created.
+// When the command is removed from the configuration,
+// Then the command is totally removed.
+TEST_F(ApplierCommand, RemoveCommand) {
+  configuration::applier::command aply;
+  configuration::command cmd("cmd");
+  cmd.parse("command_line", "echo 1");
+
+  aply.add_object(cmd);
+
+  aply.remove_object(cmd);
+  ASSERT_THROW(shared_ptr<commands::command> cc(commands::set::instance().get_command("cmd")), std::exception);
+  ASSERT_TRUE(config->commands().size() == 0);
+}
+
+// Given some command and connector appliers already applied with
+// all objects created.
+// When the command is removed from the configuration,
+// Then the command is totally removed.
+TEST_F(ApplierCommand, RemoveCommandWithConnector) {
+  configuration::applier::command aply;
+  configuration::applier::connector cnn_aply;
+  configuration::command cmd("cmd");
+  cmd.parse("command_line", "echo 1");
+  cmd.parse("connector", "perl");
+  configuration::connector cnn("perl");
+
+  cnn_aply.add_object(cnn);
+  aply.add_object(cmd);
+
+  aply.remove_object(cmd);
+  ASSERT_THROW(shared_ptr<commands::command> cc(commands::set::instance().get_command("cmd")), std::exception);
+  ASSERT_TRUE(config->commands().size() == 0);
 }
