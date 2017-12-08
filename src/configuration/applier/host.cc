@@ -19,6 +19,7 @@
 
 #include <algorithm>
 #include "com/centreon/engine/broker.hh"
+#include "com/centreon/engine/commands/set.hh"
 #include "com/centreon/engine/common.hh"
 #include "com/centreon/engine/config.hh"
 #include "com/centreon/engine/configuration/applier/host.hh"
@@ -34,6 +35,7 @@
 
 using namespace com::centreon;
 using namespace com::centreon::engine;
+using namespace com::centreon::engine::commands;
 using namespace com::centreon::engine::configuration;
 
 /**
@@ -523,7 +525,8 @@ void applier::host::resolve_object(
                                  obj.check_command().find_first_of('!')));
       try {
         // Set resolved command and arguments.
-        hst.set_check_command(find_command(command_name));
+        hst.set_check_command(set::instance().get_command(command_name));
+        //hst.set_check_command(find_command(command_name));
         hst.set_check_command_args(obj.check_command());
       }
       catch (not_found const& e) {
@@ -570,7 +573,8 @@ void applier::host::resolve_object(
 
       try {
         // Get command.
-        hst.set_event_handler(find_command(command_name));
+        hst.set_event_handler(set::instance().get_command(command_name));
+        //hst.set_event_handler(find_command(command_name));
         hst.set_event_handler_args(obj.event_handler());
       }
       catch (not_found const& e) {

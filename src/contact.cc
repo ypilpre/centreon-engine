@@ -21,6 +21,7 @@
 #include <sstream>
 #include "com/centreon/engine/broker.hh"
 #include "com/centreon/engine/commands/command.hh"
+#include "com/centreon/engine/commands/set.hh"
 #include "com/centreon/engine/configuration/applier/object.hh"
 #include "com/centreon/engine/configuration/applier/state.hh"
 #include "com/centreon/engine/configuration/contact.hh"
@@ -350,7 +351,8 @@ bool contact::check(int* w, int* e) {
       std::string command_name(buf.substr(0, index));
       shared_ptr<command> temp_command;
       try {
-        temp_command = find_command(command_name);
+        temp_command = set::instance().get_command(command_name);
+        //temp_command = find_command(command_name);
       }
       catch (not_found const& e) {
         (void)e;
@@ -383,7 +385,8 @@ bool contact::check(int* w, int* e) {
       std::string command_name(buf.substr(0, index));
       shared_ptr<command> cmd;
       try {
-        cmd = find_command(command_name);
+        cmd = set::instance().get_command(command_name);
+        //cmd = find_command(command_name);
       }
       catch (not_found const& e) {
         (void)e;

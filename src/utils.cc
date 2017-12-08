@@ -1045,14 +1045,14 @@ com::centreon::engine::contactgroup& find_contactgroup(std::string const& name) 
  *
  *  @return Command object if found, an exception is thrown otherwise.
  */
-shared_ptr<commands::command>& find_command(std::string const& name) {
+shared_ptr<commands::connector>& find_connector(std::string const& name) {
   if (name.empty())
-    throw (not_found_error() << "Could not find a command with an empty name");
+    throw (not_found_error() << "Could not find a connector with an empty name");
 
-  command_map::iterator
-    it(configuration::applier::state::instance().commands().find(name));
-  if (it == configuration::applier::state::instance().commands().end())
-    throw (not_found_error() << "Could not find command '" << name << "'");
+  connector_map::iterator
+    it(configuration::applier::state::instance().connectors().find(name));
+  if (it == configuration::applier::state::instance().connectors().end())
+    throw (not_found_error() << "Could not find connector '" << name << "'");
 
   return (it->second);
 }

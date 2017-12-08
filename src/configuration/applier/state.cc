@@ -20,6 +20,7 @@
 #include <unistd.h>
 #include "com/centreon/concurrency/locker.hh"
 #include "com/centreon/engine/broker.hh"
+#include "com/centreon/engine/commands/set.hh"
 #include "com/centreon/engine/commands/connector.hh"
 #include "com/centreon/engine/config.hh"
 #include "com/centreon/engine/configuration/applier/command.hh"
@@ -189,24 +190,6 @@ applier::state::~state() throw() {
   applier::macros::unload();
   applier::globals::unload();
   applier::logging::unload();
-}
-
-/**
- *  Get the current commands.
- *
- *  @return The current commands.
- */
-command_map const& applier::state::commands() const throw () {
-  return (_commands);
-}
-
-/**
- *  Get the current commands.
- *
- *  @return The current commands.
- */
-command_map & applier::state::commands() throw () {
-  return (_commands);
 }
 
 /**
@@ -1172,7 +1155,8 @@ void applier::state::_apply(configuration::state const& new_cfg) {
                                     config->global_host_event_handler().find_first_of('!')));
     shared_ptr<commands::command> temp_command;
     try {
-      temp_command = ::find_command(temp_command_name.c_str());
+      temp_command = commands::set::instance().get_command(temp_command_name);
+      //temp_command = ::find_command(temp_command_name.c_str());
     }
     catch (not_found const& e) {
       (void)e;
@@ -1193,7 +1177,8 @@ void applier::state::_apply(configuration::state const& new_cfg) {
 
     shared_ptr<commands::command> temp_command;
     try {
-      temp_command = ::find_command(temp_command_name.c_str());
+      temp_command = commands::set::instance().get_command(temp_command_name.c_str());
+      //temp_command = ::find_command(temp_command_name.c_str());
     }
     catch (not_found const& e) {
       logger(log_verification_error, basic)
@@ -1217,7 +1202,8 @@ void applier::state::_apply(configuration::state const& new_cfg) {
 
     shared_ptr<commands::command> temp_command;
     try {
-      temp_command = ::find_command(temp_command_name.c_str());
+      temp_command = commands::set::instance().get_command(temp_command_name);
+      //temp_command = ::find_command(temp_command_name.c_str());
     }
     catch (not_found const& e) {
       (void)e;
@@ -1236,7 +1222,8 @@ void applier::state::_apply(configuration::state const& new_cfg) {
                                     config->ochp_command().find_first_of('!')));
     shared_ptr<commands::command> temp_command;
     try {
-      temp_command = ::find_command(temp_command_name.c_str());
+      temp_command = commands::set::instance().get_command(temp_command_name);
+      //temp_command = ::find_command(temp_command_name.c_str());
     }
     catch (not_found const& e) {
       (void)e;

@@ -255,7 +255,7 @@ int main(int argc, char* argv[]) {
 
         logger(logging::log_info_message, logging::basic)
           << "\n"
-          << "Checked " << applier.commands().size() << " commands.\n"
+          << "Checked " << commands::set::instance().get_commands().size() << " commands.\n"
           << "Checked " << applier.connectors().size() << " connectors.\n"
           << "Checked " << applier.contacts().size() << " contacts.\n"
           << "Checked " << applier.hostdependencies().size() << " host dependencies.\n"

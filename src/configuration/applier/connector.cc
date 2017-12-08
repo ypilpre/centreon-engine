@@ -128,7 +128,7 @@ void applier::connector::modify_object(
            << obj.connector_name() << "'");
 
   // Find connector object.
-  umap<std::string, shared_ptr<commands::connector> >::iterator
+  connector_map::iterator
     it_obj(applier::state::instance().connectors_find(obj.key()));
   if (it_obj == applier::state::instance().connectors().end())
     throw (engine_error() << "Could not modify non-existing "
@@ -168,7 +168,7 @@ void applier::connector::remove_object(
     << "Removing connector '" << obj.connector_name() << "'.";
 
   // Find connector.
-  umap<std::string, shared_ptr<commands::connector> >::iterator
+  connector_map::iterator
     it(applier::state::instance().connectors_find(obj.key()));
   if (it != applier::state::instance().connectors().end()) {
     // Remove connector object.
