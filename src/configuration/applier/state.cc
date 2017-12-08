@@ -46,7 +46,6 @@
 #include "com/centreon/engine/logging.hh"
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/not_found.hh"
-#include "com/centreon/engine/objects/command.hh"
 #include "com/centreon/engine/retention/applier/state.hh"
 #include "com/centreon/engine/retention/state.hh"
 #include "com/centreon/engine/version.hh"
@@ -197,7 +196,7 @@ applier::state::~state() throw() {
  *
  *  @return The current commands.
  */
-umap<std::string, shared_ptr<command_struct> > const& applier::state::commands() const throw () {
+command_map const& applier::state::commands() const throw () {
   return (_commands);
 }
 
@@ -206,7 +205,7 @@ umap<std::string, shared_ptr<command_struct> > const& applier::state::commands()
  *
  *  @return The current commands.
  */
-umap<std::string, shared_ptr<command_struct> >& applier::state::commands() throw () {
+command_map & applier::state::commands() throw () {
   return (_commands);
 }
 
@@ -218,7 +217,7 @@ umap<std::string, shared_ptr<command_struct> >& applier::state::commands() throw
  *  @return Iterator to the element if found, commands().end()
  *          otherwise.
  */
-umap<std::string, shared_ptr<command_struct> >::const_iterator applier::state::commands_find(configuration::command::key_type const& k) const {
+command_map::const_iterator applier::state::commands_find(configuration::command::key_type const& k) const {
   return (_commands.find(k));
 }
 
@@ -230,7 +229,7 @@ umap<std::string, shared_ptr<command_struct> >::const_iterator applier::state::c
  *  @return Iterator to the element if found, commands().end()
  *          otherwise.
  */
-umap<std::string, shared_ptr<command_struct> >::iterator applier::state::commands_find(configuration::command::key_type const& k) {
+command_map::iterator applier::state::commands_find(configuration::command::key_type const& k) {
   return (_commands.find(k));
 }
 
@@ -1171,7 +1170,7 @@ void applier::state::_apply(configuration::state const& new_cfg) {
     std::string temp_command_name(config->global_host_event_handler().substr(
                                     0,
                                     config->global_host_event_handler().find_first_of('!')));
-    shared_ptr<command_struct> temp_command;
+    shared_ptr<commands::command> temp_command;
     try {
       temp_command = ::find_command(temp_command_name.c_str());
     }
@@ -1192,7 +1191,7 @@ void applier::state::_apply(configuration::state const& new_cfg) {
                                     0,
                                     config->global_service_event_handler().find_first_of('!')));
 
-    shared_ptr<command_struct> temp_command;
+    shared_ptr<commands::command> temp_command;
     try {
       temp_command = ::find_command(temp_command_name.c_str());
     }
@@ -1216,7 +1215,7 @@ void applier::state::_apply(configuration::state const& new_cfg) {
                                     0,
                                     config->ocsp_command().find_first_of('!')));
 
-    shared_ptr<command_struct> temp_command;
+    shared_ptr<commands::command> temp_command;
     try {
       temp_command = ::find_command(temp_command_name.c_str());
     }
@@ -1235,7 +1234,7 @@ void applier::state::_apply(configuration::state const& new_cfg) {
     std::string temp_command_name(config->ochp_command().substr(
                                     0,
                                     config->ochp_command().find_first_of('!')));
-    shared_ptr<command_struct> temp_command;
+    shared_ptr<commands::command> temp_command;
     try {
       temp_command = ::find_command(temp_command_name.c_str());
     }

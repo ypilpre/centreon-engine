@@ -56,10 +56,14 @@ extern com::centreon::engine::configuration::state*
 
 extern char*                     config_file;
 
-extern command_struct*           global_host_event_handler_ptr;
-extern command_struct*           global_service_event_handler_ptr;
-extern command_struct*           ocsp_command_ptr;
-extern command_struct*           ochp_command_ptr;
+extern com::centreon::engine::commands::command*
+                                 global_host_event_handler_ptr;
+extern com::centreon::engine::commands::command*
+                                 global_service_event_handler_ptr;
+extern com::centreon::engine::commands::command*
+                                 ocsp_command_ptr;
+extern com::centreon::engine::commands::command*
+                                 ochp_command_ptr;
 
 extern unsigned long             logging_options;
 extern unsigned long             syslog_options;

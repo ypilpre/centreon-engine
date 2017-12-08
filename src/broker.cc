@@ -22,7 +22,6 @@
 #include <unistd.h>
 #include "com/centreon/engine/broker.hh"
 #include "com/centreon/engine/flapping.hh"
-#include "com/centreon/engine/globals.hh"
 #include "com/centreon/engine/nebmods.hh"
 #include "com/centreon/engine/nebstructs.hh"
 #include "com/centreon/engine/notifications/notifier.hh"
@@ -31,6 +30,7 @@
 
 using namespace com::centreon::engine;
 using namespace com::centreon::engine::notifications;
+using namespace com::centreon::engine::commands;
 
 extern "C" {
 
@@ -418,7 +418,7 @@ void broker_command_data(
        int type,
        int flags,
        int attr,
-       command* cmd,
+       command const* cmd,
        struct timeval const* timestamp) {
   // Config check.
   if (!(config->event_broker_options() & BROKER_COMMAND_DATA))

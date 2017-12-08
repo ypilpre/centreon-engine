@@ -79,14 +79,6 @@ void applier::command::add_object(configuration::command const& obj) {
   // Add command to the global configuration set.
   config->commands().insert(obj);
 
-  // Create compatibility command.
-  command_struct* c(add_command(
-                      obj.command_name().c_str(),
-                      obj.command_line().c_str()));
-  if (!c)
-    throw (engine_error() << "Could not register command '"
-           << obj.command_name() << "'");
-
   // Create real command object.
   _create_command(obj);
 
@@ -123,27 +115,16 @@ void applier::command::modify_object(
     throw (engine_error() << "Cannot modify non-existing "
            << "command '" << obj.command_name() << "'");
 
-  // Find command object.
-  umap<std::string, shared_ptr<command_struct> >::iterator
-    it_obj(applier::state::instance().commands_find(obj.key()));
-  if (it_obj == applier::state::instance().commands().end())
-    throw (engine_error() << "Could not modify non-existing "
-           << "command object '" << obj.command_name() << "'");
-  command_struct* c(it_obj->second.get());
-
   // Update the global configuration set.
   config->commands().erase(it_cfg);
   config->commands().insert(obj);
-
-  // Modify command.
-  modify_if_different(c->command_line, obj.command_line().c_str());
 
   // Command will be temporarily removed from the command set but
   // will be added back right after with _create_command. This does
   // not create dangling pointers since commands::command object are
   // not referenced anywhere, only ::command objects are.
   commands::set::instance().remove_command(obj.command_name());
-  _create_command(obj);
+  commands::command const* cmd = _create_command(obj);
 
   // Notify event broker.
   timeval tv(get_broker_timestamp(NULL));
@@ -151,10 +132,8 @@ void applier::command::modify_object(
     NEBTYPE_COMMAND_UPDATE,
     NEBFLAG_NONE,
     NEBATTR_NONE,
-    c,
+    cmd,
     &tv);
-
-  return ;
 }
 
 /**
@@ -169,10 +148,10 @@ void applier::command::remove_object(
     << "Removing command '" << obj.command_name() << "'.";
 
   // Find command.
-  umap<std::string, shared_ptr<command_struct> >::iterator
+  umap<std::string, shared_ptr<commands::command> >::iterator
     it(applier::state::instance().commands_find(obj.key()));
   if (it != applier::state::instance().commands().end()) {
-    command_struct* cmd(it->second.get());
+    commands::command* cmd(it->second.get());
 
     // Notify event broker.
     timeval tv(get_broker_timestamp(NULL));
@@ -218,9 +197,11 @@ void applier::command::resolve_object(
  *  commands::raw object or a commands::forward object.
  *
  *  @param[in] obj  Command configuration object.
+ *
+ *  @return a pointer to the newly created command.
  */
-void applier::command::_create_command(
-                         configuration::command const& obj) {
+commands::command const* applier::command::_create_command(
+                           configuration::command const& obj) {
   // Command set.
   commands::set& cmd_set(commands::set::instance());
 
@@ -232,6 +213,7 @@ void applier::command::_create_command(
                           obj.command_line(),
                           &checks::checker::instance()));
     cmd_set.add_command(cmd);
+    return cmd.get();
   }
   // Connector command.
   else {
@@ -241,7 +223,6 @@ void applier::command::_create_command(
                           obj.command_line(),
                           *cmd_set.get_command(obj.connector())));
     cmd_set.add_command(cmd);
+    return cmd.get();
   }
-
-  return ;
 }

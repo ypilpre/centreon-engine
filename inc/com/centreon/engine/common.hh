@@ -24,6 +24,21 @@
 
 #  include "com/centreon/engine/checks/stats.hh"
 #  include "com/centreon/engine/shared.hh"
+#  include "com/centreon/unordered_hash.hh"
+#  include "com/centreon/shared_ptr.hh"
+#  include "com/centreon/engine/namespace.hh"
+
+// Forward declarations
+CCE_BEGIN()
+  namespace commands {
+    class command;
+  }
+
+  class contact;
+
+  typedef umap<std::string, shared_ptr<contact> >           contact_map;
+  typedef umap<std::string, shared_ptr<commands::command> > command_map;
+CCE_END()
 
 /* Daemon is thread safe. */
 #  ifndef _REENTRANT

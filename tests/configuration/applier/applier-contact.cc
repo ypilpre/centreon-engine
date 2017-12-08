@@ -71,7 +71,7 @@ TEST_F(ApplierContact, NewContactFromConfig) {
   ASSERT_EQ(sc.begin()->first, "test");
   ASSERT_EQ(sc.begin()->second->get_name(), "test");
   engine::contact* cc(sc.begin()->second.get());
-  command_set::const_iterator
+  command_map::const_iterator
          it(cc->get_host_notification_commands().begin()),
          end(cc->get_host_notification_commands().end());
   ASSERT_EQ(it->first, "cmd1");

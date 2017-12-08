@@ -48,6 +48,7 @@
 
 using namespace com::centreon;
 using namespace com::centreon::engine;
+using namespace com::centreon::engine::commands;
 using namespace com::centreon::engine::logging;
 using namespace com::centreon::engine::notifications;
 
@@ -1858,7 +1859,7 @@ int cmd_change_object_char_var(int cmd, char* args) {
   host* temp_host(NULL);
   contact* temp_contact(NULL);
   timeperiod* temp_timeperiod(NULL);
-  shared_ptr<command_struct> temp_command;
+  shared_ptr<command> temp_command;
   char* host_name(NULL);
   char* svc_description(NULL);
   char* contact_name(NULL);

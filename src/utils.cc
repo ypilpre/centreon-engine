@@ -185,7 +185,7 @@ char const* my_ctime(time_t const* t) {
 /* given a "raw" command, return the "expanded" or "whole" command line */
 int get_raw_command_line_r(
       nagios_macros* mac,
-      command* cmd_ptr,
+      commands::command* cmd_ptr,
       char const* cmd,
       char** full_command,
       int macro_options) {
@@ -208,12 +208,12 @@ int get_raw_command_line_r(
   }
 
   logger(dbg_commands | dbg_checks | dbg_macros, most)
-    << "Raw Command Input: " << cmd_ptr->command_line;
+    << "Raw Command Input: " << cmd_ptr->get_command_line();
 
   /* get the full command line */
   if (full_command != NULL) {
     *full_command
-      = string::dup(cmd_ptr->command_line ? cmd_ptr->command_line : "");
+      = string::dup(cmd_ptr->get_command_line());
   }
 
   /* get the command arguments */
@@ -276,7 +276,7 @@ int get_raw_command_line_r(
  * threadsafe
  */
 int get_raw_command_line(
-      command* cmd_ptr,
+      commands::command* cmd_ptr,
       char* cmd,
       char** full_command,
       int macro_options) {
@@ -1045,11 +1045,11 @@ com::centreon::engine::contactgroup& find_contactgroup(std::string const& name) 
  *
  *  @return Command object if found, an exception is thrown otherwise.
  */
-shared_ptr<command_struct>& find_command(std::string const& name) {
+shared_ptr<commands::command>& find_command(std::string const& name) {
   if (name.empty())
     throw (not_found_error() << "Could not find a command with an empty name");
 
-  umap<std::string, shared_ptr<command_struct> >::iterator
+  command_map::iterator
     it(configuration::applier::state::instance().commands().find(name));
   if (it == configuration::applier::state::instance().commands().end())
     throw (not_found_error() << "Could not find command '" << name << "'");

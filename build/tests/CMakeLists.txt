@@ -32,6 +32,7 @@ if (WITH_TESTING)
     # Sources.
     "${TESTS_DIR}/configuration/applier/applier-contact.cc"
     "${TESTS_DIR}/configuration/applier/applier-contactgroup.cc"
+    "${TESTS_DIR}/configuration/applier/applier-command.cc"
     "${TESTS_DIR}/configuration/command.cc"
     "${TESTS_DIR}/configuration/contact.cc"
     "${TESTS_DIR}/configuration/contactgroup.cc"

@@ -18,8 +18,10 @@
 */
 
 #include "com/centreon/engine/checks/checkable.hh"
+#include "com/centreon/engine/commands/command.hh"
 
 using namespace com::centreon::engine::checks;
+using namespace com::centreon::engine::commands;
 
 /**
  *  Default constructor.
