@@ -19,7 +19,6 @@
 #include <memory>
 #include <gtest/gtest.h>
 #include "../../timeperiod/utils.hh"
-#include "com/centreon/engine/commands/set.hh"
 #include "com/centreon/engine/configuration/applier/command.hh"
 #include "com/centreon/engine/configuration/applier/connector.hh"
 #include "com/centreon/engine/configuration/applier/state.hh"
@@ -41,11 +40,9 @@ class ApplierCommand : public ::testing::Test {
     if (config == NULL)
       config = new configuration::state;
     configuration::applier::state::load();  // Needed to create a contact
-    commands::set::load();                  // Needed to create commands
   }
 
   void TearDown() {
-    commands::set::unload();
     configuration::applier::state::unload();
     delete config;
     config = NULL;
@@ -63,7 +60,7 @@ TEST_F(ApplierCommand, UnusableCommandFromConfig) {
   aply.add_object(cmd);
   set_command s(config->commands());
   ASSERT_EQ(s.size(), 1);
-  command_map const& cm(commands::set::instance().get_commands());
+  command_map const& cm(configuration::applier::state::instance().commands());
   ASSERT_EQ(cm.size(), 0);
 }
 
@@ -78,7 +75,7 @@ TEST_F(ApplierCommand, NewCommandFromConfig) {
   aply.add_object(cmd);
   set_command s(config->commands());
   ASSERT_EQ(s.size(), 1);
-  shared_ptr<commands::command> cc(commands::set::instance().get_command("cmd"));
+  shared_ptr<commands::command> cc(find_command("cmd"));
   ASSERT_EQ(cc->get_name(), "cmd");
   ASSERT_EQ(cc->get_command_line(), "echo 1");
 }
@@ -96,7 +93,7 @@ TEST_F(ApplierCommand, NewCommandWithEmptyConnectorFromConfig) {
   set_command s(config->commands());
   ASSERT_EQ(s.size(), 1);
   ASSERT_THROW(shared_ptr<commands::command> cc(
-                 commands::set::instance().get_command("cmd")),
+                 find_command("cmd")),
                std::exception);
 }
 
@@ -118,7 +115,7 @@ TEST_F(ApplierCommand, NewCommandWithConnectorFromConfig) {
 
   set_command s(config->commands());
   ASSERT_EQ(s.size(), 1);
-  shared_ptr<commands::command> cc(commands::set::instance().get_command("cmd"));
+  shared_ptr<commands::command> cc(find_command("cmd"));
   ASSERT_EQ(cc->get_name(), "cmd");
   ASSERT_EQ(cc->get_command_line(), "echo 1");
   aply.resolve_object(cmd);
@@ -142,13 +139,13 @@ TEST_F(ApplierCommand, NewCommandAndConnectorWithSameName) {
 
   set_command s(config->commands());
   ASSERT_EQ(s.size(), 1);
-  shared_ptr<commands::command> cc(commands::set::instance().get_command("cmd"));
+  shared_ptr<commands::command> cc(find_command("cmd"));
   ASSERT_EQ(cc->get_name(), "cmd");
   ASSERT_EQ(cc->get_command_line(), "echo 1");
   aply.resolve_object(cmd);
   shared_ptr<commands::connector> mycnn(find_connector("cmd"));
   ASSERT_FALSE(mycnn.is_null());
-  shared_ptr<commands::command> mycmd(commands::set::instance().get_command("cmd"));
+  shared_ptr<commands::command> mycmd(find_command("cmd"));
   ASSERT_FALSE(mycmd.is_null());
 }
 
@@ -169,7 +166,7 @@ TEST_F(ApplierCommand, ModifyCommandWithConnector) {
 
   cmd.parse("command_line", "date");
   aply.modify_object(cmd);
-  shared_ptr<commands::command> cc(commands::set::instance().get_command("cmd"));
+  shared_ptr<commands::command> cc(find_command("cmd"));
   ASSERT_EQ(cc->get_name(), "cmd");
   ASSERT_EQ(cc->get_command_line(), "date");
 }
@@ -196,7 +193,7 @@ TEST_F(ApplierCommand, RemoveCommand) {
   aply.add_object(cmd);
 
   aply.remove_object(cmd);
-  ASSERT_THROW(shared_ptr<commands::command> cc(commands::set::instance().get_command("cmd")), std::exception);
+  ASSERT_THROW(shared_ptr<commands::command> cc(find_command("cmd")), std::exception);
   ASSERT_TRUE(config->commands().size() == 0);
 }
 
@@ -216,6 +213,6 @@ TEST_F(ApplierCommand, RemoveCommandWithConnector) {
   aply.add_object(cmd);
 
   aply.remove_object(cmd);
-  ASSERT_THROW(shared_ptr<commands::command> cc(commands::set::instance().get_command("cmd")), std::exception);
+  ASSERT_THROW(shared_ptr<commands::command> cc(find_command("cmd")), std::exception);
   ASSERT_TRUE(config->commands().size() == 0);
 }

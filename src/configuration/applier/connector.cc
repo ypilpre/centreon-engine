@@ -19,15 +19,16 @@
 
 #include "com/centreon/engine/checks/checker.hh"
 #include "com/centreon/engine/commands/connector.hh"
-#include "com/centreon/engine/commands/set.hh"
 #include "com/centreon/engine/configuration/applier/connector.hh"
 #include "com/centreon/engine/configuration/applier/state.hh"
 #include "com/centreon/engine/error.hh"
 #include "com/centreon/engine/globals.hh"
+#include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/macros/misc.hh"
 #include "com/centreon/engine/macros/process.hh"
 
 using namespace com::centreon::engine::configuration;
+using namespace com::centreon::engine::logging;
 
 /**
  *  Default constructor.
@@ -93,8 +94,11 @@ void applier::connector::add_object(
                         processed_cmd,
                         &checks::checker::instance()));
   state::instance().connectors()[obj.connector_name()] = cmd;
-  commands::set::instance().add_command(cmd);
-  return ;
+
+  // Add new items to the configuration state.
+  configuration::applier::state::instance().commands()[cmd->get_name()] = cmd;
+  logger(dbg_commands, basic)
+    << "added command " << cmd->get_name();
 }
 
 /**
@@ -172,7 +176,7 @@ void applier::connector::remove_object(
     it(applier::state::instance().connectors_find(obj.key()));
   if (it != applier::state::instance().connectors().end()) {
     // Remove connector object.
-    commands::set::instance().remove_command(obj.connector_name());
+    state::instance().commands().erase(obj.connector_name());
     state::instance().connectors().erase(it);
   }
 

@@ -23,7 +23,6 @@
 #include "com/centreon/engine/commands/connector.hh"
 #include "com/centreon/engine/commands/forward.hh"
 #include "com/centreon/engine/commands/raw.hh"
-#include "com/centreon/engine/commands/set.hh"
 #include "com/centreon/engine/configuration/applier/command.hh"
 #include "com/centreon/engine/configuration/applier/object.hh"
 #include "com/centreon/engine/configuration/applier/state.hh"
@@ -123,7 +122,6 @@ void applier::command::modify_object(
   // will be added back right after with _create_command. This does
   // not create dangling pointers since commands::command object are
   // not referenced anywhere, only ::command objects are.
-  commands::set::instance().remove_command(obj.command_name());
   commands::command const* cmd = _create_command(obj);
 
   // Notify event broker.
@@ -148,25 +146,19 @@ void applier::command::remove_object(
     << "Removing command '" << obj.command_name() << "'.";
 
   // Find command.
-  try {
-    shared_ptr<commands::command> cmd(commands::set::instance().get_command(obj.key()));
+  shared_ptr<commands::command> cmd(find_command(obj.key()));
 
-    // Notify event broker.
-    timeval tv(get_broker_timestamp(NULL));
-    broker_command_data(
-      NEBTYPE_COMMAND_DELETE,
-      NEBFLAG_NONE,
-      NEBATTR_NONE,
-      cmd.get(),
-      &tv);
-
-  }
-  catch (not_found const& e) {
-    (void)e;
-  }
+  // Notify event broker.
+  timeval tv(get_broker_timestamp(NULL));
+  broker_command_data(
+    NEBTYPE_COMMAND_DELETE,
+    NEBFLAG_NONE,
+    NEBATTR_NONE,
+    cmd.get(),
+    &tv);
 
   // Remove command objects.
-  commands::set::instance().remove_command(obj.command_name());
+  applier::state::instance().commands().erase(obj.command_name());
 
   // Remove command from the global configuration set.
   config->commands().erase(obj);
@@ -183,7 +175,7 @@ void applier::command::remove_object(
 void applier::command::resolve_object(
                          configuration::command const& obj) {
   if (!obj.connector().empty())
-    commands::set::instance().get_command(obj.connector());
+    find_command(obj.connector());
   return ;
 }
 
@@ -207,26 +199,19 @@ void applier::command::unresolve_objects() {
 commands::command const* applier::command::_create_command(
                            configuration::command const& obj) {
   // Command set.
-  commands::set& cmd_set(commands::set::instance());
 
   // Raw command.
   if (obj.connector().empty()) {
-    shared_ptr<commands::command>
-      cmd(new commands::raw(
-                          obj.command_name(),
-                          obj.command_line(),
-                          &checks::checker::instance()));
-    cmd_set.add_command(cmd);
-    return cmd.get();
+    return commands::command::add_command(new commands::raw(
+                                obj.command_name(),
+                                obj.command_line(),
+                                &checks::checker::instance()));
   }
   // Connector command.
   else {
-    shared_ptr<commands::command>
-      cmd(new commands::forward(
-                          obj.command_name(),
-                          obj.command_line(),
-                          *cmd_set.get_command(obj.connector())));
-    cmd_set.add_command(cmd);
-    return cmd.get();
+    return commands::command::add_command(new commands::forward(
+                                obj.command_name(),
+                                obj.command_line(),
+                                *find_command(obj.connector()).get()));
   }
 }

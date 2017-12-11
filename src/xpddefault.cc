@@ -24,7 +24,6 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include "com/centreon/engine/commands/set.hh"
 #include "com/centreon/engine/common.hh"
 #include "com/centreon/engine/events/defines.hh"
 #include "com/centreon/engine/globals.hh"
@@ -98,8 +97,7 @@ int xpddefault_initialize_performance_data() {
     temp_command_name = my_strtok(temp_buffer, "!");
 
     try {
-      temp_command = set::instance().get_command(temp_command_name);
-      //temp_command = find_command(temp_command_name);
+      temp_command = find_command(temp_command_name);
     }
     catch (not_found const& e) {
       (void) e;
@@ -122,8 +120,7 @@ int xpddefault_initialize_performance_data() {
     temp_command_name = my_strtok(temp_buffer, "!");
 
     try {
-      temp_command = set::instance().get_command(temp_command_name);
-      //temp_command = find_command(temp_command_name);
+      temp_command = find_command(temp_command_name);
     }
     catch (not_found const& e) {
       (void)e;
@@ -148,8 +145,7 @@ int xpddefault_initialize_performance_data() {
     // get the command name, leave any arguments behind.
     temp_command_name = my_strtok(temp_buffer, "!");
     try {
-      temp_command = set::instance().get_command(temp_command_name);
-      //temp_command = find_command(temp_command_name);
+      temp_command = find_command(temp_command_name);
     }
     catch (not_found const& e) {
       (void)e;
@@ -174,8 +170,7 @@ int xpddefault_initialize_performance_data() {
     // get the command name, leave any arguments behind.
     temp_command_name = my_strtok(temp_buffer, "!");
     try {
-      temp_command = set::instance().get_command(temp_command_name);
-      //temp_command = find_command(temp_command_name);
+      temp_command = find_command(temp_command_name);
     }
     catch (not_found const& e) {
       (void)e;

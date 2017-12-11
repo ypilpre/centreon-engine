@@ -25,7 +25,6 @@
 #include <sys/time.h>
 #include "com/centreon/engine/broker.hh"
 #include "com/centreon/engine/checks/checker.hh"
-#include "com/centreon/engine/commands/set.hh"
 #include "com/centreon/engine/configuration/applier/state.hh"
 #include "com/centreon/engine/contact.hh"
 #include "com/centreon/engine/downtime_finder.hh"
@@ -1983,8 +1982,7 @@ int cmd_change_object_char_var(int cmd, char* args) {
     /* make sure the command exists */
     temp_ptr2 = my_strtok(temp_ptr, "!");
     try {
-      temp_command = set::instance().get_command(temp_ptr2);
-      //temp_command = find_command(temp_ptr2);
+      temp_command = find_command(temp_ptr2);
     }
     catch (not_found const& e) {
       (void)e;

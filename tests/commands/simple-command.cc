@@ -21,7 +21,6 @@
 #include <gtest/gtest.h>
 #include "../timeperiod/utils.hh"
 #include "com/centreon/engine/commands/raw.hh"
-#include "com/centreon/engine/commands/set.hh"
 #include "com/centreon/engine/configuration/applier/state.hh"
 
 using namespace com::centreon;
@@ -37,11 +36,9 @@ class SimpleCommand : public ::testing::Test {
     if (config == NULL)
       config = new configuration::state;
     configuration::applier::state::load();  // Needed to create a contact
-    commands::set::load();
   }
 
   void TearDown() {
-    commands::set::unload();
     configuration::applier::state::unload();
     delete config;
     config = NULL;
@@ -52,6 +49,6 @@ class SimpleCommand : public ::testing::Test {
 // When the add_command method is called with is as argument,
 // Then it returns a NULL pointer.
 TEST_F(SimpleCommand, NewCommandWithNoName) {
-  ASSERT_THROW(commands::set::instance().add_command(
-        commands::raw("", "")), std::exception);
+  ASSERT_THROW(commands::command::add_command(
+        new commands::raw("", "")), std::exception);
 }

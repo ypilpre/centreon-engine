@@ -139,6 +139,7 @@ int parse_check_output(
 
 com::centreon::engine::contact& find_contact(std::string const& name);
 com::centreon::engine::contactgroup& find_contactgroup(std::string const& name);
+shared_ptr<com::centreon::engine::commands::command>& find_command(std::string const& name);
 shared_ptr<com::centreon::engine::commands::connector>& find_connector(std::string const& name);
 //shared_ptr<com::centreon::engine::commands::command>& find_command(std::string const& name);
 timeperiod& find_timeperiod(std::string const& name);
