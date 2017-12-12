@@ -71,7 +71,16 @@ host& host::operator=(host const& other) {
  *  @return a string representing the ip address.
  */
 std::string const& host::get_address() const {
-  return _address;
+  return (_address);
+}
+
+/**
+ *  Get the alias of this host.
+ *
+ *  @return The alias of this host.
+ */
+std::string const& host::get_alias() const {
+  return (_alias);
 }
 
 /**

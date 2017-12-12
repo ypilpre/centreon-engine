@@ -48,6 +48,7 @@ class                        host : public monitorable {
 
   // Configuration.
   std::string const&         get_address() const;
+  std::string const&         get_alias() const;
   int                        get_circular_path_checked() const;
   void                       set_circular_path_checked(int check_level);
   int                        get_initial_state() const;
@@ -104,6 +105,7 @@ class                        host : public monitorable {
 
   std::list<host*>           _children;
   std::string                _address;
+  std::string                _alias;
   int                        _circular_path_checked;
   bool                       _flap_detection_on_down;
   bool                       _flap_detection_on_unreachable;

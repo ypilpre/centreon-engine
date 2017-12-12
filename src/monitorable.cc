@@ -76,12 +76,50 @@ void monitorable::set_customvar(customvar const& var) {
 }
 
 /**
+ *  Get display name.
+ *
+ *  @return Display name.
+ */
+std::string const& monitorable::get_display_name() const {
+  return (_display_name);
+}
+
+/**
+ *  Set display name.
+ *
+ *  @param[in] display  New display name.
+ */
+void monitorable::set_display_name(std::string const& display) {
+  _display_name = display;
+  return ;
+}
+
+/**
  *  Get host name.
  *
  *  @return This object's host name.
  */
 std::string const& monitorable::get_host_name() const {
   return (_host_name);
+}
+
+/**
+ *  Get object ID.
+ *
+ *  @return Object ID.
+ */
+unsigned int monitorable::get_id() const {
+  return (_id);
+}
+
+/**
+ *  Set object ID.
+ *
+ *  @param[in] id  Object ID.
+ */
+void monitorable::set_id(unsigned int id) {
+  _id = id;
+  return ;
 }
 
 /**

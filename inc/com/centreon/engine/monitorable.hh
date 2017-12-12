@@ -40,9 +40,19 @@ class                  monitorable : public notifications::notifier {
                        monitorable(monitorable const& other);
   virtual              ~monitorable();
   monitorable&         operator=(monitorable const& other);
+  std::string const&   get_action_url() const;
+  void                 set_action_url(std::string const& action_url);
   customvar_set const& get_customvars() const;
   void                 set_customvar(customvar const& var);
+  std::string const&   get_display_name() const;
+  void                 set_display_name(std::string const& display);
   std::string const&   get_host_name() const;
+  unsigned int         get_id() const;
+  void                 set_id(unsigned int id);
+  std::string const&   get_notes() const;
+  void                 set_notes(std::string const& notes);
+  std::string const&   get_notes_url() const;
+  void                 set_notes_url(std::string const& notes_url);
   bool                 get_retain_nonstate_info() const;
   void                 set_retain_nonstate_info(bool retain);
   bool                 get_retain_state_info() const;
@@ -51,7 +61,12 @@ class                  monitorable : public notifications::notifier {
  private:
   void                 _internal_copy(monitorable const& other);
 
+  std::string          _action_url;
+  std::string          _display_name;
   std::string          _host_name;
+  unsigned int         _id;
+  std::string          _notes;
+  std::string          _notes_url;
   bool                 _retain_nonstate_info;
   bool                 _retain_state_info;
   customvar_set        _vars;

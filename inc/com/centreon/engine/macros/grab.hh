@@ -190,14 +190,13 @@ namespace  macros {
    *  Extract state type.
    *
    *  @param[in] t   Base object.
-   *  @param[in] mac Unused.
    *
    *  @return Newly allocated state type as a string.
    */
   template <typename T>
-  char* get_state_type(T& t, nagios_macros* mac) {
+  char const* get_state_type(T& t, nagios_macros* mac) {
     (void)mac;
-    return (string::dup((t.state_type == HARD_STATE)
+    return (string::dup((t.get_current_state_type() == HARD_STATE)
                       ? "HARD"
                       : "SOFT"));
   }

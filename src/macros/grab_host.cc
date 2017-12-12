@@ -142,22 +142,31 @@ static char* get_host_group_names(host& hst, nagios_macros* mac) {
 /**
  *  Extract host state.
  *
- *  @param[in] hst Host object.
- *  @param[in] mac Unused.
+ *  @param[in] stateid  State to convert.
  *
  *  @return Newly allocated string with host state in plain text.
  */
-template <int (host::* member)>
-static char* get_host_state(host& hst, nagios_macros* mac) {
-  (void)mac;
+static char* get_host_state(int stateid) {
   char const* state;
-  if (HOST_DOWN == hst.*member)
+  switch (stateid) {
+   case HOST_DOWN:
     state = "DOWN";
-  else if (HOST_UNREACHABLE == hst.*member)
+    break ;
+   case HOST_UNREACHABLE:
     state = "UNREACHABLE";
-  else
+    break ;
+   default:
     state = "UP";
+  }
   return (string::dup(state));
+}
+static char const* get_current_host_state(host& hst, nagios_macros* mac) {
+  (void)mac;
+  return (get_host_state(hst.get_current_state()));
+}
+static char const* get_last_host_state(host& hst, nagios_macros* mac) {
+  (void)mac;
+  return (get_host_state(hst.get_last_state()));
 }
 
 /**
@@ -235,27 +244,30 @@ struct grab_host_redirection {
     routines[MACRO_HOSTNAME].first =
       new member_grabber<host, std::string const&>(&host::get_host_name);
     routines[MACRO_HOSTNAME].second = true;
-    // XXX
-    // // Display name.
-    // routines[MACRO_HOSTDISPLAYNAME].first = &get_member_as_string<host, char*, &host::display_name>;
-    // routines[MACRO_HOSTDISPLAYNAME].second = true;
-    // // Alias.
-    // routines[MACRO_HOSTALIAS].first = &get_member_as_string<host, char*, &host::alias>;
-    // routines[MACRO_HOSTALIAS].second = true;
-    // // Address.
-    // routines[MACRO_HOSTADDRESS].first = &get_member_as_string<host, char*, &host::address>;
-    // routines[MACRO_HOSTADDRESS].second = true;
-    // // State.
-    // routines[MACRO_HOSTSTATE].first = &get_host_state<&host::current_state>;
-    // routines[MACRO_HOSTSTATE].second = true;
+    // Display name.
+    routines[MACRO_HOSTDISPLAYNAME].first =
+      new member_grabber<host, std::string const&>(&host::get_display_name);
+    routines[MACRO_HOSTDISPLAYNAME].second = true;
+    // Alias.
+    routines[MACRO_HOSTALIAS].first =
+      new member_grabber<host, std::string const&>(&host::get_alias);
+    routines[MACRO_HOSTALIAS].second = true;
+    // Address.
+    routines[MACRO_HOSTADDRESS].first =
+      new member_grabber<host, std::string const&>(&host::get_address);
+    routines[MACRO_HOSTADDRESS].second = true;
+    // State.
+    routines[MACRO_HOSTSTATE].first =
+      new function_grabber<host>(&get_current_host_state);
+    routines[MACRO_HOSTSTATE].second = true;
     // State ID.
     routines[MACRO_HOSTSTATEID].first =
       new member_grabber<host, int>(&host::get_current_state);
     routines[MACRO_HOSTSTATEID].second = true;
-    // XXX
-    // // Last state.
-    // routines[MACRO_LASTHOSTSTATE].first = &get_host_state<&host::last_state>;
-    // routines[MACRO_LASTHOSTSTATE].second = true;
+    // Last state.
+    routines[MACRO_LASTHOSTSTATE].first =
+      new function_grabber<host>(&get_last_host_state);
+    routines[MACRO_LASTHOSTSTATE].second = true;
     // Last state ID.
     routines[MACRO_LASTHOSTSTATEID].first =
       new member_grabber<host, int>(&host::get_last_state);
@@ -264,10 +276,10 @@ struct grab_host_redirection {
     routines[MACRO_HOSTCHECKTYPE].first =
       new member_grabber<host, int>(&host::get_check_type);
     routines[MACRO_HOSTCHECKTYPE].second = true;
-    // XXX
-    // // State type.
-    // routines[MACRO_HOSTSTATETYPE].first = &get_state_type<host>;
-    // routines[MACRO_HOSTSTATETYPE].second = true;
+    // State type.
+    routines[MACRO_HOSTSTATETYPE].first =
+      new function_grabber<host>(&get_state_type<host>);
+    routines[MACRO_HOSTSTATETYPE].second = true;
     // Output.
     routines[MACRO_HOSTOUTPUT].first =
       new member_grabber<host, std::string const&>(&host::get_output);
@@ -418,10 +430,10 @@ struct grab_host_redirection {
     routines[MACRO_HOSTCHILDREN].first =
       new function_grabber<host>(&get_host_children);
     routines[MACRO_HOSTCHILDREN].second = true;
-    // XXX
-    // // Host ID.
-    // routines[MACRO_HOSTID].first = &get_host_id;
-    // routines[MACRO_HOSTID].second = true;
+    // Host ID.
+    routines[MACRO_HOSTID].first =
+      new member_grabber<host, unsigned int>(&host::get_id);
+    routines[MACRO_HOSTID].second = true;
     // Host timezone.
     routines[MACRO_HOSTTIMEZONE].first =
       new member_grabber<host, std::string const&>(&host::get_timezone);

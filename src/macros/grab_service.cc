@@ -28,6 +28,7 @@
 #include "com/centreon/engine/macros/grab_service.hh"
 #include "com/centreon/engine/macros/misc.hh"
 #include "com/centreon/engine/objects/objectlist.hh"
+#include "com/centreon/engine/service.hh"
 #include "com/centreon/engine/string.hh"
 #include "com/centreon/shared_ptr.hh"
 #include "com/centreon/unordered_hash.hh"
@@ -51,7 +52,7 @@ using namespace com::centreon::engine::logging;
  *  @return Newly allocated string containing either "PASSIVE" or
  *          "ACTIVE".
  */
-static char* get_service_check_type(service& svc, nagios_macros* mac) {
+static char const* get_service_check_type(service& svc, nagios_macros* mac) {
   (void)mac;
   return (string::dup(
             (SERVICE_CHECK_PASSIVE == svc.get_check_type()
@@ -88,24 +89,34 @@ static char* get_service_group_names(service& svc, nagios_macros* mac) {
 /**
  *  Extract service state.
  *
- *  @param[in] svc Service object.
- *  @param[in] mac Unused.
+ *  @param[in] stateid  State to convert.
  *
- *  @return Newly allocated string with host state as plain text.
+ *  @return Newly allocated string with service state as plain text.
  */
-template <int (service::* member)>
-static char* get_service_state(service& svc, nagios_macros* mac) {
-  (void)mac;
+static char* get_service_state(int stateid) {
   char const* state;
-  if (STATE_OK == svc.*member)
+  switch (stateid) {
+   case STATE_OK:
     state = "OK";
-  else if (STATE_WARNING == svc.*member)
+    break ;
+   case STATE_WARNING:
     state = "WARNING";
-  else if (STATE_CRITICAL == svc.*member)
+    break ;
+   case STATE_CRITICAL:
     state = "CRITICAL";
-  else
+    break ;
+   default:
     state = "UNKNOWN";
+  }
   return (string::dup(state));
+}
+static char const* get_current_service_state(service& svc, nagios_macros* mac) {
+  (void)mac;
+  return (get_service_state(svc.get_current_state()));
+}
+static char const* get_last_service_state(service& svc, nagios_macros* mac) {
+  (void)mac;
+  return (get_service_state(svc.get_last_state()));
 }
 
 /**************************************
@@ -123,10 +134,10 @@ struct grab_service_redirection {
     routines[MACRO_SERVICEDESC].first =
       new member_grabber<service, std::string const&>(&service::get_description);
     routines[MACRO_SERVICEDESC].second = true;
-    // XXX
-    // // Display name.
-    // routines[MACRO_SERVICEDISPLAYNAME].first = &get_member_as_string<service, char*, &service::display_name>;
-    // routines[MACRO_SERVICEDISPLAYNAME].second = true;
+    // Display name.
+    routines[MACRO_SERVICEDISPLAYNAME].first =
+      new member_grabber<service, std::string const&>(&service::get_display_name);
+    routines[MACRO_SERVICEDISPLAYNAME].second = true;
     // Output.
     routines[MACRO_SERVICEOUTPUT].first =
       new member_grabber<service, std::string const&>(&service::get_output);
@@ -143,23 +154,26 @@ struct grab_service_redirection {
     // // Check command.
     // routines[MACRO_SERVICECHECKCOMMAND].first = &get_member_as_string<service, char*, &service::service_check_command>;
     // routines[MACRO_SERVICECHECKCOMMAND].second = true;
-    // // Check type.
-    // routines[MACRO_SERVICECHECKTYPE].first = &get_service_check_type;
-    // routines[MACRO_SERVICECHECKTYPE].second = true;
-    // // State type.
-    // routines[MACRO_SERVICESTATETYPE].first = &get_state_type<service>;
-    // routines[MACRO_SERVICESTATETYPE].second = true;
-    // // State.
-    // routines[MACRO_SERVICESTATE].first = &get_service_state<&service::current_state>;
-    // routines[MACRO_SERVICESTATE].second = true;
+    // Check type.
+    routines[MACRO_SERVICECHECKTYPE].first =
+      new function_grabber<service>(&get_service_check_type);
+    routines[MACRO_SERVICECHECKTYPE].second = true;
+    // State type.
+    routines[MACRO_SERVICESTATETYPE].first =
+      new function_grabber<service>(&get_state_type<service>);
+    routines[MACRO_SERVICESTATETYPE].second = true;
+    // State.
+    routines[MACRO_SERVICESTATE].first =
+      new function_grabber<service>(&get_current_service_state);
+    routines[MACRO_SERVICESTATE].second = true;
     // State ID.
     routines[MACRO_SERVICESTATEID].first =
       new member_grabber<service, int>(&service::get_current_state);
     routines[MACRO_SERVICESTATEID].second = true;
-    // XXX
-    // // Last state.
-    // routines[MACRO_LASTSERVICESTATE].first = &get_service_state<&service::last_state>;
-    // routines[MACRO_LASTSERVICESTATE].second = true;
+    // Last state.
+    routines[MACRO_LASTSERVICESTATE].first =
+      new function_grabber<service>(&get_last_service_state);
+    routines[MACRO_LASTSERVICESTATE].second = true;
     // Last state ID.
     routines[MACRO_LASTSERVICESTATEID].first =
       new member_grabber<service, int>(&service::get_last_state);
@@ -271,15 +285,16 @@ struct grab_service_redirection {
     // // Acknowledgement comment.
     // routines[MACRO_SERVICEACKCOMMENT].first = &get_macro_copy<service, MACRO_SERVICEACKCOMMENT>;
     // routines[MACRO_SERVICEACKCOMMENT].second = true;
-    // // Service id.
-    // routines[MACRO_SERVICEID].first = &get_service_id;
-    // routines[MACRO_SERVICEID].second = true;
     // // Acknowledgement comment.
     // routines[MACRO_SERVICEACKCOMMENT].first = &get_macro_copy<service, MACRO_SERVICEACKCOMMENT>;
     // routines[MACRO_SERVICEACKCOMMENT].second = true;
     // // Acknowledgement comment.
     // routines[MACRO_SERVICETIMEZONE].first = &get_service_macro_timezone;
     // routines[MACRO_SERVICETIMEZONE].second = true;
+    // Service id.
+    routines[MACRO_SERVICEID].first =
+      new member_grabber<service, unsigned int>(&service::get_id);
+    routines[MACRO_SERVICEID].second = true;
   }
 } static const redirector;
 
