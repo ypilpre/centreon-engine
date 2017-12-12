@@ -76,14 +76,14 @@ namespace           configuration {
       static void   load();
       static void   unload();
 
-      command_map const&
-                    commands() const throw ();
-      umap<std::string, shared_ptr<commands::command> >&
-                    commands() throw ();
       umap<std::string, shared_ptr<commands::command> >::const_iterator
                     commands_find(configuration::command::key_type const& k) const;
       umap<std::string, shared_ptr<commands::command> >::iterator
                     commands_find(configuration::command::key_type const& k);
+      command_map const&
+                    commands() const throw ();
+      command_map&
+                    commands() throw ();
       umap<std::string, shared_ptr<commands::connector> > const&
                     connectors() const throw ();
       umap<std::string, shared_ptr<commands::connector> >&

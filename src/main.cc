@@ -39,7 +39,6 @@
 #include "com/centreon/engine/broker/compatibility.hh"
 #include "com/centreon/engine/broker/loader.hh"
 #include "com/centreon/engine/checks/checker.hh"
-#include "com/centreon/engine/commands/set.hh"
 #include "com/centreon/engine/config.hh"
 #include "com/centreon/engine/configuration/applier/state.hh"
 #include "com/centreon/engine/configuration/parser.hh"
@@ -111,7 +110,6 @@ int main(int argc, char* argv[]) {
   com::centreon::logging::engine::load();
   config = new configuration::state;
   com::centreon::engine::timezone_manager::load();
-  com::centreon::engine::commands::set::load();
   com::centreon::engine::configuration::applier::state::load();
   com::centreon::engine::checks::checker::load();
   com::centreon::engine::events::loop::load();
@@ -468,7 +466,6 @@ int main(int argc, char* argv[]) {
   com::centreon::engine::broker::compatibility::unload();
   com::centreon::engine::broker::loader::unload();
   com::centreon::engine::configuration::applier::state::unload();
-  com::centreon::engine::commands::set::unload();
   com::centreon::engine::checks::checker::unload();
   delete config;
   config = NULL;

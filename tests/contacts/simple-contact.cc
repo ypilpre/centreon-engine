@@ -20,6 +20,7 @@
 #include <memory>
 #include <gtest/gtest.h>
 #include "../timeperiod/utils.hh"
+#include "com/centreon/engine/commands/raw.hh"
 #include "com/centreon/engine/configuration/applier/state.hh"
 #include "com/centreon/engine/configuration/contact.hh"
 #include "com/centreon/engine/configuration/state.hh"
@@ -151,10 +152,9 @@ TEST_F(SimpleContact, AddServiceNotificationCommand) {
 }
 
 // Given a contact
-// When we add a service command to him, but the service command contains
-// no command.
+// When we add a service command to him,
 // Then the check method returns false and always set the error value to 2.
-TEST_F(SimpleContact, ContactWithServiceCommand) {
+TEST_F(SimpleContact, ContactWithNonExistingServiceCommand) {
   engine::contact* c(engine::contact::add_contact("test"));
   c->add_service_notification_command("service_command");
   int w = 0, e = 0;
@@ -164,16 +164,35 @@ TEST_F(SimpleContact, ContactWithServiceCommand) {
 }
 
 // Given a contact
-// When we add a host command to him, but the host command contains
-// no command.
+// When we add a service command to him,
+// Then the check method returns false and always set the error value to 2.
+TEST_F(SimpleContact, ContactWithServiceCommand) {
+  engine::contact* c(engine::contact::add_contact("test"));
+  engine::commands::command::add_command(new engine::commands::raw(
+                                      "service_command",
+                                      "echo 1",
+                                      NULL));
+  c->add_service_notification_command("service_command");
+  int w = 0, e = 0;
+  ASSERT_FALSE(c->check(&w, &e));
+  ASSERT_EQ(w, 2);
+  ASSERT_EQ(e, 1);
+}
+
+// Given a contact
+// When we add a host command to him,
 // Then the check method returns false and always set the error value to 2.
 TEST_F(SimpleContact, ContactWithHostCommand) {
   engine::contact* c(engine::contact::add_contact("test"));
+  engine::commands::command::add_command(new engine::commands::raw(
+                                      "host_command",
+                                      "echo 2",
+                                      NULL));
   c->add_host_notification_command("host_command");
   int w = 0, e = 0;
   ASSERT_FALSE(c->check(&w, &e));
   ASSERT_EQ(w, 2);
-  ASSERT_EQ(e, 2);
+  ASSERT_EQ(e, 1);
 }
 
 // Given a contact

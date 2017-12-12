@@ -38,7 +38,6 @@
 #include "com/centreon/engine/broker/loader.hh"
 #include "com/centreon/engine/checks/checker.hh"
 #include "com/centreon/engine/commands/raw.hh"
-#include "com/centreon/engine/commands/set.hh"
 #include "com/centreon/engine/configuration/applier/state.hh"
 #include "com/centreon/engine/events/defines.hh"
 #include "com/centreon/engine/events/loop.hh"
@@ -1053,6 +1052,25 @@ shared_ptr<commands::command>& find_command(std::string const& name) {
     it(configuration::applier::state::instance().commands().find(name));
   if (it == configuration::applier::state::instance().commands().end())
     throw (not_found_error() << "Could not find command '" << name << "'");
+
+  return (it->second);
+}
+
+/**
+ *  Given a command name, find a command from the list in memory.
+ *
+ *  @param[in] name Command name.
+ *
+ *  @return Command object if found, an exception is thrown otherwise.
+ */
+shared_ptr<commands::connector>& find_connector(std::string const& name) {
+  if (name.empty())
+    throw (not_found_error() << "Could not find a connector with an empty name");
+
+  connector_map::iterator
+    it(configuration::applier::state::instance().connectors().find(name));
+  if (it == configuration::applier::state::instance().connectors().end())
+    throw (not_found_error() << "Could not find connector '" << name << "'");
 
   return (it->second);
 }

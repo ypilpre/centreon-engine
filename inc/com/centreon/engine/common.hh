@@ -32,12 +32,14 @@
 CCE_BEGIN()
   namespace commands {
     class command;
+    class connector;
   }
 
   class contact;
 
   typedef umap<std::string, shared_ptr<contact> >           contact_map;
   typedef umap<std::string, shared_ptr<commands::command> > command_map;
+  typedef umap<std::string, shared_ptr<commands::connector> > connector_map;
 CCE_END()
 
 /* Daemon is thread safe. */

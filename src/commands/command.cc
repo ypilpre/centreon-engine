@@ -19,13 +19,36 @@
 
 #include "com/centreon/concurrency/locker.hh"
 #include "com/centreon/engine/commands/command.hh"
+#include "com/centreon/engine/configuration/applier/command.hh"
+#include "com/centreon/engine/configuration/applier/state.hh"
+#include "com/centreon/engine/error.hh"
+#include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/macros/grab.hh"
 
 using namespace com::centreon;
 using namespace com::centreon::engine;
+using namespace com::centreon::engine::logging;
 
 static concurrency::mutex _lock_id;
 static unsigned long      _id = 0;
+
+/**
+ *  Add (or replace) a new command.
+ *
+ */
+commands::command* commands::command::add_command(
+                     commands::command* obj) {
+  shared_ptr<commands::command> cmd(obj);
+
+  if (cmd->get_name().empty())
+    throw (engine_error()
+           << "Command name is empty");
+  // Add new items to the configuration state.
+  configuration::applier::state::instance().commands()[cmd->get_name()] = cmd;
+  logger(dbg_commands, basic)
+    << "added command " << cmd->get_name();
+  return cmd.get();
+}
 
 /**
  *  Default constructor

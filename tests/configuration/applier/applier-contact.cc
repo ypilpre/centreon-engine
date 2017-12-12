@@ -39,7 +39,6 @@ extern configuration::state* config;
 class ApplierContact : public ::testing::Test {
  public:
   void SetUp() {
-//    set_time(20);
     if (config == NULL)
       config = new configuration::state;
     configuration::applier::state::load();  // Needed to create a contact

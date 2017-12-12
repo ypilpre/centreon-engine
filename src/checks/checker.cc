@@ -29,7 +29,6 @@
 #include "com/centreon/engine/checks/checker.hh"
 #include "com/centreon/engine/checks/viability_failure.hh"
 #include "com/centreon/engine/commands/command.hh"
-#include "com/centreon/engine/commands/set.hh"
 #include "com/centreon/engine/configuration/applier/state.hh"
 #include "com/centreon/engine/error.hh"
 #include "com/centreon/engine/globals.hh"
@@ -415,9 +414,8 @@ void checker::run(
   check_result_info.next = NULL;
 
   // Get command object.
-  commands::set& cmd_set(commands::set::instance());
   shared_ptr<commands::command>
-    cmd(cmd_set.get_command(hst->get_check_command()->get_name()));
+    cmd(find_command(hst->get_check_command()->get_name()));
   std::string processed_cmd(cmd->process_cmd(&macros));
   char* processed_cmd_ptr(string::dup(processed_cmd));
 
@@ -652,9 +650,8 @@ void checker::run(
   check_result_info.next = NULL;
 
   // Get command object.
-  commands::set& cmd_set(commands::set::instance());
   shared_ptr<commands::command>
-    cmd(cmd_set.get_command(svc->get_check_command()->get_name()));
+    cmd(find_command(svc->get_check_command()->get_name()));
   std::string processed_cmd(cmd->process_cmd(&macros));
   char* processed_cmd_ptr(string::dup(processed_cmd));
 
@@ -1055,9 +1052,8 @@ int checker::_execute_sync(host* hst) {
   hst->set_last_check(start_time.tv_sec);
 
   // Get command object.
-  commands::set& cmd_set(commands::set::instance());
   shared_ptr<commands::command>
-    cmd(cmd_set.get_command(hst->get_check_command()->get_name()));
+    cmd(find_command(hst->get_check_command()->get_name()));
   std::string processed_cmd(cmd->process_cmd(&macros));
   char* tmp_processed_cmd(string::dup(processed_cmd));
 

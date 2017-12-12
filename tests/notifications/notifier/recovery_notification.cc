@@ -64,6 +64,7 @@ class RecoveryNotification : public ::testing::Test {
 // When the notify method is called with RECOVERY type
 // Then the filter method returns true and the notification is sent.
 TEST_F(RecoveryNotification, SimpleRecovery) {
+  _notifier->set_notifications_enabled(true);
   _notifier->set_current_state(2);
   _notifier->set_current_notification_type(notifier::PROBLEM);
   _notifier->set_last_notification(10);
