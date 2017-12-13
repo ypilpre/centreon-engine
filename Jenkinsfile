@@ -83,6 +83,11 @@ try {
       node {
         sh 'cd /opt/centreon-build && git pull && cd -'
         sh '/opt/centreon-build/jobs/engine/3.4/mon-engine-package.sh debian9-armhf'
+    },
+    'opensuse-leap': {
+      node {
+        sh 'cd /opt/centreon-build && git pull && cd -'
+        sh '/opt/centreon-build/jobs/engine/3.4/mon-engine-package.sh opensuse-leap'
       }
     }
     if ((currentBuild.result ?: 'SUCCESS') != 'SUCCESS') {
