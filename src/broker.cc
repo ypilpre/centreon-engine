@@ -462,11 +462,11 @@ void broker_comment_data(
        int attr,
        int comment_type,
        int entry_type,
-       char const* host_name,
-       char const* svc_description,
+       std::string const& host_name,
+       std::string const& svc_description,
        time_t entry_time,
-       char const* author_name,
-       char const* comment_data,
+       std::string const& author_name,
+       std::string const& comment_data,
        int persistent,
        int source,
        int expires,
@@ -485,12 +485,12 @@ void broker_comment_data(
   ds.timestamp = get_broker_timestamp(timestamp);
   ds.comment_type = comment_type;
   ds.entry_type = entry_type;
-  ds.host_name = host_name;
-  ds.service_description = svc_description;
+  ds.host_name = host_name.c_str();
+  ds.service_description = svc_description.c_str();
   ds.object_ptr = NULL; // Not implemented yet.
   ds.entry_time = entry_time;
-  ds.author_name = author_name;
-  ds.comment_data = comment_data;
+  ds.author_name = author_name.c_str();
+  ds.comment_data = comment_data.c_str();
   ds.persistent = persistent;
   ds.source = source;
   ds.expires = expires;
@@ -768,11 +768,11 @@ void broker_downtime_data(
        int flags,
        int attr,
        int downtime_type,
-       char const* host_name,
-       char const* svc_description,
+       std::string const& host_name,
+       std::string const& svc_description,
        time_t entry_time,
-       char const* author_name,
-       char const* comment_data,
+       std::string const& author_name,
+       std::string const& comment_data,
        time_t start_time,
        time_t end_time,
        int fixed,
@@ -791,12 +791,12 @@ void broker_downtime_data(
   ds.attr = attr;
   ds.timestamp = get_broker_timestamp(timestamp);
   ds.downtime_type = downtime_type;
-  ds.host_name = host_name;
-  ds.service_description = svc_description;
+  ds.host_name = host_name.c_str();
+  ds.service_description = svc_description.c_str();
   ds.object_ptr = NULL; // Not implemented yet.
   ds.entry_time = entry_time;
-  ds.author_name = author_name;
-  ds.comment_data = comment_data;
+  ds.author_name = author_name.c_str();
+  ds.comment_data = comment_data.c_str();
   ds.start_time = start_time;
   ds.end_time = end_time;
   ds.fixed = fixed;

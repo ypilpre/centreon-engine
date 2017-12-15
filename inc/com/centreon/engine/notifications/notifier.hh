@@ -115,14 +115,19 @@ namespace           notifications {
     time_t            get_next_notification() const;
     bool              get_no_more_notifications() const;
     int               get_pending_flex_downtime() const;
+    void              inc_pending_flex_downtime();
+    void              dec_pending_flex_downtime();
     bool              check_pending_flex_downtime();
+    void              inc_scheduled_downtime_depth();
+    void              dec_scheduled_downtime_depth();
     int               get_scheduled_downtime_depth() const;
     bool              is_in_downtime() const;
     bool              is_state_notification_enabled(int state) const;
     void              notify(
                         notification_type type,
                         std::string const& author = "",
-                        std::string const& comment = "");
+                        std::string const& comment = "",
+                        int options = 0);
 
     void              set_last_notification(time_t last_notification);
     void              set_next_notification(time_t next_notification);
@@ -170,6 +175,7 @@ namespace           notifications {
                       _macro_builder[];
     static std::string
                       _notification_string[];
+    int               _pending_flex_downtime;
     bool              _escalate_notification;
 
     int               _notified_states;
@@ -178,6 +184,7 @@ namespace           notifications {
     umap<std::string, shared_ptr<engine::contactgroup> >
                       _contact_groups;
     bool              _notifications_enabled;
+    int               _scheduled_downtime_depth;
   };
 }
 

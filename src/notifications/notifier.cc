@@ -135,7 +135,8 @@ bool notifier::should_be_escalated() const {
 void notifier::notify(
     notification_type type,
     std::string const& author,
-    std::string const& comment) {
+    std::string const& comment,
+    int options) {
   std::list<shared_ptr<engine::contact> > users_to_notify = get_contacts_list();
   if (users_to_notify.empty())
     return ;
@@ -497,8 +498,15 @@ void notifier::set_current_notification_number(int number) {
 }
 
 int notifier::get_pending_flex_downtime() const {
-  // FIXME DBR: to implement...
-  return 0;
+  return _pending_flex_downtime;
+}
+
+void notifier::inc_pending_flex_downtime() {
+  ++_pending_flex_downtime;
+}
+
+void notifier::dec_pending_flex_downtime() {
+  --_pending_flex_downtime;
 }
 
 bool notifier::check_pending_flex_downtime() {
@@ -522,6 +530,14 @@ int notifier::get_scheduled_downtime_depth() const {
 
 void notifier::set_last_acknowledgement(time_t last_acknowledgement) {
   _last_acknowledgement = last_acknowledgement;
+}
+
+void notifier::inc_scheduled_downtime_depth() {
+  ++_scheduled_downtime_depth;
+}
+
+void notifier::dec_scheduled_downtime_depth() {
+  --_scheduled_downtime_depth;
 }
 
 #if 0

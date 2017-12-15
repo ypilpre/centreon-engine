@@ -20,13 +20,16 @@
 #ifndef CCE_DOWNTIME_FINDER_HH
 #  define CCE_DOWNTIME_FINDER_HH
 
+#  include <list>
 #  include <string>
 #  include <vector>
+#  include "com/centreon/shared_ptr.hh"
 #  include "com/centreon/engine/namespace.hh"
 
-struct scheduled_downtime_struct;
-
 CCE_BEGIN()
+
+// Forward declarations
+class downtime;
 
 /**
  *  @class downtime_finder downtime_finder.hh "com/centreon/engine/downtime_finder.hh"
@@ -38,10 +41,9 @@ class                 downtime_finder {
 public:
   typedef std::pair<std::string, std::string>  criteria;
   typedef std::vector<criteria>                criteria_set;
-  typedef std::vector<unsigned long>           result_set;
+  typedef std::vector<shared_ptr<downtime> >   result_set;
 
-                      downtime_finder(
-                        scheduled_downtime_struct const* list);
+                      downtime_finder();
                       downtime_finder(downtime_finder const& other);
                       ~downtime_finder();
   downtime_finder&    operator=(downtime_finder const& other);
@@ -50,11 +52,8 @@ public:
 
 private:
   bool                _match_criteria(
-                        scheduled_downtime_struct const* dt,
+                        shared_ptr<downtime> const& dt,
                         criteria const& crit);
-
-  scheduled_downtime_struct const*
-                      _list;
 };
 
 CCE_END()

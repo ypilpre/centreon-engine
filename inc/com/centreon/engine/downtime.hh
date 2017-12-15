@@ -22,9 +22,14 @@
 
 #  include <ctime>
 #  include <string>
-#  include "com/centreon/engine/notifications/notifier.hh"
+#  include "com/centreon/engine/namespace.hh"
 
 CCE_BEGIN()
+
+// Forward declarations
+namespace notifications {
+  class notifier;
+}
 
 /**
  *  @class downtime downtime.hh "com/centreon/engine/downtime.hh"
@@ -34,12 +39,15 @@ CCE_BEGIN()
  */
 class                downtime {
  public:
-//  enum               downtime_type {
-//    SERVICE_DOWNTIME,
-//    HOST_DOWNTIME
-//  };
-                     downtime(
-                       notifications::notifier* parent,
+  enum               downtime_type {
+    SERVICE_DOWNTIME = 1,
+    HOST_DOWNTIME    = 2,
+    ANY_DOWNTIME     = 3
+  };
+  static int         schedule_downtime(
+                       downtime_type type,
+                       std::string const& host_name,
+                       std::string const& service_description,
                        time_t entry_time,
                        std::string const& author,
                        std::string const& comment_data,
@@ -47,30 +55,88 @@ class                downtime {
                        time_t end_time,
                        int fixed,
                        unsigned long triggered_by,
-                       unsigned long duration,
-                       unsigned long downtime_id);
+                       unsigned long duration);
+  int                  unschedule();
+
+  static void        add_new_host_downtime(
+                       std::string const& host_name,
+                       time_t entry_time,
+                       std::string const& author,
+                       std::string const& comment,
+                       time_t start_time,
+                       time_t end_time,
+                       int fixed,
+                       unsigned long triggered_by,
+                       unsigned long duration);
+
+  static void        add_new_service_downtime(
+                       std::string const& host_name,
+                       std::string const& description,
+                       time_t entry_time,
+                       std::string const& author,
+                       std::string const& comment,
+                       time_t start_time,
+                       time_t end_time,
+                       int fixed,
+                       unsigned long triggered_by,
+                       unsigned long duration);
+
+                     downtime(
+                       downtime_type type,
+                       std::string const& hostname,
+                       std::string const& service_description,
+                       time_t entry_time,
+                       std::string const& author,
+                       std::string const& comment_data,
+                       time_t start_time,
+                       time_t end_time,
+                       int fixed,
+                       unsigned long triggered_by,
+                       unsigned long duration);
                      downtime(downtime const& other);
                      ~downtime();
   downtime&          operator=(downtime const& other);
 
+  unsigned long      get_comment_id() const;
+  void               set_comment_id(unsigned long id);
   std::string const& get_host_name() const;
-  //downtime_type      get_type() const;
+  downtime_type      get_type() const;
+  unsigned long      get_id() const;
+  void               set_id(unsigned long id);
+  int                get_incremented_pending_downtime() const;
+  void               inc_incremented_pending_downtime();
+  void               dec_incremented_pending_downtime();
+  bool               is_in_effect() const;
+  std::string const& get_service_description() const;
+  time_t             get_entry_time() const;
+  time_t             get_start_time() const;
+  time_t             get_end_time() const;
+  int                get_fixed() const;
+  unsigned long      get_triggered_by() const;
+  unsigned long      get_duration() const;
+  unsigned long      get_downtime_id() const;
+  std::string const& get_author() const;
+  std::string const& get_comment() const;
 
  private:
   void               _internal_copy(downtime const& other);
-
-  notifications::notifier*
-                     _parent;
+  int                _register();
 
   time_t             _entry_time;
   std::string        _author;
   std::string        _comment_data;
+  unsigned long      _comment_id;
+  std::string        _host_name;
+  int                _incremented_pending_downtime;
+  bool               _in_effect;
   time_t             _start_time;
   time_t             _end_time;
-  int                _fixed;
+  bool               _fixed;
   unsigned long      _triggered_by;
   unsigned long      _duration;
   unsigned long      _downtime_id;
+  downtime_type      _type;
+  std::string        _service_description;
 };
 
 CCE_END()

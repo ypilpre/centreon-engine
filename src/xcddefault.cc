@@ -54,10 +54,10 @@ int xcddefault_initialize_comment_data() {
 /* adds a new host comment */
 int xcddefault_add_new_host_comment(
       int entry_type,
-      char const* host_name,
+      std::string const& host_name,
       time_t entry_time,
-      char const* author_name,
-      char const* comment_data,
+      std::string const& author_name,
+      std::string const& comment_data,
       int persistent,
       int source,
       int expires,
@@ -95,11 +95,11 @@ int xcddefault_add_new_host_comment(
 /* adds a new service comment */
 int xcddefault_add_new_service_comment(
       int entry_type,
-      char const* host_name,
-      char const* svc_description,
+      std::string const& host_name,
+      std::string const& svc_description,
       time_t entry_time,
-      char const* author_name,
-      char const* comment_data,
+      std::string const& author_name,
+      std::string const& comment_data,
       int persistent,
       int source,
       int expires,

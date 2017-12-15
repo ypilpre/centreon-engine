@@ -40,7 +40,6 @@
 #include "com/centreon/engine/neberrors.hh"
 #include "com/centreon/engine/notifications/notifier.hh"
 #include "com/centreon/engine/objects/comment.hh"
-#include "com/centreon/engine/objects/downtime.hh"
 #include "com/centreon/engine/objects/objectlist.hh"
 #include "com/centreon/engine/perfdata.hh"
 #include "com/centreon/engine/sehandlers.hh"

@@ -18,8 +18,10 @@
 */
 
 #include <cstdlib>
+#include "com/centreon/engine/downtime.hh"
 #include "com/centreon/engine/downtime_finder.hh"
-#include "com/centreon/engine/objects/downtime.hh"
+#include "com/centreon/engine/globals.hh"
+#include "com/centreon/shared_ptr.hh"
 
 using namespace com::centreon::engine;
 
@@ -33,16 +35,14 @@ using namespace com::centreon::engine;
  *  @param[in] list  Active downtime list. The search will be performed
  *                   on this list.
  */
-downtime_finder::downtime_finder(scheduled_downtime_struct const* list)
-  : _list(list) {}
+downtime_finder::downtime_finder() {}
 
 /**
  *  Copy constructor.
  *
  *  @param[in] other  Object to copy.
  */
-downtime_finder::downtime_finder(downtime_finder const& other)
-  : _list(other._list) {}
+downtime_finder::downtime_finder(downtime_finder const& other) {}
 
 /**
  *  Destructor.
@@ -54,11 +54,8 @@ downtime_finder::~downtime_finder() {}
  *
  *  @param[in] other  Object to copy.
  */
-downtime_finder& downtime_finder::operator=(
-                                    downtime_finder const& other) {
-  if (this != &other) {
-    _list = other._list;
-  }
+downtime_finder& downtime_finder::operator=(downtime_finder const& other) {
+  (void)other;
   return (*this);
 }
 
@@ -71,20 +68,26 @@ downtime_finder::result_set downtime_finder::find_matching_all(
   downtime_finder::criteria_set const& criterias) {
   result_set result;
   // Process all downtimes.
-  for (scheduled_downtime const* dt(_list); dt; dt = dt->next) {
+  for (std::map<unsigned long, shared_ptr<downtime> >::const_iterator
+         dit(scheduled_downtime_list.begin()),
+         dend(scheduled_downtime_list.end());
+       dit != dend;
+       ++dit) {
     // Process all criterias.
     bool matched_all(true);
     for (criteria_set::const_iterator
-           it(criterias.begin()), end(criterias.end());
-         it != end;
-         ++it) {
-      if (!this->_match_criteria(dt, *it))
+           cit(criterias.begin()), cend(criterias.end());
+         cit != cend;
+         ++cit) {
+      if (!_match_criteria(dit->second, *cit)) {
         matched_all = false;
+        break;
+      }
     }
 
     // If downtime matched all criterias, add it to the result set.
     if (matched_all)
-      result.push_back(dt->downtime_id);
+      result.push_back(dit->second);
   }
   return (result);
 }
@@ -98,40 +101,40 @@ downtime_finder::result_set downtime_finder::find_matching_all(
  *  @return True if downtime matches the criteria.
  */
 bool downtime_finder::_match_criteria(
-                        scheduled_downtime_struct const* dt,
+                        shared_ptr<downtime> const& dt,
                         downtime_finder::criteria const& crit) {
-  bool retval(false);
+  bool retval;
   if (crit.first == "host") {
-    retval = ARE_STRINGS_MATCHING(crit.second, dt->host_name);
+    retval = (crit.second == dt->get_host_name());
   }
   else if (crit.first == "service") {
-    retval = ARE_STRINGS_MATCHING(crit.second, dt->service_description);
+    retval = (crit.second == dt->get_service_description());
   }
   else if (crit.first == "start") {
     time_t expected(strtoll(crit.second.c_str(), NULL, 0));
-    retval = (expected == dt->start_time);
+    retval = (expected == dt->get_start_time());
   }
   else if (crit.first == "end") {
     time_t expected(strtoll(crit.second.c_str(), NULL, 0));
-    retval = (expected == dt->end_time);
+    retval = (expected == dt->get_end_time());
   }
   else if (crit.first == "fixed") {
     bool expected(strtol(crit.second.c_str(), NULL, 0));
-    retval = (expected == static_cast<bool>(dt->fixed));
+    retval = (expected == static_cast<bool>(dt->get_fixed()));
   }
   else if (crit.first == "triggered_by") {
     unsigned long expected(strtoul(crit.second.c_str(), NULL, 0));
-    retval = (expected == dt->triggered_by);
+    retval = (expected == dt->get_triggered_by());
   }
   else if (crit.first == "duration") {
     unsigned long expected(strtoul(crit.second.c_str(), NULL, 0));
-    retval = (expected == dt->duration);
+    retval = (expected == dt->get_duration());
   }
   else if (crit.first == "author") {
-    retval = ARE_STRINGS_MATCHING(crit.second, dt->author);
+    retval = (crit.second == dt->get_author());
   }
   else if (crit.first == "comment") {
-    retval = ARE_STRINGS_MATCHING(crit.second, dt->comment);
+    retval = (crit.second == dt->get_comment());
   }
   else {
     retval = false;

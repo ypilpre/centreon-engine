@@ -19,6 +19,7 @@
 ** <http://www.gnu.org/licenses/>.
 */
 
+#include "com/centreon/engine/downtime.hh"
 #include "com/centreon/engine/globals.hh"
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/objects/defines.hh"
@@ -65,8 +66,6 @@ commands::command*  ocsp_command_ptr(NULL);
 comment*            comment_list(NULL);
 contact*            contact_list(NULL);
 contact*            contact_list_tail(NULL);
-//contactgroup*       contactgroup_list(NULL);
-//contactgroup*       contactgroup_list_tail(NULL);
 dbuf                check_result_dbuf;
 float               high_host_flap_threshold(30.0);
 float               high_service_flap_threshold(30.0);
@@ -102,7 +101,7 @@ int                 verify_config(false);
 nebcallback*        neb_callback_list[NEBCALLBACK_NUMITEMS];
 pthread_t           worker_threads[TOTAL_WORKER_THREADS];
 sched_info          scheduling_info;
-scheduled_downtime* scheduled_downtime_list(NULL);
+std::map<unsigned long, shared_ptr<downtime> > scheduled_downtime_list;
 servicedependency*  servicedependency_list(NULL);
 servicedependency*  servicedependency_list_tail(NULL);
 serviceescalation*  serviceescalation_list(NULL);

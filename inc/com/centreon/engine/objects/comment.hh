@@ -21,6 +21,7 @@
 #ifndef CCE_OBJECTS_COMMENTS_HH
 #  define CCE_OBJECTS_COMMENTS_HH
 
+#  include <string>
 #  include <time.h>
 #  include "com/centreon/engine/namespace.hh"
 
@@ -72,11 +73,11 @@ extern "C" {
 int      add_comment(
            unsigned int comment_type,
            int entry_type,
-           char const* host_name,
-           char const* svc_description,
+           std::string const& host_name,
+           std::string const& svc_description,
            time_t entry_time,
-           char const* author,
-           char const* comment_data,
+           std::string const& author,
+           std::string const& comment_data,
            unsigned long comment_id,
            int persistent,
            int expires,
@@ -85,10 +86,10 @@ int      add_comment(
 int      add_comment_to_hashlist(comment* new_comment);
 int      add_host_comment(
            int entry_type,
-           char const* host_name,
+           std::string const& host_name,
            time_t entry_time,
-           char const* author,
-           char const* comment_data,
+           std::string const& author,
+           std::string const& comment_data,
            unsigned long comment_id,
            int persistent,
            int expires,
@@ -97,11 +98,11 @@ int      add_host_comment(
 int      add_new_comment(
            unsigned int type,
            int entry_type,
-           char const* host_name,
-           char const* svc_description,
+           std::string const& host_name,
+           std::string const& svc_description,
            time_t entry_time,
-           char const* author_name,
-           char const* comment_data,
+           std::string const& author_name,
+           std::string const& comment_data,
            int persistent,
            int source,
            int expires,
@@ -109,10 +110,10 @@ int      add_new_comment(
            unsigned long* comment_id);
 int      add_new_host_comment(
            int entry_type,
-           char const* host_name,
+           std::string const& host_name,
            time_t entry_time,
-           char const* author_name,
-           char const* comment_data,
+           std::string const& author_name,
+           std::string const& comment_data,
            int persistent,
            int source,
            int expires,
@@ -120,11 +121,11 @@ int      add_new_host_comment(
            unsigned long* comment_id);
 int      add_new_service_comment(
            int entry_type,
-           char const* host_name,
-           char const* svc_description,
+           std::string const& host_name,
+           std::string const& svc_description,
            time_t entry_time,
-           char const* author_name,
-           char const* comment_data,
+           std::string const& author_name,
+           std::string const& comment_data,
            int persistent,
            int source,
            int expires,
@@ -132,11 +133,11 @@ int      add_new_service_comment(
            unsigned long* comment_id);
 int      add_service_comment(
            int entry_type,
-           char const* host_name,
-           char const* svc_description,
+           std::string const& host_name,
+           std::string const& svc_description,
            time_t entry_time,
-           char const* author,
-           char const* comment_data,
+           std::string const& author,
+           std::string const& comment_data,
            unsigned long comment_id,
            int persistent,
            int expires,

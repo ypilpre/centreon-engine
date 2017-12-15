@@ -21,13 +21,14 @@
 #include <iomanip>
 #include "com/centreon/engine/broker.hh"
 #include "com/centreon/engine/configuration/applier/state.hh"
+#include "com/centreon/engine/downtime.hh"
 #include "com/centreon/engine/error.hh"
 #include "com/centreon/engine/globals.hh"
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/objects/comment.hh"
-#include "com/centreon/engine/objects/downtime.hh"
 #include "com/centreon/engine/retention/dump.hh"
 
+using namespace com::centreon::engine;
 using namespace com::centreon::engine::logging;
 using namespace com::centreon::engine::retention;
 
@@ -144,25 +145,24 @@ std::ostream& dump::customvariables(
  *
  *  @return The output stream.
  */
-std::ostream& dump::downtime(std::ostream& os, scheduled_downtime_struct const& obj) {
-  // FIXME DBR: HOST_DOWNTIME no more defined
-//  if (obj.type == HOST_DOWNTIME)
-//    os << "hostdowntime {\n";
-//  else
-//    os << "servicedowntime {\n";
-//  os << "host_name=" << obj.host_name << "\n";
-//  if (obj.type == SERVICE_DOWNTIME)
-//    os << "service_description=" << obj.service_description << "\n";
-//  os << "author=" << obj.author << "\n"
-//    "comment=" << obj.comment << "\n"
-//    "duration=" << obj.duration << "\n"
-//    "end_time=" << static_cast<unsigned long>(obj.end_time) << "\n"
-//    "entry_time=" << static_cast<unsigned long>(obj.entry_time) << "\n"
-//    "fixed=" << obj.fixed << "\n"
-//    "start_time=" << static_cast<unsigned long>(obj.start_time) << "\n"
-//    "triggered_by=" << obj.triggered_by << "\n"
-//    "downtime_id=" << obj.downtime_id << "\n"
-//    "}\n";
+std::ostream& dump::downtime(std::ostream& os, engine::downtime const& obj) {
+  if (obj.get_type() == downtime::HOST_DOWNTIME)
+    os << "hostdowntime {\n";
+  else
+    os << "servicedowntime {\n";
+  os << "host_name=" << obj.get_host_name() << "\n";
+  if (obj.get_type() == downtime::SERVICE_DOWNTIME)
+    os << "service_description=" << obj.get_service_description() << "\n";
+  os << "author=" << obj.get_author() << "\n"
+    "comment=" << obj.get_comment() << "\n"
+    "duration=" << obj.get_duration() << "\n"
+    "end_time=" << static_cast<unsigned long>(obj.get_end_time()) << "\n"
+    "entry_time=" << static_cast<unsigned long>(obj.get_entry_time()) << "\n"
+    "fixed=" << obj.get_fixed() << "\n"
+    "start_time=" << static_cast<unsigned long>(obj.get_start_time()) << "\n"
+    "triggered_by=" << obj.get_triggered_by() << "\n"
+    "downtime_id=" << obj.get_id() << "\n"
+    "}\n";
   return (os);
 }
 
@@ -174,10 +174,13 @@ std::ostream& dump::downtime(std::ostream& os, scheduled_downtime_struct const& 
  *  @return The output stream.
  */
 std::ostream& dump::downtimes(std::ostream& os) {
-  for (scheduled_downtime* obj(scheduled_downtime_list);
-       obj;
-       obj = obj->next)
-    dump::downtime(os, *obj);
+  for (std::map<unsigned long, shared_ptr<engine::downtime> >::const_iterator
+         it(scheduled_downtime_list.begin()),
+         end(scheduled_downtime_list.begin());
+       it != end;
+       ++it) {
+    dump::downtime(os, *it->second.get());
+  }
   return (os);
 }
 

@@ -50,7 +50,6 @@ set(
   "${INC_DIR}/customvariable.hh"
   "${INC_DIR}/daterange.hh"
   "${INC_DIR}/defines.hh"
-  "${INC_DIR}/downtime.hh"
   "${INC_DIR}/hostdependency.hh"
   "${INC_DIR}/hostescalation.hh"
   "${INC_DIR}/hostgroup.hh"

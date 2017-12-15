@@ -114,11 +114,11 @@ int initialize_comment_data() {
 int add_new_comment(
       unsigned int type,
       int entry_type,
-      char const* host_name,
-      char const* svc_description,
+      std::string const& host_name,
+      std::string const& svc_description,
       time_t entry_time,
-      char const* author_name,
-      char const* comment_data,
+      std::string const& author_name,
+      std::string const& comment_data,
       int persistent, int source,
       int expires,
       time_t expire_time,
@@ -176,10 +176,10 @@ int add_new_comment(
 /* adds a new host comment */
 int add_new_host_comment(
       int entry_type,
-      char const* host_name,
+      std::string const& host_name,
       time_t entry_time,
-      char const* author_name,
-      char const* comment_data,
+      std::string const& author_name,
+      std::string const& comment_data,
       int persistent,
       int source,
       int expires,
@@ -228,11 +228,11 @@ int add_new_host_comment(
 /* adds a new service comment */
 int add_new_service_comment(
       int entry_type,
-      char const* host_name,
-      char const* svc_description,
+      std::string const& host_name,
+      std::string const& svc_description,
       time_t entry_time,
-      char const* author_name,
-      char const* comment_data,
+      std::string const& author_name,
+      std::string const& comment_data,
       int persistent,
       int source,
       int expires,
@@ -551,10 +551,10 @@ int add_comment_to_hashlist(comment* new_comment) {
 /* adds a host comment to the list in memory */
 int add_host_comment(
       int entry_type,
-      char const* host_name,
+      std::string const& host_name,
       time_t entry_time,
-      char const* author,
-      char const* comment_data,
+      std::string const& author,
+      std::string const& comment_data,
       unsigned long comment_id,
       int persistent,
       int expires,
@@ -578,11 +578,11 @@ int add_host_comment(
 /* adds a service comment to the list in memory */
 int add_service_comment(
       int entry_type,
-      char const* host_name,
-      char const* svc_description,
+      std::string const& host_name,
+      std::string const& svc_description,
       time_t entry_time,
-      char const* author,
-      char const* comment_data,
+      std::string const& author,
+      std::string const& comment_data,
       unsigned long comment_id,
       int persistent,
       int expires,
@@ -607,23 +607,23 @@ int add_service_comment(
 int add_comment(
       unsigned int comment_type,
       int entry_type,
-      char const* host_name,
-      char const* svc_description,
+      std::string const& host_name,
+      std::string const& svc_description,
       time_t entry_time,
-      char const* author,
-      char const* comment_data,
+      std::string const& author,
+      std::string const& comment_data,
       unsigned long comment_id,
       int persistent,
       int expires,
       time_t expire_time,
       int source) {
   /* make sure we have the data we need */
-  if (host_name == NULL
-      || author == NULL
-      || comment_data == NULL
-      || (comment_type == SERVICE_COMMENT
-          && svc_description == NULL))
-    return (ERROR);
+//  if (host_name == NULL
+//      || author == NULL
+//      || comment_data == NULL
+//      || (comment_type == SERVICE_COMMENT
+//          && svc_description == NULL))
+//    return (ERROR);
 
   /* allocate memory for the comment */
   comment* new_comment(new comment);

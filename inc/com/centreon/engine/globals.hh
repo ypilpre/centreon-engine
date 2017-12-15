@@ -28,12 +28,12 @@
 #  include "com/centreon/engine/checks.hh"
 #  include "com/centreon/engine/circular_buffer.hh"
 #  include "com/centreon/engine/configuration/state.hh"
+#  include "com/centreon/engine/downtime.hh"
 #  include "com/centreon/engine/events/hash_timed_event.hh"
 #  include "com/centreon/engine/events/sched_info.hh"
 #  include "com/centreon/engine/events/timed_event.hh"
 #  include "com/centreon/engine/nebmods.hh"
 #  include "com/centreon/engine/objects/comment.hh"
-#  include "com/centreon/engine/objects/downtime.hh"
 #  include "com/centreon/engine/objects/hostdependency.hh"
 #  include "com/centreon/engine/objects/hostescalation.hh"
 #  include "com/centreon/engine/objects/servicedependency.hh"
@@ -148,7 +148,9 @@ extern int                       defer_comment_sorting;
 extern char*                     macro_x_names[];
 extern char*                     macro_user[];
 
-extern scheduled_downtime*       scheduled_downtime_list;
+extern std::map<unsigned long, shared_ptr<com::centreon::engine::downtime> >
+                                 scheduled_downtime_list;
+
 extern int                       defer_downtime_sorting;
 
 extern FILE*                     debug_file_fp;

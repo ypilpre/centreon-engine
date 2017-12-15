@@ -237,10 +237,6 @@ CCE_END()
 #  define SOFT_STATE 0
 #  define HARD_STATE 1
 
-/* Scheduled downtime types. */
-#  define SERVICE_DOWNTIME 1 /* Service downtime. */
-#  define HOST_DOWNTIME    2 /* Host downtime. */
-#  define ANY_DOWNTIME     3 /* Host or service downtime. */
 
 /* Notification options. */
 #  define NOTIFICATION_OPTION_NONE      0
