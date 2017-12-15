@@ -1025,8 +1025,7 @@ int cmd_schedule_downtime(int cmd, time_t entry_time, char* args) {
   case CMD_SCHEDULE_HOST_DOWNTIME:
     downtime::schedule_downtime(
       downtime::HOST_DOWNTIME,
-      host_name,
-      NULL,
+      temp_host,
       entry_time,
       author,
       comment_data,
@@ -1040,8 +1039,7 @@ int cmd_schedule_downtime(int cmd, time_t entry_time, char* args) {
   case CMD_SCHEDULE_SVC_DOWNTIME:
     downtime::schedule_downtime(
       downtime::SERVICE_DOWNTIME,
-      host_name,
-      svc_description,
+      temp_service,
       entry_time,
       author,
       comment_data,
@@ -1060,8 +1058,7 @@ int cmd_schedule_downtime(int cmd, time_t entry_time, char* args) {
          ++it) {
       downtime::schedule_downtime(
         downtime::SERVICE_DOWNTIME,
-        host_name,
-        (*it)->get_description().c_str(),
+        *it,
         entry_time,
         author,
         comment_data,
@@ -1082,8 +1079,7 @@ int cmd_schedule_downtime(int cmd, time_t entry_time, char* args) {
       temp_hg = it->second.get();
       downtime::schedule_downtime(
         downtime::HOST_DOWNTIME,
-        temp_hg->get_host_name().c_str(),
-        NULL,
+        temp_hg,
         entry_time,
         author,
         comment_data,
@@ -1112,8 +1108,7 @@ int cmd_schedule_downtime(int cmd, time_t entry_time, char* args) {
           continue;
         downtime::schedule_downtime(
           downtime::SERVICE_DOWNTIME,
-          temp_service->get_host_name(),
-          temp_service->get_description(),
+          temp_service,
           entry_time, author,
           comment_data,
           start_time,
@@ -1139,8 +1134,7 @@ int cmd_schedule_downtime(int cmd, time_t entry_time, char* args) {
         if (hst_set.find(temp_host) == hst_set.end()) {
           downtime::schedule_downtime(
             downtime::HOST_DOWNTIME,
-            temp_host->get_host_name().c_str(),
-            NULL,
+            temp_host,
             entry_time,
             author,
             comment_data,
@@ -1163,8 +1157,7 @@ int cmd_schedule_downtime(int cmd, time_t entry_time, char* args) {
          ++it) {
       downtime::schedule_downtime(
         downtime::SERVICE_DOWNTIME,
-        it->first.first.c_str(),
-        it->first.second.c_str(),
+        it->second.get(),
         entry_time, author,
         comment_data,
         start_time,
@@ -1179,8 +1172,7 @@ int cmd_schedule_downtime(int cmd, time_t entry_time, char* args) {
     /* schedule downtime for "parent" host */
     downtime::schedule_downtime(
       downtime::HOST_DOWNTIME,
-      host_name,
-      NULL,
+      temp_host,
       entry_time,
       author,
       comment_data,
@@ -1207,8 +1199,7 @@ int cmd_schedule_downtime(int cmd, time_t entry_time, char* args) {
     /* schedule downtime for "parent" host */
     downtime::schedule_downtime(
       downtime::HOST_DOWNTIME,
-      host_name,
-      NULL,
+      temp_host,
       entry_time,
       author,
       comment_data,
@@ -2735,8 +2726,7 @@ void schedule_and_propagate_downtime(
     /* schedule downtime for this host */
     downtime::schedule_downtime(
       downtime::HOST_DOWNTIME,
-      child_host->get_host_name(),
-      "",
+      child_host,
       entry_time,
       author,
       comment_data,

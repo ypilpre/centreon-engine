@@ -27,9 +27,7 @@
 CCE_BEGIN()
 
 // Forward declarations
-namespace notifications {
-  class notifier;
-}
+class monitorable;
 
 /**
  *  @class downtime downtime.hh "com/centreon/engine/downtime.hh"
@@ -46,8 +44,7 @@ class                downtime {
   };
   static int         schedule_downtime(
                        downtime_type type,
-                       std::string const& host_name,
-                       std::string const& service_description,
+                       monitorable* parent,
                        time_t entry_time,
                        std::string const& author,
                        std::string const& comment_data,
@@ -56,35 +53,10 @@ class                downtime {
                        int fixed,
                        unsigned long triggered_by,
                        unsigned long duration);
-  int                  unschedule();
-
-  static void        add_new_host_downtime(
-                       std::string const& host_name,
-                       time_t entry_time,
-                       std::string const& author,
-                       std::string const& comment,
-                       time_t start_time,
-                       time_t end_time,
-                       int fixed,
-                       unsigned long triggered_by,
-                       unsigned long duration);
-
-  static void        add_new_service_downtime(
-                       std::string const& host_name,
-                       std::string const& description,
-                       time_t entry_time,
-                       std::string const& author,
-                       std::string const& comment,
-                       time_t start_time,
-                       time_t end_time,
-                       int fixed,
-                       unsigned long triggered_by,
-                       unsigned long duration);
 
                      downtime(
                        downtime_type type,
-                       std::string const& hostname,
-                       std::string const& service_description,
+                       monitorable* parent,
                        time_t entry_time,
                        std::string const& author,
                        std::string const& comment_data,
@@ -117,6 +89,7 @@ class                downtime {
   unsigned long      get_downtime_id() const;
   std::string const& get_author() const;
   std::string const& get_comment() const;
+  int                unschedule();
 
  private:
   void               _internal_copy(downtime const& other);
@@ -126,17 +99,17 @@ class                downtime {
   std::string        _author;
   std::string        _comment_data;
   unsigned long      _comment_id;
-  std::string        _host_name;
   int                _incremented_pending_downtime;
   bool               _in_effect;
   time_t             _start_time;
   time_t             _end_time;
   bool               _fixed;
+  monitorable* const
+                     _parent;
   unsigned long      _triggered_by;
   unsigned long      _duration;
   unsigned long      _downtime_id;
   downtime_type      _type;
-  std::string        _service_description;
 };
 
 CCE_END()

@@ -121,11 +121,12 @@ TEST_F(SimpleNotification, NoContactUser) {
 TEST_F(SimpleNotification, SimpleNotification) {
 
   _notifier->set_current_state(1);
+  _notifier->set_notifications_enabled(true);
   time_t last_notification = _notifier->get_last_notification();
+  _notifier->enable_state_notification(1);
   // When
   time_t now = last_notification + 20;
   set_time(now);
-  _notifier->enable_state_notification(1);
   _notifier->notify(notifier::PROBLEM, "admin", "Test comment");
   ASSERT_TRUE(_notifier->get_last_notification() >= now);
 }
