@@ -91,54 +91,27 @@ applier::contact& applier::contact::operator=(
  *  @param[in] obj  The new contact to add into the monitoring engine.
  */
 void applier::contact::add_object(configuration::contact const& obj) {
+  std::string const& name(obj.contact_name());
   // Logging.
   logger(logging::dbg_config, logging::more)
-    << "Creating new contact '" << obj.contact_name() << "'.";
+    << "Creating new contact '" << name << "'.";
+
+  // Check if the contact already exists.
+  umap<std::string, shared_ptr<engine::contact> >::const_iterator
+    it(applier::state::instance().contacts().find(name));
+  if (it != configuration::applier::state::instance().contacts().end())
+    throw (engine_error() << "Contact '" << name
+           << "' has already been defined");
 
   // Add contact to the global configuration set.
   config->contacts().insert(obj);
 
   // Create contact.
-  engine::contact*
-    c(engine::contact::add_contact(
-        obj.contact_name(),
-        obj.alias(),
-        obj.email(),
-        obj.pager(),
-        obj.address(),
-        obj.service_notification_period(),
-        obj.host_notification_period(),
-        static_cast<bool>(
-          obj.service_notification_options() & service::ok),
-        static_cast<bool>(
-          obj.service_notification_options() & service::critical),
-        static_cast<bool>(
-          obj.service_notification_options() & service::warning),
-        static_cast<bool>(
-          obj.service_notification_options() & service::unknown),
-        static_cast<bool>(
-          obj.service_notification_options() & service::flapping),
-        static_cast<bool>(
-          obj.service_notification_options() & service::downtime),
-        static_cast<bool>(
-          obj.host_notification_options() & host::up),
-        static_cast<bool>(
-          obj.host_notification_options() & host::down),
-        static_cast<bool>(
-          obj.host_notification_options() & host::unreachable),
-        static_cast<bool>(
-          obj.host_notification_options() & host::flapping),
-        static_cast<bool>(
-          obj.host_notification_options() & host::downtime),
-        obj.host_notifications_enabled(),
-        obj.service_notifications_enabled(),
-        obj.can_submit_commands(),
-        obj.retain_status_information(),
-        obj.retain_nonstatus_information(),
-        obj.timezone()));
-  if (!c)
-    throw (engine_error() << "Could not register contact '"
-           << obj.contact_name() << "'");
+  shared_ptr<engine::contact>
+    c(new engine::contact(obj));
+
+  // Add new items to the configuration state.
+  configuration::applier::state::instance().contacts()[name] = c;
 
   // Add all the host notification commands.
   for (list_string::const_iterator

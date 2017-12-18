@@ -49,59 +49,7 @@ class contactgroup;
    */
 class                           contact {
  public:
-  static contact*               add_contact(
-                                  std::string const& name,
-                                  std::string const& alias = "",
-                                  std::string const& email = "",
-                                  std::string const& pager = "",
-                                  std::vector<std::string> const& addresses
-                                    = std::vector<std::string>(),
-                                  std::string const& svc_notification_period = "",
-                                  std::string const& host_notification_period = "",
-                                  int notify_service_ok = 0,
-                                  int notify_service_critical = 0,
-                                  int notify_service_warning = 0,
-                                  int notify_service_unknown = 0,
-                                  int notify_service_flapping = 0,
-                                  int notify_service_downtime = 0,
-                                  int notify_host_up = 0,
-                                  int notify_host_down = 0,
-                                  int notify_host_unreachable = 0,
-                                  int notify_host_flapping = 0,
-                                  int notify_host_downtime = 0,
-                                  int host_notifications_enabled = 0,
-                                  int service_notifications_enabled = 0,
-                                  int can_submit_commands = 0,
-                                  int retain_status_information = 0,
-                                  int retain_nonstatus_information = 0,
-                                  std::string const& timezone = "");
-
-                                contact(
-                                  std::string const& name,
-                                  std::string const& alias = "",
-                                  std::string const& email = "",
-                                  std::string const& pager = "",
-                                  std::vector<std::string> const& addresses
-                                    = std::vector<std::string>(),
-                                  std::string const& svc_notification_period = "",
-                                  std::string const& host_notification_period = "",
-                                  int notify_service_ok = 0,
-                                  int notify_service_critical = 0,
-                                  int notify_service_warning = 0,
-                                  int notify_service_unknown = 0,
-                                  int notify_service_flapping = 0,
-                                  int notify_service_downtime = 0,
-                                  int notify_host_up = 0,
-                                  int notify_host_down = 0,
-                                  int notify_host_unreachable = 0,
-                                  int notify_host_flapping = 0,
-                                  int notify_host_downtime = 0,
-                                  int host_notifications_enabled = 0,
-                                  int service_notifications_enabled = 0,
-                                  int can_submit_commands = 0,
-                                  int retain_status_information = 0,
-                                  int retain_nonstatus_information = 0,
-                                  std::string const& timezone = "");
+                                contact(configuration::contact const& obj);
                                 contact();
                                 contact(contact const& other);
   virtual                       ~contact();

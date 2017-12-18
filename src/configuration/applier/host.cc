@@ -681,8 +681,8 @@ void applier::host::unresolve_objects() {
        ++it) {
     ::host& h(*it->second);
     h.clear_children();
-    h.clear_contacts();
-    h.clear_contactgroups();
+    h.get_contacts().clear();
+    h.get_contactgroups().clear();
     h.clear_groups();
     h.clear_parents();
     h.clear_services();

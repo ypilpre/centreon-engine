@@ -737,8 +737,8 @@ void applier::service::unresolve_objects() {
        it != end;
        ++it) {
     ::service& s(*it->second);
-    s.clear_contacts();
-    s.clear_contactgroups();
+    s.get_contacts().clear();
+    s.get_contactgroups().clear();
     s.clear_groups();
     s.set_check_command(NULL);
     s.set_check_command_args("");

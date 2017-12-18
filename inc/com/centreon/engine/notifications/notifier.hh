@@ -101,8 +101,6 @@ namespace           notifications {
     void              set_notifications_enabled(bool enabled);
     bool              get_notifications_enabled() const;
     int               get_acknowledgement_type() const;
-    void              clear_contacts();
-    void              clear_contactgroups();
     void              enable_state_notification(int state);
     std::list<shared_ptr<engine::contact> >
                       get_contacts_list();
@@ -160,7 +158,7 @@ namespace           notifications {
                         std::string const& comment_data,
                         time_t start_time,
                         time_t end_time,
-                        int fixed,
+                        bool fixed,
                         unsigned long triggered_by,
                         unsigned long duration,
                         downtime_propagation propagate =

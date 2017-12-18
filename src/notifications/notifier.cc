@@ -95,20 +95,6 @@ void notifier::add_contact(shared_ptr<engine::contact> user) {
 }
 
 /**
- *  Clear the contacts list
- */
-void notifier::clear_contacts() {
-  _contacts.clear();
-}
-
-/**
- *  Clear the contactgroups list
- */
-void notifier::clear_contactgroups() {
-  _contact_groups.clear();
-}
-
-/**
  * This method tells if notifications are enabled globally
  *
  * @return a boolean
@@ -550,7 +536,7 @@ int notifier::schedule_downtime(
       std::string const& comment_data,
       time_t start_time,
       time_t end_time,
-      int fixed,
+      bool fixed,
       unsigned long triggered_by,
       unsigned long duration,
       downtime_propagation propagate) {
@@ -574,7 +560,10 @@ int notifier::schedule_downtime(
                        fixed,
                        triggered_by,
                        duration);
-  dt->set_id(scheduled_downtime_list.rbegin()->first + 1);
+  if (scheduled_downtime_list.empty())
+    dt->set_id(1);
+  else
+    dt->set_id(scheduled_downtime_list.rbegin()->first + 1);
   scheduled_downtime_list[dt->get_id()] = shared_ptr<downtime>(dt);
 
   /* register the scheduled downtime */

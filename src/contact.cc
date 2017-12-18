@@ -45,201 +45,54 @@ using namespace com::centreon::engine::notifications;
 **************************************/                                         
 
 /**
- *  Wrapper to the contact constructor
- *
- *  @param[in] name contact name
- *  @param[in] alias contact alias
- *  @param[in] email contact email
- *  @param[in] pager contact pager
- *  @param[in] addresses contact addresses as strings array
- *  @param[in] svc_notification_period contact service notification period name
- *  @param[in] host_notification_period contact host notification period name
- *  @param[in] notify_service_ok should this contact notified for service ok
- *  @param[in] notify_service_critical should this contact notified for service critical
- *  @param[in] notify_service_warning should this contact notified for service warning
- *  @param[in] notify_service_unknown should this contact notified for service unknown
- *  @param[in] notify_service_flapping should this contact notified for service flapping
- *  @param[in] notify_service_downtime should this contact notified for service downtime
- *  @param[in] notify_host_up should this contact notified for host up
- *  @param[in] notify_host_down should this contact notified for host down
- *  @param[in] notify_host_unreachable should this contact notified for host unreachable
- *  @param[in] notify_host_flapping should this contact notified for host flapping
- *  @param[in] notify_host_downtime should this contact notified for host downtime
- *  @param[in] host_notifications_enabled should this contact notified for hosts
- *  @param[in] service_notifications_enabled should this contact notified for services
- *  @param[in] can_submit_commands
- *  @param[in] retain_status_information
- *  @param[in] retain_nonstatus_information
- *  @param[in] timezone
- *
- *  Creates a new contact. If the given name is empty, NULL is returned.
- *  If a contact with the same name already exists, NULL is returned.
- *
- *  @return A pointer to the newly created contact.
- */
-contact*      contact::add_contact(
-                std::string const& name,
-                std::string const& alias,
-                std::string const& email,
-                std::string const& pager,
-                std::vector<std::string> const& addresses,
-                std::string const& svc_notification_period,
-                std::string const& host_notification_period,
-                int notify_service_ok,
-                int notify_service_critical,
-                int notify_service_warning,
-                int notify_service_unknown,
-                int notify_service_flapping,
-                int notify_service_downtime,
-                int notify_host_up,
-                int notify_host_down,
-                int notify_host_unreachable,
-                int notify_host_flapping,
-                int notify_host_downtime,
-                int host_notifications_enabled,
-                int service_notifications_enabled,
-                int can_submit_commands,
-                int retain_status_information,
-                int retain_nonstatus_information,
-                std::string const& timezone) {
-  // Make sure we have the data we need.
-  if (name.empty()) {
-    logger(log_config_error, basic)
-      << "Error: Contact name is empty";
-    return (NULL);
-  }
-
-  // Check if the contact already exists.
-  umap<std::string, shared_ptr<contact> >::const_iterator
-    it(configuration::applier::state::instance().contacts().find(name));
-  if (it != configuration::applier::state::instance().contacts().end()) {
-    logger(log_config_error, basic)
-      << "Error: Contact '" << name << "' has already been defined";
-    return (NULL);
-  }
-
-  // Allocate memory for a new contact.
-  shared_ptr<contact> obj(new contact(
-                            name,
-                            alias,
-                            email,
-                            pager,
-                            addresses,
-                            svc_notification_period,
-                            host_notification_period,
-                            notify_service_ok,
-                            notify_service_critical,
-                            notify_service_warning,
-                            notify_service_unknown,
-                            notify_service_flapping,
-                            notify_service_downtime,
-                            notify_host_up,
-                            notify_host_down,
-                            notify_host_unreachable,
-                            notify_host_flapping,
-                            notify_host_downtime,
-                            host_notifications_enabled,
-                            service_notifications_enabled,
-                            can_submit_commands,
-                            retain_status_information,
-                            retain_nonstatus_information,
-                            timezone));
-
-  try {
-    // Add new items to the configuration state.
-    configuration::applier::state::instance().contacts()[name] = obj;
-
-    // Notify event broker.
-    timeval tv(get_broker_timestamp(NULL));
-    broker_adaptive_contact_data(
-      NEBTYPE_CONTACT_ADD,
-      NEBFLAG_NONE,
-      NEBATTR_NONE,
-      obj.get(),
-      CMD_NONE,
-      MODATTR_ALL,
-      MODATTR_ALL,
-      MODATTR_ALL,
-      MODATTR_ALL,
-      MODATTR_ALL,
-      MODATTR_ALL,
-      &tv);
-  }
-  catch (...) {
-    obj.clear();
-  }
-
-  return obj.get();
-}
-
-/**
  *  Constructor.
  */
 contact::contact() {}
 
-/**
- * Constructor.
- */
-contact::contact(
-           std::string const& name,
-           std::string const& alias,
-           std::string const& email,
-           std::string const& pager,
-           std::vector<std::string> const& addresses,
-           std::string const& svc_notification_period,
-           std::string const& host_notification_period,
-           int notify_service_ok,
-           int notify_service_critical,
-           int notify_service_warning,
-           int notify_service_unknown,
-           int notify_service_flapping,
-           int notify_service_downtime,
-           int notify_host_up,
-           int notify_host_down,
-           int notify_host_unreachable,
-           int notify_host_flapping,
-           int notify_host_downtime,
-           int host_notifications_enabled,
-           int service_notifications_enabled,
-           int can_submit_commands,
-           int retain_status_information,
-           int retain_nonstatus_information,
-           std::string const& timezone)
-  : _name(name), _email(email), _address(addresses),
-    _host_notification_period_name(host_notification_period),
-    _host_notification_period(0),
-    _service_notification_period(0),
-    _service_notification_period_name(svc_notification_period),
-    _pager(pager),
-    _can_submit_commands(can_submit_commands > 0),
-    _host_notifications_enabled(host_notifications_enabled > 0),
+contact::contact(configuration::contact const& obj)
+  : _name(obj.contact_name()),
+    _alias((obj.alias().empty()) ? obj.contact_name() : obj.alias()),
+    _email(obj.email()),
+    _pager(obj.pager()),
+    _address(obj.address()),
+    _service_notification_period_name(obj.service_notification_period()),
+    _host_notification_period_name(obj.host_notification_period()),
+    _service_notified_states(
+        ((obj.service_notification_options() & configuration::service::ok)
+         ? notifier::ON_RECOVERY : 0)
+      | ((obj.service_notification_options() & configuration::service::critical)
+         ? notifier::ON_CRITICAL : 0)
+      | ((obj.service_notification_options() & configuration::service::warning)
+         ? notifier::ON_WARNING : 0)
+      | ((obj.service_notification_options() & configuration::service::unknown)
+         ? notifier::ON_UNKNOWN : 0)
+      | ((obj.service_notification_options() & configuration::service::flapping)
+         ? notifier::ON_FLAPPING : 0)
+      | ((obj.service_notification_options() & configuration::service::downtime)
+         ? notifier::ON_DOWNTIME : 0)),
+    _host_notified_states(
+        ((obj.host_notification_options() & configuration::host::up)
+          ? notifier::ON_RECOVERY : 0)
+      | ((obj.host_notification_options() & configuration::host::down)
+          ? notifier::ON_DOWN : 0)
+      | ((obj.host_notification_options() & configuration::host::unreachable)
+          ? notifier::ON_UNREACHABLE : 0)
+      | ((obj.host_notification_options() & configuration::host::flapping)
+          ? notifier::ON_FLAPPING : 0)
+      | ((obj.host_notification_options() & configuration::host::downtime)
+          ? notifier::ON_DOWNTIME : 0)),
+    _host_notifications_enabled(obj.host_notifications_enabled()),
     _modified_attributes(MODATTR_NONE),
     _modified_host_attributes(MODATTR_NONE),
     _modified_service_attributes(MODATTR_NONE),
-    _retain_nonstatus_information(retain_nonstatus_information > 0),
-    _retain_status_information(retain_status_information > 0),
-    _service_notifications_enabled(service_notifications_enabled > 0),
-    _timezone(timezone) {
-
-  if (alias.empty())
-    _alias = name;
-  else
-    _alias = alias;
-
-  _service_notified_states =
-      ((notify_service_ok > 0)       ? notifier::ON_RECOVERY : 0)
-    | ((notify_service_critical > 0) ? notifier::ON_CRITICAL : 0)
-    | ((notify_service_warning > 0)  ? notifier::ON_WARNING  : 0)
-    | ((notify_service_unknown > 0)  ? notifier::ON_UNKNOWN  : 0)
-    | ((notify_service_flapping > 0) ? notifier::ON_FLAPPING : 0)
-    | ((notify_service_downtime > 0) ? notifier::ON_DOWNTIME : 0);
-
-  _host_notified_states =
-      ((notify_host_up > 0)          ? notifier::ON_RECOVERY    : 0)
-    | ((notify_host_down > 0)        ? notifier::ON_DOWN        : 0)
-    | ((notify_host_unreachable > 0) ? notifier::ON_UNREACHABLE : 0)
-    | ((notify_host_flapping > 0)    ? notifier::ON_FLAPPING    : 0)
-    | ((notify_host_downtime > 0)    ? notifier::ON_DOWNTIME    : 0);
+    _retain_nonstatus_information(obj.retain_nonstatus_information()),
+    _retain_status_information(obj.retain_status_information()),
+    _service_notifications_enabled(obj.service_notifications_enabled()),
+    _timezone(obj.timezone()) {
+    
+  // Make sure we have the data we need.
+  if (_name.empty())
+    throw (engine_error() << "contact: Contact name is empty");
 
   // Notify event broker.
   timeval tv(get_broker_timestamp(NULL));

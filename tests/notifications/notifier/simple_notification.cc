@@ -43,7 +43,10 @@ class SimpleNotification : public ::testing::Test {
     if (config == NULL)
       config = new configuration::state;
     configuration::applier::state::load();
-    engine::contact::add_contact("test");
+    contact_map& cm(
+      configuration::applier::state::instance().contacts());
+    configuration::contact ctct("test");
+    cm["test"] = shared_ptr<engine::contact>(new engine::contact(ctct));
 
     _notifier->add_contact(configuration::applier::state::instance().contacts_find("test")->second);
   }
@@ -106,7 +109,7 @@ TEST_F(SimpleNotification, NoContactUser) {
   time_t now = last_notification + 20;
   set_time(now);
   // And
-  _notifier->clear_contacts();
+  _notifier->get_contacts().clear();
   // And
   _notifier->enable_state_notification(1);
   _notifier->notify(notifier::PROBLEM, "admin", "Test comment");
