@@ -27,6 +27,14 @@ using namespace com::centreon::engine;
 monitorable::monitorable() {}
 
 /**
+ *  constructor.
+ *
+ *  @param[in] host_name Host name of this monitorable.
+ */
+monitorable::monitorable(std::string const& host_name)
+  : _host_name(host_name) {}
+
+/**
  *  Copy constructor.
  *
  *  @param[in] other  Object to copy.

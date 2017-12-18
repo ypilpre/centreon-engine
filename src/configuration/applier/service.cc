@@ -105,6 +105,12 @@ void applier::service::add_object(
            << "' of host '" << *obj.hosts().begin() << "'");
   }
 
+  // Add new items to the configuration state.
+  configuration::applier::state::instance().services().insert(
+    std::make_pair(
+      std::make_pair(*obj.hosts().begin(), obj.service_description()),
+      svc));
+
   // Add custom variables.
   for (map_customvar::const_iterator
          it(obj.customvariables().begin()),
