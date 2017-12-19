@@ -757,4 +757,5 @@ void applier::host::resolve_notification_period(
   hst.set_notification_period(
     configuration::applier::state::instance().timeperiods_find(
       period).get());
+  return ;
 }

@@ -752,6 +752,70 @@ void applier::service::unresolve_objects() {
 }
 
 /**
+ *  Resolve service check command.
+ *
+ *  @param[out] svc  Target service.
+ *  @param[in]  cmd  New check command.
+ */
+void applier::service::resolve_check_command(
+                         ::service& svc,
+                         std::string const& cmd) {
+  std::string command_name(cmd.substr(
+                             0,
+                             cmd.find_first_of('!')));
+  svc.set_check_command(find_command(command_name));
+  svc.set_check_command_args(cmd);
+  return ;
+}
+
+/**
+ *  Resolve service check period.
+ *
+ *  @param[out] svc     Target service.
+ *  @param[in]  period  New check period.
+ */
+void applier::service::resolve_check_period(
+                         ::service& svc,
+                         std::string const& period) {
+  svc.set_check_period(
+    configuration::applier::state::instance().timeperiods_find(
+      period).get());
+  return ;
+}
+
+/**
+ *  Resolve event handler.
+ *
+ *  @param[out] svc  Target service.
+ *  @param[in]  cmd  New event handler.
+ */
+void applier::service::resolve_event_handler(
+                         ::service& svc,
+                         std::string const& cmd) {
+  std::string command_name(cmd.substr(
+                             0,
+                             cmd.find_first_of('!')));
+  svc.set_event_handler(find_command(command_name));
+  svc.set_event_handler_args(cmd);
+  return ;
+}
+
+/**
+ *  Resolve notification period.
+ *
+ *  @param[out] svc     Target service.
+ *  @param[in]  period  New notification period.
+ */
+void applier::service::resolve_notification_period(
+                         ::service& svc,
+                         std::string const& period) {
+  svc.set_notification_period(
+    configuration::applier::state::instance().timeperiods_find(
+      period).get());
+  return ;
+}
+
+/**
  *  Expand service instance memberships.
  *
  *  @param[in]  obj Target service.
