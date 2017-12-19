@@ -517,33 +517,23 @@ void applier::host::resolve_object(
     // XXX
 
     // Resolve check command.
-    {
-      // Get the command name.
-      std::string command_name(obj.check_command().substr(
-                                 0,
-                                 obj.check_command().find_first_of('!')));
-      try {
-        // Set resolved command and arguments.
-        hst.set_check_command(find_command(command_name));
-        hst.set_check_command_args(obj.check_command());
-      }
-      catch (not_found const& e) {
-        (void)e;
-        logger(logging::log_verification_error, logging::basic)
-          << "Error: Host check command '" << command_name
-          << "' specified for host '" << hst.get_host_name()
-          << "' is not defined anywhere!";
-        ++config_errors;
-        failure = true;
-      }
+    try {
+      resolve_check_command(hst, obj.check_command());
+    }
+    catch (not_found const& e) {
+      (void)e;
+      logger(logging::log_verification_error, logging::basic)
+        << "Error: Host check command '" << obj.check_command()
+        << "' specified for host '" << hst.get_host_name()
+        << "' is not defined anywhere!";
+      ++config_errors;
+      failure = true;
     }
 
     // Resolve check period.
     if (!obj.check_period().empty()) {
       try {
-        hst.set_check_period(
-          configuration::applier::state::instance().timeperiods_find(
-            obj.check_period()).get());
+        resolve_check_period(hst, obj.check_period());
       }
       catch (not_found const& e) {
         (void)e;
@@ -704,4 +694,67 @@ void applier::host::unresolve_objects() {
     h.set_notification_period(NULL);
   }
   return ;
+}
+
+/**
+ *  Resolve host check command.
+ *
+ *  @param[out] hst  Target host.
+ *  @param[in]  cmd  New check command.
+ */
+void applier::host::resolve_check_command(
+                      ::host& hst,
+                      std::string const& cmd) {
+  std::string command_name(cmd.substr(
+                             0,
+                             cmd.find_first_of('!')));
+  hst.set_check_command(find_command(command_name));
+  hst.set_check_command_args(cmd);
+  return ;
+}
+
+/**
+ *  Resolve host check period.
+ *
+ *  @param[out] hst     Target host.
+ *  @param[in]  period  New check period.
+ */
+void applier::host::resolve_check_period(
+                      ::host& hst,
+                      std::string const& period) {
+  hst.set_check_period(
+    configuration::applier::state::instance().timeperiods_find(
+      period).get());
+  return ;
+}
+
+/**
+ *  Resolve event handler.
+ *
+ *  @param[out] hst  Target host.
+ *  @param[in]  cmd  New event handler.
+ */
+void applier::host::resolve_event_handler(
+                      ::host& hst,
+                      std::string const& cmd) {
+  std::string command_name(cmd.substr(
+                             0,
+                             cmd.find_first_of('!')));
+  hst.set_event_handler(find_command(command_name));
+  hst.set_event_handler_args(cmd);
+  return ;
+}
+
+/**
+ *  Resolve notification period.
+ *
+ *  @param[out] hst     Target host.
+ *  @param[in]  period  New notification period.
+ */
+void applier::host::resolve_notification_period(
+                      ::host& hst,
+                      std::string const& period) {
+  hst.set_notification_period(
+    configuration::applier::state::instance().timeperiods_find(
+      period).get());
 }

@@ -17,11 +17,13 @@
 ** <http://www.gnu.org/licenses/>.
 */
 
+#include "com/centreon/engine/configuration/applier/host.hh"
 #include "com/centreon/engine/configuration/applier/state.hh"
 #include "com/centreon/engine/flapping.hh"
 #include "com/centreon/engine/globals.hh"
 #include "com/centreon/engine/retention/applier/host.hh"
 #include "com/centreon/engine/retention/applier/utils.hh"
+#include "com/centreon/engine/not_found.hh"
 #include "com/centreon/engine/notifications/notifier.hh"
 #include "com/centreon/engine/statusdata.hh"
 #include "com/centreon/engine/string.hh"
@@ -180,35 +182,72 @@ void applier::host::_update(
     if (state.obsess_over_host().is_set()
         && (obj.get_modified_attributes() & MODATTR_OBSESSIVE_HANDLER_ENABLED))
       obj.set_ocp_enabled(*state.obsess_over_host());
-    // XXX
-    // if (state.check_command().is_set()
-    //     && (obj.get_modified_attributes() & MODATTR_CHECK_COMMAND)) {
-    //   if (utils::is_command_exist(*state.check_command()))
-    //     string::setstr(obj.host_check_command, *state.check_command());
-    //   else
-    //     obj.modified_attributes -= MODATTR_CHECK_COMMAND;
-    // }
-    // if (state.check_period().is_set()
-    //     && (obj.modified_attributes & MODATTR_CHECK_TIMEPERIOD)) {
-    //   if (is_timeperiod_exist(*state.check_period()))
-    //     string::setstr(obj.check_period, *state.check_period());
-    //   else
-    //     obj.modified_attributes -= MODATTR_CHECK_TIMEPERIOD;
-    // }
-    // if (state.notification_period().is_set()
-    //     && (obj.modified_attributes & MODATTR_NOTIFICATION_TIMEPERIOD)) {
-    //   if (is_timeperiod_exist(*state.notification_period()))
-    //       string::setstr(obj.notification_period, *state.notification_period());
-    //   else
-    //     obj.modified_attributes -= MODATTR_NOTIFICATION_TIMEPERIOD;
-    // }
-    // if (state.event_handler().is_set()
-    //     && (obj.modified_attributes & MODATTR_EVENT_HANDLER_COMMAND)) {
-    //   if (utils::is_command_exist(*state.event_handler()))
-    //     string::setstr(obj.host_check_command, *state.event_handler());
-    //   else
-    //     obj.modified_attributes -= MODATTR_CHECK_COMMAND;
-    // }
+    if (state.check_command().is_set()
+        && (obj.get_modified_attributes() & MODATTR_CHECK_COMMAND)) {
+      if (utils::is_command_exist(*state.check_command()))
+        try {
+          configuration::applier::host hstaplr;
+          hstaplr.resolve_check_command(obj, *state.check_command());
+        }
+        catch (not_found const& e) {
+          // Retention application failed. No big deal,
+          // just silently ignore the exception.
+          (void)e;
+        }
+      else
+        obj.set_modified_attributes(
+          obj.get_modified_attributes() - MODATTR_CHECK_COMMAND);
+    }
+    if (state.check_period().is_set()
+        && (obj.get_modified_attributes() & MODATTR_CHECK_TIMEPERIOD)) {
+      if (is_timeperiod_exist(*state.check_period()))
+        try {
+          configuration::applier::host hstaplr;
+          hstaplr.resolve_check_period(obj, *state.check_period());
+        }
+        catch (not_found const& e) {
+          // Retention application failed. No big deal,
+          // just silently ignore the exception.
+          (void)e;
+        }
+      else
+        obj.set_modified_attributes(
+          obj.get_modified_attributes() - MODATTR_CHECK_TIMEPERIOD);
+    }
+    if (state.notification_period().is_set()
+        && (obj.get_modified_attributes() & MODATTR_NOTIFICATION_TIMEPERIOD)) {
+      if (is_timeperiod_exist(*state.notification_period()))
+        try {
+          configuration::applier::host hstaplr;
+          hstaplr.resolve_notification_period(
+            obj,
+            *state.notification_period());
+        }
+        catch (not_found const& e) {
+          // Retention application failed. No big deal,
+          // just silently ignore the exception.
+          (void)e;
+        }
+      else
+        obj.set_modified_attributes(
+          obj.get_modified_attributes() - MODATTR_NOTIFICATION_TIMEPERIOD);
+    }
+    if (state.event_handler().is_set()
+        && (obj.get_modified_attributes() & MODATTR_EVENT_HANDLER_COMMAND)) {
+      if (utils::is_command_exist(*state.event_handler()))
+        try {
+          configuration::applier::host hstaplr;
+          hstaplr.resolve_event_handler(obj, *state.event_handler());
+        }
+        catch (not_found const& e) {
+          // Retention application failed. No big deal,
+          // just silently ignore the exception.
+          (void)e;
+        }
+      else
+        obj.set_modified_attributes(
+          obj.get_modified_attributes() - MODATTR_CHECK_COMMAND);
+    }
     if (state.normal_check_interval().is_set()
         && (obj.get_modified_attributes() & MODATTR_NORMAL_CHECK_INTERVAL))
       obj.set_normal_check_interval(*state.normal_check_interval());
