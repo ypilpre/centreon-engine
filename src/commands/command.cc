@@ -63,9 +63,7 @@ commands::command::command(
                      command_listener* listener)
   : _command_line(command_line),
     _listener(listener),
-    _name(name) {
-
-}
+    _name(name) {}
 
 /**
  *  Destructor.

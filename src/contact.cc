@@ -49,6 +49,11 @@ using namespace com::centreon::engine::notifications;
  */
 contact::contact() {}
 
+/**
+ *  Constructor from a configuration contact
+ *
+ * @param obj Configuration contact
+ */
 contact::contact(configuration::contact const& obj)
   : _name(obj.contact_name()),
     _alias((obj.alias().empty()) ? obj.contact_name() : obj.alias()),
@@ -133,8 +138,6 @@ contact& contact::operator=(contact const& other) {
  * Destructor.
  */
 contact::~contact() {
-  logger(dbg_functions, basic)
-    << "contact: destructor";
 }
 
 /**

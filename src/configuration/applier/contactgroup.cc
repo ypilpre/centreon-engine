@@ -71,20 +71,28 @@ applier::contactgroup& applier::contactgroup::operator=(
  */
 void applier::contactgroup::add_object(
                               configuration::contactgroup const& obj) {
+  std::string const& name(obj.contactgroup_name());
   // Logging.
   logger(logging::dbg_config, logging::more)
     << "Creating new contactgroup '" << obj.contactgroup_name() << "'.";
+
+  // Check if the contact group already exists.
+  umap<std::string, shared_ptr<engine::contactgroup> >::const_iterator
+    it(applier::state::instance().contactgroups().find(name));
+  if (it != configuration::applier::state::instance().contactgroups().end())
+    throw (engine_error() << "Contactgroup '" << name
+           << "' has already been defined");
 
   // Add contact group to the global configuration set.
   config->contactgroups().insert(obj);
 
   // Create contact group.
-  engine::contactgroup* cg(engine::contactgroup::add_contactgroup(
-                            obj.contactgroup_name(),
-                            obj.alias()));
-  if (!cg)
-    throw (engine_error() << "Error: Could not register contact group '"
-           << obj.contactgroup_name() << "'");
+  shared_ptr<engine::contactgroup>
+    cg(new engine::contactgroup(obj));
+
+  // Add new items to the configuration state.
+  applier::state::instance().contactgroups().insert(
+    std::make_pair(name, cg));
 
   // Apply resolved contacts on contactgroup.
   for (set_string::const_iterator
@@ -167,7 +175,7 @@ void applier::contactgroup::modify_object(
   // Were members modified ?
   if (obj.members() != old_cfg.members()) {
     // Delete all old contact group members.
-    cg->clear_members();
+    cg->get_members().clear();
 //    deleter::listmember(
 //      (*it_obj).second->members,
 //      &deleter::contactsmember);

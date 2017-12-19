@@ -92,6 +92,7 @@ applier::contact& applier::contact::operator=(
  */
 void applier::contact::add_object(configuration::contact const& obj) {
   std::string const& name(obj.contact_name());
+
   // Logging.
   logger(logging::dbg_config, logging::more)
     << "Creating new contact '" << name << "'.";
@@ -111,7 +112,8 @@ void applier::contact::add_object(configuration::contact const& obj) {
     c(new engine::contact(obj));
 
   // Add new items to the configuration state.
-  configuration::applier::state::instance().contacts()[name] = c;
+  applier::state::instance().contacts().insert(
+    std::make_pair(name, c));
 
   // Add all the host notification commands.
   for (list_string::const_iterator
