@@ -222,26 +222,29 @@ struct grab_service_redirection {
     routines[MACRO_LASTSERVICECRITICAL].first =
       new member_grabber<service, time_t>(&service::get_last_time_critical);
     routines[MACRO_LASTSERVICECRITICAL].second = true;
-    // XXX
-    // // Downtime.
-    // routines[MACRO_SERVICEDOWNTIME].first = &get_member_as_string<service, int, &service::scheduled_downtime_depth>;
-    // routines[MACRO_SERVICEDOWNTIME].second = true;
+    // Downtime.
+    routines[MACRO_SERVICEDOWNTIME].first =
+      new member_grabber<service, int>(&service::get_scheduled_downtime_depth);
+    routines[MACRO_SERVICEDOWNTIME].second = true;
     // Percent state change.
     routines[MACRO_SERVICEPERCENTCHANGE].first =
       new member_grabber<service, double>(&service::get_percent_state_change);
     routines[MACRO_SERVICEPERCENTCHANGE].second = true;
+    // XXX
     // // Duration.
     // routines[MACRO_SERVICEDURATION].first = &get_duration<service>;
     // routines[MACRO_SERVICEDURATION].second = true;
     // // Duration in seconds.
     // routines[MACRO_SERVICEDURATIONSEC].first = &get_duration_sec<service>;
     // routines[MACRO_SERVICEDURATIONSEC].second = true;
-    // // Notification number.
-    // routines[MACRO_SERVICENOTIFICATIONNUMBER].first = &get_member_as_string<service, int, &service::current_notification_number>;
-    // routines[MACRO_SERVICENOTIFICATIONNUMBER].second = true;
-    // // Notification ID.
-    // routines[MACRO_SERVICENOTIFICATIONID].first = &get_member_as_string<service, unsigned long, &service::current_notification_id>;
-    // routines[MACRO_SERVICENOTIFICATIONID].second = true;
+    // Notification number.
+    routines[MACRO_SERVICENOTIFICATIONNUMBER].first =
+      new member_grabber<service, int>(&service::get_current_notification_number);
+    routines[MACRO_SERVICENOTIFICATIONNUMBER].second = true;
+    // Notification ID.
+    routines[MACRO_SERVICENOTIFICATIONID].first =
+      new member_grabber<service, int>(&service::get_current_notification_id);
+    routines[MACRO_SERVICENOTIFICATIONID].second = true;
     // Event ID.
     routines[MACRO_SERVICEEVENTID].first =
       new member_grabber<service, int>(&service::get_current_event_id);
@@ -258,21 +261,24 @@ struct grab_service_redirection {
     routines[MACRO_LASTSERVICEPROBLEMID].first =
       new member_grabber<service, int>(&service::get_last_problem_id);
     routines[MACRO_LASTSERVICEPROBLEMID].second = true;
-    // XXX
-    // // Action URL.
-    // routines[MACRO_SERVICEACTIONURL].first = &get_recursive<service, &service::action_url, URL_ENCODE_MACRO_CHARS>;
-    // routines[MACRO_SERVICEACTIONURL].second = true;
-    // // Notes URL.
-    // routines[MACRO_SERVICENOTESURL].first = &get_recursive<service, &service::notes_url, URL_ENCODE_MACRO_CHARS>;
-    // routines[MACRO_SERVICENOTESURL].second = true;
-    // // Notes.
-    // routines[MACRO_SERVICENOTES].first = &get_recursive<service, &service::notes, 0>;
-    // routines[MACRO_SERVICENOTES].second = true;
+    // Action URL.
+    routines[MACRO_SERVICEACTIONURL].first =
+      new function_grabber<service>(&get_action_url<service>);
+    routines[MACRO_SERVICEACTIONURL].second = true;
+    // Notes URL.
+    routines[MACRO_SERVICENOTESURL].first =
+      new function_grabber<service>(&get_notes_url<service>);
+    routines[MACRO_SERVICENOTESURL].second = true;
+    // Notes.
+    routines[MACRO_SERVICENOTES].first =
+      new function_grabber<service>(&get_notes<service>);
+    routines[MACRO_SERVICENOTES].second = true;
     // Group names.
     routines[MACRO_SERVICEGROUPNAMES].first =
       new function_grabber<service>(
         (char const* (*)(service&, nagios_macros*))&get_service_group_names);
     routines[MACRO_SERVICEGROUPNAMES].second = true;
+    // XXX
     // // Acknowledgement author.
     // routines[MACRO_SERVICEACKAUTHOR].first = &get_macro_copy<service, MACRO_SERVICEACKAUTHOR>;
     // routines[MACRO_SERVICEACKAUTHOR].second = true;

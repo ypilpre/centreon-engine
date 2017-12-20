@@ -187,9 +187,67 @@ namespace  macros {
   }
 
   /**
+   *  Get action URL.
+   *
+   *  @param[in] t    Base object.
+   *  @param[in] mac  Macros.
+   *
+   *  @return Newly allocated and encoded action URL as string.
+   */
+  template <typename T>
+  char const* get_action_url(T& t, nagios_macros* mac) {
+    char* buffer(NULL);
+    process_macros_r(
+      mac,
+      t.get_action_url().c_str(),
+      &buffer,
+      URL_ENCODE_MACRO_CHARS);
+    return (buffer);
+  }
+
+  /**
+   *  Get notes.
+   *
+   *  @param[in] t    Base object.
+   *  @param[in] mac  Macros.
+   *
+   *  @return Newly allocated notes as string.
+   */
+  template <typename T>
+  char const* get_notes(T& t, nagios_macros* mac) {
+    char* buffer(NULL);
+    process_macros_r(
+      mac,
+      t.get_notes().c_str(),
+      &buffer,
+      0);
+    return (buffer);
+  }
+
+  /**
+   *  Get notes URL.
+   *
+   *  @param[in] t    Base object.
+   *  @param[in] mac  Macros.
+   *
+   *  @return Newly allocated and encoded notes URL as string.
+   */
+  template <typename T>
+  char const* get_notes_url(T& t, nagios_macros* mac) {
+    char* buffer(NULL);
+    process_macros_r(
+      mac,
+      t.get_notes_url().c_str(),
+      &buffer,
+      URL_ENCODE_MACRO_CHARS);
+    return (buffer);
+  }
+
+  /**
    *  Extract state type.
    *
-   *  @param[in] t   Base object.
+   *  @param[in] t    Base object.
+   *  @param[in] mac  Unused.
    *
    *  @return Newly allocated state type as a string.
    */

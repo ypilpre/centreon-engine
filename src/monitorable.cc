@@ -57,6 +57,25 @@ monitorable& monitorable::operator=(monitorable const& other) {
 }
 
 /**
+ *  Get action URL.
+ *
+ *  @return Action URL.
+ */
+std::string const& monitorable::get_action_url() const {
+  return (_action_url);
+}
+
+/**
+ *  Set action URL.
+ *
+ *  @param[in] action_url  New action URL.
+ */
+void monitorable::set_action_url(std::string const& action_url) {
+  _action_url = action_url;
+  return ;
+}
+
+/**
  *  Get custom variables.
  *
  *  @return Set of this object's custom variables.
@@ -119,6 +138,44 @@ unsigned int monitorable::get_id() const {
  */
 void monitorable::set_id(unsigned int id) {
   _id = id;
+  return ;
+}
+
+/**
+ *  Get notes.
+ *
+ *  @return Notes.
+ */
+std::string const& monitorable::get_notes() const {
+  return (_notes);
+}
+
+/**
+ *  Set notes.
+ *
+ *  @param[in] notes  New notes.
+ */
+void monitorable::set_notes(std::string const& notes) {
+  _notes = notes;
+  return ;
+}
+
+/**
+ *  Get notes URL.
+ *
+ *  @return Notes URL.
+ */
+std::string const& monitorable::get_notes_url() const {
+  return (_notes_url);
+}
+
+/**
+ *  Set notes URL.
+ *
+ *  @param[in] notes_url  New notes URL.
+ */
+void monitorable::set_notes_url(std::string const& notes_url) {
+  _notes_url = notes_url;
   return ;
 }
 

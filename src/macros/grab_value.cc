@@ -629,9 +629,8 @@ static int handle_summary_macro(
             && temp_host->get_has_been_checked())
           hosts_up++;
         else if (temp_host->get_current_state() == HOST_DOWN) {
-          // XXX
-          // if (temp_host->scheduled_downtime_depth > 0)
-          //   problem = false;
+          if (temp_host->get_scheduled_downtime_depth() > 0)
+            problem = false;
           if (temp_host->is_acknowledged())
             problem = false;
           if (!temp_host->get_active_checks_enabled())
@@ -641,9 +640,8 @@ static int handle_summary_macro(
           hosts_down++;
         }
         else if (temp_host->get_current_state() == HOST_UNREACHABLE) {
-          // XXX
-          // if (temp_host->scheduled_downtime_depth > 0)
-          //   problem = false;
+          if (temp_host->get_scheduled_downtime_depth() > 0)
+            problem = false;
           if (temp_host->is_acknowledged())
             problem = false;
           if (!temp_host->get_active_checks_enabled())
@@ -700,8 +698,8 @@ static int handle_summary_macro(
           catch (not_found const& e) {
             (void)e;
           }
-          // if (temp_service->scheduled_downtime_depth > 0)
-          //   problem = false;
+          if (temp_service->get_scheduled_downtime_depth() > 0)
+            problem = false;
           if (temp_service->is_acknowledged())
             problem = false;
           if (!temp_service->get_active_checks_enabled())
@@ -721,9 +719,8 @@ static int handle_summary_macro(
           catch (not_found const& e) {
             (void)e;
           }
-          // XXX
-          // if (temp_service->scheduled_downtime_depth > 0)
-          //   problem = false;
+          if (temp_service->get_scheduled_downtime_depth() > 0)
+            problem = false;
           if (temp_service->is_acknowledged())
             problem = false;
           if (!temp_service->get_active_checks_enabled())
@@ -743,9 +740,8 @@ static int handle_summary_macro(
           catch (not_found const& e) {
             (void)e;
           }
-          // XXX
-          // if (temp_service->scheduled_downtime_depth > 0)
-          //   problem = false;
+          if (temp_service->get_scheduled_downtime_depth() > 0)
+            problem = false;
           if (temp_service->is_acknowledged())
             problem = false;
           if (!temp_service->get_active_checks_enabled())

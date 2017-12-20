@@ -304,10 +304,10 @@ struct grab_host_redirection {
     routines[MACRO_MAXHOSTATTEMPTS].first =
       new member_grabber<host, int>(&host::get_max_attempts);
     routines[MACRO_MAXHOSTATTEMPTS].second = true;
-    // XXX
-    // // Downtime.
-    // routines[MACRO_HOSTDOWNTIME].first = &get_member_as_string<host, int, &host::scheduled_downtime_depth>;
-    // routines[MACRO_HOSTDOWNTIME].second = true;
+    // Downtime.
+    routines[MACRO_HOSTDOWNTIME].first =
+      new member_grabber<host, int>(&host::get_scheduled_downtime_depth);
+    routines[MACRO_HOSTDOWNTIME].second = true;
     // Percent state change.
     routines[MACRO_HOSTPERCENTCHANGE].first =
       new member_grabber<host, double>(&host::get_percent_state_change);
@@ -348,13 +348,14 @@ struct grab_host_redirection {
     routines[MACRO_LASTHOSTUNREACHABLE].first =
       new member_grabber<host, time_t>(&host::get_last_time_unreachable);
     routines[MACRO_LASTHOSTUNREACHABLE].second = true;
-    // XXX
-    // // Notification number.
-    // routines[MACRO_HOSTNOTIFICATIONNUMBER].first = &get_member_as_string<host, int, &host::current_notification_number>;
-    // routines[MACRO_HOSTNOTIFICATIONNUMBER].second = true;
-    // // Notification ID.
-    // routines[MACRO_HOSTNOTIFICATIONID].first = &get_member_as_string<host, unsigned long, &host::current_notification_id>;
-    // routines[MACRO_HOSTNOTIFICATIONID].second = true;
+    // Notification number.
+    routines[MACRO_HOSTNOTIFICATIONNUMBER].first =
+      new member_grabber<host, int>(&host::get_current_notification_number);
+    routines[MACRO_HOSTNOTIFICATIONNUMBER].second = true;
+    // Notification ID.
+    routines[MACRO_HOSTNOTIFICATIONID].first =
+      new member_grabber<host, int>(&host::get_current_notification_id);
+    routines[MACRO_HOSTNOTIFICATIONID].second = true;
     // Event ID.
     routines[MACRO_HOSTEVENTID].first =
       new member_grabber<host, int>(&host::get_current_event_id);
@@ -371,15 +372,18 @@ struct grab_host_redirection {
     routines[MACRO_LASTHOSTPROBLEMID].first =
       new member_grabber<host, int>(&host::get_last_problem_id);
     routines[MACRO_LASTHOSTPROBLEMID].second = true;
-    // // Action URL.
-    // routines[MACRO_HOSTACTIONURL].first = &get_recursive<host, &host::action_url, URL_ENCODE_MACRO_CHARS>;
-    // routines[MACRO_HOSTACTIONURL].second = true;
-    // // Notes URL.
-    // routines[MACRO_HOSTNOTESURL].first = &get_recursive<host, &host::notes_url, URL_ENCODE_MACRO_CHARS>;
-    // routines[MACRO_HOSTNOTESURL].second = true;
-    // // Notes.
-    // routines[MACRO_HOSTNOTES].first = &get_recursive<host, &host::notes, 0>;
-    // routines[MACRO_HOSTNOTES].second = true;
+    // Action URL.
+    routines[MACRO_HOSTACTIONURL].first =
+      new function_grabber<host>(&get_action_url<host>);
+    routines[MACRO_HOSTACTIONURL].second = true;
+    // Notes URL.
+    routines[MACRO_HOSTNOTESURL].first =
+      new function_grabber<host>(&get_notes_url<host>);
+    routines[MACRO_HOSTNOTESURL].second = true;
+    // Notes.
+    routines[MACRO_HOSTNOTES].first =
+      new function_grabber<host>(&get_notes<host>);
+    routines[MACRO_HOSTNOTES].second = true;
     // Group names.
     routines[MACRO_HOSTGROUPNAMES].first =
       new function_grabber<host>(
@@ -410,6 +414,7 @@ struct grab_host_redirection {
       new function_grabber<host>(
         &get_host_total_services<MACRO_TOTALHOSTSERVICESCRITICAL>);
     routines[MACRO_TOTALHOSTSERVICESCRITICAL].second = false;
+    // XXX
     // // Acknowledgement author.
     // routines[MACRO_HOSTACKAUTHOR].first = &get_macro_copy<host, MACRO_HOSTACKAUTHOR>;
     // routines[MACRO_HOSTACKAUTHOR].second = true;
