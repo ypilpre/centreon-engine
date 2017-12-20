@@ -118,140 +118,28 @@ TEST_F(SimpleContactgroup, TestContactgroupCheckWithOneInexistentContact) {
   ASSERT_EQ(e, 1);
 }
 
-// Given a contactgroup
-// When the add_contact method is called with a non empty name
-// corresponding to an existing contact
-// Then an error is given
-// And the method returns false.
-// Then the contact group contains only the add user.
-// When the clear_members() is executed, the contact group contains no more
-// member.
-TEST_F(SimpleContactgroup, TestContactgroupCheckWithOneContact) {
-  engine::contactgroup* c(engine::contactgroup::add_contactgroup("test"));
-  c->add_contact("centreon");
-  engine::contact* user(engine::contact::add_contact("centreon"));
-  int w(0), e(0);
-  ASSERT_TRUE(c->check(&w, &e));
-  ASSERT_EQ(w, 0);
-  ASSERT_EQ(e, 0);
-
-  ASSERT_FALSE(c->contains_member("nagios"));
-  ASSERT_TRUE(c->contains_member("centreon"));
-
-  c->clear_members();
-  ASSERT_TRUE(c->get_members().empty());
-}
-
-#if 0
-// Given a contact
-// When adding a service notification period by its name without a corresponding
-// notification period definition
-// Then the check method returns false with 1 warning and 3 errors.
-TEST_F(SimpleContactgroup, AddServiceNotificationTimeperiod) {
-  engine::contact* c(engine::contact::add_contact("test"));
-  c->set_service_notification_period_name("notif_period");
-  int w = 0, e = 0;
-  ASSERT_FALSE(c->check(&w, &e));
-  ASSERT_EQ(w, 1);
-  ASSERT_EQ(e, 3);
-}
-
-// Given a contact
-// When adding a host notification period by its name without a corresponding
-// notification period definition
-// Then the check method returns false with 1 warning and 3 errors.
-TEST_F(SimpleContactgroup, AddHostNotificationTimeperiod) {
-  engine::contact* c(engine::contact::add_contact("test"));
-  c->set_host_notification_period_name("notif_period");
-  int w = 0, e = 0;
-  ASSERT_FALSE(c->check(&w, &e));
-  ASSERT_EQ(w, 1);
-  ASSERT_EQ(e, 3);
-}
-
-// Given a contact
-// When adding a host notification command with an null/empty name
-// Then an exception is thrown.
-TEST_F(SimpleContactgroup, AddHostNotificationCommand) {
-  engine::contact* c(engine::contact::add_contact("test"));
-  ASSERT_THROW(c->add_host_notification_command(NULL), std::exception);
-  ASSERT_THROW(c->add_host_notification_command(""), std::exception);
-}
-
-// Given a contact
-// When adding a service notification command with an null/empty name
-// Then an exception is thrown.
-TEST_F(SimpleContactgroup, AddServiceNotificationCommand) {
-  engine::contact* c(engine::contact::add_contact("test"));
-  ASSERT_THROW(c->add_service_notification_command(NULL), std::exception);
-  ASSERT_THROW(c->add_service_notification_command(""), std::exception);
-}
-
-// Given a contact
-// When we add a service command to him, but the service command contains
-// no command.
-// Then the check method returns false and always set the error value to 2.
-TEST_F(SimpleContactgroup, ContactWithServiceCommand) {
-  engine::contact* c(engine::contact::add_contact("test"));
-  c->add_service_notification_command("service_command");
-  int w = 0, e = 0;
-  ASSERT_FALSE(c->check(&w, &e));
-  ASSERT_EQ(w, 2);
-  ASSERT_EQ(e, 2);
-}
-
-// Given a contact
-// When we add a host command to him, but the host command contains
-// no command.
-// Then the check method returns false and always set the error value to 2.
-TEST_F(SimpleContactgroup, ContactWithHostCommand) {
-  engine::contact* c(engine::contact::add_contact("test"));
-  c->add_host_notification_command("host_command");
-  int w = 0, e = 0;
-  ASSERT_FALSE(c->check(&w, &e));
-  ASSERT_EQ(w, 2);
-  ASSERT_EQ(e, 2);
-}
-
-// Given a contact
-// When he is notified on a host recovery
-// Then he should be notified on host down or on host unreachable.
-TEST_F(SimpleContactgroup, ContactWithRecoveryHostNotification) {
-  engine::contact* c(engine::contact::add_contact(
-        "test",
-        "",
-        "",
-        "",
-        std::vector<std::string>(),
-        "",
-        "",
-        0, 0, 0, 0, 0, 0, // services notifications
-        1, 0, 0, 0, 0,    // hosts notifications
-        1, 1, 0, 0, 0, ""));
-  int w(0), e(0);
-  ASSERT_FALSE(c->check(&w, &e));
-  ASSERT_EQ(w, 3);
-  ASSERT_EQ(e, 2);
-}
-
-// Given a contact
-// When he is notified on a service recovery
-// Then he should be notified on service warning or critical.
-TEST_F(SimpleContactgroup, ContactWithRecoveryServiceNotification) {
-  engine::contact* c(engine::contact::add_contact(
-        "test",
-        "",
-        "",
-        "",
-        std::vector<std::string>(),
-        "",
-        "",
-        1, 0, 0, 0, 0, 0, // services notifications
-        0, 0, 0, 0, 0,    // hosts notifications
-        1, 1, 0, 0, 0, ""));
-  int w(0), e(0);
-  ASSERT_FALSE(c->check(&w, &e));
-  ASSERT_EQ(w, 3);
-  ASSERT_EQ(e, 2);
-}
-#endif
+//// Given a contactgroup
+//// When the add_contact method is called with a non empty name
+//// corresponding to an existing contact
+//// Then an error is given
+//// And the method returns false.
+//// Then the contact group contains only the add user.
+//// When the clear_members() is executed, the contact group contains no more
+//// member.
+//TEST_F(SimpleContactgroup, TestContactgroupCheckWithOneContact) {
+//  engine::contactgroup* c(engine::contactgroup::add_contactgroup("test"));
+//  c->add_contact("centreon");
+//  shared_ptr<engine::contact> user(new engine::contact("centreon"));
+//  contact_map& cm(configuration::applier::state::instance().contacts());
+//  cm["centreon"] = user;
+//  int w(0), e(0);
+//  ASSERT_TRUE(c->check(&w, &e));
+//  ASSERT_EQ(w, 0);
+//  ASSERT_EQ(e, 0);
+//
+//  ASSERT_FALSE(c->contains_member("nagios"));
+//  ASSERT_TRUE(c->contains_member("centreon"));
+//
+//  c->clear_members();
+//  ASSERT_TRUE(c->get_members().empty());
+//}

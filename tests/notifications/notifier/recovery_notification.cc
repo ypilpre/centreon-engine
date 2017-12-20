@@ -44,7 +44,9 @@ class RecoveryNotification : public ::testing::Test {
     if (config == NULL)
       config = new configuration::state;
     configuration::applier::state::load();
-    engine::contact::add_contact("test");
+    contact_map& cm = configuration::applier::state::instance().contacts();
+    configuration::contact ctct("test");
+    cm["test"] = shared_ptr<engine::contact>(new engine::contact(ctct));
 
     _notifier->add_contact(configuration::applier::state::instance().contacts_find("test")->second);
   }

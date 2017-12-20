@@ -37,7 +37,7 @@ using namespace com::centreon::engine::notifications;
  */
 downtime::downtime(
             downtime_type type,
-            monitorable* parent,
+            notifications::notifier* parent,
             time_t entry_time,
             std::string const& author,
             std::string const& comment_data,
@@ -129,7 +129,7 @@ void downtime::_internal_copy(downtime const& other) {
 }
 
 std::string const& downtime::get_host_name() const {
-  return _parent->get_host_name();
+  return static_cast<monitorable*>(_parent)->get_host_name();
 }
 
 downtime::downtime_type downtime::get_type() const {
@@ -153,7 +153,7 @@ std::string const& downtime::get_service_description() const {
     throw engine_error()
              << "Error on downtime " << static_cast<unsigned int>(get_id()) << ": "
              << "'Service description' is non sense"
-             << "on a monitorable other than a service";
+             << "on a notifier other than a service";
   }
 }
 
@@ -193,47 +193,7 @@ unsigned long downtime::get_downtime_id() const {
   return _downtime_id;
 }
 
-int downtime::schedule_downtime(
-      downtime_type type,
-      monitorable* parent,
-      time_t entry_time,
-      std::string const& author,
-      std::string const& comment_data,
-      time_t start_time,
-      time_t end_time,
-      int fixed,
-      unsigned long triggered_by,
-      unsigned long duration) {
-
-  logger(dbg_functions, basic)
-    << "schedule_downtime()";
-
-  /* don't add old or invalid downtimes */
-  if (start_time >= end_time || end_time <= time(NULL))
-    return (ERROR);
-
-  /* add a new downtime entry */
-  downtime* dt = new downtime(
-                       type,
-                       parent,
-                       entry_time,
-                       author,
-                       comment_data,
-                       start_time,
-                       end_time,
-                       fixed,
-                       triggered_by,
-                       duration);
-  dt->set_id(scheduled_downtime_list.rbegin()->first + 1);
-  scheduled_downtime_list[dt->get_id()] = shared_ptr<downtime>(dt);
-
-  /* register the scheduled downtime */
-  dt->_register();
-
-  return (OK);
-}
-
-int downtime::_register() {
+int downtime::record() {
   char start_time_string[MAX_DATETIME_LENGTH] = "";
   char end_time_string[MAX_DATETIME_LENGTH] = "";
   host* hst(NULL);

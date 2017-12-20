@@ -41,12 +41,9 @@ namespace configuration {
    */
 class                          contactgroup {
  public:
-  static contactgroup*         add_contactgroup(
-                                 std::string const& name,
-                                 std::string const& alias = "");
+                               contactgroup();
                                contactgroup(
-                                 std::string const& name,
-                                 std::string const& alias = "");
+                                 configuration::contactgroup const& obj);
   virtual                      ~contactgroup();
   contactgroup&                operator=(contactgroup const& other);
   bool                         operator<(contactgroup const& other) const;
@@ -65,7 +62,6 @@ class                          contactgroup {
   void                         add_contact(std::string const& contact_name);
   void                         update_config(
                                  configuration::contactgroup const& obj);
-  void                         clear_members();
 
  private:
   std::string                  _name;

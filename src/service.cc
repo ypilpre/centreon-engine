@@ -32,7 +32,8 @@ using namespace com::centreon::engine;
  */
 service::service(configuration::service const& cfg)
 // XXX
-{}
+  : monitorable(*cfg.hosts().begin()),
+    _description(cfg.service_description()) {}
 
 /**
  *  Copy constructor.

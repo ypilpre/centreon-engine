@@ -42,77 +42,32 @@ using namespace com::centreon::engine::logging;
 **************************************/
 
 /**
- *  Add a new contact group to the list in memory.
- *
- *  @param[in] name  Contact group name.
- *  @param[in] alias Contact group alias.
+ * Constructor.
  */
-contactgroup* contactgroup::add_contactgroup(
-                              std::string const& name,
-                              std::string const& alias) {
+contactgroup::contactgroup() {}
+
+/**
+ *  Constructor from a configuration contactgroup
+ *
+ * @param obj Configuration contactgroup
+ */
+contactgroup::contactgroup(configuration::contactgroup const& obj)
+  : _name(obj.contactgroup_name()),
+    _alias((obj.alias().empty()) ? obj.contactgroup_name() : obj.alias()) {
+
   // Make sure we have the data we need.
-  if (name.empty()) {
-    logger(log_config_error, basic)
-      << "Error: Contactgroup name is empty";
-    return (NULL);
-  }
+  if (_name.empty())
+    throw (engine_error() << "contactgroup: Contact group name is empty");
 
-  // Check if the contact group already exist.
-  umap<std::string, shared_ptr<contactgroup> >::const_iterator
-    it(configuration::applier::state::instance().contactgroups().find(name));
-  if (it != configuration::applier::state::instance().contactgroups().end()) {
-    logger(log_config_error, basic)
-      << "Error: Contactgroup '" << name << "' has already been defined";
-    return (NULL);
-  }
-
-  // Allocate memory for a new contactgroup.
-  shared_ptr<contactgroup> obj(new contactgroup(
-                                 name,
-                                 alias));
-
-  try {
-    // Add new items to the configuration state.
-    configuration::applier::state::instance().contactgroups()[name] = obj;
-
-    // Notify event broker.
-    timeval tv(get_broker_timestamp(NULL));
-    broker_group(
-      NEBTYPE_CONTACTGROUP_ADD,
-      NEBFLAG_NONE,
-      NEBATTR_NONE,
-      obj.get(),
-      &tv);
-  }
-  catch (...) {
-    obj.clear();
-  }
-
-  return (obj.get());
+  // Notify event broker.
+  timeval tv(get_broker_timestamp(NULL));
+  broker_group(
+    NEBTYPE_CONTACTGROUP_ADD,
+    NEBFLAG_NONE,
+    NEBATTR_NONE,
+    this,
+    &tv);
 }
-
-/**
- * Constructor.
- */
-
-/**
- * Constructor.
- */
-contactgroup::contactgroup(
-                std::string const& name,
-                std::string const& alias)
-  : _name(name) {
-  if (alias.empty())
-    _alias = name;
-  else
-    _alias = alias;
-}
-
-/**
- * Copy constructor.
- *
- * @param[in] other Object to copy.
- */
 
 /**
  * Assignment operator.
@@ -217,10 +172,6 @@ void contactgroup::add_contact(std::string const& contact_name) {
           // build anymore.
     this,
     &tv);
-}
-
-void contactgroup::clear_members() {
-  _members.clear();
 }
 
 void contactgroup::update_config(configuration::contactgroup const& obj) {

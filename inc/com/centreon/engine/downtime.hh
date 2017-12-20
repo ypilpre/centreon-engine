@@ -27,7 +27,9 @@
 CCE_BEGIN()
 
 // Forward declarations
-class monitorable;
+namespace notifications {
+  class notifier;
+}
 
 /**
  *  @class downtime downtime.hh "com/centreon/engine/downtime.hh"
@@ -42,21 +44,10 @@ class                downtime {
     HOST_DOWNTIME    = 2,
     ANY_DOWNTIME     = 3
   };
-  static int         schedule_downtime(
-                       downtime_type type,
-                       monitorable* parent,
-                       time_t entry_time,
-                       std::string const& author,
-                       std::string const& comment_data,
-                       time_t start_time,
-                       time_t end_time,
-                       int fixed,
-                       unsigned long triggered_by,
-                       unsigned long duration);
 
                      downtime(
                        downtime_type type,
-                       monitorable* parent,
+                       notifications::notifier* parent,
                        time_t entry_time,
                        std::string const& author,
                        std::string const& comment_data,
@@ -90,10 +81,10 @@ class                downtime {
   std::string const& get_author() const;
   std::string const& get_comment() const;
   int                unschedule();
+  int                record();
 
  private:
   void               _internal_copy(downtime const& other);
-  int                _register();
 
   time_t             _entry_time;
   std::string        _author;
@@ -104,7 +95,7 @@ class                downtime {
   time_t             _start_time;
   time_t             _end_time;
   bool               _fixed;
-  monitorable* const
+  notifications::notifier* const
                      _parent;
   unsigned long      _triggered_by;
   unsigned long      _duration;

@@ -23,6 +23,7 @@
 #  include <ctime>
 #  include <list>
 #  include "com/centreon/engine/checks/checkable.hh"
+#  include "com/centreon/engine/downtime.hh"
 #  include "com/centreon/engine/globals.hh"
 #  include "com/centreon/engine/macros/defines.hh"
 #  include "com/centreon/engine/namespace.hh"
@@ -32,7 +33,6 @@ CCE_BEGIN()
 
 // Forward declaration
 class contact;
-class downtime;
 
 namespace           notifications {
 
@@ -83,6 +83,13 @@ namespace           notifications {
       ACKNOWLEDGEMENT_NORMAL,
       ACKNOWLEDGEMENT_STICKY
     };
+
+    enum              downtime_propagation {
+      DOWNTIME_PROPAGATE_NONE,
+      DOWNTIME_PROPAGATE_SIMPLE,
+      DOWNTIME_PROPAGATE_TRIGGERED
+    };
+
                       notifier();
                       notifier(notifier const& other);
     virtual           ~notifier();
@@ -94,8 +101,6 @@ namespace           notifications {
     void              set_notifications_enabled(bool enabled);
     bool              get_notifications_enabled() const;
     int               get_acknowledgement_type() const;
-    void              clear_contacts();
-    void              clear_contactgroups();
     void              enable_state_notification(int state);
     std::list<shared_ptr<engine::contact> >
                       get_contacts_list();
@@ -146,6 +151,18 @@ namespace           notifications {
     timeperiod*       get_notification_period() const;
     void              set_notification_period(timeperiod* tperiod);
     long              get_notification_interval() const;
+    int               schedule_downtime(
+                        downtime::downtime_type type,
+                        time_t entry_time,
+                        std::string const& author,
+                        std::string const& comment_data,
+                        time_t start_time,
+                        time_t end_time,
+                        bool fixed,
+                        unsigned long triggered_by,
+                        unsigned long duration,
+                        downtime_propagation propagate =
+                          DOWNTIME_PROPAGATE_NONE);
 
    protected:
     virtual void      _checkable_macro_builder(nagios_macros& mac) = 0;

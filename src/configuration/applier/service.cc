@@ -105,6 +105,12 @@ void applier::service::add_object(
            << "' of host '" << *obj.hosts().begin() << "'");
   }
 
+  // Add new items to the configuration state.
+  configuration::applier::state::instance().services().insert(
+    std::make_pair(
+      std::make_pair(*obj.hosts().begin(), obj.service_description()),
+      svc));
+
   // Add custom variables.
   for (map_customvar::const_iterator
          it(obj.customvariables().begin()),
@@ -737,8 +743,8 @@ void applier::service::unresolve_objects() {
        it != end;
        ++it) {
     ::service& s(*it->second);
-    s.clear_contacts();
-    s.clear_contactgroups();
+    s.get_contacts().clear();
+    s.get_contactgroups().clear();
     s.clear_groups();
     s.set_check_command(NULL);
     s.set_check_command_args("");
