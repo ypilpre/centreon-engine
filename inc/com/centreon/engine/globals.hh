@@ -148,7 +148,7 @@ extern int                       defer_comment_sorting;
 extern char*                     macro_x_names[];
 extern char*                     macro_user[];
 
-extern std::map<unsigned long, shared_ptr<com::centreon::engine::downtime> >
+extern std::map<unsigned long, com::centreon::engine::downtime* >
                                  scheduled_downtime_list;
 
 extern int                       defer_downtime_sorting;

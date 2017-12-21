@@ -81,7 +81,7 @@ class                downtime {
   std::string const& get_author() const;
   std::string const& get_comment() const;
   int                unschedule();
-  int                record();
+  int                registration();
 
  private:
   void               _internal_copy(downtime const& other);

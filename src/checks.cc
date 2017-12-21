@@ -2778,11 +2778,11 @@ int process_host_check_result_3x(
       int reschedule_check,
       int use_cached_result,
       unsigned long check_timestamp_horizon) {
-  host* child_host = NULL;
-  host* parent_host = NULL;
+  shared_ptr<host> child_host;
+  shared_ptr<host> parent_host;
   host* master_host = NULL;
   host* temp_host = NULL;
-  objectlist* check_hostlist = NULL;
+  std::list<shared_ptr<host> > check_hostlist;
   objectlist* hostlist_item = NULL;
   int parent_state = HOST_UP;
   time_t current_time = 0L;
@@ -2872,7 +2872,8 @@ int process_host_check_result_3x(
           logger(dbg_checks, more)
             << "Check of parent host '" << parent_host->get_host_name()
             << "' queued.";
-          add_object_to_objectlist(&check_hostlist, (void*)parent_host);
+          check_hostlist.push_back(parent_host);
+          //add_object_to_objectlist(&check_hostlist, (void*)parent_host);
         }
       }
 
@@ -2892,7 +2893,8 @@ int process_host_check_result_3x(
           logger(dbg_checks, more)
             << "Check of child host '" << child_host->get_host_name()
             << "' queued.";
-          add_object_to_objectlist(&check_hostlist, (void*)child_host);
+          check_hostlist.push_back(child_host);
+          //add_object_to_objectlist(&check_hostlist, (void*)child_host);
         }
       }
     }
@@ -3031,7 +3033,7 @@ int process_host_check_result_3x(
 
             /* run an immediate check of the parent host */
             run_sync_host_check_3x(
-              parent_host,
+              parent_host.get(),
               &parent_state,
               check_options,
               use_cached_result,
@@ -3092,9 +3094,10 @@ int process_host_check_result_3x(
           if (child_host->get_current_state() != HOST_UNREACHABLE) {
             logger(dbg_checks, more) << "Check of child host '"
               << child_host->get_host_name() << "' queued.";
-            add_object_to_objectlist(
-              &check_hostlist,
-              (void*)child_host);
+            check_hostlist.push_back(child_host);
+            //add_object_to_objectlist(
+            //  &check_hostlist,
+            //  (void*)child_host);
           }
         }
       }
@@ -3160,9 +3163,10 @@ int process_host_check_result_3x(
           if ((parent_host = *it) == NULL)
             continue ;
           if (parent_host->get_current_state() == HOST_UP) {
-            add_object_to_objectlist(
-              &check_hostlist,
-              (void*)parent_host);
+            check_hostlist.push_back(parent_host);
+            //add_object_to_objectlist(
+            //  &check_hostlist,
+            //  (void*)parent_host);
             logger(dbg_checks, more) << "Check of host '"
               << parent_host->get_host_name() << "' queued.";
           }
@@ -3185,9 +3189,10 @@ int process_host_check_result_3x(
             logger(dbg_checks, more)
               << "Check of child host '"
               << child_host->get_host_name() << "' queued.";
-            add_object_to_objectlist(
-              &check_hostlist,
-              (void*)child_host);
+            check_hostlist.push_back(child_host);
+            //add_object_to_objectlist(
+            //  &check_hostlist,
+            //  (void*)child_host);
           }
         }
 
@@ -3215,9 +3220,10 @@ int process_host_check_result_3x(
               logger(dbg_checks, more)
                 << "Check of host '"
                 << master_host->get_host_name() << "' queued.";
-              add_object_to_objectlist(
-                &check_hostlist,
-                (void*)master_host);
+              check_hostlist.push_back(master_host);
+              //add_object_to_objectlist(
+              //  &check_hostlist,
+              //  (void*)master_host);
             }
           }
         }
@@ -3313,11 +3319,13 @@ int process_host_check_result_3x(
 
   /* run async checks of all hosts we added above */
   /* don't run a check if one is already executing or we can get by with a cached state */
-  for (hostlist_item = check_hostlist;
-       hostlist_item != NULL;
-       hostlist_item = hostlist_item->next) {
+  for (std::list<shared_ptr<host> >::const_iterator
+         it(check_hostlist.begin()),
+         end(check_hostlist.end());
+       it != end;
+       ++it) {
     run_async_check = true;
-    temp_host = (host*)hostlist_item->object_ptr;
+    temp_host = (it->get());
 
     logger(dbg_checks, most)
       << "ASYNC CHECK OF HOST: " << temp_host->get_host_name()
@@ -3342,7 +3350,6 @@ int process_host_check_result_3x(
         NULL,
         NULL);
   }
-  free_objectlist(&check_hostlist);
   return (OK);
 }
 
@@ -3460,7 +3467,7 @@ int adjust_host_check_attempt_3x(host* hst, int is_active) {
 /* determination of the host's state based on route availability*//* used only to determine difference between DOWN and UNREACHABLE states */
 int determine_host_reachability(host* hst) {
   int state = HOST_DOWN;
-  host* parent_host = NULL;
+  shared_ptr<host> parent_host;
 
   logger(dbg_functions, basic)
     << "determine_host_reachability()";

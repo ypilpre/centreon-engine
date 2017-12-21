@@ -178,7 +178,7 @@ int process_external_command(char const* cmd) {
 int cmd_add_comment(int cmd, time_t entry_time, char* args) {
   char* temp_ptr(NULL);
   host* temp_host(NULL);
-  service* temp_service(NULL);
+  shared_ptr<service> temp_service;
   char* host_name(NULL);
   char* svc_description(NULL);
   char* user(NULL);
@@ -261,7 +261,7 @@ int cmd_delete_comment(int cmd, char* args) {
 
 /* removes all comments associated with a host or service from the status log */
 int cmd_delete_all_comments(int cmd, char* args) {
-  service* temp_service(NULL);
+  shared_ptr<service> temp_service;
   host* temp_host(NULL);
   char* host_name(NULL);
   char* svc_description(NULL);
@@ -298,7 +298,7 @@ int cmd_delete_all_comments(int cmd, char* args) {
 int cmd_delay_notification(int cmd, char* args) {
   char* temp_ptr(NULL);
   host* temp_host(NULL);
-  service* temp_service(NULL);
+  shared_ptr<service> temp_service;
   char* host_name(NULL);
   char* svc_description(NULL);
   time_t delay_time(0);
@@ -343,7 +343,7 @@ int cmd_delay_notification(int cmd, char* args) {
 int cmd_schedule_check(int cmd, char* args) {
   char* temp_ptr(NULL);
   host* temp_host(NULL);
-  service* temp_service(NULL);
+  shared_ptr<service> temp_service;
   char* host_name(NULL);
   char* svc_description(NULL);
   time_t delay_time(0);
@@ -390,13 +390,13 @@ int cmd_schedule_check(int cmd, char* args) {
   /* schedule service checks */
   else if (cmd == CMD_SCHEDULE_HOST_SVC_CHECKS
            || cmd == CMD_SCHEDULE_FORCED_HOST_SVC_CHECKS) {
-    for (std::list<service* >::const_iterator
+    for (std::list<shared_ptr<service> >::const_iterator
            it(temp_host->get_services().begin()),
            end(temp_host->get_services().end());
          it != end;
          ++it) {
       schedule_service_check(
-        *it, delay_time,
+        (*it).get(), delay_time,
         (cmd == CMD_SCHEDULE_FORCED_HOST_SVC_CHECKS)
         ? CHECK_OPTION_FORCE_EXECUTION : CHECK_OPTION_NONE);
     }
@@ -413,7 +413,7 @@ int cmd_schedule_check(int cmd, char* args) {
   }
   else
     schedule_service_check(
-      temp_service, delay_time,
+      temp_service.get(), delay_time,
       (cmd == CMD_SCHEDULE_FORCED_SVC_CHECK)
       ? CHECK_OPTION_FORCE_EXECUTION : CHECK_OPTION_NONE);
 
@@ -444,13 +444,13 @@ int cmd_schedule_host_service_checks(int cmd, char* args, int force) {
   delay_time = strtoul(temp_ptr, NULL, 10);
 
   /* reschedule all services on the specified host */
-  for (std::list<service*>::const_iterator
+  for (std::list<shared_ptr<service> >::const_iterator
          it(temp_host->get_services().begin()),
          end(temp_host->get_services().end());
        it != end;
        ++it) {
     schedule_service_check(
-      *it,
+      it->get(),
       delay_time,
       (force) ? CHECK_OPTION_FORCE_EXECUTION : CHECK_OPTION_NONE);
   }
@@ -545,7 +545,7 @@ int process_passive_service_check(
       int return_code,
       char const* output) {
   host* temp_host(NULL);
-  service* temp_service(NULL);
+  shared_ptr<service> temp_service;
   char const* real_host_name(NULL);
 
   /* skip this service check result if we aren't accepting passive service checks */
@@ -778,7 +778,7 @@ int process_passive_host_check(
 
 /* acknowledges a host or service problem */
 int cmd_acknowledge_problem(int cmd, char* args) {
-  service* temp_service(NULL);
+  shared_ptr<service> temp_service;
   host* temp_host(NULL);
   char* host_name(NULL);
   char* svc_description(NULL);
@@ -850,7 +850,7 @@ int cmd_acknowledge_problem(int cmd, char* args) {
   /* acknowledge the service problem */
   else
     acknowledge_service_problem(
-      temp_service,
+      temp_service.get(),
       ack_author,
       ack_data,
       type,
@@ -866,7 +866,7 @@ int cmd_acknowledge_problem(int cmd, char* args) {
 
 /* removes a host or service acknowledgement */
 int cmd_remove_acknowledgement(int cmd, char* args) {
-  service* temp_service(NULL);
+  shared_ptr<service> temp_service;
   host* temp_host(NULL);
   char* host_name(NULL);
   char* svc_description(NULL);
@@ -887,9 +887,9 @@ int cmd_remove_acknowledgement(int cmd, char* args) {
       return (ERROR);
 
     /* verify that the service is valid */
-    if (!(temp_service = find_service(
+    if ((temp_service = find_service(
                            temp_host->get_host_name(),
-                           svc_description)))
+                           svc_description)).is_null())
       return (ERROR);
   }
 
@@ -899,14 +899,14 @@ int cmd_remove_acknowledgement(int cmd, char* args) {
 
   /* acknowledge the service problem */
   else
-    remove_service_acknowledgement(temp_service);
+    remove_service_acknowledgement(temp_service.get());
 
   return (OK);
 }
 
 /* schedules downtime for a specific host or service */
 int cmd_schedule_downtime(int cmd, time_t entry_time, char* args) {
-  service* temp_service(NULL);
+  shared_ptr<service> temp_service;
   host* temp_host(NULL);
   host* last_host(NULL);
   hostgroup_struct* temp_hostgroup(NULL);
@@ -1049,7 +1049,7 @@ int cmd_schedule_downtime(int cmd, time_t entry_time, char* args) {
     break;
 
   case CMD_SCHEDULE_HOST_SVC_DOWNTIME:
-    for (std::list<service*>::const_iterator
+    for (service_set::const_iterator
            it(temp_host->get_services().begin()),
            end(temp_host->get_services().end());
          it != end;
@@ -1095,7 +1095,7 @@ int cmd_schedule_downtime(int cmd, time_t entry_time, char* args) {
          ++it) {
       if ((temp_hg = it->second.get()) == NULL)
         continue;
-      for (std::list<service*>::const_iterator
+      for (service_set::const_iterator
              it(temp_host->get_services().begin()),
              end(temp_host->get_services().end());
            it != end;
@@ -1209,7 +1209,7 @@ int cmd_delete_downtime(int cmd, char* args) {
 
   downtime_id = strtoul(temp_ptr, NULL, 10);
 
-  std::map<unsigned long, shared_ptr<downtime> >::iterator
+  std::map<unsigned long, downtime* >::iterator
     it(scheduled_downtime_list.find(downtime_id));
   if (it == scheduled_downtime_list.end())
     return (ERROR);
@@ -1487,7 +1487,7 @@ int cmd_delete_downtime_by_start_time_comment(int cmd, char* args){
 
 /* changes a host or service (integer) variable */
 int cmd_change_object_int_var(int cmd, char* args) {
-  service* temp_service(NULL);
+  shared_ptr<service> temp_service;
   host* temp_host(NULL);
   contact* temp_contact(NULL);
   char* host_name(NULL);
@@ -1649,7 +1649,7 @@ int cmd_change_object_int_var(int cmd, char* args) {
 
       /* schedule a check if we should */
       if (temp_service->get_should_be_scheduled())
-        schedule_service_check(temp_service, temp_service->get_next_check(), CHECK_OPTION_NONE);
+        schedule_service_check(temp_service.get(), temp_service->get_next_check(), CHECK_OPTION_NONE);
     }
     break;
 
@@ -1707,13 +1707,13 @@ int cmd_change_object_int_var(int cmd, char* args) {
       NEBTYPE_ADAPTIVESERVICE_UPDATE,
       NEBFLAG_NONE,
       NEBATTR_NONE,
-      temp_service,
+      temp_service.get(),
       cmd, attr,
       temp_service->get_modified_attributes(),
       NULL);
 
     /* update the status log with the service info */
-    update_service_status(temp_service, false);
+    update_service_status(temp_service.get(), false);
     break;
 
   case CMD_CHANGE_NORMAL_HOST_CHECK_INTERVAL:
@@ -1789,7 +1789,7 @@ int cmd_change_object_int_var(int cmd, char* args) {
 
 /* changes a host or service (char) variable */
 int cmd_change_object_char_var(int cmd, char* args) {
-  service* temp_service(NULL);
+  shared_ptr<service> temp_service;
   host* temp_host(NULL);
   contact* temp_contact(NULL);
   timeperiod* temp_timeperiod(NULL);
@@ -2068,14 +2068,14 @@ int cmd_change_object_char_var(int cmd, char* args) {
       NEBTYPE_ADAPTIVESERVICE_UPDATE,
       NEBFLAG_NONE,
       NEBATTR_NONE,
-      temp_service,
+      temp_service.get(),
       cmd,
       attr,
       temp_service->get_modified_attributes(),
       NULL);
 
     /* update the status log with the service info */
-    update_service_status(temp_service, false);
+    update_service_status(temp_service.get(), false);
     break;
 
   case CMD_CHANGE_HOST_EVENT_HANDLER:
@@ -2138,7 +2138,7 @@ int cmd_change_object_char_var(int cmd, char* args) {
 /* changes a custom host or service variable */
 int cmd_change_object_custom_var(int cmd, char* args) {
   host* temp_host(NULL);
-  service* temp_service(NULL);
+  shared_ptr<service> temp_service;
   contact* temp_contact(NULL);
   char* temp_ptr(NULL);
   char* name1(NULL);
@@ -2246,7 +2246,7 @@ int cmd_change_object_custom_var(int cmd, char* args) {
   case CMD_CHANGE_CUSTOM_SVC_VAR:
     temp_service->set_modified_attributes(
       temp_service->get_modified_attributes() | MODATTR_CUSTOM_VARIABLE);
-    update_service_status(temp_service, false);
+    update_service_status(temp_service.get(), false);
     break;
 
   case CMD_CHANGE_CUSTOM_CONTACT_VAR:
@@ -2568,15 +2568,15 @@ void enable_and_propagate_notifications(
        int affect_top_host,
        int affect_hosts,
        int affect_services) {
-  host* child_host(NULL);
-  service* temp_service(NULL);
+  shared_ptr<host> child_host;
+  shared_ptr<service> temp_service;
 
   /* enable notification for top level host */
   if (affect_top_host && level == 0)
     enable_host_notifications(hst);
 
   /* check all child hosts... */
-  for (std::list<host*>::const_iterator
+  for (host_set::const_iterator
          it(hst->get_children().begin()),
          end(hst->get_children().end());
        it != end;
@@ -2586,7 +2586,7 @@ void enable_and_propagate_notifications(
 
     /* recurse... */
     enable_and_propagate_notifications(
-      child_host,
+      child_host.get(),
       level + 1,
       affect_top_host,
       affect_hosts,
@@ -2594,11 +2594,11 @@ void enable_and_propagate_notifications(
 
     /* enable notifications for this host */
     if (affect_hosts)
-      enable_host_notifications(child_host);
+      enable_host_notifications(child_host.get());
 
     /* enable notifications for all services on this host... */
     if (affect_services) {
-      for (std::list<service*>::const_iterator
+      for (service_set::const_iterator
              it(child_host->get_services().begin()),
              end(child_host->get_services().end());
            it != end;
@@ -2628,12 +2628,12 @@ void disable_and_propagate_notifications(
     disable_host_notifications(hst);
 
   /* check all child hosts... */
-  for (std::list<host*>::const_iterator
+  for (host_set::const_iterator
          it(hst->get_children().begin()),
          end(hst->get_children().end());
        it != end;
        ++it) {
-    host* child_host(*it);
+    host* child_host(it->get());
 
     /* recurse... */
     disable_and_propagate_notifications(
@@ -2649,12 +2649,12 @@ void disable_and_propagate_notifications(
 
     /* disable notifications for all services on this host... */
     if (affect_services) {
-      for (std::list<service*>::const_iterator
+      for (service_set::const_iterator
              sit(child_host->get_services().begin()),
              send(child_host->get_services().end());
-           it != end;
+           sit != send;
            ++it) {
-        disable_service_notifications(*sit);
+        disable_service_notifications(sit->get());
       }
     }
   }

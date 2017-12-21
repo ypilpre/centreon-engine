@@ -149,7 +149,7 @@ bool host::get_stalk_on_up() const {
  *
  *  @param[in] hst  Child of this host.
  */
-void host::add_child(host* hst) {
+void host::add_child(shared_ptr<host> hst) {
   // XXX
 }
 
@@ -165,7 +165,7 @@ void host::clear_children() {
  *
  *  @return List of children.
  */
-std::list<host*> const& host::get_children() const {
+std::list<shared_ptr<host> > const& host::get_children() const {
   return (_children);
 }
 
@@ -199,7 +199,7 @@ hostgroup_set const& host::get_groups() const {
  *
  *  @param[in] hst  New parent.
  */
-void host::add_parent(host* hst) {
+void host::add_parent(shared_ptr<host> hst) {
   _parents.push_back(hst);
   return ;
 }
@@ -216,7 +216,7 @@ void host::clear_parents() {
  *
  *  @return List of parents.
  */
-std::list<host*> const& host::get_parents() const {
+std::list<shared_ptr<host> > const& host::get_parents() const {
   return (_parents);
 }
 
@@ -225,7 +225,7 @@ std::list<host*> const& host::get_parents() const {
  *
  *  @param[in] svc  Service.
  */
-void host::add_service(service* svc) {
+void host::add_service(shared_ptr<service> svc) {
   _total_service_check_interval += svc->get_normal_check_interval();
   // XXX
 }
@@ -243,9 +243,9 @@ void host::clear_services() {
  *
  *  @return List of services of this host.
  */
-std::list<service*> const& host::get_services() const {
+std::list<shared_ptr<service> > const& host::get_services() const {
   // XXX
-  static std::list<service*> retval;
+  static std::list<shared_ptr<service> > retval;
   return retval;
 }
 

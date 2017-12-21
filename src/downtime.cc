@@ -193,11 +193,11 @@ unsigned long downtime::get_downtime_id() const {
   return _downtime_id;
 }
 
-int downtime::record() {
+int downtime::registration() {
   char start_time_string[MAX_DATETIME_LENGTH] = "";
   char end_time_string[MAX_DATETIME_LENGTH] = "";
-  host* hst(NULL);
-  service* svc(NULL);
+  host* hst;
+  service* svc;
   int hours(0);
   int minutes(0);
   int seconds(0);
@@ -298,6 +298,8 @@ int downtime::record() {
   if (_triggered_by == 0) {
 //    new_downtime_id = new unsigned long;
 //    *new_downtime_id = downtime_id;
+    unsigned long* id = new unsigned long;
+    *id = get_id();
     schedule_new_event(
       EVENT_SCHEDULED_DOWNTIME,
       true,
@@ -306,7 +308,7 @@ int downtime::record() {
       0,
       NULL,
       false,
-      (void*)get_id(),
+      (void*)id,
       NULL,
       0);
   }
@@ -316,12 +318,8 @@ int downtime::record() {
 
   /* if host/service is in a non-OK/UP state right now, see if we should start flexible time immediately */
   /* this is new logic added in 3.0rc3 */
-  if (_fixed == false) {
-    if (_type == HOST_DOWNTIME)
-      check_pending_flex_host_downtime(hst);
-    else
-      check_pending_flex_service_downtime(svc);
-  }
+  if (!_fixed)
+      _parent->check_pending_flex_downtime();
 #endif
   return (OK);
 }
@@ -443,10 +441,10 @@ int downtime::unschedule() {
   /* unschedule all downtime entries that were triggered by this one */
   downtime* dt;
   do {
-    std::map<unsigned long, shared_ptr<downtime> >::iterator next_it;
+    std::map<unsigned long, downtime* >::iterator next_it;
 
     dt = NULL;
-    for (std::map<unsigned long, shared_ptr<downtime> >::iterator
+    for (std::map<unsigned long, downtime* >::iterator
            it(scheduled_downtime_list.begin()),
            end(scheduled_downtime_list.end());
          it != end;
@@ -454,7 +452,7 @@ int downtime::unschedule() {
 
       next_it = it;
       ++next_it;
-      dt = it->second.get();
+      dt = it->second;
 
       if (dt->get_triggered_by() == downtime_id) {
         dt->unschedule();

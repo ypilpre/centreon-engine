@@ -477,29 +477,29 @@ void broker_comment_data(
   if (!(config->event_broker_options() & BROKER_COMMENT_DATA))
     return;
 
-  // Fill struct with relevant data.
-  nebstruct_comment_data ds;
-  ds.type = type;
-  ds.flags = flags;
-  ds.attr = attr;
-  ds.timestamp = get_broker_timestamp(timestamp);
-  ds.comment_type = comment_type;
-  ds.entry_type = entry_type;
-  ds.host_name = host_name.c_str();
-  ds.service_description = svc_description.c_str();
-  ds.object_ptr = NULL; // Not implemented yet.
-  ds.entry_time = entry_time;
-  ds.author_name = author_name.c_str();
-  ds.comment_data = comment_data.c_str();
-  ds.persistent = persistent;
-  ds.source = source;
-  ds.expires = expires;
-  ds.expire_time = expire_time;
-  ds.comment_id = comment_id;
-
-  // Make callbacks.
-  neb_make_callbacks(NEBCALLBACK_COMMENT_DATA, &ds);
-  return;
+//  // Fill struct with relevant data.
+//  nebstruct_comment_data ds;
+//  ds.type = type;
+//  ds.flags = flags;
+//  ds.attr = attr;
+//  ds.timestamp = get_broker_timestamp(timestamp);
+//  ds.comment_type = comment_type;
+//  ds.entry_type = entry_type;
+//  ds.host_name = host_name.c_str();
+//  ds.service_description = svc_description.c_str();
+//  ds.object_ptr = NULL; // Not implemented yet.
+//  ds.entry_time = entry_time;
+//  ds.author_name = author_name.c_str();
+//  ds.comment_data = comment_data.c_str();
+//  ds.persistent = persistent;
+//  ds.source = source;
+//  ds.expires = expires;
+//  ds.expire_time = expire_time;
+//  ds.comment_id = comment_id;
+//
+//  // Make callbacks.
+//  neb_make_callbacks(NEBCALLBACK_COMMENT_DATA, &ds);
+//  return;
 }
 
 /**

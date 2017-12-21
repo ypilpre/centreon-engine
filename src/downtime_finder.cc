@@ -68,7 +68,7 @@ downtime_finder::result_set downtime_finder::find_matching_all(
   downtime_finder::criteria_set const& criterias) {
   result_set result;
   // Process all downtimes.
-  for (std::map<unsigned long, shared_ptr<downtime> >::const_iterator
+  for (std::map<unsigned long, downtime* >::const_iterator
          dit(scheduled_downtime_list.begin()),
          dend(scheduled_downtime_list.end());
        dit != dend;

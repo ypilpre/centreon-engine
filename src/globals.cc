@@ -101,7 +101,7 @@ int                 verify_config(false);
 nebcallback*        neb_callback_list[NEBCALLBACK_NUMITEMS];
 pthread_t           worker_threads[TOTAL_WORKER_THREADS];
 sched_info          scheduling_info;
-std::map<unsigned long, shared_ptr<downtime> > scheduled_downtime_list;
+std::map<unsigned long, downtime* > scheduled_downtime_list;
 servicedependency*  servicedependency_list(NULL);
 servicedependency*  servicedependency_list_tail(NULL);
 serviceescalation*  serviceescalation_list(NULL);

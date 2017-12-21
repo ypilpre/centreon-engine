@@ -728,8 +728,8 @@ void processing::_wrapper_enable_host_svc_notifications(host* hst) {
          end(hst->get_services().end());
        it != end;
        ++it)
-    if (*it)
-      enable_service_notifications(*it);
+    if (it->get())
+      enable_service_notifications(it->get());
 }
 
 void processing::_wrapper_disable_host_svc_notifications(host* hst) {
@@ -738,8 +738,8 @@ void processing::_wrapper_disable_host_svc_notifications(host* hst) {
          end(hst->get_services().end());
        it != end;
        ++it)
-    if (*it)
-      disable_service_notifications(*it);
+    if (it->get())
+      disable_service_notifications(it->get());
 }
 
 void processing::_wrapper_disable_host_svc_checks(host* hst) {
@@ -748,8 +748,8 @@ void processing::_wrapper_disable_host_svc_checks(host* hst) {
          end(hst->get_services().end());
        it != end;
        ++it)
-    if (*it)
-      disable_service_checks(*it);
+    if (!it->is_null())
+      disable_service_checks(it->get());
 }
 
 void processing::_wrapper_enable_host_svc_checks(host* hst) {
@@ -758,8 +758,8 @@ void processing::_wrapper_enable_host_svc_checks(host* hst) {
          end(hst->get_services().end());
        it != end;
        ++it)
-    if (*it)
-      enable_service_checks(*it);
+    if (!it->is_null())
+      enable_service_checks(it->get());
 }
 
 void processing::_wrapper_set_host_notification_number(
@@ -795,8 +795,8 @@ void processing::_wrapper_enable_service_notifications(host* hst) {
          end(hst->get_services().end());
        it != end;
        ++it)
-    if (*it)
-      enable_service_notifications(*it);
+    if (!it->is_null())
+      enable_service_notifications(it->get());
 }
 
 void processing::_wrapper_disable_service_notifications(host* hst) {
@@ -805,8 +805,8 @@ void processing::_wrapper_disable_service_notifications(host* hst) {
          end(hst->get_services().end());
        it != end;
        ++it)
-    if (*it)
-      disable_service_notifications(*it);
+    if (!it->is_null())
+      disable_service_notifications(it->get());
 }
 
 void processing::_wrapper_enable_service_checks(host* hst) {
@@ -815,8 +815,8 @@ void processing::_wrapper_enable_service_checks(host* hst) {
          end(hst->get_services().end());
        it != end;
        ++it)
-    if (*it)
-      enable_service_checks(*it);
+    if (!it->is_null())
+      enable_service_checks(it->get());
 }
 
 void processing::_wrapper_disable_service_checks(host* hst) {
@@ -825,8 +825,8 @@ void processing::_wrapper_disable_service_checks(host* hst) {
          end(hst->get_services().end());
        it != end;
        ++it)
-    if (*it)
-      disable_service_checks(*it);
+    if (!it->is_null())
+      disable_service_checks(it->get());
 }
 
 void processing::_wrapper_enable_passive_service_checks(host* hst) {
@@ -835,8 +835,8 @@ void processing::_wrapper_enable_passive_service_checks(host* hst) {
          end(hst->get_services().end());
        it != end;
        ++it)
-    if (*it)
-      enable_passive_service_checks(*it);
+    if (!it->is_null())
+      enable_passive_service_checks(it->get());
 }
 
 void processing::_wrapper_disable_passive_service_checks(host* hst) {
@@ -845,8 +845,8 @@ void processing::_wrapper_disable_passive_service_checks(host* hst) {
          end(hst->get_services().end());
        it != end;
        ++it)
-    if (*it)
-      disable_passive_service_checks(*it);
+    if (!it->is_null())
+      disable_passive_service_checks(it->get());
 }
 
 void processing::_wrapper_set_service_notification_number(

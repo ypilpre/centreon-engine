@@ -1060,7 +1060,7 @@ int process_hostgroup_command(int cmd,
              end(temp_host->get_services().end());
            it != end;
            ++it) {
-        if ((temp_service = *it) == NULL)
+        if ((temp_service = it->get()) == NULL)
           continue;
 
         switch (cmd) {
@@ -1151,7 +1151,7 @@ int process_host_command(int cmd,
            end(temp_host->get_services().end());
          it != end;
          ++it) {
-      if ((temp_service = *it) == NULL)
+      if ((temp_service = it->get()) == NULL)
         continue;
       if (cmd == CMD_ENABLE_HOST_SVC_NOTIFICATIONS)
         enable_service_notifications(temp_service);
@@ -1167,7 +1167,7 @@ int process_host_command(int cmd,
            end(temp_host->get_services().end());
          it != end;
          ++it) {
-      if ((temp_service = *it) == NULL)
+      if ((temp_service = it->get()) == NULL)
         continue;
       if (cmd == CMD_ENABLE_HOST_SVC_CHECKS)
         enable_service_checks(temp_service);
@@ -1252,7 +1252,7 @@ int process_service_command(int cmd,
                             char* args) {
   char* host_name = NULL;
   char* svc_description = NULL;
-  service* temp_service = NULL;
+  shared_ptr<service> temp_service;
   char* str = NULL;
   char* buf[2] = { NULL, NULL };
   int intval = 0;
@@ -1273,57 +1273,57 @@ int process_service_command(int cmd,
 
   switch (cmd) {
   case CMD_ENABLE_SVC_NOTIFICATIONS:
-    enable_service_notifications(temp_service);
+    enable_service_notifications(temp_service.get());
     break;
 
   case CMD_DISABLE_SVC_NOTIFICATIONS:
-    disable_service_notifications(temp_service);
+    disable_service_notifications(temp_service.get());
     break;
 
   case CMD_ENABLE_SVC_CHECK:
-    enable_service_checks(temp_service);
+    enable_service_checks(temp_service.get());
     break;
 
   case CMD_DISABLE_SVC_CHECK:
-    disable_service_checks(temp_service);
+    disable_service_checks(temp_service.get());
     break;
 
   case CMD_ENABLE_SVC_EVENT_HANDLER:
-    enable_service_event_handler(temp_service);
+    enable_service_event_handler(temp_service.get());
     break;
 
   case CMD_DISABLE_SVC_EVENT_HANDLER:
-    disable_service_event_handler(temp_service);
+    disable_service_event_handler(temp_service.get());
     break;
 
   case CMD_ENABLE_SVC_FLAP_DETECTION:
-    enable_service_flap_detection(temp_service);
+    enable_service_flap_detection(temp_service.get());
     break;
 
   case CMD_DISABLE_SVC_FLAP_DETECTION:
-    disable_service_flap_detection(temp_service);
+    disable_service_flap_detection(temp_service.get());
     break;
 
   case CMD_ENABLE_PASSIVE_SVC_CHECKS:
-    enable_passive_service_checks(temp_service);
+    enable_passive_service_checks(temp_service.get());
     break;
 
   case CMD_DISABLE_PASSIVE_SVC_CHECKS:
-    disable_passive_service_checks(temp_service);
+    disable_passive_service_checks(temp_service.get());
     break;
 
   case CMD_START_OBSESSING_OVER_SVC:
-    start_obsessing_over_service(temp_service);
+    start_obsessing_over_service(temp_service.get());
     break;
 
   case CMD_STOP_OBSESSING_OVER_SVC:
-    stop_obsessing_over_service(temp_service);
+    stop_obsessing_over_service(temp_service.get());
     break;
 
   case CMD_SET_SVC_NOTIFICATION_NUMBER:
     if ((str = my_strtok(NULL, ";"))) {
       intval = atoi(str);
-      set_service_notification_number(temp_service, intval);
+      set_service_notification_number(temp_service.get(), intval);
     }
     break;
 
@@ -1362,7 +1362,7 @@ int process_servicegroup_command(int cmd,
   servicegroup_struct* temp_servicegroup = NULL;
   host* temp_host = NULL;
   host* last_host = NULL;
-  service* temp_service = NULL;
+  shared_ptr<service> temp_service;
 
   (void)entry_time;
 
@@ -1400,27 +1400,27 @@ int process_servicegroup_command(int cmd,
       switch (cmd) {
 
       case CMD_ENABLE_SERVICEGROUP_SVC_NOTIFICATIONS:
-        enable_service_notifications(temp_service);
+        enable_service_notifications(temp_service.get());
         break;
 
       case CMD_DISABLE_SERVICEGROUP_SVC_NOTIFICATIONS:
-        disable_service_notifications(temp_service);
+        disable_service_notifications(temp_service.get());
         break;
 
       case CMD_ENABLE_SERVICEGROUP_SVC_CHECKS:
-        enable_service_checks(temp_service);
+        enable_service_checks(temp_service.get());
         break;
 
       case CMD_DISABLE_SERVICEGROUP_SVC_CHECKS:
-        disable_service_checks(temp_service);
+        disable_service_checks(temp_service.get());
         break;
 
       case CMD_ENABLE_SERVICEGROUP_PASSIVE_SVC_CHECKS:
-        enable_passive_service_checks(temp_service);
+        enable_passive_service_checks(temp_service.get());
         break;
 
       case CMD_DISABLE_SERVICEGROUP_PASSIVE_SVC_CHECKS:
-        disable_passive_service_checks(temp_service);
+        disable_passive_service_checks(temp_service.get());
         break;
 
       default:

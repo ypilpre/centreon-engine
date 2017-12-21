@@ -65,8 +65,8 @@ static void generate_host_total_services(
            end(hst.get_services().end());
          it != end;
          ++it) {
-      service* temp_service(*it);
-      if (temp_service) {
+      shared_ptr<service> temp_service(*it);
+      if (!temp_service.is_null()) {
         total_host_services++;
         switch (temp_service->get_current_state()) {
          case STATE_OK:

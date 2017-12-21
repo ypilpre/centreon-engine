@@ -206,10 +206,10 @@ namespace         modules {
 
         char* name(my_strtok(args, ";"));
         char* description(my_strtok(NULL, ";"));
-        service* svc(::find_service(name, description));
-        if (!svc)
+        shared_ptr<service> svc(::find_service(name, description));
+        if (svc.is_null())
           return ;
-        (*fptr)(svc);
+        (*fptr)(svc.get());
       }
 
       template <void (*fptr)(service*, char*)>
@@ -222,10 +222,10 @@ namespace         modules {
 
         char* name(my_strtok(args, ";"));
         char* description(my_strtok(NULL, ";"));
-        service* svc(::find_service(name, description));
-        if (!svc)
+        shared_ptr<service> svc(::find_service(name, description));
+        if (svc.is_null())
           return ;
-        (*fptr)(svc, args + strlen(name) + strlen(description) + 2);
+        (*fptr)(svc.get(), args + strlen(name) + strlen(description) + 2);
       }
 
       template <void (*fptr)(service*)>

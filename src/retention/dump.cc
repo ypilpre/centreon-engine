@@ -174,12 +174,12 @@ std::ostream& dump::downtime(std::ostream& os, engine::downtime const& obj) {
  *  @return The output stream.
  */
 std::ostream& dump::downtimes(std::ostream& os) {
-  for (std::map<unsigned long, shared_ptr<engine::downtime> >::const_iterator
+  for (std::map<unsigned long, engine::downtime* >::const_iterator
          it(scheduled_downtime_list.begin()),
          end(scheduled_downtime_list.begin());
        it != end;
        ++it) {
-    dump::downtime(os, *it->second.get());
+    dump::downtime(os, *it->second);
   }
   return (os);
 }

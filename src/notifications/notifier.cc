@@ -549,7 +549,7 @@ int notifier::schedule_downtime(
     return (ERROR);
 
   /* add a new downtime entry */
-  downtime* dt = new downtime(
+  downtime* dt(new downtime(
                        type,
                        this,
                        entry_time,
@@ -559,15 +559,15 @@ int notifier::schedule_downtime(
                        end_time,
                        fixed,
                        triggered_by,
-                       duration);
+                       duration));
   if (scheduled_downtime_list.empty())
     dt->set_id(1);
   else
     dt->set_id(scheduled_downtime_list.rbegin()->first + 1);
-  scheduled_downtime_list[dt->get_id()] = shared_ptr<downtime>(dt);
+  scheduled_downtime_list.insert(std::make_pair(dt->get_id(), dt));
 
   /* register the scheduled downtime */
-  dt->record();
+  dt->registration();
 
   if (type == downtime::HOST_DOWNTIME) {
     host* temp_host = static_cast<host*>(this);
@@ -590,12 +590,12 @@ int notifier::schedule_downtime(
         break;
     }
     /* check all child hosts... */
-    for (std::list<host*>::const_iterator
+    for (std::list<shared_ptr<host> >::const_iterator
            it(temp_host->get_children().begin()),
            end(temp_host->get_children().end());
          it != end;
          ++it) {
-      host* child_host(*it);
+      shared_ptr<host> child_host(*it);
 
       /* recurse... */
       child_host->schedule_downtime(

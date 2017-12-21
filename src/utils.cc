@@ -1123,7 +1123,7 @@ com::centreon::engine::host* find_host(std::string const& name) {
  *
  *  @return service object if found, NULL otherwise.
  */
-com::centreon::engine::service* find_service(
+shared_ptr<com::centreon::engine::service> find_service(
                                   std::string const& host_name,
                                   std::string const& description) {
   if (host_name.empty() || description.empty())
@@ -1136,7 +1136,7 @@ com::centreon::engine::service* find_service(
   if (it == configuration::applier::state::instance().services().end())
     return NULL;
 
-  return (it->second.get());
+  return (it->second);
 }
 
 /**

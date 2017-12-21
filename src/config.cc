@@ -77,7 +77,7 @@ static int dfs_host_path(host* root) {
 
     /* If a child is not checked, check it */
     if (child_status == DFS_UNCHECKED)
-      child_status = dfs_host_path(*it);
+      child_status = dfs_host_path((*it).get());
 
     /* If a child already temporary checked, its a problem,
      * loop inside, and its a acked status */

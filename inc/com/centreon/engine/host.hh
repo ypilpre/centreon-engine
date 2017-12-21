@@ -57,19 +57,19 @@ class                        host : public monitorable {
   bool                       get_stalk_on_up() const;
 
   // Links with other objects.
-  void                       add_child(host* hst);
+  void                       add_child(shared_ptr<host> hst);
   void                       clear_children();
-  std::list<host*> const&    get_children() const;
+  std::list<shared_ptr<host> > const&    get_children() const;
   void                       add_group(hostgroup_struct* hg);
   void                       clear_groups();
   umap<std::string, hostgroup_struct*> const&
                              get_groups() const;
-  void                       add_parent(host* hst);
+  void                       add_parent(shared_ptr<host> hst);
   void                       clear_parents();
-  std::list<host*> const&    get_parents() const;
-  void                       add_service(service* svc);
+  std::list<shared_ptr<host> > const&    get_parents() const;
+  void                       add_service(shared_ptr<service> svc);
   void                       clear_services();
-  std::list<service*> const& get_services() const;
+  std::list<shared_ptr<service> > const& get_services() const;
   int                        get_total_service_check_interval() const;
 
   // State runtime.
@@ -103,7 +103,8 @@ class                        host : public monitorable {
  private:
   void                       _internal_copy(host const& other);
 
-  std::list<host*>           _children;
+  std::list<shared_ptr<host> >
+                             _children;
   std::string                _address;
   std::string                _alias;
   int                        _circular_path_checked;
@@ -117,7 +118,8 @@ class                        host : public monitorable {
   time_t                     _last_time_up;
   bool                       _notify_on_down;
   bool                       _notify_on_unreachable;
-  std::list<host*>           _parents;
+  std::list<shared_ptr<host> >
+                             _parents;
   bool                       _should_reschedule_current_check;
   bool                       _stalk_on_down;
   bool                       _stalk_on_unreachable;
@@ -129,6 +131,6 @@ CCE_END()
 
 using com::centreon::engine::host;
 
-typedef std::list<host*> host_set;
+typedef std::list<shared_ptr<host> > host_set;
 
 #endif // !CCE_HOST_HH
