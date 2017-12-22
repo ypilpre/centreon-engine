@@ -83,7 +83,7 @@ TEST_F(Downtime, SimpleServiceDowntime) {
     40, 60,
     false,
     0, 20) == 0);
-  downtime* dt(scheduled_downtime_list.begin()->second);
+  std::auto_ptr<downtime> dt(scheduled_downtime_list.begin()->second);
 
   // Only one downtime.
   ASSERT_EQ(dt->get_id(), 1);
@@ -93,7 +93,11 @@ TEST_F(Downtime, SimpleServiceDowntime) {
   ASSERT_EQ(dt->get_host_name(), "test_host");
   ASSERT_EQ(dt->get_service_description(), "test description");
 
-  set_time(25);
+  set_time(50);
   dt->unschedule();
+  comment* cm = comment_list;
+  ASSERT_EQ(std::string(cm->comment_data), "This service has been scheduled for flexible downtime starting between 01-01-1970 01:00:40 and 01-01-1970 01:01:00 and lasting for a period of 0 hours and 0 minutes. Notifications for the service will not be sent out during that time period.");
+  cm = cm->next;
+  ASSERT_TRUE(cm == NULL);
   ASSERT_TRUE(scheduled_downtime_list.empty());
 }

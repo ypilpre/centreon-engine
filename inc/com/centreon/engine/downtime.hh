@@ -67,9 +67,10 @@ class                downtime {
   unsigned long      get_id() const;
   void               set_id(unsigned long id);
   int                get_incremented_pending_downtime() const;
-  void               inc_incremented_pending_downtime();
-  void               dec_incremented_pending_downtime();
-  bool               is_in_effect() const;
+  void               set_incremented_pending_downtime();
+  void               unset_incremented_pending_downtime();
+  bool               get_in_effect() const;
+  void               set_in_effect(bool in_effect);
   std::string const& get_service_description() const;
   time_t             get_entry_time() const;
   time_t             get_start_time() const;
@@ -82,6 +83,10 @@ class                downtime {
   std::string const& get_comment() const;
   int                unschedule();
   int                registration();
+  notifications::notifier* const
+                     get_parent() const;
+  void               handle();
+  bool               get_start_flex_downtime() const;
 
  private:
   void               _internal_copy(downtime const& other);
@@ -90,7 +95,7 @@ class                downtime {
   std::string        _author;
   std::string        _comment_data;
   unsigned long      _comment_id;
-  int                _incremented_pending_downtime;
+  bool               _incremented_pending_downtime;
   bool               _in_effect;
   time_t             _start_time;
   time_t             _end_time;
@@ -101,6 +106,7 @@ class                downtime {
   unsigned long      _duration;
   unsigned long      _downtime_id;
   downtime_type      _type;
+  bool               _start_flex_downtime;
 };
 
 CCE_END()

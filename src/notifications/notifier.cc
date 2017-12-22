@@ -24,6 +24,7 @@
 #include "com/centreon/engine/host.hh"
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/notifications/notifier.hh"
+#include "com/centreon/engine/service.hh"
 #include "com/centreon/shared_ptr.hh"
 
 using namespace com::centreon;
@@ -498,11 +499,96 @@ void notifier::dec_pending_flex_downtime() {
   --_pending_flex_downtime;
 }
 
-bool notifier::check_pending_flex_downtime() {
-  // FIXME DBR: to implement...
-  return true;
-}
+/////////////////////////////////////////////////////////
+///* checks for flexible (non-fixed) host downtime that should start now */
+//int check_pending_flex_host_downtime(host* hst) {
+//  scheduled_downtime* temp_downtime(NULL);
+//  time_t current_time(0L);
+//
+//  logger(dbg_functions, basic)
+//    << "check_pending_flex_host_downtime()";
+//
+//  if (hst == NULL)
+//    return (ERROR);
+//
+//  time(&current_time);
+//
+//  /* if host is currently up, nothing to do */
+//  if (hst->current_state == HOST_UP)
+//    return (OK);
+//
+//  /* check all downtime entries */
+//  for (temp_downtime = scheduled_downtime_list;
+//       temp_downtime != NULL;
+//       temp_downtime = temp_downtime->next) {
+//    if (temp_downtime->type != HOST_DOWNTIME
+//        || temp_downtime->fixed == true
+//        || temp_downtime->is_in_effect == true
+//        || temp_downtime->triggered_by != 0)
+//      continue;
+//
+//    /* this entry matches our host! */
+//    if (find_host(temp_downtime->host_name) == hst) {
+//      /* if the time boundaries are okay, start this scheduled downtime */
+//      if (temp_downtime->start_time <= current_time
+//          && current_time <= temp_downtime->end_time) {
+//
+//        logger(dbg_downtime, basic)
+//          << "Flexible downtime (id=" << temp_downtime->downtime_id
+//          << ") for host '" << hst->name << "' starting now...";
+//
+//        temp_downtime->start_flex_downtime = true;
+//        handle_scheduled_downtime(temp_downtime);
+//      }
+//    }
+//  }
+//  return (OK);
+//}
+//
+/////////////////////////////////////////////////////////
 
+/**
+ *  Checks for flexible (non-fixed) notifier downtime that should start now.
+ */
+void notifier::check_pending_flex_downtime() {
+  time_t current_time(0L);
+
+  logger(dbg_functions, basic)
+    << "check_pending_flex_downtime()";
+
+  time(&current_time);
+
+  /* if notifier is currently ok, nothing to do */
+  if (get_current_state() == STATE_OK)
+    return ;
+
+  /* Check all downtime entries */
+  for (std::map<unsigned long, downtime*>::const_iterator
+         it(scheduled_downtime_list.begin()),
+         end(scheduled_downtime_list.begin());
+       it != end;
+       ++it) {
+    downtime* temp_downtime = it->second;
+
+    if (temp_downtime->get_type() != downtime::SERVICE_DOWNTIME
+        || temp_downtime->get_fixed()
+        || temp_downtime->get_in_effect()
+        || temp_downtime->get_triggered_by() != 0)
+      continue;
+
+    /* This entry matches our notifier */
+    /* and the time boundaries are ok, start this scheduled downtime */
+    if (temp_downtime->get_parent() == this
+        && temp_downtime->get_start_time() <= current_time
+        && current_time <= temp_downtime->get_end_time()) {
+      logger(dbg_downtime, basic)
+        << "Flexible downtime (id=" << temp_downtime->get_id()
+        << ") for notifier '" << get_info() << "' starting now...";
+
+      temp_downtime->handle();
+    }
+  }
+}
 time_t notifier::get_next_notification() const {
   // FIXME DBR: to implement...
   return 0;
@@ -614,3 +700,15 @@ int notifier::schedule_downtime(
   return (OK);
 }
 
+std::string notifier::get_info() {
+  std::ostringstream oss;
+  service* svc = dynamic_cast<service*>(this);
+
+  if (svc)
+    oss << "Notifier: service '" << svc->get_description() << "' ; host '"
+        << svc->get_host_name() << "'";
+  else
+    oss << "Notifier: host '"
+        << svc->get_host_name() << "'";
+  return oss.str();
+}

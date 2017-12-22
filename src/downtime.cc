@@ -351,7 +351,7 @@ int downtime::unschedule() {
 
   /* decrement pending flex downtime if necessary ... */
   if (!get_fixed()
-      && get_incremented_pending_downtime() == true) {
+      && get_incremented_pending_downtime()) {
     if (get_type() == HOST_DOWNTIME)
       hst->dec_pending_flex_downtime();
     else
@@ -359,7 +359,7 @@ int downtime::unschedule() {
   }
 
   /* decrement the downtime depth variable and update status data if necessary */
-  if (is_in_effect()) {
+  if (get_in_effect()) {
 
     /* send data to event broker */
     attr = NEBATTR_DOWNTIME_STOP_CANCELLED;
@@ -469,14 +469,286 @@ int downtime::get_incremented_pending_downtime() const {
   return _incremented_pending_downtime;
 }
 
-void downtime::inc_incremented_pending_downtime() {
-  ++_incremented_pending_downtime;
+void downtime::set_incremented_pending_downtime() {
+  _incremented_pending_downtime = true;
 }
 
-void downtime::dec_incremented_pending_downtime() {
-  --_incremented_pending_downtime;
+void downtime::unset_incremented_pending_downtime() {
+  _incremented_pending_downtime = false;
 }
 
-bool downtime::is_in_effect() const {
+bool downtime::get_in_effect() const {
   return _in_effect;
+}
+
+void downtime::set_in_effect(bool in_effect) {
+  _in_effect = in_effect;
+}
+
+notifications::notifier* const downtime::get_parent() const {
+  return _parent;
+}
+
+void downtime::handle() {
+  int attr(0);
+  host* hst(NULL);
+  service* svc(NULL);
+  downtime* this_downtime;
+  time_t event_time(0UL);
+
+  logger(dbg_functions, basic)
+    << "handle downtime " << get_id();
+
+  /* find the host or service associated with this downtime */
+  if (get_type() == HOST_DOWNTIME)
+    hst = static_cast<host*>(get_parent());
+  else if (get_type() == SERVICE_DOWNTIME)
+    svc = static_cast<service*>(get_parent());
+  else
+    throw engine_error()
+             << "Error while handling downtime "
+             << static_cast<unsigned int>(get_id()) << ": "
+             << "notifier is not a host nor a service";
+
+  /* if downtime is flexible and notifier is in an ok state,
+     don't do anything right now (wait for event handler to kick it off) */
+  /* start_flex_downtime variable is set to true by event handler functions */
+  if (!get_fixed()) {
+
+    /* we're not supposed to force a start of flex downtime... */
+    if (!get_start_flex_downtime()) {
+
+      /* host is up or service is ok, so we don't really do anything right now */
+      if ((get_type() == HOST_DOWNTIME
+           && _parent->get_current_state() == HOST_UP)
+          || (get_type() == SERVICE_DOWNTIME
+              && _parent->get_current_state() == STATE_OK)) {
+
+        _parent->inc_pending_flex_downtime();
+        set_incremented_pending_downtime();
+
+        /*** SINCE THE FLEX DOWNTIME MAY NEVER START,
+          WE HAVE TO PROVIDE A WAY OF EXPIRING UNUSED DOWNTIME... ***/
+
+        schedule_new_event(
+          EVENT_EXPIRE_DOWNTIME,
+          true,
+          get_end_time() + 1,
+          false,
+          0,
+          NULL,
+          false,
+          NULL,
+          NULL,
+          0);
+        return ;
+      }
+    }
+  }
+
+  /* have we come to the end of the scheduled downtime? */
+  if (get_in_effect()) {
+
+    /* send data to event broker */
+    attr = NEBATTR_DOWNTIME_STOP_NORMAL;
+    broker_downtime_data(
+      NEBTYPE_DOWNTIME_STOP,
+      NEBFLAG_NONE,
+      attr,
+      get_type(),
+      get_host_name(),
+      get_service_description(),
+      get_entry_time(),
+      get_author(),
+      get_comment(),
+      get_start_time(),
+      get_end_time(),
+      get_fixed(),
+      get_triggered_by(),
+      get_duration(),
+      get_id(),
+      NULL);
+
+    /* decrement the downtime depth variable */
+    _parent->dec_scheduled_downtime_depth();
+
+    if (get_type() == HOST_DOWNTIME
+        && _parent->get_scheduled_downtime_depth() == 0) {
+
+      logger(dbg_downtime, basic)
+        << "Host '" << hst->get_host_name() << "' has exited from a period "
+        "of scheduled downtime (id=" << get_id() << ").";
+
+      /* log a notice - this one is parsed by the history CGI */
+      logger(log_info_message, basic)
+        << "HOST DOWNTIME ALERT: " << hst->get_host_name()
+        << ";STOPPED; Host has exited from a period of scheduled "
+        "downtime";
+
+      /* send a notification */
+      _parent->notify(
+                 notifier::DOWNTIMESTOP,
+                 get_author(),
+                 get_comment(),
+                 NOTIFICATION_OPTION_NONE);
+//      host_notification(
+//        hst,
+//        NOTIFICATION_DOWNTIMEEND,
+//        temp_downtime->author,
+//        temp_downtime->comment,
+//        NOTIFICATION_OPTION_NONE);
+    }
+    else if (get_type() == SERVICE_DOWNTIME
+             && _parent->get_scheduled_downtime_depth() == 0) {
+
+      logger(dbg_downtime, basic)
+        << "Service '" << svc->get_description() << "' on host '"
+        << svc->get_host_name() << "' has exited from a period of "
+        "scheduled downtime (id=" << get_id() << ").";
+
+      /* log a notice - this one is parsed by the history CGI */
+      logger(log_info_message, basic)
+        << "SERVICE DOWNTIME ALERT: " << svc->get_host_name()
+        << ";" << svc->get_description()
+        << ";STOPPED; Service has exited from a period of scheduled "
+        "downtime";
+
+      /* send a notification */
+      svc->notify(
+             notifier::DOWNTIMESTOP,
+             get_author(),
+             get_comment(),
+             NOTIFICATION_OPTION_NONE);
+//      service_notification(
+//        svc,
+//        NOTIFICATION_DOWNTIMEEND,
+//        temp_downtime->author,
+//        temp_downtime->comment,
+//        NOTIFICATION_OPTION_NONE);
+    }
+
+    /* update the status data */
+    _parent->update_status(false);
+//    if (temp_downtime->type == HOST_DOWNTIME)
+//      update_host_status(hst, false);
+//    else
+//      update_service_status(svc, false);
+
+    /* decrement pending flex downtime if necessary */
+    if (!get_fixed()
+        && get_incremented_pending_downtime()) {
+      if (_parent->get_pending_flex_downtime() > 0)
+        hst->dec_pending_flex_downtime();
+    }
+
+    /* handle (stop) downtime that is triggered by this one */
+    while (true) {
+      /* list contents might change by recursive calls, so we use this inefficient method to prevent segfaults */
+      for (std::map<unsigned long, downtime*>::iterator
+             it(scheduled_downtime_list.begin()),
+             end(scheduled_downtime_list.end());
+           it != end;
+           ++it) {
+        this_downtime = it->second;
+        if (this_downtime->get_triggered_by() == get_id()) {
+          this_downtime->handle();
+          //FIXME DBR break here but not at the end of the same method...
+          break;
+        }
+      }
+    }
+
+    /* delete downtime entry */
+    scheduled_downtime_list.erase(get_id());
+  }
+  /* else we are just starting the scheduled downtime */
+  else {
+
+    /* send data to event broker */
+    broker_downtime_data(
+      NEBTYPE_DOWNTIME_START,
+      NEBFLAG_NONE,
+      NEBATTR_NONE,
+      get_type(),
+      get_host_name(),
+      get_service_description(),
+      get_entry_time(),
+      get_author(),
+      get_comment(),
+      get_start_time(),
+      get_end_time(),
+      get_fixed(),
+      get_triggered_by(),
+      get_duration(),
+      get_id(),
+      NULL);
+
+    logger(dbg_downtime, basic)
+      << _parent->get_info() << " has entered a period of "
+      << "scheduled downtime (id=" << get_id() << ").";
+
+    if (get_type() == HOST_DOWNTIME)
+      /* log a notice - this one is parsed by the history CGI */
+      logger(log_info_message, basic)
+        << "HOST DOWNTIME ALERT: " << hst->get_host_name()
+        << ";STARTED; Host has entered a period of scheduled downtime";
+    else
+      /* log a notice - this one is parsed by the history CGI */
+      logger(log_info_message, basic)
+        << "SERVICE DOWNTIME ALERT: " << svc->get_host_name()
+        << ";" << svc->get_description()
+        << ";STARTED; Service has entered a period of scheduled "
+        "downtime";
+
+    /* send a notification */
+    _parent->notify(
+      notifier::DOWNTIMESTART,
+      get_author(),
+      get_comment(),
+      NOTIFICATION_OPTION_NONE);
+
+    /* increment the downtime depth variable */
+    _parent->inc_scheduled_downtime_depth();
+
+    /* set the in effect flag */
+    set_in_effect(true);
+
+    _parent->update_status(false);
+
+    /* schedule an event */
+    if (!get_fixed())
+      event_time
+        = (time_t)((unsigned long)time(NULL) + get_duration());
+    else
+      event_time = get_end_time();
+
+    /* FIXME DBR: not beautiful :-( */
+    unsigned long* new_downtime_id = new unsigned long(get_id());
+    schedule_new_event(
+      EVENT_SCHEDULED_DOWNTIME,
+      true,
+      event_time,
+      false,
+      0,
+      NULL,
+      false,
+      (void*)new_downtime_id,
+      NULL,
+      0);
+
+    /* handle (start) downtime that is triggered by this one */
+    for (std::map<unsigned long, downtime*>::iterator
+           it(scheduled_downtime_list.begin()),
+           end(scheduled_downtime_list.end());
+         it != end;
+         ++it) {
+      this_downtime = it->second;
+      if (get_triggered_by() == get_id())
+        this_downtime->handle();
+    }
+  }
+}
+
+bool downtime::get_start_flex_downtime() const {
+  return _start_flex_downtime;
 }

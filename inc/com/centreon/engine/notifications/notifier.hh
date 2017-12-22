@@ -122,7 +122,7 @@ namespace           notifications {
     int               get_pending_flex_downtime() const;
     void              inc_pending_flex_downtime();
     void              dec_pending_flex_downtime();
-    bool              check_pending_flex_downtime();
+    void              check_pending_flex_downtime();
     void              inc_scheduled_downtime_depth();
     void              dec_scheduled_downtime_depth();
     int               get_scheduled_downtime_depth() const;
@@ -163,6 +163,7 @@ namespace           notifications {
                         unsigned long duration,
                         downtime_propagation propagate =
                           DOWNTIME_PROPAGATE_NONE);
+    std::string       get_info();
 
    protected:
     virtual void      _checkable_macro_builder(nagios_macros& mac) = 0;
