@@ -127,6 +127,9 @@ namespace              checks {
     void               set_percent_state_change(double change);
     bool               is_in_downtime() const;
 
+    // Status info
+    void               update_status(int aggregated_dump);
+
     // Event handler.
     commands::command* get_event_handler() const;
     void               set_event_handler(
