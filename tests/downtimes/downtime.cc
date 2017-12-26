@@ -67,9 +67,10 @@ class Downtime : public ::testing::Test {
   }
 };
 
-// Given a notifier in downtime
-// When the notify method is called with PROBLEM type
-// Then the filter method returns false and no notification is sent.
+// Given a service in downtime
+// When a downtime is scheduled,
+// Then a downtime is created with id=1 and no comment.
+// And host name and service description are available from the downtime.
 TEST_F(Downtime, SimpleServiceDowntime) {
   shared_ptr<engine::service> svc(find_service(
                                     "test_host",
@@ -81,7 +82,7 @@ TEST_F(Downtime, SimpleServiceDowntime) {
     "admin",
     "test downtime",
     40, 60,
-    false,
+    true,
     0, 20) == 0);
   std::auto_ptr<downtime> dt(scheduled_downtime_list.begin()->second);
 
@@ -90,13 +91,21 @@ TEST_F(Downtime, SimpleServiceDowntime) {
   // No comment for now.
   ASSERT_EQ(dt->get_comment_id(), 0);
 
+  // And host name and service description are available
   ASSERT_EQ(dt->get_host_name(), "test_host");
   ASSERT_EQ(dt->get_service_description(), "test description");
 
-  set_time(50);
+  // When it is time to start the downtime
+  set_time(41);
+  // And the handle method is called, the downtime is in effect
+  dt->handle();
+  ASSERT_EQ(dt->get_in_effect(), true);
+
+  set_time(80);
+  dt->handle();
   dt->unschedule();
   comment* cm = comment_list;
-  ASSERT_EQ(std::string(cm->comment_data), "This service has been scheduled for flexible downtime starting between 01-01-1970 01:00:40 and 01-01-1970 01:01:00 and lasting for a period of 0 hours and 0 minutes. Notifications for the service will not be sent out during that time period.");
+  ASSERT_TRUE(strcmp(cm->comment_data, "This service has been scheduled for fixed downtime from 01-01-1970 01:00:40 to 01-01-1970 01:01:00. Notifications for the service will not be sent out during that time period.") == 0);
   cm = cm->next;
   ASSERT_TRUE(cm == NULL);
   ASSERT_TRUE(scheduled_downtime_list.empty());

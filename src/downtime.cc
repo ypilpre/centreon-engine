@@ -231,7 +231,7 @@ int downtime::registration() {
   if (_fixed)
     oss << "This " << type_string
         << " has been scheduled for fixed downtime from "
-        << start_time_string << " to " << end_time_string
+        << start_time_string << " to " << end_time_string << "."
         << " Notifications for the " << type_string
         << " will not be sent out during that time period.";
   else
@@ -328,9 +328,6 @@ unsigned long downtime::get_comment_id() const {
   return _comment_id;
 }
 
-void downtime::set_comment_id(unsigned long id) {
-  _comment_id = id;
-}
 
 /* unschedules a host or service downtime */
 int downtime::unschedule() {
@@ -351,12 +348,8 @@ int downtime::unschedule() {
 
   /* decrement pending flex downtime if necessary ... */
   if (!get_fixed()
-      && get_incremented_pending_downtime()) {
-    if (get_type() == HOST_DOWNTIME)
-      hst->dec_pending_flex_downtime();
-    else
-      svc->dec_pending_flex_downtime();
-  }
+      && get_incremented_pending_downtime())
+    _parent->dec_pending_flex_downtime();
 
   /* decrement the downtime depth variable and update status data if necessary */
   if (get_in_effect()) {
@@ -642,21 +635,21 @@ void downtime::handle() {
     }
 
     /* handle (stop) downtime that is triggered by this one */
-    while (true) {
+    std::map<unsigned long, downtime*>::iterator it, end;
+    do {
       /* list contents might change by recursive calls, so we use this inefficient method to prevent segfaults */
-      for (std::map<unsigned long, downtime*>::iterator
-             it(scheduled_downtime_list.begin()),
-             end(scheduled_downtime_list.end());
+      for (it = scheduled_downtime_list.begin(),
+           end = scheduled_downtime_list.end();
            it != end;
            ++it) {
         this_downtime = it->second;
         if (this_downtime->get_triggered_by() == get_id()) {
           this_downtime->handle();
-          //FIXME DBR break here but not at the end of the same method...
           break;
         }
       }
     }
+    while (it != end);
 
     /* delete downtime entry */
     scheduled_downtime_list.erase(get_id());
