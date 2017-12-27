@@ -21,6 +21,7 @@
 #include "com/centreon/engine/downtime.hh"
 #include "com/centreon/engine/downtime_finder.hh"
 #include "com/centreon/engine/globals.hh"
+#include "com/centreon/engine/service.hh"
 #include "com/centreon/shared_ptr.hh"
 
 using namespace com::centreon::engine;
@@ -108,7 +109,8 @@ bool downtime_finder::_match_criteria(
     retval = (crit.second == dt->get_host_name());
   }
   else if (crit.first == "service") {
-    retval = (crit.second == dt->get_service_description());
+    service* svc = static_cast<service*>(dt->get_parent());
+    retval = (crit.second == svc->get_description());
   }
   else if (crit.first == "start") {
     time_t expected(strtoll(crit.second.c_str(), NULL, 0));

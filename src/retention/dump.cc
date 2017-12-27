@@ -27,6 +27,7 @@
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/objects/comment.hh"
 #include "com/centreon/engine/retention/dump.hh"
+#include "com/centreon/engine/service.hh"
 
 using namespace com::centreon::engine;
 using namespace com::centreon::engine::logging;
@@ -151,8 +152,10 @@ std::ostream& dump::downtime(std::ostream& os, engine::downtime const& obj) {
   else
     os << "servicedowntime {\n";
   os << "host_name=" << obj.get_host_name() << "\n";
-  if (obj.get_type() == downtime::SERVICE_DOWNTIME)
-    os << "service_description=" << obj.get_service_description() << "\n";
+  if (obj.get_type() == downtime::SERVICE_DOWNTIME) {
+    engine::service* svc(static_cast<engine::service*>(obj.get_parent()));
+    os << "service_description=" << svc->get_description() << "\n";
+  }
   os << "author=" << obj.get_author() << "\n"
     "comment=" << obj.get_comment() << "\n"
     "duration=" << obj.get_duration() << "\n"

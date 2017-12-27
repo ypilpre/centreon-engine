@@ -71,12 +71,19 @@ downtime::downtime(downtime const& other)
  *  Destructor.
  */
 downtime::~downtime() {
+  std::string svc_descr;
+
   /* remove the downtime from the list in memory */
   /* first remove the comment associated with this downtime */
-  if (get_type() == HOST_DOWNTIME)
+  if (get_type() == HOST_DOWNTIME) {
     delete_host_comment(get_comment_id());
-  else
+    svc_descr = "";
+  }
+  else {
+    service* svc(static_cast<service*>(get_parent()));
     delete_service_comment(get_comment_id());
+    svc_descr = svc->get_description();
+  }
 
   /* send data to event broker */
   broker_downtime_data(
@@ -85,7 +92,7 @@ downtime::~downtime() {
     NEBATTR_NONE,
     get_type(),
     get_host_name(),
-    get_service_description(),
+    svc_descr,
     get_entry_time(),
     get_author(),
     get_comment(),
@@ -142,19 +149,6 @@ unsigned long downtime::get_id() const {
 
 void downtime::set_id(unsigned long id) {
   _downtime_id = id;
-}
-
-std::string const& downtime::get_service_description() const {
-  if (get_type() == SERVICE_DOWNTIME) {
-    service* svc = static_cast<service*>(_parent);
-    return svc->get_description();
-  }
-  else {
-    throw engine_error()
-             << "Error on downtime " << static_cast<unsigned int>(get_id()) << ": "
-             << "'Service description' is non sense"
-             << "on a notifier other than a service";
-  }
 }
 
 time_t downtime::get_entry_time() const {
@@ -336,15 +330,20 @@ int downtime::unschedule() {
   service* svc(NULL);
   timed_event* temp_event(NULL);
   int attr(0);
+  std::string descr;
 
   logger(dbg_functions, basic)
     << "unschedule_downtime()";
 
   /* find the host or service associated with this downtime */
-  if (get_type() == HOST_DOWNTIME)
+  if (get_type() == HOST_DOWNTIME) {
     hst = static_cast<host*>(_parent);
-  else
+    descr = "";
+  }
+  else {
     svc = static_cast<service*>(_parent);
+    descr = svc->get_description();
+  }
 
   /* decrement pending flex downtime if necessary ... */
   if (!get_fixed()
@@ -362,7 +361,7 @@ int downtime::unschedule() {
       attr,
       get_type(),
       get_host_name(),
-      get_service_description(),
+      descr,
       get_entry_time(),
       get_author(),
       get_comment(),
@@ -488,15 +487,20 @@ void downtime::handle() {
   service* svc(NULL);
   downtime* this_downtime;
   time_t event_time(0UL);
+  std::string descr;
 
   logger(dbg_functions, basic)
     << "handle downtime " << get_id();
 
   /* find the host or service associated with this downtime */
-  if (get_type() == HOST_DOWNTIME)
+  if (get_type() == HOST_DOWNTIME) {
     hst = static_cast<host*>(get_parent());
-  else if (get_type() == SERVICE_DOWNTIME)
+    descr = "";
+  }
+  else if (get_type() == SERVICE_DOWNTIME) {
     svc = static_cast<service*>(get_parent());
+    descr = svc->get_description();
+  }
   else
     throw engine_error()
              << "Error while handling downtime "
@@ -550,7 +554,7 @@ void downtime::handle() {
       attr,
       get_type(),
       get_host_name(),
-      get_service_description(),
+      descr,
       get_entry_time(),
       get_author(),
       get_comment(),
@@ -664,7 +668,7 @@ void downtime::handle() {
       NEBATTR_NONE,
       get_type(),
       get_host_name(),
-      get_service_description(),
+      descr,
       get_entry_time(),
       get_author(),
       get_comment(),

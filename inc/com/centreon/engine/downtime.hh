@@ -71,7 +71,6 @@ class                downtime {
   void               unset_incremented_pending_downtime();
   bool               get_in_effect() const;
   void               set_in_effect(bool in_effect);
-  std::string const& get_service_description() const;
   time_t             get_entry_time() const;
   time_t             get_start_time() const;
   time_t             get_end_time() const;
