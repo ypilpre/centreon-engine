@@ -1102,16 +1102,18 @@ timeperiod& find_timeperiod(std::string const& name) {
  *
  *  @return host object if found, NULL otherwise.
  */
-com::centreon::engine::host* find_host(std::string const& name) {
+shared_ptr<com::centreon::engine::host> find_host(std::string const& name) {
   if (name.empty())
-    return NULL;
+    throw (not_found_error()
+      << "Could not find a host with an empty name");
 
   umap<std::string, shared_ptr<com::centreon::engine::host> >::const_iterator
     it(configuration::applier::state::instance().hosts().find(name));
   if (it == configuration::applier::state::instance().hosts().end())
-    return NULL;
+    throw (not_found_error()
+      << "Could not find host '" << name << "'");
 
-  return (it->second.get());
+  return (it->second);
 }
 
 /**

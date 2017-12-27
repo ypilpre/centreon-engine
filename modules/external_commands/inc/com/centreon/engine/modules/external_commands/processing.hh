@@ -147,10 +147,10 @@ namespace         modules {
         (void)entry_time;
 
         char* name(my_strtok(args, ";"));
-        host* hst(::find_host(name));
-        if (!hst)
+        shared_ptr<host> hst(::find_host(name));
+        if (hst.is_null())
           return ;
-        (*fptr)(hst);
+        (*fptr)(hst.get());
       }
 
       template <void (*fptr)(host*, char*)>
@@ -162,10 +162,10 @@ namespace         modules {
         (void)entry_time;
 
         char* name(my_strtok(args, ";"));
-        host* hst(::find_host(name));
-        if (!hst)
+        shared_ptr<host> hst(::find_host(name));
+        if (hst.is_null())
           return ;
-        (*fptr)(hst, args + strlen(name) + 1);
+        (*fptr)(hst.get(), args + strlen(name) + 1);
       }
 
       template <void (*fptr)(host*)>

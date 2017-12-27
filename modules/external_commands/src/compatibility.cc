@@ -1103,7 +1103,7 @@ int process_host_command(int cmd,
                          time_t entry_time,
                          char* args) {
   char* host_name = NULL;
-  host* temp_host = NULL;
+  shared_ptr<host> temp_host;
   service* temp_service = NULL;
   char* str = NULL;
   char* buf[2] = { NULL, NULL };
@@ -1116,32 +1116,37 @@ int process_host_command(int cmd,
     return (ERROR);
 
   /* find the host */
-  if ((temp_host = find_host(host_name)) == NULL)
+  try {
+    temp_host = find_host(host_name);
+  }
+  catch (not_found const& e) {
+    (void) e;
     return (ERROR);
+  }
 
   switch (cmd) {
   case CMD_ENABLE_HOST_NOTIFICATIONS:
-    enable_host_notifications(temp_host);
+    enable_host_notifications(temp_host.get());
     break;
 
   case CMD_DISABLE_HOST_NOTIFICATIONS:
-    disable_host_notifications(temp_host);
+    disable_host_notifications(temp_host.get());
     break;
 
   case CMD_ENABLE_HOST_AND_CHILD_NOTIFICATIONS:
-    enable_and_propagate_notifications(temp_host, 0, true, true, false);
+    enable_and_propagate_notifications(temp_host.get(), 0, true, true, false);
     break;
 
   case CMD_DISABLE_HOST_AND_CHILD_NOTIFICATIONS:
-    disable_and_propagate_notifications(temp_host, 0, true, true, false);
+    disable_and_propagate_notifications(temp_host.get(), 0, true, true, false);
     break;
 
   case CMD_ENABLE_ALL_NOTIFICATIONS_BEYOND_HOST:
-    enable_and_propagate_notifications(temp_host, 0, false, true, true);
+    enable_and_propagate_notifications(temp_host.get(), 0, false, true, true);
     break;
 
   case CMD_DISABLE_ALL_NOTIFICATIONS_BEYOND_HOST:
-    disable_and_propagate_notifications(temp_host, 0, false, true, true);
+    disable_and_propagate_notifications(temp_host.get(), 0, false, true, true);
     break;
 
   case CMD_ENABLE_HOST_SVC_NOTIFICATIONS:
@@ -1177,49 +1182,49 @@ int process_host_command(int cmd,
     break;
 
   case CMD_ENABLE_HOST_CHECK:
-    enable_host_checks(temp_host);
+    enable_host_checks(temp_host.get());
     break;
 
   case CMD_DISABLE_HOST_CHECK:
-    disable_host_checks(temp_host);
+    disable_host_checks(temp_host.get());
     break;
 
   case CMD_ENABLE_HOST_EVENT_HANDLER:
-    enable_host_event_handler(temp_host);
+    enable_host_event_handler(temp_host.get());
     break;
 
   case CMD_DISABLE_HOST_EVENT_HANDLER:
-    disable_host_event_handler(temp_host);
+    disable_host_event_handler(temp_host.get());
     break;
 
   case CMD_ENABLE_HOST_FLAP_DETECTION:
-    enable_host_flap_detection(temp_host);
+    enable_host_flap_detection(temp_host.get());
     break;
 
   case CMD_DISABLE_HOST_FLAP_DETECTION:
-    disable_host_flap_detection(temp_host);
+    disable_host_flap_detection(temp_host.get());
     break;
 
   case CMD_ENABLE_PASSIVE_HOST_CHECKS:
-    enable_passive_host_checks(temp_host);
+    enable_passive_host_checks(temp_host.get());
     break;
 
   case CMD_DISABLE_PASSIVE_HOST_CHECKS:
-    disable_passive_host_checks(temp_host);
+    disable_passive_host_checks(temp_host.get());
     break;
 
   case CMD_START_OBSESSING_OVER_HOST:
-    start_obsessing_over_host(temp_host);
+    start_obsessing_over_host(temp_host.get());
     break;
 
   case CMD_STOP_OBSESSING_OVER_HOST:
-    stop_obsessing_over_host(temp_host);
+    stop_obsessing_over_host(temp_host.get());
     break;
 
   case CMD_SET_HOST_NOTIFICATION_NUMBER:
     if ((str = my_strtok(NULL, ";"))) {
       intval = atoi(str);
-      set_host_notification_number(temp_host, intval);
+      set_host_notification_number(temp_host.get(), intval);
     }
     break;
 
@@ -1360,7 +1365,7 @@ int process_servicegroup_command(int cmd,
                                  char* args) {
   char* servicegroup_name = NULL;
   servicegroup_struct* temp_servicegroup = NULL;
-  host* temp_host = NULL;
+  shared_ptr<host> temp_host;
   host* last_host = NULL;
   shared_ptr<service> temp_service;
 
@@ -1444,43 +1449,48 @@ int process_servicegroup_command(int cmd,
            it != end;
            ++it) {
 
-        if ((temp_host = find_host(it->first.first)) == NULL)
+        try {
+          temp_host = find_host(it->first.first);
+        }
+        catch (not_found const& e) {
+          (void) e;
           continue;
+        }
 
-        if (hst_set.find(temp_host) != hst_set.end())
+        if (hst_set.find(temp_host.get()) != hst_set.end())
           continue;
 
         switch (cmd) {
 
         case CMD_ENABLE_SERVICEGROUP_HOST_NOTIFICATIONS:
-          enable_host_notifications(temp_host);
+          enable_host_notifications(temp_host.get());
           break;
 
         case CMD_DISABLE_SERVICEGROUP_HOST_NOTIFICATIONS:
-          disable_host_notifications(temp_host);
+          disable_host_notifications(temp_host.get());
           break;
 
         case CMD_ENABLE_SERVICEGROUP_HOST_CHECKS:
-          enable_host_checks(temp_host);
+          enable_host_checks(temp_host.get());
           break;
 
         case CMD_DISABLE_SERVICEGROUP_HOST_CHECKS:
-          disable_host_checks(temp_host);
+          disable_host_checks(temp_host.get());
           break;
 
         case CMD_ENABLE_SERVICEGROUP_PASSIVE_HOST_CHECKS:
-          enable_passive_host_checks(temp_host);
+          enable_passive_host_checks(temp_host.get());
           break;
 
         case CMD_DISABLE_SERVICEGROUP_PASSIVE_HOST_CHECKS:
-          disable_passive_host_checks(temp_host);
+          disable_passive_host_checks(temp_host.get());
           break;
 
         default:
           break;
         }
 
-        hst_set.insert(temp_host);
+        hst_set.insert(temp_host.get());
       }
     }
     break;

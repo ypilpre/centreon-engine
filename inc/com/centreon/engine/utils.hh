@@ -143,7 +143,7 @@ shared_ptr<com::centreon::engine::commands::command>& find_command(std::string c
 shared_ptr<com::centreon::engine::commands::connector>& find_connector(std::string const& name);
 //shared_ptr<com::centreon::engine::commands::command>& find_command(std::string const& name);
 timeperiod& find_timeperiod(std::string const& name);
-com::centreon::engine::host* find_host(std::string const& name);
+shared_ptr<com::centreon::engine::host> find_host(std::string const& name);
 hostgroup_struct& find_hostgroup(std::string const& name);
 shared_ptr<com::centreon::engine::service> find_service(
                                   std::string const& host_name,

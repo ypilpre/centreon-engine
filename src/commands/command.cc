@@ -69,7 +69,6 @@ commands::command::command(
  *  Destructor.
  */
 commands::command::~command() throw () {
-
 }
 
 /**

@@ -177,7 +177,7 @@ int process_external_command(char const* cmd) {
 /* adds a host or service comment to the status log */
 int cmd_add_comment(int cmd, time_t entry_time, char* args) {
   char* temp_ptr(NULL);
-  host* temp_host(NULL);
+  shared_ptr<host> temp_host;
   shared_ptr<service> temp_service;
   char* host_name(NULL);
   char* svc_description(NULL);
@@ -203,8 +203,13 @@ int cmd_add_comment(int cmd, time_t entry_time, char* args) {
   }
 
   /* else verify that the host is valid */
-  if ((temp_host = find_host(host_name)) == NULL)
+  try {
+    temp_host = find_host(host_name);
+  }
+  catch (not_found const& e) {
+    (void) e;
     return (ERROR);
+  }
 
   /* get the persistent flag */
   if ((temp_ptr = my_strtok(NULL, ";")) == NULL)
@@ -262,7 +267,7 @@ int cmd_delete_comment(int cmd, char* args) {
 /* removes all comments associated with a host or service from the status log */
 int cmd_delete_all_comments(int cmd, char* args) {
   shared_ptr<service> temp_service;
-  host* temp_host(NULL);
+  shared_ptr<host> temp_host;
   char* host_name(NULL);
   char* svc_description(NULL);
 
@@ -283,8 +288,13 @@ int cmd_delete_all_comments(int cmd, char* args) {
   }
 
   /* else verify that the host is valid */
-  if ((temp_host = find_host(host_name)) == NULL)
+  try {
+    temp_host = find_host(host_name);
+  }
+  catch (not_found const& e) {
+    (void) e;
     return (ERROR);
+  }
 
   /* delete comments */
   delete_all_comments(
@@ -297,7 +307,7 @@ int cmd_delete_all_comments(int cmd, char* args) {
 /* delays a host or service notification for given number of minutes */
 int cmd_delay_notification(int cmd, char* args) {
   char* temp_ptr(NULL);
-  host* temp_host(NULL);
+  shared_ptr<host> temp_host;
   shared_ptr<service> temp_service;
   char* host_name(NULL);
   char* svc_description(NULL);
@@ -321,8 +331,13 @@ int cmd_delay_notification(int cmd, char* args) {
 
   /* else verify that the host is valid */
   else {
-    if ((temp_host = find_host(host_name)) == NULL)
+    try {
+      temp_host = find_host(host_name);
+    }
+    catch (not_found const& e) {
+      (void) e;
       return (ERROR);
+    }
   }
 
   /* get the time that we should delay until... */
@@ -342,7 +357,7 @@ int cmd_delay_notification(int cmd, char* args) {
 /* schedules a host check at a particular time */
 int cmd_schedule_check(int cmd, char* args) {
   char* temp_ptr(NULL);
-  host* temp_host(NULL);
+  shared_ptr<host> temp_host;
   shared_ptr<service> temp_service;
   char* host_name(NULL);
   char* svc_description(NULL);
@@ -358,8 +373,13 @@ int cmd_schedule_check(int cmd, char* args) {
       || cmd == CMD_SCHEDULE_FORCED_HOST_SVC_CHECKS) {
 
     /* verify that the host is valid */
-    if ((temp_host = find_host(host_name)) == NULL)
+    try {
+      temp_host = find_host(host_name);
+    }
+    catch (not_found const& e) {
+      (void) e;
       return (ERROR);
+    }
   }
 
   else {
@@ -382,7 +402,7 @@ int cmd_schedule_check(int cmd, char* args) {
   if (cmd == CMD_SCHEDULE_HOST_CHECK
       || cmd == CMD_SCHEDULE_FORCED_HOST_CHECK)
     schedule_host_check(
-      temp_host,
+      temp_host.get(),
       delay_time,
       (cmd == CMD_SCHEDULE_FORCED_HOST_CHECK)
       ? CHECK_OPTION_FORCE_EXECUTION : CHECK_OPTION_NONE);
@@ -424,7 +444,7 @@ int cmd_schedule_check(int cmd, char* args) {
 int cmd_schedule_host_service_checks(int cmd, char* args, int force) {
   char* temp_ptr(NULL);
   service* temp_service(NULL);
-  host* temp_host(NULL);
+  shared_ptr<host> temp_host;
   char* host_name(NULL);
   time_t delay_time(0);
 
@@ -435,8 +455,13 @@ int cmd_schedule_host_service_checks(int cmd, char* args, int force) {
     return (ERROR);
 
   /* verify that the host is valid */
-  if ((temp_host = find_host(host_name)) == NULL)
+  try {
+    temp_host = find_host(host_name);
+  }
+  catch (not_found const& e) {
+    (void) e;
     return (ERROR);
+  }
 
   /* get the next check time */
   if ((temp_ptr = my_strtok(NULL, "\n")) == NULL)
@@ -544,7 +569,6 @@ int process_passive_service_check(
       char const* svc_description,
       int return_code,
       char const* output) {
-  host* temp_host(NULL);
   shared_ptr<service> temp_service;
   char const* real_host_name(NULL);
 
@@ -691,7 +715,7 @@ int process_passive_host_check(
       char const* host_name,
       int return_code,
       char const* output) {
-  host const* temp_host(NULL);
+  shared_ptr<host const> temp_host;
   char const* real_host_name(NULL);
 
   /* skip this host check result if we aren't accepting passive host checks */
@@ -707,9 +731,12 @@ int process_passive_host_check(
     return (ERROR);
 
   /* find the host by its name or address */
-  if ((temp_host = find_host(host_name)) != NULL)
+  try {
+    temp_host = find_host(host_name);
     real_host_name = host_name;
-  else {
+  }
+  catch (not_found const& e) {
+    (void) e;
     for (umap<std::string, shared_ptr<host> >::iterator
            it(configuration::applier::state::instance().hosts().begin()),
            end(configuration::applier::state::instance().hosts().end());
@@ -779,7 +806,7 @@ int process_passive_host_check(
 /* acknowledges a host or service problem */
 int cmd_acknowledge_problem(int cmd, char* args) {
   shared_ptr<service> temp_service;
-  host* temp_host(NULL);
+  shared_ptr<host> temp_host;
   char* host_name(NULL);
   char* svc_description(NULL);
   char* ack_author(NULL);
@@ -794,8 +821,13 @@ int cmd_acknowledge_problem(int cmd, char* args) {
     return (ERROR);
 
   /* verify that the host is valid */
-  if ((temp_host = find_host(host_name)) == NULL)
+  try {
+    temp_host = find_host(host_name);
+  }
+  catch (not_found const& e) {
+    (void) e;
     return (ERROR);
+  }
 
   /* this is a service acknowledgement */
   if (cmd == CMD_ACKNOWLEDGE_SVC_PROBLEM) {
@@ -841,7 +873,7 @@ int cmd_acknowledge_problem(int cmd, char* args) {
   /* acknowledge the host problem */
   if (cmd == CMD_ACKNOWLEDGE_HOST_PROBLEM)
     acknowledge_host_problem(
-      temp_host,
+      temp_host.get(),
       ack_author,
       ack_data,
       type,
@@ -867,7 +899,7 @@ int cmd_acknowledge_problem(int cmd, char* args) {
 /* removes a host or service acknowledgement */
 int cmd_remove_acknowledgement(int cmd, char* args) {
   shared_ptr<service> temp_service;
-  host* temp_host(NULL);
+  shared_ptr<host> temp_host;
   char* host_name(NULL);
   char* svc_description(NULL);
 
@@ -876,8 +908,13 @@ int cmd_remove_acknowledgement(int cmd, char* args) {
     return (ERROR);
 
   /* verify that the host is valid */
-  if ((temp_host = find_host(host_name)) == NULL)
+  try {
+    temp_host = find_host(host_name);
+  }
+  catch (not_found const& e) {
+    (void) e;
     return (ERROR);
+  }
 
   /* we are removing a service acknowledgement */
   if (cmd == CMD_REMOVE_SVC_ACKNOWLEDGEMENT) {
@@ -895,7 +932,7 @@ int cmd_remove_acknowledgement(int cmd, char* args) {
 
   /* acknowledge the host problem */
   if (cmd == CMD_REMOVE_HOST_ACKNOWLEDGEMENT)
-    remove_host_acknowledgement(temp_host);
+    remove_host_acknowledgement(temp_host.get());
 
   /* acknowledge the service problem */
   else
@@ -907,7 +944,7 @@ int cmd_remove_acknowledgement(int cmd, char* args) {
 /* schedules downtime for a specific host or service */
 int cmd_schedule_downtime(int cmd, time_t entry_time, char* args) {
   shared_ptr<service> temp_service;
-  host* temp_host(NULL);
+  shared_ptr<host> temp_host;
   host* last_host(NULL);
   hostgroup_struct* temp_hostgroup(NULL);
   host* temp_hg;
@@ -957,8 +994,13 @@ int cmd_schedule_downtime(int cmd, time_t entry_time, char* args) {
       return (ERROR);
 
     /* verify that the host is valid */
-    if ((temp_host = find_host(host_name)) == NULL)
+    try {
+      temp_host = find_host(host_name);
+    }
+    catch (not_found const& e) {
+      (void) e;
       return (ERROR);
+    }
 
     /* this is a service downtime */
     if (cmd == CMD_SCHEDULE_SVC_DOWNTIME) {
@@ -1127,7 +1169,7 @@ int cmd_schedule_downtime(int cmd, time_t entry_time, char* args) {
         temp_host = it->second->get_host();
         if (temp_host == NULL)
           continue;
-        if (hst_set.find(temp_host) == hst_set.end()) {
+        if (hst_set.find(temp_host.get()) == hst_set.end()) {
           temp_host->schedule_downtime(
             downtime::HOST_DOWNTIME,
             entry_time,
@@ -1138,7 +1180,7 @@ int cmd_schedule_downtime(int cmd, time_t entry_time, char* args) {
             fixed,
             triggered_by,
             duration);
-          hst_set.insert(temp_host);
+          hst_set.insert(temp_host.get());
         }
       }
     }
@@ -1494,11 +1536,12 @@ static int delete_downtime_by_hostname_service_description_start_time_comment(
 	continue;
     }
     else if (temp_downtime->get_type() == downtime::SERVICE_DOWNTIME) {
+      service* svc = static_cast<service*>(temp_downtime->get_parent());
       if ((hostname != NULL)
           && (temp_downtime->get_host_name() != hostname))
 	continue;
       if (service_description != NULL
-	  && temp_downtime->get_service_description() != service_description)
+	  && svc->get_description() != service_description)
 	continue;
     }
 
@@ -1553,7 +1596,7 @@ int cmd_delete_downtime_by_start_time_comment(int cmd, char* args){
 /* changes a host or service (integer) variable */
 int cmd_change_object_int_var(int cmd, char* args) {
   shared_ptr<service> temp_service;
-  host* temp_host(NULL);
+  shared_ptr<host> temp_host;
   contact* temp_contact(NULL);
   char* host_name(NULL);
   char* svc_description(NULL);
@@ -1597,8 +1640,13 @@ int cmd_change_object_int_var(int cmd, char* args) {
       return (ERROR);
 
     /* verify that the host is valid */
-    if ((temp_host = find_host(host_name)) == NULL)
+    try {
+      temp_host = find_host(host_name);
+    }
+    catch (not_found const& e) {
+      (void) e;
       return (ERROR);
+    }
     break;
 
   case CMD_CHANGE_CONTACT_MODATTR:
@@ -1663,7 +1711,7 @@ int cmd_change_object_int_var(int cmd, char* args) {
 
       /* schedule a check if we should */
       if (temp_host->get_should_be_scheduled())
-        schedule_host_check(temp_host, temp_host->get_next_check(), CHECK_OPTION_NONE);
+        schedule_host_check(temp_host.get(), temp_host->get_next_check(), CHECK_OPTION_NONE);
     }
     break;
 
@@ -1796,14 +1844,14 @@ int cmd_change_object_int_var(int cmd, char* args) {
       NEBTYPE_ADAPTIVEHOST_UPDATE,
       NEBFLAG_NONE,
       NEBATTR_NONE,
-      temp_host,
+      temp_host.get(),
       cmd,
       attr,
       temp_host->get_modified_attributes(),
       NULL);
 
     /* update the status log with the host info */
-    update_host_status(temp_host, false);
+    update_host_status(temp_host.get(), false);
     break;
 
   case CMD_CHANGE_CONTACT_MODATTR:
@@ -1855,7 +1903,7 @@ int cmd_change_object_int_var(int cmd, char* args) {
 /* changes a host or service (char) variable */
 int cmd_change_object_char_var(int cmd, char* args) {
   shared_ptr<service> temp_service;
-  host* temp_host(NULL);
+  shared_ptr<host> temp_host;
   contact* temp_contact(NULL);
   timeperiod* temp_timeperiod(NULL);
   shared_ptr<command> temp_command;
@@ -1898,8 +1946,13 @@ int cmd_change_object_char_var(int cmd, char* args) {
       return (ERROR);
 
     /* verify that the host is valid */
-    if ((temp_host = find_host(host_name)) == NULL)
+    try {
+      temp_host = find_host(host_name);
+    }
+    catch (not_found const& e) {
+      (void) e;
       return (ERROR);
+    }
 
     if ((charval = my_strtok(NULL, "\n")) == NULL)
       return (ERROR);
@@ -2155,14 +2208,14 @@ int cmd_change_object_char_var(int cmd, char* args) {
       NEBTYPE_ADAPTIVEHOST_UPDATE,
       NEBFLAG_NONE,
       NEBATTR_NONE,
-      temp_host,
+      temp_host.get(),
       cmd,
       attr,
       temp_host->get_modified_attributes(),
       NULL);
 
     /* update the status log with the host info */
-    update_host_status(temp_host, false);
+    update_host_status(temp_host.get(), false);
     break;
 
   case CMD_CHANGE_CONTACT_HOST_NOTIFICATION_TIMEPERIOD:
@@ -2202,7 +2255,7 @@ int cmd_change_object_char_var(int cmd, char* args) {
 
 /* changes a custom host or service variable */
 int cmd_change_object_custom_var(int cmd, char* args) {
-  host* temp_host(NULL);
+  shared_ptr<host> temp_host;
   shared_ptr<service> temp_service;
   contact* temp_contact(NULL);
   char* temp_ptr(NULL);
@@ -2245,8 +2298,13 @@ int cmd_change_object_custom_var(int cmd, char* args) {
   switch (cmd) {
 
   case CMD_CHANGE_CUSTOM_HOST_VAR:
-    if ((temp_host = find_host(name1)) == NULL)
+    try {
+      temp_host = find_host(name1);
+    }
+    catch (not_found const& e) {
+      (void) e;
       return (ERROR);
+    }
     temp_customvars = temp_host->get_customvars();
     break;
 
@@ -2305,7 +2363,7 @@ int cmd_change_object_custom_var(int cmd, char* args) {
   case CMD_CHANGE_CUSTOM_HOST_VAR:
     temp_host->set_modified_attributes(
       temp_host->get_modified_attributes() | MODATTR_CUSTOM_VARIABLE);
-    update_host_status(temp_host, false);
+    update_host_status(temp_host.get(), false);
     break;
 
   case CMD_CHANGE_CUSTOM_SVC_VAR:
