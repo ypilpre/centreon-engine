@@ -22,6 +22,7 @@
 #include "../timeperiod/utils.hh"
 #include "com/centreon/engine/commands/raw.hh"
 #include "com/centreon/engine/configuration/applier/state.hh"
+#include "com/centreon/process_manager.hh"
 
 using namespace com::centreon;
 using namespace com::centreon::engine;
@@ -35,20 +36,77 @@ class SimpleCommand : public ::testing::Test {
 //    set_time(20);
     if (config == NULL)
       config = new configuration::state;
-    configuration::applier::state::load();  // Needed to create a contact
+    process_manager::load();
+    configuration::applier::state::load();  // Needed to store commands
   }
 
   void TearDown() {
-    configuration::applier::state::unload();
+    configuration::applier::state::unload();  // Needed to store commands
+    process_manager::unload();
     delete config;
     config = NULL;
   }
 };
 
+class my_listener : public commands::command_listener {
+ public: 
+  result const& get_result() const {
+    return (_res);
+  }
+
+  void finished(result const& res) throw () {
+    _res = res;
+  }
+
+ private:
+  commands::result _res;
+};
+
 // Given an empty name
-// When the add_command method is called with is as argument,
+// When the add_command method is called with it as argument,
 // Then it returns a NULL pointer.
 TEST_F(SimpleCommand, NewCommandWithNoName) {
   ASSERT_THROW(commands::command::add_command(
         new commands::raw("", "")), std::exception);
+}
+
+// Given a name and a command line
+// When the add_command method is called
+// Then a new raw command is built
+// When sync executed
+// Then we have the output in the result class.
+TEST_F(SimpleCommand, NewCommandSync) {
+  command* cmd(commands::command::add_command(
+        new commands::raw("test", "/bin/echo bonjour")));
+  nagios_macros mac;
+  memset(&mac, 0, sizeof(mac));
+  commands::result res;
+  std::string cc(cmd->process_cmd(&mac));
+  ASSERT_EQ(cc, "/bin/echo bonjour");
+  cmd->run(cc, mac, 2, res);
+  ASSERT_EQ(res.output, "bonjour\n");
+}
+
+// Given a name and a command line
+// When the add_command method is called
+// Then a new raw command is built
+// When async executed
+// Then we have the output in the result class.
+TEST_F(SimpleCommand, NewCommandAsync) {
+  std::auto_ptr<my_listener> lstnr(new my_listener);
+  command* cmd(commands::command::add_command(
+    new commands::raw("test", "/bin/echo bonjour")));
+  cmd->set_listener(lstnr.get());
+  nagios_macros mac;
+  memset(&mac, 0, sizeof(mac));
+  std::string cc(cmd->process_cmd(&mac));
+  ASSERT_EQ(cc, "/bin/echo bonjour");
+  unsigned long id(cmd->run(cc, mac, 2));
+  int timeout(0);
+  while (timeout < 10 && lstnr->get_result().output == "") {
+    usleep(100000);
+    ++timeout;
+  }
+  ASSERT_TRUE(timeout < 10);
+  ASSERT_EQ(lstnr->get_result().output, "bonjour\n");
 }
