@@ -92,6 +92,10 @@ void applier::host::add_object(
            << "Could not register host '" << obj.host_name() << "'");
   }
 
+  // Add new items to the configuration state.
+  configuration::applier::state::instance().hosts().insert(
+    std::make_pair(obj.host_name(), h));
+      
   // Custom variables.
   for (map_customvar::const_iterator
          it(obj.customvariables().begin()),
@@ -113,8 +117,6 @@ void applier::host::add_object(
     MODATTR_ALL,
     MODATTR_ALL,
     &tv);
-
-  return ;
 }
 
 /**
