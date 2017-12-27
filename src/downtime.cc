@@ -635,7 +635,7 @@ void downtime::handle() {
     if (!get_fixed()
         && get_incremented_pending_downtime()) {
       if (_parent->get_pending_flex_downtime() > 0)
-        hst->dec_pending_flex_downtime();
+        _parent->dec_pending_flex_downtime();
     }
 
     /* handle (stop) downtime that is triggered by this one */

@@ -30,7 +30,7 @@ using namespace com::centreon::engine;
  */
 host::host(configuration::host const& cfg)
 // XXX
-{}
+  : monitorable(cfg.host_name()) {}
 
 /**
  *  Copy constructor.

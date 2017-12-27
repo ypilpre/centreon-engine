@@ -48,7 +48,8 @@ notifier::notifier()
     _current_notification_number(0),
     _notified_states(0),
     _notification_interval(60),
-    _in_downtime(false) {}
+    _in_downtime(false),
+    _scheduled_downtime_depth(0) {}
 
 /**
  * Copy constructor.
@@ -61,7 +62,8 @@ notifier::notifier(notifier const& other)
     _current_notification_number(other._current_notification_number),
     _notified_states(other._notified_states),
     _notification_interval(other._notification_interval),
-    _in_downtime(other._in_downtime) {}
+    _in_downtime(other._in_downtime),
+    _scheduled_downtime_depth(other._scheduled_downtime_depth) {}
 
 /**
  * Assignment operator.
