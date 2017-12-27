@@ -80,8 +80,8 @@ int xcddefault_add_new_host_comment(
     expire_time,
     source);
 
-  /* update comment file */
-  xcddefault_save_comment_data();
+//  /* update comment file */
+//  xcddefault_save_comment_data(); //SHOULD BE REMOVED FIXME DBR
 
   /* return the id for the comment we are about to add (this happens in the main code) */
   if (comment_id != NULL)
