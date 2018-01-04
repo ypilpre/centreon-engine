@@ -2795,11 +2795,8 @@ void acknowledge_host_problem(
   if (hst->get_current_state() == HOST_UP)
     return;
 
-  /* set the acknowledgement flag */
-  hst->set_acknowledged(true);
-
   /* set the acknowledgement type */
-  hst->set_acknowledgement_type((type == notifier::ACKNOWLEDGEMENT_STICKY)
+  hst->set_acknowledged((type == notifier::ACKNOWLEDGEMENT_STICKY)
          ? notifier::ACKNOWLEDGEMENT_STICKY : notifier::ACKNOWLEDGEMENT_NORMAL);
 
   /* schedule acknowledgement expiration */
@@ -2864,11 +2861,8 @@ void acknowledge_service_problem(
   if (svc->get_current_state() == STATE_OK)
     return;
 
-  /* set the acknowledgement flag */
-  svc->set_acknowledged(true);
-
   /* set the acknowledgement type */
-  svc->set_acknowledgement_type((type == notifier::ACKNOWLEDGEMENT_STICKY)
+  svc->set_acknowledged((type == notifier::ACKNOWLEDGEMENT_STICKY)
     ? notifier::ACKNOWLEDGEMENT_STICKY : notifier::ACKNOWLEDGEMENT_NORMAL);
 
   /* schedule acknowledgement expiration */
@@ -2926,7 +2920,7 @@ void acknowledge_service_problem(
 /* removes a host acknowledgement */
 void remove_host_acknowledgement(host* hst) {
   /* set the acknowledgement flag */
-  hst->set_acknowledged(false);
+  hst->set_acknowledged(notifier::ACKNOWLEDGEMENT_NONE);
 
   /* update the status log with the host info */
   update_host_status(hst, false);
@@ -2938,7 +2932,7 @@ void remove_host_acknowledgement(host* hst) {
 /* removes a service acknowledgement */
 void remove_service_acknowledgement(service* svc) {
   /* set the acknowledgement flag */
-  svc->set_acknowledged(false);
+  svc->set_acknowledged(notifier::ACKNOWLEDGEMENT_NONE);
 
   /* update the status log with the service info */
   update_service_status(svc, false);

@@ -100,7 +100,8 @@ namespace           notifications {
     void              add_contactgroup(shared_ptr<engine::contactgroup> cg);
     void              set_notifications_enabled(bool enabled);
     bool              get_notifications_enabled() const;
-    int               get_acknowledgement_type() const;
+    acknowledgement_type
+                      get_acknowledgement_type() const;
     void              enable_state_notification(int state);
     std::list<shared_ptr<engine::contact> >
                       get_contacts_list();
@@ -138,8 +139,8 @@ namespace           notifications {
     void              set_next_notification(time_t next_notification);
     bool              should_be_escalated() const;
     bool              is_acknowledged() const;
-    void              set_acknowledged(bool acked);
-    void              set_acknowledgement_type(acknowledgement_type type);
+    void              set_acknowledged(acknowledgement_type type);
+    time_t            get_last_acknowledgement() const;
     void              set_last_acknowledgement(time_t last_acknowledgement);
     bool              get_recovery_been_sent() const;
     bool              set_notified_on_down(bool value);
@@ -181,10 +182,13 @@ namespace           notifications {
     macro_builder     _get_macro_builder(notification_type type) const;
     bool              _problem_filter();
     bool              _recovery_filter();
+    bool              _acknowledgement_filter();
 
     void              _problem_macro_builder(nagios_macros& mac);
     void              _recovery_macro_builder(nagios_macros& mac);
 
+    acknowledgement_type
+                      _current_acknowledgement;
     time_t            _last_acknowledgement;
 
     static notifier_filter

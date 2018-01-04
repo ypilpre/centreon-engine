@@ -157,10 +157,9 @@ void applier::host::_update(
   }
 
   if (obj.get_retain_nonstate_info()) {
-    if (state.problem_has_been_acknowledged().is_set())
-      obj.set_acknowledged(*state.problem_has_been_acknowledged());
-    if (state.acknowledgement_type().is_set())
-      obj.set_acknowledgement_type(static_cast<notifier::acknowledgement_type>(*state.acknowledgement_type()));
+    if (state.problem_has_been_acknowledged().is_set()
+        && state.acknowledgement_type().is_set())
+      obj.set_acknowledged(static_cast<notifier::acknowledgement_type>(*state.acknowledgement_type()));
     if (state.notifications_enabled().is_set()
         && (obj.get_modified_attributes() & MODATTR_NOTIFICATIONS_ENABLED))
       obj.set_notifications_enabled(*state.notifications_enabled());

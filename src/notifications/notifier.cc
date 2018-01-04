@@ -32,7 +32,6 @@ using namespace com::centreon::engine;
 using namespace com::centreon::engine::logging;
 using namespace com::centreon::engine::notifications;
 
-
 /**************************************
 *                                     *
 *           Public Methods            *
@@ -49,7 +48,8 @@ notifier::notifier()
     _notified_states(0),
     _notification_interval(60),
     _in_downtime(false),
-    _scheduled_downtime_depth(0) {}
+    _scheduled_downtime_depth(0),
+    _current_acknowledgement(ACKNOWLEDGEMENT_NONE) {}
 
 /**
  * Copy constructor.
@@ -63,7 +63,8 @@ notifier::notifier(notifier const& other)
     _notified_states(other._notified_states),
     _notification_interval(other._notification_interval),
     _in_downtime(other._in_downtime),
-    _scheduled_downtime_depth(other._scheduled_downtime_depth) {}
+    _scheduled_downtime_depth(other._scheduled_downtime_depth),
+    _current_acknowledgement(other._current_acknowledgement) {}
 
 /**
  * Assignment operator.
@@ -129,6 +130,16 @@ void notifier::notify(
     std::string const& author,
     std::string const& comment,
     int options) {
+
+  /* Normal acknowledgement is lost when state changes. We must verify
+   * that the acknowledgement is older than the state change.
+   */
+  if (is_acknowledged()
+      && get_last_acknowledgement() < get_last_check()
+      && get_acknowledgement_type() == ACKNOWLEDGEMENT_NORMAL
+      && get_current_state() != get_last_state())
+    set_acknowledged(ACKNOWLEDGEMENT_NONE);
+
   std::list<shared_ptr<engine::contact> > users_to_notify = get_contacts_list();
   if (users_to_notify.empty())
     return ;
@@ -321,7 +332,8 @@ umap<std::string, shared_ptr<engine::contactgroup> >& notifier::get_contactgroup
 notifier::notifier_filter notifier::_filter[] = {
   0,
   &notifier::_problem_filter,
-  &notifier::_recovery_filter
+  &notifier::_recovery_filter,
+  &notifier::_acknowledgement_filter
 };
 
 std::string notifier::_notification_string[] = {
@@ -361,7 +373,8 @@ bool notifier::_problem_filter() {
   if (is_in_downtime()
       || get_flapping()
       || !is_state_notification_enabled(get_current_state())
-      || get_last_hard_state_change() < get_last_state_change())
+      || get_last_hard_state_change() < get_last_state_change()
+      || is_acknowledged())
     return false;
 
   int notif_number = get_current_notification_number();
@@ -393,6 +406,21 @@ bool notifier::_recovery_filter() {
   if (is_in_downtime()
       || get_current_notification_type() != PROBLEM
       || get_current_state() != 0)
+    return false;
+
+  return true;
+}
+
+/**
+ * Filter method on acknowledgement notifications
+ *
+ * @return a boolean
+ */
+bool notifier::_acknowledgement_filter() {
+
+  if (is_in_downtime()
+      || get_current_notification_type() != ACKNOWLEDGEMENT
+      || get_current_state() == 0)
     return false;
 
   return true;
@@ -454,21 +482,15 @@ bool notifier::contains_contact(std::string const& username) const {
 }
 
 bool notifier::is_acknowledged() const {
-  // FIXME DBR: to implement...
-  return false;
+  return (_current_acknowledgement != ACKNOWLEDGEMENT_NONE);
 }
 
-int notifier::get_acknowledgement_type() const {
-  // FIXME DBR: to implement...
-  return 0;
+notifier::acknowledgement_type notifier::get_acknowledgement_type() const {
+  return _current_acknowledgement;
 }
 
-void notifier::set_acknowledged(bool acked) {
-  // FIXME DBR: to implement...
-}
-
-void notifier::set_acknowledgement_type(notifier::acknowledgement_type type) {
-  // FIXME DBR: to implement...
+void notifier::set_acknowledged(acknowledgement_type type) {
+  _current_acknowledgement = type;
 }
 
 void notifier::set_initial_notif_time(time_t initial) {
@@ -614,6 +636,10 @@ int notifier::get_scheduled_downtime_depth() const {
 
 void notifier::set_last_acknowledgement(time_t last_acknowledgement) {
   _last_acknowledgement = last_acknowledgement;
+}
+
+time_t notifier::get_last_acknowledgement() const {
+  return _last_acknowledgement;
 }
 
 void notifier::inc_scheduled_downtime_depth() {

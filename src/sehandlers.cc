@@ -1064,8 +1064,7 @@ int handle_host_state(host* hst) {
     /* reset the acknowledgement flag if necessary */
     if (hst->get_acknowledgement_type() == notifier::ACKNOWLEDGEMENT_NORMAL) {
 
-      hst->set_acknowledged(false);
-      hst->set_acknowledgement_type(notifier::ACKNOWLEDGEMENT_NONE);
+      hst->set_acknowledged(notifier::ACKNOWLEDGEMENT_NONE);
 
       /* remove any non-persistant comments associated with the ack */
       delete_host_acknowledgement_comments(hst);
@@ -1073,8 +1072,7 @@ int handle_host_state(host* hst) {
     else if (hst->get_acknowledgement_type() == notifier::ACKNOWLEDGEMENT_STICKY
              && hst->get_current_state() == HOST_UP) {
 
-      hst->set_acknowledged(false);
-      hst->set_acknowledgement_type(notifier::ACKNOWLEDGEMENT_NONE);
+      hst->set_acknowledged(notifier::ACKNOWLEDGEMENT_NONE);
 
       /* remove any non-persistant comments associated with the ack */
       delete_host_acknowledgement_comments(hst);
