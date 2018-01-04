@@ -164,6 +164,7 @@ TEST_F(CheckNotificationManagement, TooEarlyNewNotification) {
 
   _notifier->set_notifications_enabled(true);
   _notifier->set_current_state(1);
+  _notifier->set_last_state(1);
   _notifier->set_last_hard_state(1);
   _notifier->set_last_state_change(time(NULL));
   _notifier->set_last_hard_state_change(time(NULL));

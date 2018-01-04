@@ -559,7 +559,6 @@ int checkable::get_current_state() const {
  *  @param[in] state  Current state.
  */
 void checkable::set_current_state(int state) {
-  _last_state = _current_state;
   _current_state = state;
   return ;
 }
