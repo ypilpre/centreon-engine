@@ -352,16 +352,23 @@ std::string notifier::_notification_string[] = {
 bool notifier::_problem_filter() {
   time_t now;
   time(&now);
+  /* No notification sent if:
+   *  * notifier in downtime
+   *  * notifier is flapping
+   *  * notifier is not configured to send notification on the current state
+   *  * state is not hard.
+   */
   if (is_in_downtime()
       || get_flapping()
-      || !is_state_notification_enabled(get_current_state()))
+      || !is_state_notification_enabled(get_current_state())
+      || get_last_hard_state_change() < get_last_state_change())
     return false;
 
   int notif_number = get_current_notification_number();
 
-  /* We already have been notified */
+  /* A PROBLEM notification has already been sent */
   if (notif_number >= 1
-      && _type == PROBLEM
+      && get_current_notification_type() == PROBLEM
       && get_last_state() == get_current_state()) {
     /* No notification if the delay between previous notification and now
        is less than notification_interval */

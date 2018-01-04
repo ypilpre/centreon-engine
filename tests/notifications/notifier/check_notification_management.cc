@@ -35,7 +35,7 @@ using namespace com::centreon::engine::notifications;
 
 extern configuration::state* config;
 
-class SimpleNotification : public ::testing::Test {
+class CheckNotificationManagement : public ::testing::Test {
  public:
   void SetUp() {
     set_time(20);
@@ -64,7 +64,7 @@ class SimpleNotification : public ::testing::Test {
 // Given a notifier in downtime
 // When the notify method is called with PROBLEM type
 // Then the filter method returns false and no notification is sent.
-TEST_F(SimpleNotification, ProblemWithDowntime) {
+TEST_F(CheckNotificationManagement, ProblemWithDowntime) {
 
   _notifier->set_in_downtime(true);
   long last_notification = _notifier->get_last_notification();
@@ -76,7 +76,7 @@ TEST_F(SimpleNotification, ProblemWithDowntime) {
 // Given a flapping notifier
 // When the notify method is called with PROBLEM type
 // Then the filter method returns false and no notification is sent.
-TEST_F(SimpleNotification, ProblemDuringFlapping) {
+TEST_F(CheckNotificationManagement, ProblemDuringFlapping) {
 
   _notifier->set_flapping(true);
   long last_notification = _notifier->get_last_notification();
@@ -88,7 +88,7 @@ TEST_F(SimpleNotification, ProblemDuringFlapping) {
 // Given a notifier that notifies on any state.
 // When the notify method is called with PROBLEM type for a given state
 // Then the filter method returns false and no notification is sent.
-TEST_F(SimpleNotification, ProblemWithUnnotifiedState) {
+TEST_F(CheckNotificationManagement, ProblemWithUnnotifiedState) {
 
   _notifier->set_current_state(1);
   long last_notification = _notifier->get_last_notification();
@@ -102,7 +102,7 @@ TEST_F(SimpleNotification, ProblemWithUnnotifiedState) {
 // And no contact user for notification are configured
 // And the notify method is called with PROBLEM type for state 1
 // Then no notification is sent.
-TEST_F(SimpleNotification, NoContactUser) {
+TEST_F(CheckNotificationManagement, NoContactUser) {
   // When
   _notifier->set_current_state(1);
   time_t last_notification = _notifier->get_last_notification();
@@ -120,10 +120,32 @@ TEST_F(SimpleNotification, NoContactUser) {
 // Given a notifier with state 1.
 // When notification is enabled on state 1
 // And the notify method is called with PROBLEM type for state 1
-// Then a notification is sent.
-TEST_F(SimpleNotification, SimpleNotification) {
+// And the notifier is not in hard state
+// Then no notification is sent.
+TEST_F(CheckNotificationManagement, NoHardNoNotification) {
 
   _notifier->set_current_state(1);
+  _notifier->set_notifications_enabled(true);
+  time_t last_notification = _notifier->get_last_notification();
+  _notifier->enable_state_notification(1);
+  // When
+  time_t now = last_notification + 20;
+  set_time(now);
+  _notifier->notify(notifier::PROBLEM, "admin", "Test comment");
+  ASSERT_FALSE(_notifier->get_last_notification() >= now);
+}
+
+// Given a notifier with state 1.
+// When notification is enabled on state 1
+// And the notify method is called with PROBLEM type for state 1
+// And the notifier is in hard state
+// Then a notification is sent.
+TEST_F(CheckNotificationManagement, CheckNotificationManagement) {
+
+  _notifier->set_current_state(1);
+  _notifier->set_last_hard_state(1);
+  _notifier->set_last_state_change(time(NULL));
+  _notifier->set_last_hard_state_change(time(NULL));
   _notifier->set_notifications_enabled(true);
   time_t last_notification = _notifier->get_last_notification();
   _notifier->enable_state_notification(1);
@@ -138,9 +160,13 @@ TEST_F(SimpleNotification, SimpleNotification) {
 // When notification is enabled on state 1
 // And the notify method is called with PROBLEM type for state 1
 // Then a notification is sent.
-TEST_F(SimpleNotification, TooEarlyNewNotification) {
+TEST_F(CheckNotificationManagement, TooEarlyNewNotification) {
 
+  _notifier->set_notifications_enabled(true);
   _notifier->set_current_state(1);
+  _notifier->set_last_hard_state(1);
+  _notifier->set_last_state_change(time(NULL));
+  _notifier->set_last_hard_state_change(time(NULL));
   _notifier->set_current_notification_type(notifier::PROBLEM);
   _notifier->set_current_notification_number(1);
   _notifier->enable_state_notification(1);

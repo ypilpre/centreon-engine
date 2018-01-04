@@ -49,7 +49,7 @@ if (WITH_TESTING)
     "${TESTS_DIR}/downtime_finder.cc"
     "${TESTS_DIR}/main.cc"
     "${TESTS_DIR}/notifications/notifier/recovery_notification.cc"
-    "${TESTS_DIR}/notifications/notifier/simple_notification.cc"
+    "${TESTS_DIR}/notifications/notifier/check_notification_management.cc"
     "${TESTS_DIR}/notifications/test_notifier.cc"
     "${TESTS_DIR}/timeperiod/get_next_valid_time/between_two_years.cc"
     "${TESTS_DIR}/timeperiod/get_next_valid_time/calendar_date.cc"
