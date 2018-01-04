@@ -134,10 +134,14 @@ void notifier::notify(
   /* Normal acknowledgement is lost when state changes. We must verify
    * that the acknowledgement is older than the state change.
    */
-  if (is_acknowledged()
-      && get_last_acknowledgement() < get_last_check()
-      && get_acknowledgement_type() == ACKNOWLEDGEMENT_NORMAL
-      && get_current_state() != get_last_state())
+  /* Sticky acknowledgement is lost when state changes to OK. We must verify
+   * that the acknowledgement is older than the state change.
+   */
+  if (get_last_acknowledgement() < get_last_check()
+      && ((get_acknowledgement_type() == ACKNOWLEDGEMENT_NORMAL
+          && get_current_state() != get_last_state())
+          || (get_acknowledgement_type() == ACKNOWLEDGEMENT_STICKY
+          && get_current_state() == 0)))
     set_acknowledged(ACKNOWLEDGEMENT_NONE);
 
   std::list<shared_ptr<engine::contact> > users_to_notify = get_contacts_list();
@@ -241,6 +245,7 @@ void notifier::notify(
                 mac.x[MACRO_NOTIFICATIONRECIPIENTS],
                 oss.str());
 
+      _type = type;
       time(&_last_notification);
     }
   }
