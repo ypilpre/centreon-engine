@@ -674,8 +674,8 @@ int handle_async_service_check_result(
 
       /* 10/04/07 check to see if the service and/or associate host is flapping */
       /* this should be done before a notification is sent out to ensure the host didn't just start flapping */
-      check_for_service_flapping(temp_service, true, true);
-      check_for_host_flapping(temp_host, true, false, true);
+      check_for_service_flapping(temp_service, true);
+      check_for_host_flapping(temp_host, true, false);
       flapping_check_done = true;
 
       /* notify contacts about the service recovery */
@@ -717,7 +717,7 @@ int handle_async_service_check_result(
 
     /* Check if we need to send a recovery notification */
     if (!temp_service->get_recovery_been_sent() && !hard_state_change) {
-     ////////////////
+      ////////////////
       // FIXME DBR  //
       ////////////////
 //      temp_service->notify(notifier::PROBLEM);
@@ -1062,8 +1062,8 @@ int handle_async_service_check_result(
 
       /* 10/04/07 check to see if the service and/or associate host is flapping */
       /* this should be done before a notification is sent out to ensure the host didn't just start flapping */
-      check_for_service_flapping(temp_service, true, true);
-      check_for_host_flapping(temp_host, true, false, true);
+      check_for_service_flapping(temp_service, true);
+      check_for_host_flapping(temp_host, true, false);
       flapping_check_done = true;
 
       /* (re)send notifications out about this service problem if the host is up (and was at last check also) and the dependencies were okay... */
@@ -1199,8 +1199,8 @@ int handle_async_service_check_result(
 
   /* check to see if the service and/or associate host is flapping */
   if (flapping_check_done == false) {
-    check_for_service_flapping(temp_service, true, true);
-    check_for_host_flapping(temp_host, true, false, true);
+    check_for_service_flapping(temp_service, true);
+    check_for_host_flapping(temp_host, true, false);
   }
 
   /* update service performance info */
@@ -3264,7 +3264,7 @@ int process_host_check_result_3x(
   }
 
   /* check to see if the associated host is flapping */
-  check_for_host_flapping(hst, true, true, true);
+  check_for_host_flapping(hst, true, true);
 
   /* reschedule the next check of the host (usually ONLY for scheduled, active checks, unless overridden above) */
   if (reschedule_check == true) {

@@ -38,8 +38,7 @@ using namespace com::centreon::engine::logging;
 /* detects service flapping */
 void check_for_service_flapping(
        service* svc,
-       int update,
-       int allow_flapstart_notification) {
+       int update) {
   int update_history = true;
   int is_flapping = false;
   int last_state_history_value = STATE_OK;
@@ -158,8 +157,7 @@ void check_for_service_flapping(
       svc,
       curved_percent_change,
       high_threshold,
-      low_threshold,
-      allow_flapstart_notification);
+      low_threshold);
 
   /* did the service just stop flapping? */
   else if (!is_flapping && svc->get_flapping())
@@ -175,8 +173,7 @@ void check_for_service_flapping(
 void check_for_host_flapping(
        host* hst,
        int update,
-       int actual_check,
-       int allow_flapstart_notification) {
+       int actual_check) {
   int update_history = true;
   int is_flapping = false;
   int last_state_history_value = HOST_UP;
@@ -308,8 +305,7 @@ void check_for_host_flapping(
       hst,
       curved_percent_change,
       high_threshold,
-      low_threshold,
-      allow_flapstart_notification);
+      low_threshold);
 
   /* did the host just stop flapping? */
   else if (!is_flapping && hst->get_flapping())
@@ -330,8 +326,7 @@ void set_service_flap(
        service* svc,
        double percent_change,
        double high_threshold,
-       double low_threshold,
-       int allow_flapstart_notification) {
+       double low_threshold) {
   logger(dbg_functions, basic)
     << "set_service_flap()";
 
@@ -497,8 +492,7 @@ void set_host_flap(
        host* hst,
        double percent_change,
        double high_threshold,
-       double low_threshold,
-       int allow_flapstart_notification) {
+       double low_threshold) {
   logger(dbg_functions, basic)
     << "set_host_flap()";
 
@@ -696,13 +690,13 @@ void enable_flap_detection_routines() {
          end(configuration::applier::state::instance().hosts().end());
        it != end;
        ++it)
-    check_for_host_flapping(it->second.get(), false, false, true);
+    check_for_host_flapping(it->second.get(), false, false);
   for (umap<std::pair<std::string, std::string>, com::centreon::shared_ptr< ::service> >::iterator
          it(configuration::applier::state::instance().services().begin()),
          end(configuration::applier::state::instance().services().end());
        it != end;
        ++it)
-    check_for_service_flapping(it->second.get(), false, true);
+    check_for_service_flapping(it->second.get(), false);
   return ;
 }
 
@@ -789,7 +783,7 @@ void enable_host_flap_detection(host* hst) {
     NULL);
 
   /* check for flapping */
-  check_for_host_flapping(hst, false, false, true);
+  check_for_host_flapping(hst, false, false);
 
   /* update host status */
   update_host_status(hst, false);
@@ -943,7 +937,7 @@ void enable_service_flap_detection(service* svc) {
     NULL);
 
   /* check for flapping */
-  check_for_service_flapping(svc, false, true);
+  check_for_service_flapping(svc, false);
 
   /* update service status */
   update_service_status(svc, false);

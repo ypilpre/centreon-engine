@@ -320,16 +320,11 @@ void applier::host::_update(
     obj.set_flapping(state.is_flapping());
   // else use normal startup flap detection logic.
   else {
-    // host was flapping before program started.
-    // 11/10/07 don't allow flapping notifications to go out.
-    allow_flapstart_notification = !state.is_flapping();
-
     // check for flapping.
     check_for_host_flapping(
       &obj,
       false,
-      false,
-      allow_flapstart_notification);
+      false);
 
     // host was flapping before and isn't now, so clear recovery
     // check variable if host isn't flapping now.

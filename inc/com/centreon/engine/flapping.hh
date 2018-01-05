@@ -42,21 +42,18 @@ extern "C" {
 // determines whether or not a service is "flapping" between states
 void check_for_service_flapping(
        com::centreon::engine::service* svc,
-       int update,
-       int allow_flapstart_notification);
+       int update);
 // determines whether or not a host is "flapping" between states
 void check_for_host_flapping(
        com::centreon::engine::host* hst,
        int update,
-       int actual_check,
-       int allow_flapstart_notification);
+       int actual_check);
 // handles a service that is flapping
 void set_service_flap(
        com::centreon::engine::service* svc,
        double percent_change,
        double high_threshold,
-       double low_threshold,
-       int allow_flapstart_notification);
+       double low_threshold);
 // handles a service that has stopped flapping
 void clear_service_flap(
        com::centreon::engine::service* svc,
@@ -68,8 +65,7 @@ void set_host_flap(
        com::centreon::engine::host* hst,
        double percent_change,
        double high_threshold,
-       double low_threshold,
-       int allow_flapstart_notification);
+       double low_threshold);
 // handles a host that has stopped flapping
 void clear_host_flap(
        com::centreon::engine::host* hst,

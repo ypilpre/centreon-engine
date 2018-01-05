@@ -328,15 +328,10 @@ void applier::service::_update(
     obj.set_flapping(state.is_flapping());
   // else use normal startup flap detection logic.
   else {
-    // service was flapping before program started.
-    // 11/10/07 don't allow flapping notifications to go out.
-    allow_flapstart_notification = !state.is_flapping();
-
     // check for flapping.
     check_for_service_flapping(
       &obj,
-      false,
-      allow_flapstart_notification);
+      false);
 
     // service was flapping before and isn't now, so clear
     // recovery check variable if service isn't flapping now.
