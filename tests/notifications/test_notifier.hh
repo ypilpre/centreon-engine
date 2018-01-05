@@ -28,7 +28,7 @@ class test_notifier : public notifier {
   void set_is_host(bool is_host);
   void set_notification_interval(long interval);
   void set_current_notification_number(int number);
-  void set_current_notification_type(notifier::notification_type type);
+  void add_notification_flag(notifier::notification_type type);
 
  protected:
   bool _is_host() const;

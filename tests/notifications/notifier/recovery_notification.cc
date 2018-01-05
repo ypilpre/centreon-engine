@@ -68,11 +68,16 @@ class RecoveryNotification : public ::testing::Test {
 TEST_F(RecoveryNotification, SimpleRecovery) {
   _notifier->set_notifications_enabled(true);
   _notifier->set_current_state(2);
-  _notifier->set_current_notification_type(notifier::PROBLEM);
+  _notifier->set_last_hard_state(2);
+  _notifier->add_notification_flag(notifier::PROBLEM);
   _notifier->set_last_notification(10);
 
   long last_notification = _notifier->get_last_notification();
   // When
+  set_time(last_notification + 10);
+
+  _notifier->set_last_state(2);
+  _notifier->set_last_state_change(time(NULL));
   _notifier->set_current_state(0);
   _notifier->notify(notifier::RECOVERY, "admin", "Test comment");
   long current_notification = _notifier->get_last_notification();
@@ -86,7 +91,7 @@ TEST_F(RecoveryNotification, SimpleRecovery) {
 // Then the filter method returns false and the notification is not sent.
 TEST_F(RecoveryNotification, RecoveryDuringDowntime) {
   _notifier->set_current_state(2);
-  _notifier->set_current_notification_type(notifier::PROBLEM);
+  _notifier->add_notification_flag(notifier::PROBLEM);
   _notifier->set_last_notification(10);
 
   _notifier->set_in_downtime(true);
@@ -105,7 +110,7 @@ TEST_F(RecoveryNotification, RecoveryDuringDowntime) {
 // Then the filter method returns false and the notification is not sent.
 TEST_F(RecoveryNotification, RecoveryWithNonOkState) {
   _notifier->set_current_state(2);
-  _notifier->set_current_notification_type(notifier::PROBLEM);
+  _notifier->add_notification_flag(notifier::PROBLEM);
   _notifier->set_last_notification(10);
 
   _notifier->set_in_downtime(true);

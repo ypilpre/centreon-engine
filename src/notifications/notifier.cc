@@ -42,7 +42,7 @@ using namespace com::centreon::engine::notifications;
  * Constructor.
  */
 notifier::notifier()
-  : _type(NONE),
+  : _current_notifications(0),
     _last_notification(0),
     _current_notification_number(0),
     _notified_states(0),
@@ -57,7 +57,7 @@ notifier::notifier()
  * @param[in] other Object to copy.
  */
 notifier::notifier(notifier const& other)
-  : _type(other._type),
+  : _current_notifications(other._current_notifications),
     _last_notification(other._last_notification),
     _current_notification_number(other._current_notification_number),
     _notified_states(other._notified_states),
@@ -74,7 +74,7 @@ notifier::notifier(notifier const& other)
  * @return This object
  */
 notifier& notifier::operator=(notifier const& other) {
-  _type = other._type;
+  _current_notifications = other._current_notifications;
   _last_notification = other._last_notification;
   _current_notification_number = other._current_notification_number;
   _notified_states = other._notified_states;
@@ -207,7 +207,7 @@ void notifier::notify(
       /* Old Nagios comment: these macros are deprecated and will likely
          disappear in next major release. if this is an acknowledgement,
          get author and comment macros: FIXME: Is it useful for us ??? */
-      if (_type == ACKNOWLEDGEMENT) {
+      if (_current_notifications == ACKNOWLEDGEMENT) {
         string::setstr(mac.x[MACRO_SERVICEACKAUTHOR], author);
         string::setstr(mac.x[MACRO_SERVICEACKCOMMENT], comment);
         // FIXME DBR: Same as previous comment
@@ -224,7 +224,7 @@ void notifier::notify(
       // Set the notification type macro
       string::setstr(
                 mac.x[MACRO_NOTIFICATIONTYPE],
-                _notification_string[_type]);
+                _notification_string[_current_notifications]);
 
       // Set the notification number
       string::setstr(
@@ -245,7 +245,16 @@ void notifier::notify(
                 mac.x[MACRO_NOTIFICATIONRECIPIENTS],
                 oss.str());
 
-      _type = type;
+      _current_notifications |= (1 << type);
+      switch (type) {
+        case RECOVERY:
+          _current_notifications &= ~(1 << PROBLEM);
+          break;
+        case FLAPPINGSTOP:
+        case FLAPPINGDISABLED:
+          _current_notifications &= ~(1 << FLAPPINGSTART);
+          break;
+      }
       time(&_last_notification);
     }
   }
@@ -335,14 +344,15 @@ umap<std::string, shared_ptr<engine::contactgroup> >& notifier::get_contactgroup
 **************************************/
 
 notifier::notifier_filter notifier::_filter[] = {
-  0,
   &notifier::_problem_filter,
   &notifier::_recovery_filter,
-  &notifier::_acknowledgement_filter
+  &notifier::_acknowledgement_filter,
+  &notifier::_flappingstart_filter,
+  &notifier::_flappingstopdisabled_filter,
+  &notifier::_flappingstopdisabled_filter,
 };
 
 std::string notifier::_notification_string[] = {
-  "NONE",
   "PROBLEM",
   "RECOVERY",
   "ACKNOWLEDGEMENT",
@@ -386,7 +396,7 @@ bool notifier::_problem_filter() {
 
   /* A PROBLEM notification has already been sent */
   if (notif_number >= 1
-      && get_current_notification_type() == PROBLEM
+      && (get_current_notifications_flag() & (1 << PROBLEM))
       && get_last_state() == get_current_state()) {
     /* No notification if the delay between previous notification and now
        is less than notification_interval */
@@ -397,8 +407,8 @@ bool notifier::_problem_filter() {
   return true;
 }
 
-notifier::notification_type notifier::get_current_notification_type() const {
-  return _type;
+unsigned int notifier::get_current_notifications_flag() const {
+  return _current_notifications;
 }
 
 /**
@@ -409,7 +419,7 @@ notifier::notification_type notifier::get_current_notification_type() const {
 bool notifier::_recovery_filter() {
 
   if (is_in_downtime()
-      || get_current_notification_type() != PROBLEM
+      || (get_current_notifications_flag() & (1 << PROBLEM)) == 0
       || get_current_state() != 0)
     return false;
 
@@ -424,8 +434,36 @@ bool notifier::_recovery_filter() {
 bool notifier::_acknowledgement_filter() {
 
   if (is_in_downtime()
-      || get_current_notification_type() != ACKNOWLEDGEMENT
+      || (get_current_notifications_flag() & (1 << PROBLEM)) == 0
       || get_current_state() == 0)
+    return false;
+
+  return true;
+}
+
+/**
+ * Filter method on acknowledgement notifications
+ *
+ * @return a boolean
+ */
+bool notifier::_flappingstart_filter() {
+
+  if (is_in_downtime()
+      || (get_current_notifications_flag() & (1 << FLAPPINGSTART)))
+    return false;
+
+  return true;
+}
+
+/**
+ * Filter method on acknowledgement notifications
+ *
+ * @return a boolean
+ */
+bool notifier::_flappingstopdisabled_filter() {
+
+  if (is_in_downtime()
+      || (get_current_notifications_flag() & (1 << FLAPPINGSTART)) == 0)
     return false;
 
   return true;
@@ -448,7 +486,7 @@ long notifier::get_notification_interval() const {
   return _notification_interval;
 }
 
-long notifier::get_last_notification() const {
+time_t notifier::get_last_notification() const {
   return _last_notification;
 }
 

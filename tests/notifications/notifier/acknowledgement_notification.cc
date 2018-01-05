@@ -98,6 +98,10 @@ TEST_F(AcknowledgementNotification, AcknowledgementNotification) {
   _notifier->set_acknowledged(notifier::ACKNOWLEDGEMENT_NORMAL);
   _notifier->set_last_acknowledgement(now);
   // Then no more notification is sent while the state is WARNING
+  _notifier->notify(notifier::ACKNOWLEDGEMENT, "admin", "Test comment");
+  ASSERT_TRUE(_notifier->get_last_notification() >= now);
+  now += 20;
+  set_time(now);
   _notifier->notify(notifier::PROBLEM, "admin", "Test comment");
   ASSERT_FALSE(_notifier->get_last_notification() >= now);
 

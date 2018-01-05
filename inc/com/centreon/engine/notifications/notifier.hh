@@ -52,17 +52,16 @@ namespace           notifications {
     };
 
     enum              notification_type {
-      NONE                 = 0,
-      PROBLEM              = 1,
-      RECOVERY             = 2,
-      ACKNOWLEDGEMENT      = 3,
-      FLAPPINGSTART        = 4,
-      FLAPPINGSTOP         = 5,
-      FLAPPINGDISABLED     = 6,
-      DOWNTIMESTART        = 7,
-      DOWNTIMESTOP         = 8,
-      DOWNTIMECANCELLED    = 9,
-      CUSTOM               = 10,
+      PROBLEM              = 0,
+      RECOVERY             = 1,
+      ACKNOWLEDGEMENT      = 2,
+      FLAPPINGSTART        = 3,
+      FLAPPINGSTOP         = 4,
+      FLAPPINGDISABLED     = 5,
+      DOWNTIMESTART        = 6,
+      DOWNTIMESTOP         = 7,
+      DOWNTIMECANCELLED    = 8,
+      CUSTOM               = 9,
     };
     enum              action_on {
       ON_NONE = 0,
@@ -116,7 +115,7 @@ namespace           notifications {
 
     int               get_current_notification_id() const;
     int               get_current_notification_number() const;
-    notification_type get_current_notification_type() const;
+    unsigned int      get_current_notifications_flag() const;
     time_t            get_last_notification() const;
     time_t            get_next_notification() const;
     bool              get_no_more_notifications() const;
@@ -174,7 +173,7 @@ namespace           notifications {
     long              _notification_interval;
     int               _current_notification_id;
     int               _current_notification_number;
-    notification_type _type;
+    unsigned int      _current_notifications;
     bool              _in_downtime;
 
    private:
@@ -183,6 +182,8 @@ namespace           notifications {
     bool              _problem_filter();
     bool              _recovery_filter();
     bool              _acknowledgement_filter();
+    bool              _flappingstart_filter();
+    bool              _flappingstopdisabled_filter();
 
     void              _problem_macro_builder(nagios_macros& mac);
     void              _recovery_macro_builder(nagios_macros& mac);

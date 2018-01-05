@@ -7,8 +7,8 @@ void test_notifier::set_in_downtime(bool downtime) {
   _in_downtime = true;
 }
 
-void test_notifier::set_current_notification_type(notifier::notification_type type) {
-  _type = type;
+void test_notifier::add_notification_flag(notifier::notification_type type) {
+  _current_notifications |= (1 << type);
 }
 
 void test_notifier::set_notification_interval(long interval) {

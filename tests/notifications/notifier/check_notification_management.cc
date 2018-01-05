@@ -67,7 +67,7 @@ class CheckNotificationManagement : public ::testing::Test {
 TEST_F(CheckNotificationManagement, ProblemWithDowntime) {
 
   _notifier->set_in_downtime(true);
-  long last_notification = _notifier->get_last_notification();
+  time_t last_notification = _notifier->get_last_notification();
   // When
   _notifier->notify(notifier::PROBLEM, "admin", "Test comment");
   ASSERT_EQ(last_notification, _notifier->get_last_notification());
@@ -79,9 +79,10 @@ TEST_F(CheckNotificationManagement, ProblemWithDowntime) {
 TEST_F(CheckNotificationManagement, ProblemDuringFlapping) {
 
   _notifier->set_flapping(true);
-  long last_notification = _notifier->get_last_notification();
-  // When
+  time_t last_notification = _notifier->get_last_notification();
+  // When the notify method is called with PROBLEM type
   _notifier->notify(notifier::PROBLEM, "admin", "Test comment");
+  // Then the filter method returns false and no notification is sent
   ASSERT_EQ(last_notification, _notifier->get_last_notification());
 }
 
@@ -91,7 +92,7 @@ TEST_F(CheckNotificationManagement, ProblemDuringFlapping) {
 TEST_F(CheckNotificationManagement, ProblemWithUnnotifiedState) {
 
   _notifier->set_current_state(1);
-  long last_notification = _notifier->get_last_notification();
+  time_t last_notification = _notifier->get_last_notification();
   // When
   _notifier->notify(notifier::PROBLEM, "admin", "Test comment");
   ASSERT_EQ(last_notification, _notifier->get_last_notification());
@@ -168,7 +169,7 @@ TEST_F(CheckNotificationManagement, TooEarlyNewNotification) {
   _notifier->set_last_hard_state(1);
   _notifier->set_last_state_change(time(NULL));
   _notifier->set_last_hard_state_change(time(NULL));
-  _notifier->set_current_notification_type(notifier::PROBLEM);
+  _notifier->add_notification_flag(notifier::PROBLEM);
   _notifier->set_current_notification_number(1);
   _notifier->enable_state_notification(1);
   time_t last_notification = 20;
