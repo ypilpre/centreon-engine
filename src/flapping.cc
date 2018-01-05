@@ -25,11 +25,13 @@
 #include "com/centreon/engine/flapping.hh"
 #include "com/centreon/engine/globals.hh"
 #include "com/centreon/engine/logging/logger.hh"
+#include "com/centreon/engine/notifications/notifier.hh"
 #include "com/centreon/engine/objects/comment.hh"
 #include "com/centreon/engine/statusdata.hh"
 
 using namespace com::centreon::engine;
 using namespace com::centreon::engine::logging;
+using namespace com::centreon::engine::notifications;
 
 /******************************************************************/
 /******************** FLAP DETECTION FUNCTIONS ********************/
@@ -393,18 +395,7 @@ void set_service_flap(
 //    svc->check_flapping_recovery_notification = false;
 
   /* send a notification */
-  if (allow_flapstart_notification) {
-          ////////////////
-          // FIXME DBR  //
-          ////////////////
-//    svc->notify(notifier::FLAPPINGSTART);
-//    service_notification(
-//      svc,
-//      NOTIFICATION_FLAPPINGSTART,
-//      NULL,
-//      NULL,
-//      NOTIFICATION_OPTION_NONE);
-  }
+  svc->notify(notifier::FLAPPINGSTART, "", "", NOTIFICATION_OPTION_NONE);
 }
 
 /* handles a service that has stopped flapping */
@@ -455,16 +446,7 @@ void clear_service_flap(
     NULL);
 
   /* send a notification */
-          ////////////////
-          // FIXME DBR  //
-          ////////////////
-//  svc->notify(notifier::FLAPPINGSTOP);
-//  service_notification(
-//    svc,
-//    NOTIFICATION_FLAPPINGSTOP,
-//    NULL,
-//    NULL,
-//    NOTIFICATION_OPTION_NONE);
+  svc->notify(notifier::FLAPPINGSTOP, "", "", NOTIFICATION_OPTION_NONE);
 
   /* should we send a recovery notification? */
   // XXX
@@ -556,18 +538,7 @@ void set_host_flap(
   //   hst->check_flapping_recovery_notification = false;
 
   /* send a notification */
-  // if (allow_flapstart_notification) {
-          ////////////////
-          // FIXME DBR  //
-          ////////////////
-//    hst->notify(notifier::FLAPPINGSTART);
-//    host_notification(
-//      hst,
-//      NOTIFICATION_FLAPPINGSTART,
-//      NULL,
-//      NULL,
-//      NOTIFICATION_OPTION_NONE);
-  // }
+  hst->notify(notifier::FLAPPINGSTART, "", "", NOTIFICATION_OPTION_NONE);
 }
 
 /* handles a host that has stopped flapping */
