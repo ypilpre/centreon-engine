@@ -247,8 +247,14 @@ void notifier::notify(
 
       _current_notifications |= (1 << type);
       switch (type) {
+        case PROBLEM:
+          _current_notifications &= ~(1 << RECOVERY);
+          break;
         case RECOVERY:
           _current_notifications &= ~(1 << PROBLEM);
+          break;
+        case FLAPPINGSTART:
+          _current_notifications &= ~((1 << FLAPPINGSTOP) | (1 << FLAPPINGDISABLED));
           break;
         case FLAPPINGSTOP:
         case FLAPPINGDISABLED:
@@ -350,6 +356,10 @@ notifier::notifier_filter notifier::_filter[] = {
   &notifier::_flappingstart_filter,
   &notifier::_flappingstopdisabled_filter,
   &notifier::_flappingstopdisabled_filter,
+  &notifier::_downtimestart_filter,
+  &notifier::_downtimestopcancelled_filter,
+  &notifier::_downtimestopcancelled_filter,
+  &notifier::_custom_filter
 };
 
 std::string notifier::_notification_string[] = {
@@ -442,7 +452,7 @@ bool notifier::_acknowledgement_filter() {
 }
 
 /**
- * Filter method on acknowledgement notifications
+ * Filter method on flappingstart notifications
  *
  * @return a boolean
  */
@@ -456,7 +466,7 @@ bool notifier::_flappingstart_filter() {
 }
 
 /**
- * Filter method on acknowledgement notifications
+ * Filter method on flapping stop/disabled notifications
  *
  * @return a boolean
  */
@@ -464,6 +474,45 @@ bool notifier::_flappingstopdisabled_filter() {
 
   if (is_in_downtime()
       || (get_current_notifications_flag() & (1 << FLAPPINGSTART)) == 0)
+    return false;
+
+  return true;
+}
+
+/**
+ * Filter method on downtime start notifications
+ *
+ * @return a boolean
+ */
+bool notifier::_downtimestart_filter() {
+
+  if (is_in_downtime())
+    return false;
+
+  return true;
+}
+
+/**
+ * Filter method on downtime stop/cancelled notifications
+ *
+ * @return a boolean
+ */
+bool notifier::_downtimestopcancelled_filter() {
+
+  if (!is_in_downtime())
+    return false;
+
+  return true;
+}
+
+/**
+ * Filter method on custom notifications
+ *
+ * @return a boolean
+ */
+bool notifier::_custom_filter() {
+
+  if (is_in_downtime())
     return false;
 
   return true;

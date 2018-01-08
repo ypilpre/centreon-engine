@@ -184,6 +184,9 @@ namespace           notifications {
     bool              _acknowledgement_filter();
     bool              _flappingstart_filter();
     bool              _flappingstopdisabled_filter();
+    bool              _downtimestart_filter();
+    bool              _downtimestopcancelled_filter();
+    bool              _custom_filter();
 
     void              _problem_macro_builder(nagios_macros& mac);
     void              _recovery_macro_builder(nagios_macros& mac);
