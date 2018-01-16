@@ -125,6 +125,29 @@ bool notifier::should_be_escalated() const {
   return false;
 }
 
+/**
+ *  Deletes all non-persistent acknowledgement comments for a particular
+ *  notifier
+ */
+void notifier::delete_acknowledgement_comments() {
+  comment* temp_comment = NULL;
+  comment* next_comment = NULL;
+
+  /* delete comments from memory */
+  //FIXME DBR: to rewrite
+//  for (temp_comment = comment_list;
+//       temp_comment != NULL;
+//       temp_comment = next_comment) {
+//    next_comment = temp_comment->next;
+//    if (temp_comment->comment_type == SERVICE_COMMENT
+//        && !strcmp(temp_comment->host_name, get_host_name().c_str())
+//        && !strcmp(temp_comment->service_description, get_description().c_str())
+//        && temp_comment->entry_type == ACKNOWLEDGEMENT_COMMENT
+//        && temp_comment->persistent == false)
+//      delete_comment(SERVICE_COMMENT, temp_comment->comment_id);
+//  }
+}
+
 void notifier::notify(
     notification_type type,
     std::string const& author,
@@ -141,8 +164,10 @@ void notifier::notify(
       && ((get_acknowledgement_type() == ACKNOWLEDGEMENT_NORMAL
           && get_current_state() != get_last_state())
           || (get_acknowledgement_type() == ACKNOWLEDGEMENT_STICKY
-          && get_current_state() == 0)))
+          && get_current_state() == 0))) {
     set_acknowledged(ACKNOWLEDGEMENT_NONE);
+    delete_acknowledgement_comments();
+  }
 
   std::list<shared_ptr<engine::contact> > users_to_notify = get_contacts_list();
   if (users_to_notify.empty())
@@ -247,8 +272,14 @@ void notifier::notify(
 
       _current_notifications |= (1 << type);
       switch (type) {
+        case PROBLEM:
+          _current_notifications &= ~(1 << RECOVERY);
+          break;
         case RECOVERY:
           _current_notifications &= ~(1 << PROBLEM);
+          break;
+        case FLAPPINGSTART:
+          _current_notifications &= ~((1 << FLAPPINGSTOP) | (1 << FLAPPINGDISABLED));
           break;
         case FLAPPINGSTOP:
         case FLAPPINGDISABLED:
@@ -350,6 +381,10 @@ notifier::notifier_filter notifier::_filter[] = {
   &notifier::_flappingstart_filter,
   &notifier::_flappingstopdisabled_filter,
   &notifier::_flappingstopdisabled_filter,
+  &notifier::_downtimestart_filter,
+  &notifier::_downtimestopcancelled_filter,
+  &notifier::_downtimestopcancelled_filter,
+  &notifier::_custom_filter
 };
 
 std::string notifier::_notification_string[] = {
@@ -442,7 +477,7 @@ bool notifier::_acknowledgement_filter() {
 }
 
 /**
- * Filter method on acknowledgement notifications
+ * Filter method on flappingstart notifications
  *
  * @return a boolean
  */
@@ -456,7 +491,7 @@ bool notifier::_flappingstart_filter() {
 }
 
 /**
- * Filter method on acknowledgement notifications
+ * Filter method on flapping stop/disabled notifications
  *
  * @return a boolean
  */
@@ -464,6 +499,45 @@ bool notifier::_flappingstopdisabled_filter() {
 
   if (is_in_downtime()
       || (get_current_notifications_flag() & (1 << FLAPPINGSTART)) == 0)
+    return false;
+
+  return true;
+}
+
+/**
+ * Filter method on downtime start notifications
+ *
+ * @return a boolean
+ */
+bool notifier::_downtimestart_filter() {
+
+  if (is_in_downtime())
+    return false;
+
+  return true;
+}
+
+/**
+ * Filter method on downtime stop/cancelled notifications
+ *
+ * @return a boolean
+ */
+bool notifier::_downtimestopcancelled_filter() {
+
+  if (!is_in_downtime())
+    return false;
+
+  return true;
+}
+
+/**
+ * Filter method on custom notifications
+ *
+ * @return a boolean
+ */
+bool notifier::_custom_filter() {
+
+  if (is_in_downtime())
     return false;
 
   return true;

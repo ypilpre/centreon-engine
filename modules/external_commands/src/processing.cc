@@ -33,6 +33,7 @@
 using namespace com::centreon;
 using namespace com::centreon::engine;
 using namespace com::centreon::engine::logging;
+using namespace com::centreon::engine::notifications;
 using namespace com::centreon::engine::modules::external_commands;
 
 // Dummy command.
@@ -776,16 +777,7 @@ void processing::_wrapper_send_custom_host_notification(
   if ((buf[0] = my_strtok(args, ";"))
       && (buf[1] = my_strtok(NULL, ";"))
       && (buf[2] = my_strtok(NULL, ";"))) {
-    ///////////////
-    // FIXME DBR //
-    ///////////////
-//    hst->notify(notifier::CUSTOM, buf[1], buf[2], atoi(buf[0]));
-////    host_notification(
-////      hst,
-////      NOTIFICATION_CUSTOM,
-////      buf[1],
-////      buf[2],
-////      atoi(buf[0]));
+    hst->notify(notifier::CUSTOM, buf[1], buf[2], atoi(buf[0]));
   }
 }
 
@@ -864,15 +856,6 @@ void processing::_wrapper_send_custom_service_notification(
   if ((buf[0] = my_strtok(args, ";"))
       && (buf[1] = my_strtok(NULL, ";"))
       && (buf[2] = my_strtok(NULL, ";"))) {
-    ///////////////
-    // FIXME DBR //
-    ///////////////
-//    svc->notify(notifier::CUSTOM, buf[1], buf[2], atoi(buf[0]));
-////    service_notification(
-////      svc,
-////      NOTIFICATION_CUSTOM,
-////      buf[1],
-////      buf[2],
-////      atoi(buf[0]));
+    svc->notify(notifier::CUSTOM, buf[1], buf[2], atoi(buf[0]));
   }
 }

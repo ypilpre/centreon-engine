@@ -19,7 +19,7 @@
 */
 
 #include "com/centreon/engine/globals.hh"
-#include "com/centreon/engine/objects/comment.hh"
+#include "com/centreon/engine/comment.hh"
 #include "com/centreon/engine/xcddefault.hh"
 
 /******************************************************************/
@@ -28,17 +28,18 @@
 
 /* initialize comment data */
 int xcddefault_initialize_comment_data() {
-  comment* temp_comment = NULL;
+  com::centreon::engine::comment* temp_comment = NULL;
 
-  /* find the new starting index for comment id if its missing */
-  if (next_comment_id == 0L) {
-    for (temp_comment = comment_list;
-	 temp_comment != NULL;
-         temp_comment = temp_comment->next) {
-      if (temp_comment->comment_id >= next_comment_id)
-        next_comment_id = temp_comment->comment_id + 1;
-    }
-  }
+  //FIXME DBR: bad container, to review !
+//  /* find the new starting index for comment id if its missing */
+//  if (next_comment_id == 0L) {
+//    for (temp_comment = comment_list;
+//	 temp_comment != NULL;
+//         temp_comment = temp_comment->next) {
+//      if (temp_comment->comment_id >= next_comment_id)
+//        next_comment_id = temp_comment->comment_id + 1;
+//    }
+//  }
 
   /* initialize next comment id if necessary */
   if (next_comment_id == 0L)
@@ -53,22 +54,22 @@ int xcddefault_initialize_comment_data() {
 
 /* adds a new host comment */
 int xcddefault_add_new_host_comment(
-      int entry_type,
+      com::centreon::engine::comment::entry_type entry_type,
       std::string const& host_name,
       time_t entry_time,
       std::string const& author_name,
       std::string const& comment_data,
       int persistent,
-      int source,
+      com::centreon::engine::comment::source_type source,
       int expires,
       time_t expire_time,
       unsigned long* comment_id) {
   /* find the next valid comment id */
-  while (find_host_comment(next_comment_id) != NULL)
+  while (com::centreon::engine::comment::find_host_comment(next_comment_id) != NULL)
     next_comment_id++;
 
   /* add comment to list in memory */
-  add_host_comment(
+  com::centreon::engine::comment::add_host_comment(
     entry_type,
     host_name,
     entry_time,
@@ -79,9 +80,6 @@ int xcddefault_add_new_host_comment(
     expires,
     expire_time,
     source);
-
-//  /* update comment file */
-//  xcddefault_save_comment_data(); //SHOULD BE REMOVED FIXME DBR
 
   /* return the id for the comment we are about to add (this happens in the main code) */
   if (comment_id != NULL)
@@ -94,23 +92,24 @@ int xcddefault_add_new_host_comment(
 
 /* adds a new service comment */
 int xcddefault_add_new_service_comment(
-      int entry_type,
+      com::centreon::engine::comment::entry_type entry_type,
       std::string const& host_name,
       std::string const& svc_description,
       time_t entry_time,
       std::string const& author_name,
       std::string const& comment_data,
       int persistent,
-      int source,
+      com::centreon::engine::comment::source_type source,
       int expires,
       time_t expire_time,
       unsigned long* comment_id) {
   /* find the next valid comment id */
-  while (find_service_comment(next_comment_id) != NULL)
-    next_comment_id++;
+  //FIXME DBR
+//  while (find_service_comment(next_comment_id) != NULL)
+//    next_comment_id++;
 
   /* add comment to list in memory */
-  add_service_comment(
+  com::centreon::engine::comment::add_service_comment(
     entry_type,
     host_name,
     svc_description,

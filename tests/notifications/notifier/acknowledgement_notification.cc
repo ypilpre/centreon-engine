@@ -105,6 +105,7 @@ TEST_F(AcknowledgementNotification, AcknowledgementNotification) {
   _notifier->notify(notifier::PROBLEM, "admin", "Test comment");
   ASSERT_FALSE(_notifier->get_last_notification() >= now);
 
+  // When the service is set to hard CRITICAL
   now += _notifier->get_notification_interval() + 1;
   set_time(now);
   _notifier->set_current_state(1);
@@ -126,6 +127,7 @@ TEST_F(AcknowledgementNotification, AcknowledgementNotification) {
   _notifier->set_last_check(now);
   // Then the acknowledgement is removed and a notification is sent.
   _notifier->notify(notifier::PROBLEM, "admin", "Test comment");
+  ASSERT_FALSE(_notifier->is_acknowledged());
   ASSERT_TRUE(_notifier->get_last_notification() >= now);
 
   // When the service is set to OK,

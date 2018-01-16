@@ -97,6 +97,7 @@ namespace           notifications {
     bool              contains_contact(std::string const& username) const;
     void              add_contact(shared_ptr<engine::contact> user);
     void              add_contactgroup(shared_ptr<engine::contactgroup> cg);
+    void              delete_acknowledgement_comments();
     void              set_notifications_enabled(bool enabled);
     bool              get_notifications_enabled() const;
     acknowledgement_type
@@ -184,6 +185,9 @@ namespace           notifications {
     bool              _acknowledgement_filter();
     bool              _flappingstart_filter();
     bool              _flappingstopdisabled_filter();
+    bool              _downtimestart_filter();
+    bool              _downtimestopcancelled_filter();
+    bool              _custom_filter();
 
     void              _problem_macro_builder(nagios_macros& mac);
     void              _recovery_macro_builder(nagios_macros& mac);

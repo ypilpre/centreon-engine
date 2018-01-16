@@ -36,6 +36,7 @@
 using namespace com::centreon;
 using namespace com::centreon::engine;
 using namespace com::centreon::engine::logging;
+using namespace com::centreon::engine::notifications;
 
 int process_external_command1(char* cmd) {
   char* command_id = NULL;
@@ -1237,12 +1238,8 @@ int process_host_command(int cmd,
     str = my_strtok(NULL, ";");
     if (str)
       buf[1] = string::dup(str);
-    ///////////////
-    // FIXME DBR //
-    ///////////////
-//    if (buf[0] && buf[1])
-//      temp_host->notify(notifier::CUSTOM, buf[0], buf[1], intval);
-//      //host_notification(temp_host, NOTIFICATION_CUSTOM, buf[0], buf[1], intval);
+    if (buf[0] && buf[1])
+      temp_host->notify(notifier::CUSTOM, buf[0], buf[1], intval);
     break;
 
   default:
@@ -1341,16 +1338,8 @@ int process_service_command(int cmd,
     str = my_strtok(NULL, ";");
     if (str)
       buf[1] = string::dup(str);
-    ///////////////
-    // FIXME DBR //
-    ///////////////
-//    if (buf[0] && buf[1])
-//      temp_service->notify(notifier::CUSTOM, buf[0], buf[1], intval);
-//     // service_notification(temp_service,
-//     //                      NOTIFICATION_CUSTOM,
-//     //                      buf[0],
-//     //                      buf[1],
-//     //                      intval);
+    if (buf[0] && buf[1])
+      temp_service->notify(notifier::CUSTOM, buf[0], buf[1], intval);
     break;
 
   default:

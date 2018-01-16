@@ -102,15 +102,16 @@ TEST_F(Downtime, SimpleServiceFixedDowntime) {
   set_time(41);
   // And the handle method is called, the downtime is in effect
   dt->handle();
-  ASSERT_EQ(dt->get_in_effect(), true);
+  ASSERT_TRUE(dt->get_in_effect());
 
   set_time(80);
   dt->handle();
   dt->unschedule();
-  comment* cm = comment_list;
-  ASSERT_TRUE(strcmp(cm->comment_data, "This service has been scheduled for fixed downtime from 01-01-1970 01:00:40 to 01-01-1970 01:01:00. Notifications for the service will not be sent out during that time period.") == 0);
-  cm = cm->next;
-  ASSERT_TRUE(cm == NULL);
+  std::map<unsigned long, comment*>::const_iterator it(comment_list.begin());
+  ASSERT_TRUE(it != comment_list.end());
+  ASSERT_TRUE(it->second->get_comment_data() == "This service has been scheduled for fixed downtime from 01-01-1970 01:00:40 to 01-01-1970 01:01:00. Notifications for the service will not be sent out during that time period.");
+  ++it;
+  ASSERT_TRUE(it == comment_list.end());
   ASSERT_TRUE(scheduled_downtime_list.empty());
 }
 
@@ -125,7 +126,7 @@ TEST_F(Downtime, SimpleServiceFlexibleDowntime) {
                                     "test_host",
                                     "test description"));
   // No comment for now.
-  ASSERT_TRUE(comment_list == NULL);
+  ASSERT_TRUE(comment_list.empty());
   set_time(20);
   ASSERT_TRUE(svc->schedule_downtime(
     downtime::SERVICE_DOWNTIME,
@@ -145,10 +146,11 @@ TEST_F(Downtime, SimpleServiceFlexibleDowntime) {
   engine::service* s(static_cast<engine::service*>(dt->get_parent()));
   ASSERT_EQ(s->get_description(), "test description");
 
-  comment* cm = comment_list;
-  ASSERT_TRUE(strcmp(cm->comment_data, "This service has been scheduled for flexible downtime starting between 01-01-1970 01:00:40 and 01-01-1970 01:01:00 and lasting for a period of 0 hours and 2 minutes. Notifications for the service will not be sent out during that time period.") == 0);
-  cm = cm->next;
-  ASSERT_TRUE(cm == NULL);
+  std::map<unsigned long, comment*>::const_iterator it(comment_list.begin());
+  ASSERT_TRUE(it != comment_list.end());
+  ASSERT_TRUE(it->second->get_comment_data() == "This service has been scheduled for flexible downtime starting between 01-01-1970 01:00:40 and 01-01-1970 01:01:00 and lasting for a period of 0 hours and 2 minutes. Notifications for the service will not be sent out during that time period.");
+  ++it;
+  ASSERT_TRUE(it == comment_list.end());
 
   // When it is time to start the downtime
   set_time(41);
@@ -186,10 +188,11 @@ TEST_F(Downtime, SimpleHostFixedDowntime) {
   // Only one downtime.
   ASSERT_EQ(dt->get_id(), 1);
   // One comment for now.
-  comment* cm = comment_list;
-  ASSERT_TRUE(strcmp(cm->comment_data, "This host has been scheduled for fixed downtime from 01-01-1970 01:00:40 to 01-01-1970 01:01:00. Notifications for the host will not be sent out during that time period.") == 0);
-  cm = cm->next;
-  ASSERT_TRUE(cm == NULL);
+  std::map<unsigned long, comment*>::const_iterator it(comment_list.begin());
+  ASSERT_TRUE(it != comment_list.end());
+  ASSERT_TRUE(it->second->get_comment_data() == "This host has been scheduled for fixed downtime from 01-01-1970 01:00:40 to 01-01-1970 01:01:00. Notifications for the host will not be sent out during that time period.");
+  ++it;
+  ASSERT_TRUE(it == comment_list.end());
 
   // And host name and service description are available
   ASSERT_EQ(dt->get_host_name(), "test_host");
@@ -217,7 +220,7 @@ TEST_F(Downtime, SimpleHostFlexibleDowntime) {
   shared_ptr<engine::host> hst(find_host(
                                     "test_host"));
   // No comment for now.
-  ASSERT_TRUE(comment_list == NULL);
+  ASSERT_TRUE(comment_list.empty());
   set_time(20);
   ASSERT_TRUE(hst->schedule_downtime(
     downtime::HOST_DOWNTIME,
@@ -235,10 +238,11 @@ TEST_F(Downtime, SimpleHostFlexibleDowntime) {
   // And host name and service description are available
   ASSERT_EQ(dt->get_host_name(), "test_host");
 
-  comment* cm = comment_list;
-  ASSERT_TRUE(strcmp(cm->comment_data, "This host has been scheduled for flexible downtime starting between 01-01-1970 01:00:40 and 01-01-1970 01:01:00 and lasting for a period of 0 hours and 2 minutes. Notifications for the host will not be sent out during that time period.") == 0);
-  cm = cm->next;
-  ASSERT_TRUE(cm == NULL);
+  std::map<unsigned long, comment*>::const_iterator it(comment_list.begin());
+  ASSERT_TRUE(it != comment_list.end());
+  ASSERT_TRUE(it->second->get_comment_data() == "This host has been scheduled for flexible downtime starting between 01-01-1970 01:00:40 and 01-01-1970 01:01:00 and lasting for a period of 0 hours and 2 minutes. Notifications for the host will not be sent out during that time period.");
+  ++it;
+  ASSERT_TRUE(it == comment_list.end());
 
   // When it is time to start the downtime
   set_time(41);
@@ -265,7 +269,7 @@ TEST_F(Downtime, SimpleHostFlexibleDowntime2) {
   shared_ptr<engine::host> hst(find_host(
                                     "test_host"));
   // No comment for now.
-  ASSERT_TRUE(comment_list == NULL);
+  ASSERT_TRUE(comment_list.empty());
   hst->set_current_state(0);
   set_time(20);
   ASSERT_TRUE(hst->schedule_downtime(
@@ -284,10 +288,11 @@ TEST_F(Downtime, SimpleHostFlexibleDowntime2) {
   // And host name and service description are available
   ASSERT_EQ(dt->get_host_name(), "test_host");
 
-  comment* cm = comment_list;
-  ASSERT_TRUE(strcmp(cm->comment_data, "This host has been scheduled for flexible downtime starting between 01-01-1970 01:00:40 and 01-01-1970 01:01:00 and lasting for a period of 0 hours and 2 minutes. Notifications for the host will not be sent out during that time period.") == 0);
-  cm = cm->next;
-  ASSERT_TRUE(cm == NULL);
+  std::map<unsigned long, comment*>::const_iterator it(comment_list.begin());
+  ASSERT_TRUE(it != comment_list.end());
+  ASSERT_TRUE(it->second->get_comment_data() == "This host has been scheduled for flexible downtime starting between 01-01-1970 01:00:40 and 01-01-1970 01:01:00 and lasting for a period of 0 hours and 2 minutes. Notifications for the host will not be sent out during that time period.");
+  ++it;
+  ASSERT_TRUE(it == comment_list.end());
 
   // When it is time to start the downtime
   set_time(41);
@@ -301,10 +306,11 @@ TEST_F(Downtime, SimpleHostFlexibleDowntime2) {
 
   dt->unschedule();
 
-  cm = comment_list;
-  ASSERT_TRUE(strcmp(cm->comment_data, "This host has been scheduled for flexible downtime starting between 01-01-1970 01:00:40 and 01-01-1970 01:01:00 and lasting for a period of 0 hours and 2 minutes. Notifications for the host will not be sent out during that time period.") == 0);
-  cm = cm->next;
-  ASSERT_TRUE(cm == NULL);
+  it = comment_list.begin();
+  ASSERT_TRUE(it != comment_list.end());
+  ASSERT_TRUE(it->second->get_comment_data() == "This host has been scheduled for flexible downtime starting between 01-01-1970 01:00:40 and 01-01-1970 01:01:00 and lasting for a period of 0 hours and 2 minutes. Notifications for the host will not be sent out during that time period.");
+  ++it;
+  ASSERT_TRUE(it == comment_list.end());
 
   ASSERT_TRUE(scheduled_downtime_list.empty());
 }

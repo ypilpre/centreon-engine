@@ -21,6 +21,7 @@
 #ifndef CCE_XCDDEFAULT_HH
 #  define CCE_XCDDEFAULT_HH
 
+#  include <string>
 #  include <time.h>
 
 #  ifdef __cplusplus
@@ -30,25 +31,25 @@ extern "C" {
 int xcddefault_initialize_comment_data();
 int xcddefault_save_comment_data();
 int xcddefault_add_new_host_comment(
-      int entry_type,
+      com::centreon::engine::comment::entry_type entry_type,
       std::string const& host_name,
       time_t entry_time,
       std::string const& author_name,
       std::string const& comment_data,
       int persistent,
-      int source,
+      com::centreon::engine::comment::source_type source,
       int expires,
       time_t expire_time,
       unsigned long* comment_id);
 int xcddefault_add_new_service_comment(
-      int entry_type,
+      com::centreon::engine::comment::entry_type entry_type,
       std::string const& host_name,
       std::string const& svc_description,
       time_t entry_time,
       std::string const& author_name,
       std::string const& comment_data,
       int persistent,
-      int source,
+      com::centreon::engine::comment::source_type source,
       int expires,
       time_t expire_time,
       unsigned long* comment_id);

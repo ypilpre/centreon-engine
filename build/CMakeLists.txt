@@ -666,6 +666,7 @@ set(
   # Sources.
   "${SRC_DIR}/broker.cc"
   "${SRC_DIR}/checks.cc"
+  "${SRC_DIR}/comment.cc"
   "${SRC_DIR}/config.cc"
   "${SRC_DIR}/contact.cc"
   "${SRC_DIR}/contactgroup.cc"
@@ -700,6 +701,7 @@ set(
   "${INC_DIR}/com/centreon/engine/checks.hh"
   "${INC_DIR}/com/centreon/engine/checks/checkable.hh"
   "${INC_DIR}/com/centreon/engine/circular_buffer.hh"
+  "${INC_DIR}/com/centreon/engine/comment.hh"
   "${INC_DIR}/com/centreon/engine/common.hh"
   "${INC_DIR}/com/centreon/engine/config.hh"
   "${INC_DIR}/com/centreon/engine/contact.hh"

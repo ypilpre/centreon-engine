@@ -76,12 +76,12 @@ downtime::~downtime() {
   /* remove the downtime from the list in memory */
   /* first remove the comment associated with this downtime */
   if (get_type() == HOST_DOWNTIME) {
-    delete_host_comment(get_comment_id());
+    comment::delete_host_comment(get_comment_id());
     svc_descr = "";
   }
   else {
     service* svc(static_cast<service*>(get_parent()));
-    delete_service_comment(get_comment_id());
+    comment::delete_service_comment(get_comment_id());
     svc_descr = svc->get_description();
   }
 
@@ -258,30 +258,30 @@ int downtime::registration() {
 
   /* add a non-persistent comment to the host or service regarding the scheduled outage */
   if (_type == SERVICE_DOWNTIME)
-    add_new_comment(
-      SERVICE_COMMENT,
-      DOWNTIME_COMMENT,
+    comment::add_new_comment(
+      comment::SERVICE_COMMENT,
+      comment::DOWNTIME_COMMENT,
       svc->get_host_name(),
       svc->get_description(),
       time(NULL),
       "(Centreon Engine Process)",
       oss.str(),
       0,
-      COMMENTSOURCE_INTERNAL,
+      comment::COMMENTSOURCE_INTERNAL,
       false,
       (time_t)0,
       &_comment_id);   // FIXME DBR: should be computed automatically
   else
-    add_new_comment(
-      HOST_COMMENT,
-      DOWNTIME_COMMENT,
+    comment::add_new_comment(
+      comment::HOST_COMMENT,
+      comment::DOWNTIME_COMMENT,
       hst->get_host_name(),
       "",
       time(NULL),
       "(Centreon Engine Process)",
       oss.str(),
       0,
-      COMMENTSOURCE_INTERNAL,
+      comment::COMMENTSOURCE_INTERNAL,
       false,
       (time_t)0,
       &_comment_id);     // FIXME DBR: should be computed automatically
@@ -588,12 +588,6 @@ void downtime::handle() {
                  get_author(),
                  get_comment(),
                  NOTIFICATION_OPTION_NONE);
-//      host_notification(
-//        hst,
-//        NOTIFICATION_DOWNTIMEEND,
-//        temp_downtime->author,
-//        temp_downtime->comment,
-//        NOTIFICATION_OPTION_NONE);
     }
     else if (get_type() == SERVICE_DOWNTIME
              && _parent->get_scheduled_downtime_depth() == 0) {

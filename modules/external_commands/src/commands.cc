@@ -38,7 +38,7 @@
 #include "com/centreon/engine/modules/external_commands/utils.hh"
 #include "com/centreon/engine/not_found.hh"
 #include "com/centreon/engine/notifications/notifier.hh"
-#include "com/centreon/engine/objects/comment.hh"
+#include "com/centreon/engine/comment.hh"
 #include "com/centreon/engine/statusdata.hh"
 #include "com/centreon/engine/string.hh"
 #include "com/centreon/engine/timeperiod.hh"
@@ -50,6 +50,49 @@ using namespace com::centreon::engine;
 using namespace com::centreon::engine::commands;
 using namespace com::centreon::engine::logging;
 using namespace com::centreon::engine::notifications;
+
+/*
+** Deletes all host and service downtimes on a host by hostname,
+** optionally filtered by service description, start time and comment.
+** All char* must be set or NULL - "" will silently fail to match.
+** Returns number deleted.
+*/
+static int delete_downtime_by_hostname_service_description_start_time_comment(
+             char const* hostname,
+             char const* service_description,
+             time_t start_time,
+             char const* comment) {
+  int deleted(0);
+
+  shared_ptr<host> hst;
+  if (hostname != NULL && *hostname != 0)
+    hst = find_host(hostname);
+  shared_ptr<service> svc;
+  if (service_description != NULL && *service_description != 0)
+    svc = find_service(hostname, service_description);
+
+  for (std::map<unsigned long, downtime* >::iterator
+         it(scheduled_downtime_list.begin()),
+         next_it(scheduled_downtime_list.begin()),
+         end(scheduled_downtime_list.end());
+       it != end;
+       it = next_it) {
+    downtime* temp_downtime(it->second);
+    ++next_it;
+    if (start_time != 0 && start_time != temp_downtime->get_start_time())
+      continue;
+    if (comment != NULL && temp_downtime->get_comment() != comment)
+      continue;
+    if (svc.is_null() && temp_downtime->get_parent() != hst.get())
+      continue;
+    if (!svc.is_null() && temp_downtime->get_parent() != svc.get())
+      continue;
+
+    temp_downtime->unschedule();
+    ++deleted;
+  }
+  return deleted;
+}
 
 /******************************************************************/
 /****************** EXTERNAL COMMAND PROCESSING *******************/
@@ -201,14 +244,15 @@ int cmd_add_comment(int cmd, time_t entry_time, char* args) {
     if ((temp_service = find_service(host_name, svc_description)) == NULL)
       return (ERROR);
   }
-
-  /* else verify that the host is valid */
-  try {
-    temp_host = find_host(host_name);
-  }
-  catch (not_found const& e) {
-    (void) e;
-    return (ERROR);
+  else {
+    /* else verify that the host is valid */
+    try {
+      temp_host = find_host(host_name);
+    }
+    catch (not_found const& e) {
+      (void) e;
+      return (ERROR);
+    }
   }
 
   /* get the persistent flag */
@@ -229,16 +273,16 @@ int cmd_add_comment(int cmd, time_t entry_time, char* args) {
     return (ERROR);
 
   /* add the comment */
-  result = add_new_comment(
-             (cmd == CMD_ADD_HOST_COMMENT) ? HOST_COMMENT : SERVICE_COMMENT,
-             USER_COMMENT,
+  result = comment::add_new_comment(
+             (cmd == CMD_ADD_HOST_COMMENT) ? comment::HOST_COMMENT : comment::SERVICE_COMMENT,
+             comment::USER_COMMENT,
              host_name,
              svc_description,
              entry_time,
              user,
              comment_data,
              persistent,
-             COMMENTSOURCE_EXTERNAL,
+             comment::COMMENTSOURCE_EXTERNAL,
              false,
              (time_t)0,
              NULL);
@@ -257,9 +301,9 @@ int cmd_delete_comment(int cmd, char* args) {
 
   /* delete the specified comment */
   if (cmd == CMD_DEL_HOST_COMMENT)
-    delete_host_comment(comment_id);
+    comment::delete_host_comment(comment_id);
   else
-    delete_service_comment(comment_id);
+    comment::delete_service_comment(comment_id);
 
   return (OK);
 }
@@ -297,8 +341,8 @@ int cmd_delete_all_comments(int cmd, char* args) {
   }
 
   /* delete comments */
-  delete_all_comments(
-    (cmd == CMD_DEL_ALL_HOST_COMMENTS) ? HOST_COMMENT : SERVICE_COMMENT,
+  comment::delete_all_comments(
+    (cmd == CMD_DEL_ALL_HOST_COMMENTS) ? comment::HOST_COMMENT : comment::SERVICE_COMMENT,
     host_name,
     svc_description);
   return (OK);
@@ -1380,14 +1424,12 @@ int cmd_delete_downtime_by_host_name(int cmd, char* args) {
     }
   }
 
-  // FIXME DBR: delete_downtime_by_hostname_service_description_start_time_comment
-  // does not exist anymore
-//  deleted = delete_downtime_by_hostname_service_description_start_time_comment(
-//              hostname,
-//              service_description,
-//              downtime_start_time,
-//              downtime_comment);
-  if (0 == deleted)
+  deleted = delete_downtime_by_hostname_service_description_start_time_comment(
+              hostname,
+              service_description,
+              downtime_start_time,
+              downtime_comment);
+  if (deleted == 0)
     return (ERROR);
   return (OK);
 }
@@ -1473,14 +1515,13 @@ int cmd_delete_downtime_by_hostgroup_name(int cmd, char* args) {
     temp_host = it->second.get();
     if (temp_host == NULL)
       continue ;
-    if ((host_name != NULL) && strcmp(temp_host->get_host_name().c_str(), host_name))
+    if (host_name != NULL && temp_host->get_host_name() != host_name)
       continue ;
-    //FIXME DBR: delete_downtime_by_hostname_service_description_start_time_comment does not exist anymore
-//    deleted = delete_downtime_by_hostname_service_description_start_time_comment(
-//                temp_host->name,
-//                service_description,
-//                downtime_start_time,
-//                downtime_comment);
+    deleted = delete_downtime_by_hostname_service_description_start_time_comment(
+                host_name,
+                service_description,
+                downtime_start_time,
+                downtime_comment);
   }
 
   if (0 == deleted)
@@ -1488,72 +1529,6 @@ int cmd_delete_downtime_by_hostgroup_name(int cmd, char* args) {
 
   return (OK);
 }
-
-////////////////////////////////////////////////////////////////////////////////
-/*
-** Deletes all host and service downtimes on a host by hostname,
-** optionally filtered by service description, start time and comment.
-** All char* must be set or NULL - "" will silently fail to match.
-** Returns number deleted.
-*/
-static int delete_downtime_by_hostname_service_description_start_time_comment(
-             char const* hostname,
-             char const* service_description,
-             time_t start_time,
-             char const* comment) {
-  downtime* temp_downtime;
-  int deleted(0);
-
-  /* Do not allow deletion of everything - must have at least 1 filter on. */
-  if ((NULL == hostname)
-      && (NULL == service_description)
-      && (0 == start_time)
-      && (NULL == comment))
-    return (deleted);
-
-  std::map<unsigned long, downtime*>::iterator next_it;
-
-  for (std::map<unsigned long, downtime*>::iterator
-         it(scheduled_downtime_list.begin()),
-         end(scheduled_downtime_list.begin());
-       it != end;
-       it = next_it) {
-    temp_downtime = it->second;
-    next_it = it;
-    ++next_it;
-
-    if (start_time != 0 && temp_downtime->get_start_time() != start_time)
-      continue;
-    if (comment != NULL
-        && temp_downtime->get_comment() != comment)
-      continue;
-    if (temp_downtime->get_type() == downtime::HOST_DOWNTIME) {
-      /* If service is specified, then do not delete the host downtime. */
-      if (service_description != NULL)
-	continue;
-      if (hostname != NULL
-	  && temp_downtime->get_host_name() != hostname)
-	continue;
-    }
-    else if (temp_downtime->get_type() == downtime::SERVICE_DOWNTIME) {
-      service* svc = static_cast<service*>(temp_downtime->get_parent());
-      if ((hostname != NULL)
-          && (temp_downtime->get_host_name() != hostname))
-	continue;
-      if (service_description != NULL
-	  && svc->get_description() != service_description)
-	continue;
-    }
-
-    temp_downtime->unschedule();
-//    unschedule_downtime(
-//      temp_downtime->type,
-//      temp_downtime->downtime_id);
-    ++deleted;
-  }
-  return (deleted);
-}
-////////////////////////////////////////////////////////////////////////////////
 
 /* Delete downtimes based on start time and/or comment. */
 int cmd_delete_downtime_by_start_time_comment(int cmd, char* args){
@@ -1580,12 +1555,11 @@ int cmd_delete_downtime_by_start_time_comment(int cmd, char* args){
   if ((0 == downtime_start_time) && (NULL == downtime_comment))
     return (ERROR);
 
-  //FIXME DBR: delete_downtime_by_hostname_service_description_start_time_comment does not exist anymore
-//  deleted = delete_downtime_by_hostname_service_description_start_time_comment(
-//              NULL,
-//              NULL,
-//              downtime_start_time,
-//              downtime_comment);
+  deleted = delete_downtime_by_hostname_service_description_start_time_comment(
+              NULL,
+              NULL,
+              downtime_start_time,
+              downtime_comment);
 
   if (0 == deleted)
     return (ERROR);
@@ -2819,29 +2793,28 @@ void acknowledge_host_problem(
 
   /* send out an acknowledgement notification */
     ///////////////
-    // FIXME DBR //
+    // FIXME DBR // notify is a filter here and should be managed by the 
+    // notify() method
     ///////////////
-//  if (notify)
-//    hst->notify(notifier::ACKNOWLEDGEMENT, ack_author, ack_data);
-////    host_notification(
-////      hst,
-////      NOTIFICATION_ACKNOWLEDGEMENT,
-////      ack_author,
-////      ack_data,
-////      NOTIFICATION_OPTION_NONE);
+  if (notify)
+    hst->notify(
+      notifier::ACKNOWLEDGEMENT,
+      ack_author,
+      ack_data,
+      NOTIFICATION_OPTION_NONE);
 
   /* update the status log with the host info */
   update_host_status(hst, false);
 
   /* add a comment for the acknowledgement */
-  add_new_host_comment(
-    ACKNOWLEDGEMENT_COMMENT,
+  comment::add_new_host_comment(
+    comment::ACKNOWLEDGEMENT_COMMENT,
     hst->get_host_name().c_str(),
     current_time,
     ack_author,
     ack_data,
     persistent,
-    COMMENTSOURCE_INTERNAL,
+    comment::COMMENTSOURCE_INTERNAL,
     false,
     (time_t)0,
     NULL);
@@ -2886,30 +2859,28 @@ void acknowledge_service_problem(
 
   /* send out an acknowledgement notification */
     ///////////////
-    // FIXME DBR //
+    // FIXME DBR // notify variable should disappear
     ///////////////
-//  if (notify)
-//    svc->notify(notifier::ACKNOWLEDGEMENT, ack_author, ack_data);
-////    service_notification(
-////      svc,
-////      NOTIFICATION_ACKNOWLEDGEMENT,
-////      ack_author,
-////      ack_data,
-////      NOTIFICATION_OPTION_NONE);
+  if (notify)
+    svc->notify(
+      notifier::ACKNOWLEDGEMENT,
+      ack_author,
+      ack_data,
+      NOTIFICATION_OPTION_NONE);
 
   /* update the status log with the service info */
   update_service_status(svc, false);
 
   /* add a comment for the acknowledgement */
-  add_new_service_comment(
-    ACKNOWLEDGEMENT_COMMENT,
+  comment::add_new_service_comment(
+    comment::ACKNOWLEDGEMENT_COMMENT,
     svc->get_host_name().c_str(),
     svc->get_description().c_str(),
     current_time,
     ack_author,
     ack_data,
     persistent,
-    COMMENTSOURCE_INTERNAL,
+    comment::COMMENTSOURCE_INTERNAL,
     false,
     (time_t)0,
     NULL);
@@ -2924,7 +2895,7 @@ void remove_host_acknowledgement(host* hst) {
   update_host_status(hst, false);
 
   /* remove any non-persistant comments associated with the ack */
-  delete_host_acknowledgement_comments(hst);
+  comment::delete_host_acknowledgement_comments(hst);
 }
 
 /* removes a service acknowledgement */
@@ -2936,7 +2907,7 @@ void remove_service_acknowledgement(service* svc) {
   update_service_status(svc, false);
 
   /* remove any non-persistant comments associated with the ack */
-  delete_service_acknowledgement_comments(svc);
+  comment::delete_service_acknowledgement_comments(svc);
 }
 
 /* starts executing service checks */
