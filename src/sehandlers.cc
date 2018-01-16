@@ -26,11 +26,12 @@
 #include "com/centreon/engine/macros.hh"
 #include "com/centreon/engine/neberrors.hh"
 #include "com/centreon/engine/notifications/notifier.hh"
-#include "com/centreon/engine/objects/comment.hh"
+#include "com/centreon/engine/comment.hh"
 #include "com/centreon/engine/perfdata.hh"
 #include "com/centreon/engine/sehandlers.hh"
 #include "com/centreon/engine/utils.hh"
 
+using namespace com::centreon::engine;
 using namespace com::centreon::engine::logging;
 using namespace com::centreon::engine::notifications;
 
@@ -1067,7 +1068,7 @@ int handle_host_state(host* hst) {
       hst->set_acknowledged(notifier::ACKNOWLEDGEMENT_NONE);
 
       /* remove any non-persistant comments associated with the ack */
-      delete_host_acknowledgement_comments(hst);
+      comment::delete_host_acknowledgement_comments(hst);
     }
     else if (hst->get_acknowledgement_type() == notifier::ACKNOWLEDGEMENT_STICKY
              && hst->get_current_state() == HOST_UP) {
@@ -1075,7 +1076,7 @@ int handle_host_state(host* hst) {
       hst->set_acknowledged(notifier::ACKNOWLEDGEMENT_NONE);
 
       /* remove any non-persistant comments associated with the ack */
-      delete_host_acknowledgement_comments(hst);
+      comment::delete_host_acknowledgement_comments(hst);
     }
 
     /* reset the next and last notification times */

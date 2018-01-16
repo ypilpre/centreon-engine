@@ -17,7 +17,7 @@
 ** <http://www.gnu.org/licenses/>.
 */
 
-#include "com/centreon/engine/objects/comment.hh"
+#include "com/centreon/engine/comment.hh"
 #include "com/centreon/engine/retention/comment.hh"
 #include "com/centreon/engine/string.hh"
 
@@ -52,11 +52,11 @@ retention::comment::comment(type_id comment_type)
   : object(object::comment),
     _comment_id(0),
     _comment_type(comment_type),
-    _entry_type(USER_COMMENT),
+    _entry_type(engine::comment::USER_COMMENT),
     _expire_time(0),
     _expires(false),
     _persistent(false),
-    _source(COMMENTSOURCE_INTERNAL) {}
+    _source(engine::comment::COMMENTSOURCE_INTERNAL) {}
 
 /**
  *  Copy constructor.

@@ -125,6 +125,29 @@ bool notifier::should_be_escalated() const {
   return false;
 }
 
+/**
+ *  Deletes all non-persistent acknowledgement comments for a particular
+ *  notifier
+ */
+void notifier::delete_acknowledgement_comments() {
+  comment* temp_comment = NULL;
+  comment* next_comment = NULL;
+
+  /* delete comments from memory */
+  //FIXME DBR: to rewrite
+//  for (temp_comment = comment_list;
+//       temp_comment != NULL;
+//       temp_comment = next_comment) {
+//    next_comment = temp_comment->next;
+//    if (temp_comment->comment_type == SERVICE_COMMENT
+//        && !strcmp(temp_comment->host_name, get_host_name().c_str())
+//        && !strcmp(temp_comment->service_description, get_description().c_str())
+//        && temp_comment->entry_type == ACKNOWLEDGEMENT_COMMENT
+//        && temp_comment->persistent == false)
+//      delete_comment(SERVICE_COMMENT, temp_comment->comment_id);
+//  }
+}
+
 void notifier::notify(
     notification_type type,
     std::string const& author,
@@ -141,8 +164,10 @@ void notifier::notify(
       && ((get_acknowledgement_type() == ACKNOWLEDGEMENT_NORMAL
           && get_current_state() != get_last_state())
           || (get_acknowledgement_type() == ACKNOWLEDGEMENT_STICKY
-          && get_current_state() == 0)))
+          && get_current_state() == 0))) {
     set_acknowledged(ACKNOWLEDGEMENT_NONE);
+    delete_acknowledgement_comments();
+  }
 
   std::list<shared_ptr<engine::contact> > users_to_notify = get_contacts_list();
   if (users_to_notify.empty())

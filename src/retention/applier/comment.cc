@@ -19,7 +19,7 @@
 
 #include "com/centreon/engine/configuration/applier/state.hh"
 #include "com/centreon/engine/globals.hh"
-#include "com/centreon/engine/objects/comment.hh"
+#include "com/centreon/engine/comment.hh"
 #include "com/centreon/engine/retention/applier/comment.hh"
 #include "com/centreon/engine/service.hh"
 
@@ -32,8 +32,6 @@ using namespace com::centreon::engine;
  *  @param[in] lst The comment list to add.
  */
 void applier::comment::apply(list_comment const& lst) {
-  // Big speedup when reading retention.dat in bulk.
-  defer_comment_sorting = 1;
 
   for (list_comment::const_iterator it(lst.begin()), end(lst.end());
        it != end;
@@ -44,8 +42,6 @@ void applier::comment::apply(list_comment const& lst) {
       _add_service_comment(**it);
   }
 
-  // Sort all comments.
-  sort_comments();
 }
 
 /**
@@ -62,9 +58,9 @@ void applier::comment::_add_host_comment(
   host* hst(it->second.get());
 
   // add the comment.
-  add_comment(
-    HOST_COMMENT,
-    obj.entry_type(),
+  engine::comment::add_comment(
+    engine::comment::HOST_COMMENT,
+    static_cast<engine::comment::entry_type>(obj.entry_type()),
     obj.host_name().c_str(),
     NULL,
     obj.entry_time(),
@@ -74,18 +70,18 @@ void applier::comment::_add_host_comment(
     obj.persistent(),
     obj.expires(),
     obj.expire_time(),
-    obj.source());
+    static_cast<engine::comment::source_type>(obj.source()));
 
   // acknowledgement comments get deleted if they're not persistent
   // and the original problem is no longer acknowledged.
-  if (obj.entry_type() == ACKNOWLEDGEMENT_COMMENT) {
+  if (obj.entry_type() == engine::comment::ACKNOWLEDGEMENT_COMMENT) {
     if (!hst->is_acknowledged() && !obj.persistent())
-      delete_comment(HOST_COMMENT, obj.comment_id());
+      engine::comment::delete_comment(engine::comment::HOST_COMMENT, obj.comment_id());
   }
   // non-persistent comments don't last past restarts UNLESS
   // they're acks (see above).
   else if (!obj.persistent())
-    delete_comment(HOST_COMMENT, obj.comment_id());
+    engine::comment::delete_comment(engine::comment::HOST_COMMENT, obj.comment_id());
 }
 
 /**
@@ -104,9 +100,9 @@ void applier::comment::_add_service_comment(
   service* svc(&*it_svc->second);
 
   // add the comment.
-  add_comment(
-    SERVICE_COMMENT,
-    obj.entry_type(),
+  engine::comment::add_comment(
+    engine::comment::SERVICE_COMMENT,
+    static_cast<engine::comment::entry_type>(obj.entry_type()),
     obj.host_name().c_str(),
     obj.service_description().c_str(),
     obj.entry_time(),
@@ -116,16 +112,16 @@ void applier::comment::_add_service_comment(
     obj.persistent(),
     obj.expires(),
     obj.expire_time(),
-    obj.source());
+    static_cast<engine::comment::source_type>(obj.source()));
 
   // acknowledgement comments get deleted if they're not persistent
   // and the original problem is no longer acknowledged.
-  if (obj.entry_type() == ACKNOWLEDGEMENT_COMMENT) {
+  if (obj.entry_type() == engine::comment::ACKNOWLEDGEMENT_COMMENT) {
     if (!svc->is_acknowledged() && !obj.persistent())
-      delete_comment(SERVICE_COMMENT, obj.comment_id());
+      engine::comment::delete_comment(engine::comment::SERVICE_COMMENT, obj.comment_id());
   }
   // non-persistent comments don't last past restarts UNLESS
   // they're acks (see above).
   else if (!obj.persistent())
-    delete_comment(SERVICE_COMMENT, obj.comment_id());
+    engine::comment::delete_comment(engine::comment::SERVICE_COMMENT, obj.comment_id());
 }

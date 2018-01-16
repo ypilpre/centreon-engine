@@ -26,17 +26,17 @@
 #  include "com/centreon/engine/namespace.hh"
 #  include "com/centreon/engine/service.hh"
 
-// Forward declaration.
-struct comment_struct;
 
 CCE_BEGIN()
 
+// Forward declaration.
+class comment;
 class contact;
 class downtime;
 
 namespace         retention {
   namespace       dump {
-    std::ostream& comment(std::ostream& os, comment_struct const& obj);
+    std::ostream& comment(std::ostream& os, comment const& obj);
     std::ostream& comments(std::ostream& os);
     std::ostream& contact(std::ostream& os, contact const& obj);
     std::ostream& contacts(std::ostream& os);

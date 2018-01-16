@@ -52,7 +52,7 @@
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/macros/misc.hh"
 #include "com/centreon/engine/nebmods.hh"
-#include "com/centreon/engine/objects/comment.hh"
+#include "com/centreon/engine/comment.hh"
 #include "com/centreon/engine/perfdata.hh"
 #include "com/centreon/engine/retention/dump.hh"
 #include "com/centreon/engine/retention/parser.hh"
@@ -376,7 +376,8 @@ int main(int argc, char* argv[]) {
         initialize_status_data();
 
         // Initialize comment data.
-        initialize_comment_data();
+        //FIXME DBR: this function no more exists and may be should be rewritten
+        //initialize_comment_data();
 
         // Initialize scheduled downtime data.
         // FIXME DBR: this function no more exists

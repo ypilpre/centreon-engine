@@ -503,9 +503,7 @@ void applier::service::remove_object(
     ::service* svc(it->second.get());
 
     // Remove service comments.
-    delete_all_service_comments(
-      host_name.c_str(),
-      service_description.c_str());
+    comment::delete_all_service_comments(host_name, service_description);
 
     // Remove service downtimes.
     //FIXME DBR: does not exist anymore

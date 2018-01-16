@@ -97,6 +97,7 @@ namespace           notifications {
     bool              contains_contact(std::string const& username) const;
     void              add_contact(shared_ptr<engine::contact> user);
     void              add_contactgroup(shared_ptr<engine::contactgroup> cg);
+    void              delete_acknowledgement_comments();
     void              set_notifications_enabled(bool enabled);
     bool              get_notifications_enabled() const;
     acknowledgement_type

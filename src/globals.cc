@@ -63,7 +63,8 @@ commands::command*  global_host_event_handler_ptr(NULL);
 commands::command*  global_service_event_handler_ptr(NULL);
 commands::command*  ochp_command_ptr(NULL);
 commands::command*  ocsp_command_ptr(NULL);
-comment*            comment_list(NULL);
+
+std::map<unsigned long, comment*> comment_list;
 contact*            contact_list(NULL);
 contact*            contact_list_tail(NULL);
 dbuf                check_result_dbuf;
@@ -85,7 +86,6 @@ int                 caught_signal(false);
 int                 command_check_interval(-1);
 int                 config_errors(0);
 int                 config_warnings(0);
-int                 defer_comment_sorting(0);
 int                 defer_downtime_sorting(0);
 int                 embedded_perl_initialized(false);
 int                 external_command_buffer_slots(4096);

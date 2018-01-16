@@ -31,6 +31,7 @@
 #include "com/centreon/engine/checks.hh"
 #include "com/centreon/engine/checks/checker.hh"
 #include "com/centreon/engine/checks/viability_failure.hh"
+#include "com/centreon/engine/comment.hh"
 #include "com/centreon/engine/configuration/applier/state.hh"
 #include "com/centreon/engine/events/defines.hh"
 #include "com/centreon/engine/flapping.hh"
@@ -39,7 +40,6 @@
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/neberrors.hh"
 #include "com/centreon/engine/notifications/notifier.hh"
-#include "com/centreon/engine/objects/comment.hh"
 #include "com/centreon/engine/objects/objectlist.hh"
 #include "com/centreon/engine/perfdata.hh"
 #include "com/centreon/engine/sehandlers.hh"
@@ -544,14 +544,14 @@ int handle_async_service_check_result(
       temp_service->set_acknowledged(notifier::ACKNOWLEDGEMENT_NONE);
 
       /* remove any non-persistant comments associated with the ack */
-      delete_service_acknowledgement_comments(temp_service);
+      comment::delete_service_acknowledgement_comments(temp_service);
     }
     else if (temp_service->get_acknowledgement_type() == notifier::ACKNOWLEDGEMENT_STICKY
              && temp_service->get_current_state() == STATE_OK) {
       temp_service->set_acknowledged(notifier::ACKNOWLEDGEMENT_NONE);
 
       /* remove any non-persistant comments associated with the ack */
-      delete_service_acknowledgement_comments(temp_service);
+      comment::delete_service_acknowledgement_comments(temp_service);
     }
 
     /* do NOT reset current notification number!!! */

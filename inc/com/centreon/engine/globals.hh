@@ -33,7 +33,7 @@
 #  include "com/centreon/engine/events/sched_info.hh"
 #  include "com/centreon/engine/events/timed_event.hh"
 #  include "com/centreon/engine/nebmods.hh"
-#  include "com/centreon/engine/objects/comment.hh"
+#  include "com/centreon/engine/comment.hh"
 #  include "com/centreon/engine/objects/hostdependency.hh"
 #  include "com/centreon/engine/objects/hostescalation.hh"
 #  include "com/centreon/engine/objects/servicedependency.hh"
@@ -142,7 +142,9 @@ extern timed_event*              event_list_high;
 extern timed_event*              event_list_high_tail;
 extern sched_info                scheduling_info;
 
-extern comment*                  comment_list;
+extern std::map<unsigned long, com::centreon::engine::comment*>
+                                 comment_list;
+
 extern int                       defer_comment_sorting;
 
 extern char*                     macro_x_names[];

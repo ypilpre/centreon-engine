@@ -610,7 +610,6 @@ int xrddefault_read_state_information() {
 
   /* Big speedup when reading retention.dat in bulk */
   defer_downtime_sorting = 1;
-  defer_comment_sorting = 1;
 
   /* read all lines in the retention file */
   while (1) {

@@ -26,7 +26,7 @@
 #include "com/centreon/engine/globals.hh"
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/notifications/notifier.hh"
-#include "com/centreon/engine/objects/comment.hh"
+#include "com/centreon/engine/comment.hh"
 #include "com/centreon/engine/statusdata.hh"
 
 using namespace com::centreon::engine;

@@ -46,7 +46,7 @@
 #include "com/centreon/engine/macros.hh"
 #include "com/centreon/engine/nebmods.hh"
 #include "com/centreon/engine/not_found.hh"
-#include "com/centreon/engine/objects/comment.hh"
+#include "com/centreon/engine/comment.hh"
 #include "com/centreon/engine/shared.hh"
 #include "com/centreon/engine/string.hh"
 #include "com/centreon/engine/utils.hh"
@@ -955,7 +955,8 @@ void cleanup() {
  */
 void free_memory(nagios_macros* mac) {
   // Free memory allocated to comments.
-  free_comment_data();
+  //FIXME DBR: the goal here is to remove the global container comment_list...
+  //free_comment_data();
 
   // Free memory allocated to downtimes.
   // FIXME DBR: downtimes need to be rewritten
