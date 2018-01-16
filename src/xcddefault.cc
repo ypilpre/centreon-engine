@@ -69,9 +69,11 @@ int xcddefault_add_new_host_comment(
     next_comment_id++;
 
   /* add comment to list in memory */
-  com::centreon::engine::comment::add_host_comment(
+  com::centreon::engine::comment::add_comment(
+    com::centreon::engine::comment::HOST_COMMENT,
     entry_type,
     host_name,
+    "",
     entry_time,
     author_name,
     comment_data,
@@ -109,7 +111,8 @@ int xcddefault_add_new_service_comment(
 //    next_comment_id++;
 
   /* add comment to list in memory */
-  com::centreon::engine::comment::add_service_comment(
+  com::centreon::engine::comment::add_comment(
+    com::centreon::engine::comment::SERVICE_COMMENT,
     entry_type,
     host_name,
     svc_description,

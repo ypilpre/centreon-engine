@@ -80,29 +80,6 @@ class           comment {
                   int expires,
                   time_t expire_time,
                   source_type source);
-   static int   add_host_comment(
-                  entry_type entry_type,
-                  std::string const& host_name,
-                  time_t entry_time,
-                  std::string const& author,
-                  std::string const& comment_data,
-                  unsigned long comment_id,
-                  int persistent,
-                  int expires,
-                  time_t expire_time,
-                  source_type source);
-    static int add_service_comment(
-                  comment::entry_type entry_type,
-                  std::string const& host_name,
-                  std::string const& svc_description,
-                  time_t entry_time,
-                  std::string const& author,
-                  std::string const& comment_data,
-                  unsigned long comment_id,
-                  int persistent,
-                  int expires,
-                  time_t expire_time,
-                  source_type source);
 
     static int  add_new_host_comment(
                   comment::entry_type ent_type,

@@ -248,61 +248,6 @@ int comment::delete_service_acknowledgement_comments(service* svc) {
   return (OK);
 }
 
-/* adds a host comment to the list in memory */
-int comment::add_host_comment(
-      comment::entry_type entry_type,
-      std::string const& host_name,
-      time_t entry_time,
-      std::string const& author,
-      std::string const& comment_data,
-      unsigned long comment_id,
-      int persistent,
-      int expires,
-      time_t expire_time,
-      source_type source) {
-  return (comment::add_comment(
-            comment::HOST_COMMENT,
-            entry_type,
-            host_name,
-            "",
-            entry_time,
-            author,
-            comment_data,
-            comment_id,
-            persistent,
-            expires,
-            expire_time,
-            source));
-}
-
-/* adds a service comment to the list in memory */
-int comment::add_service_comment(
-      comment::entry_type entry_type,
-      std::string const& host_name,
-      std::string const& svc_description,
-      time_t entry_time,
-      std::string const& author,
-      std::string const& comment_data,
-      unsigned long comment_id,
-      int persistent,
-      int expires,
-      time_t expire_time,
-      source_type source) {
-  return (comment::add_comment(
-            comment::SERVICE_COMMENT,
-            entry_type,
-            host_name,
-            svc_description,
-            entry_time,
-            author,
-            comment_data,
-            comment_id,
-            persistent,
-            expires,
-            expire_time,
-            source));
-}
-
 /* adds a comment to the list in memory */
 int comment::add_comment(
       comment_type comment_type,
