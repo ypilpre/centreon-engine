@@ -51,6 +51,49 @@ using namespace com::centreon::engine::commands;
 using namespace com::centreon::engine::logging;
 using namespace com::centreon::engine::notifications;
 
+/*
+** Deletes all host and service downtimes on a host by hostname,
+** optionally filtered by service description, start time and comment.
+** All char* must be set or NULL - "" will silently fail to match.
+** Returns number deleted.
+*/
+static int delete_downtime_by_hostname_service_description_start_time_comment(
+             char const* hostname,
+             char const* service_description,
+             time_t start_time,
+             char const* comment) {
+  int deleted(0);
+
+  shared_ptr<host> hst;
+  if (hostname != NULL && *hostname != 0)
+    hst = find_host(hostname);
+  shared_ptr<service> svc;
+  if (service_description != NULL && *service_description != 0)
+    svc = find_service(hostname, service_description);
+
+  for (std::map<unsigned long, downtime* >::iterator
+         it(scheduled_downtime_list.begin()),
+         next_it(scheduled_downtime_list.begin()),
+         end(scheduled_downtime_list.end());
+       it != end;
+       it = next_it) {
+    downtime* temp_downtime(it->second);
+    ++next_it;
+    if (start_time != 0 && start_time != temp_downtime->get_start_time())
+      continue;
+    if (comment != NULL && temp_downtime->get_comment() != comment)
+      continue;
+    if (svc.is_null() && temp_downtime->get_parent() != hst.get())
+      continue;
+    if (!svc.is_null() && temp_downtime->get_parent() != svc.get())
+      continue;
+
+    temp_downtime->unschedule();
+    ++deleted;
+  }
+  return deleted;
+}
+
 /******************************************************************/
 /****************** EXTERNAL COMMAND PROCESSING *******************/
 /******************************************************************/
@@ -1380,14 +1423,12 @@ int cmd_delete_downtime_by_host_name(int cmd, char* args) {
     }
   }
 
-  // FIXME DBR: delete_downtime_by_hostname_service_description_start_time_comment
-  // does not exist anymore
-//  deleted = delete_downtime_by_hostname_service_description_start_time_comment(
-//              hostname,
-//              service_description,
-//              downtime_start_time,
-//              downtime_comment);
-  if (0 == deleted)
+  deleted = delete_downtime_by_hostname_service_description_start_time_comment(
+              hostname,
+              service_description,
+              downtime_start_time,
+              downtime_comment);
+  if (deleted == 0)
     return (ERROR);
   return (OK);
 }
@@ -1488,72 +1529,6 @@ int cmd_delete_downtime_by_hostgroup_name(int cmd, char* args) {
 
   return (OK);
 }
-
-////////////////////////////////////////////////////////////////////////////////
-/*
-** Deletes all host and service downtimes on a host by hostname,
-** optionally filtered by service description, start time and comment.
-** All char* must be set or NULL - "" will silently fail to match.
-** Returns number deleted.
-*/
-static int delete_downtime_by_hostname_service_description_start_time_comment(
-             char const* hostname,
-             char const* service_description,
-             time_t start_time,
-             char const* comment) {
-  downtime* temp_downtime;
-  int deleted(0);
-
-  /* Do not allow deletion of everything - must have at least 1 filter on. */
-  if ((NULL == hostname)
-      && (NULL == service_description)
-      && (0 == start_time)
-      && (NULL == comment))
-    return (deleted);
-
-  std::map<unsigned long, downtime*>::iterator next_it;
-
-  for (std::map<unsigned long, downtime*>::iterator
-         it(scheduled_downtime_list.begin()),
-         end(scheduled_downtime_list.begin());
-       it != end;
-       it = next_it) {
-    temp_downtime = it->second;
-    next_it = it;
-    ++next_it;
-
-    if (start_time != 0 && temp_downtime->get_start_time() != start_time)
-      continue;
-    if (comment != NULL
-        && temp_downtime->get_comment() != comment)
-      continue;
-    if (temp_downtime->get_type() == downtime::HOST_DOWNTIME) {
-      /* If service is specified, then do not delete the host downtime. */
-      if (service_description != NULL)
-	continue;
-      if (hostname != NULL
-	  && temp_downtime->get_host_name() != hostname)
-	continue;
-    }
-    else if (temp_downtime->get_type() == downtime::SERVICE_DOWNTIME) {
-      service* svc = static_cast<service*>(temp_downtime->get_parent());
-      if ((hostname != NULL)
-          && (temp_downtime->get_host_name() != hostname))
-	continue;
-      if (service_description != NULL
-	  && svc->get_description() != service_description)
-	continue;
-    }
-
-    temp_downtime->unschedule();
-//    unschedule_downtime(
-//      temp_downtime->type,
-//      temp_downtime->downtime_id);
-    ++deleted;
-  }
-  return (deleted);
-}
-////////////////////////////////////////////////////////////////////////////////
 
 /* Delete downtimes based on start time and/or comment. */
 int cmd_delete_downtime_by_start_time_comment(int cmd, char* args){
@@ -2821,16 +2796,15 @@ void acknowledge_host_problem(
 
   /* send out an acknowledgement notification */
     ///////////////
-    // FIXME DBR //
+    // FIXME DBR // notify is a filter here and should be managed by the 
+    // notify() method
     ///////////////
-//  if (notify)
-//    hst->notify(notifier::ACKNOWLEDGEMENT, ack_author, ack_data);
-////    host_notification(
-////      hst,
-////      NOTIFICATION_ACKNOWLEDGEMENT,
-////      ack_author,
-////      ack_data,
-////      NOTIFICATION_OPTION_NONE);
+  if (notify)
+    hst->notify(
+      notifier::ACKNOWLEDGEMENT,
+      ack_author,
+      ack_data,
+      NOTIFICATION_OPTION_NONE);
 
   /* update the status log with the host info */
   update_host_status(hst, false);
@@ -2888,16 +2862,14 @@ void acknowledge_service_problem(
 
   /* send out an acknowledgement notification */
     ///////////////
-    // FIXME DBR //
+    // FIXME DBR // notify variable should disappear
     ///////////////
-//  if (notify)
-//    svc->notify(notifier::ACKNOWLEDGEMENT, ack_author, ack_data);
-////    service_notification(
-////      svc,
-////      NOTIFICATION_ACKNOWLEDGEMENT,
-////      ack_author,
-////      ack_data,
-////      NOTIFICATION_OPTION_NONE);
+  if (notify)
+    svc->notify(
+      notifier::ACKNOWLEDGEMENT,
+      ack_author,
+      ack_data,
+      NOTIFICATION_OPTION_NONE);
 
   /* update the status log with the service info */
   update_service_status(svc, false);
