@@ -38,11 +38,11 @@ using namespace com::centreon::engine::logging;
 using namespace com::centreon::engine::notifications;
 
 
-/**************************************                                         
-*                                     *                                         
-*           Public Methods            *                                         
-*                                     *                                         
-**************************************/                                         
+/**************************************
+*                                     *
+*           Public Methods            *
+*                                     *
+**************************************/
 
 /**
  *  Constructor.
@@ -60,8 +60,6 @@ contact::contact(configuration::contact const& obj)
     _email(obj.email()),
     _pager(obj.pager()),
     _address(obj.address()),
-    _service_notification_period_name(obj.service_notification_period()),
-    _host_notification_period_name(obj.host_notification_period()),
     _service_notified_states(
         ((obj.service_notification_options() & configuration::service::ok)
          ? notifier::ON_RECOVERY : 0)
@@ -94,7 +92,7 @@ contact::contact(configuration::contact const& obj)
     _retain_status_information(obj.retain_status_information()),
     _service_notifications_enabled(obj.service_notifications_enabled()),
     _timezone(obj.timezone()) {
-    
+
   // Make sure we have the data we need.
   if (_name.empty())
     throw (engine_error() << "contact: Contact name is empty");
@@ -140,13 +138,19 @@ contact& contact::operator=(contact const& other) {
 contact::~contact() {
 }
 
+/**************************************
+*                                     *
+*           Base properties           *
+*                                     *
+**************************************/
+
 /**
  *  Return the contact name
  *
  *  @return a reference to the name
  */
 std::string const& contact::get_name() const {
-  return _name;
+  return (_name);
 }
 
 /**
@@ -155,7 +159,36 @@ std::string const& contact::get_name() const {
  *  @return a reference to the alias
  */
 std::string const& contact::get_alias() const {
-  return _alias;
+  return (_alias);
+}
+
+/**
+ *  Set alias.
+ *
+ *  @param[in] alias  New alias.
+ */
+void contact::set_alias(std::string const& alias) {
+  _alias = alias;
+  return ;
+}
+
+/**
+ *  Check if contact can submit commands.
+ *
+ *  @return True if contact can submit commands.
+ */
+bool contact::get_can_submit_commands() const {
+  return (_can_submit_commands);
+}
+
+/**
+ *  (Dis)Allow a contact to submit commands.
+ *
+ *  @param[in] can_submit  True to enable contact to send commands.
+ */
+void contact::set_can_submit_commands(bool can_submit) {
+  _can_submit_commands = can_submit;
+  return ;
 }
 
 /**
@@ -164,7 +197,17 @@ std::string const& contact::get_alias() const {
  *  @return a reference to the email
  */
 std::string const& contact::get_email() const {
-  return _email;
+  return (_email);
+}
+
+/**
+ *  Set contact email.
+ *
+ *  @param[in] email  New email.
+ */
+void contact::set_email(std::string const& email) {
+  _email = email;
+  return ;
 }
 
 /**
@@ -173,7 +216,124 @@ std::string const& contact::get_email() const {
  *  @return a reference to the pager
  */
 std::string const& contact::get_pager() const {
-  return _pager;
+  return (_pager);
+}
+
+/**
+ *  Set the pager.
+ *
+ *  @param[in] pager  New pager.
+ */
+void contact::set_pager(std::string const& pager) {
+  _pager = pager;
+  return ;
+}
+
+/**
+ *  Check if status info should be retained.
+ *
+ *  @return True if status info should be retained.
+ */
+bool contact::get_retain_status_information() const {
+  return (_retain_status_information);
+}
+
+/**
+ *  Retain (or not) status info.
+ *
+ *  @param[in] retain  True to retain status info.
+ */
+void contact::set_retain_status_information(bool retain) {
+  _retain_status_information = retain;
+  return ;
+}
+
+/**
+ *  Check if non-status info should be retained.
+ *
+ *  @return True if non-status info should be retained.
+ */
+bool contact::get_retain_nonstatus_information() const {
+  return (_retain_nonstatus_information);
+}
+
+/**
+ *  Retain (or not) non-status info.
+ *
+ *  @param[in] retain  True to retain non-status info.
+ */
+void contact::set_retain_nonstatus_information(bool retain) {
+  _retain_nonstatus_information = retain;
+  return ;
+}
+
+/**
+ *  Get timezone.
+ *
+ *  @return Contact timezone.
+ */
+std::string const& contact::get_timezone() const {
+  return (_timezone);
+}
+
+/**
+ *  Set timezone.
+ *
+ *  @param[in] timezone  New contact timezone.
+ */
+void contact::set_timezone(std::string const& timezone) {
+  _timezone = timezone;
+  return ;
+}
+
+/**************************************
+*                                     *
+*     Host notification properties    *
+*                                     *
+**************************************/
+
+/**
+ *  Get host notified states.
+ *
+ *  @return Host notified states.
+ */
+unsigned int contact::get_host_notified_states() const {
+  return (_host_notified_states);
+}
+
+/**
+ *  Set host notified states.
+ *
+ *  @param[in] notified_states  New host notified states.
+ */
+void contact::set_host_notified_states(unsigned int notified_states) {
+  _host_notified_states = notified_states;
+  return ;
+}
+
+/**************************************
+*                                     *
+*   Service notification properties   *
+*                                     *
+**************************************/
+
+/**
+ *  Get service notified states.
+ *
+ *  @return Service notified states.
+ */
+unsigned int contact::get_service_notified_states() const {
+  return (_service_notified_states);
+}
+
+/**
+ *  Set service notified states.
+ *
+ *  @param[in] notified_states  New service notified states.
+ */
+void contact::set_service_notified_states(unsigned int notified_states) {
+  _service_notified_states = notified_states;
+  return ;
 }
 
 /**
@@ -254,55 +414,56 @@ bool contact::check(int* w, int* e) {
       it->second = cmd;
     }
 
-  /* check service notification timeperiod */
-  if (get_service_notification_period_name().empty()) {
-    logger(log_verification_error, basic)
-      << "Warning: Contact '" << get_name() << "' has no service "
-      "notification time period defined!";
-    warnings++;
-  }
-  else {
-    timeperiod* temp_timeperiod;
-    try {
-      temp_timeperiod = &find_timeperiod(get_service_notification_period_name());
-    }
-    catch (not_found const& e) {
-      (void)e;
-      logger(log_verification_error, basic)
-        << "Error: Service notification period '"
-        << get_service_notification_period_name()
-        << "' specified for contact '" << get_name()
-        << "' is not defined anywhere!";
-      ++errors;
-    }
-    set_service_notification_period(temp_timeperiod);
-  }
+  // XXX : move entier method to applier
+  // /* check service notification timeperiod */
+  // if (get_service_notification_period_name().empty()) {
+  //   logger(log_verification_error, basic)
+  //     << "Warning: Contact '" << get_name() << "' has no service "
+  //     "notification time period defined!";
+  //   warnings++;
+  // }
+  // else {
+  //   timeperiod* temp_timeperiod;
+  //   try {
+  //     temp_timeperiod = &find_timeperiod(get_service_notification_period_name());
+  //   }
+  //   catch (not_found const& e) {
+  //     (void)e;
+  //     logger(log_verification_error, basic)
+  //       << "Error: Service notification period '"
+  //       << get_service_notification_period_name()
+  //       << "' specified for contact '" << get_name()
+  //       << "' is not defined anywhere!";
+  //     ++errors;
+  //   }
+  //   set_service_notification_period(temp_timeperiod);
+  // }
 
-  /* check host notification timeperiod */
-  if (get_host_notification_period_name().empty()) {
-    logger(log_verification_error, basic)
-      << "Warning: Contact '" << get_name() << "' has no host "
-      "notification time period defined!";
-    warnings++;
-  }
-  else {
-    timeperiod* temp_timeperiod;
-    try {
-      temp_timeperiod = &find_timeperiod(get_host_notification_period_name());
-    }
-    catch (not_found const& e) {
-      (void)e;
-      logger(log_verification_error, basic)
-        << "Error: Host notification period '"
-        << get_host_notification_period_name()
-        << "' specified for contact '" << get_name()
-        << "' is not defined anywhere!";
-      ++errors;
-    }
+  // /* check host notification timeperiod */
+  // if (get_host_notification_period_name().empty()) {
+  //   logger(log_verification_error, basic)
+  //     << "Warning: Contact '" << get_name() << "' has no host "
+  //     "notification time period defined!";
+  //   warnings++;
+  // }
+  // else {
+  //   timeperiod* temp_timeperiod;
+  //   try {
+  //     temp_timeperiod = &find_timeperiod(get_host_notification_period_name());
+  //   }
+  //   catch (not_found const& e) {
+  //     (void)e;
+  //     logger(log_verification_error, basic)
+  //       << "Error: Host notification period '"
+  //       << get_host_notification_period_name()
+  //       << "' specified for contact '" << get_name()
+  //       << "' is not defined anywhere!";
+  //     ++errors;
+  //   }
 
-    /* save the pointer to the host notification timeperiod for later */
-    set_host_notification_period(temp_timeperiod);
-  }
+  //   /* save the pointer to the host notification timeperiod for later */
+  //   set_host_notification_period(temp_timeperiod);
+  // }
 
   /* check for sane host recovery options */
   if (notify_on_host_recovery()
@@ -450,9 +611,6 @@ void contact::set_customvar(customvar const& var) {
   }
 }
 
-std::string const& contact::get_timezone() const {
-  return _timezone;
-}
 
 std::string const& contact::get_address(int index) const {
   return _address[index];
@@ -522,7 +680,7 @@ timeperiod_struct* contact::get_service_notification_period() const {
   return _service_notification_period;
 }
 
-bool contact::is_host_notifications_enabled() const {
+bool contact::get_host_notifications_enabled() const {
   return _host_notifications_enabled;
 }
 
@@ -530,28 +688,12 @@ void contact::set_host_notifications_enabled(bool enabled) {
   _host_notifications_enabled = enabled;
 }
 
-bool contact::is_service_notifications_enabled() const {
+bool contact::get_service_notifications_enabled() const {
   return _service_notifications_enabled;
 }
 
 void contact::set_service_notifications_enabled(bool enabled) {
   _service_notifications_enabled = enabled;
-}
-
-std::string const& contact::get_host_notification_period_name() const {
-  return _host_notification_period_name;
-}
-
-void contact::set_host_notification_period_name(std::string const& name) {
-  _host_notification_period_name = name;
-}
-
-std::string const& contact::get_service_notification_period_name() const {
-  return _service_notification_period_name;
-}
-
-void contact::set_service_notification_period_name(std::string const& name) {
-  _service_notification_period_name = name;
 }
 
 void contact::add_host_notification_command(std::string const& command_name) {
@@ -570,33 +712,6 @@ void contact::add_service_notification_command(std::string const& command_name) 
              << "Error: Service notification command is empty");
 
   _service_notification_commands[command_name] = shared_ptr<command>(0);
-}
-
-void contact::update_config(configuration::contact const& obj) {
-  configuration::applier::modify_if_different(
-    _alias, obj.alias().empty() ? obj.contact_name() : obj.alias());
-  configuration::applier::modify_if_different(_email, obj.email());
-  configuration::applier::modify_if_different(_pager, obj.pager());
-  configuration::applier::modify_if_different(_address, obj.address());
-  configuration::applier::modify_if_different(_service_notified_states, obj.service_notification_options());
-  configuration::applier::modify_if_different(_host_notified_states, obj.host_notification_options());
-
-  configuration::applier::modify_if_different(
-    _host_notification_period_name, obj.host_notification_period());
-  configuration::applier::modify_if_different(
-    _service_notification_period_name, obj.service_notification_period());
-  configuration::applier::modify_if_different(
-    _host_notifications_enabled, obj.host_notifications_enabled());
-  configuration::applier::modify_if_different(
-    _service_notifications_enabled, obj.service_notifications_enabled());
-  configuration::applier::modify_if_different(
-    _can_submit_commands, obj.can_submit_commands());
-  configuration::applier::modify_if_different(
-    _retain_status_information, obj.retain_status_information());
-  configuration::applier::modify_if_different(
-    _retain_nonstatus_information, obj.retain_nonstatus_information());
-  configuration::applier::modify_if_different(
-    _timezone, obj.timezone());
 }
 
 void contact::clear_host_notification_commands() {
@@ -637,21 +752,13 @@ bool contact::operator<(contact const& other) {
   return false;
 }
 
-bool contact::get_retain_status_information() const {
-  return _retain_status_information;
-}
-
-bool contact::get_retain_nonstatus_information() const {
-  return _retain_nonstatus_information;
-}
-
 /* enables host notifications for a contact */
 void contact::enable_host_notifications() {
   unsigned long attr(MODATTR_NOTIFICATIONS_ENABLED);
 
   /* no change */
-  if (is_host_notifications_enabled())
-    return;
+  if (get_host_notifications_enabled())
+    return ;
 
   /* set the attribute modified flag */
   _modified_host_attributes |= attr;
@@ -683,8 +790,8 @@ void contact::disable_host_notifications() {
   unsigned long attr(MODATTR_NOTIFICATIONS_ENABLED);
 
   /* no change */
-  if (!is_host_notifications_enabled())
-    return;
+  if (!get_host_notifications_enabled())
+    return ;
 
   /* set the attribute modified flag */
   _modified_host_attributes |= attr;
@@ -716,8 +823,8 @@ void contact::enable_service_notifications() {
   unsigned long attr(MODATTR_NOTIFICATIONS_ENABLED);
 
   /* no change */
-  if (is_service_notifications_enabled())
-    return;
+  if (get_service_notifications_enabled())
+    return ;
 
   /* set the attribute modified flag */
   _modified_service_attributes |= attr;
@@ -749,8 +856,8 @@ void contact::disable_service_notifications() {
   unsigned long attr(MODATTR_NOTIFICATIONS_ENABLED);
 
   /* no change */
-  if (!is_service_notifications_enabled())
-    return;
+  if (!get_service_notifications_enabled())
+    return ;
 
   /* set the attribute modified flag */
   _modified_service_attributes |= attr;

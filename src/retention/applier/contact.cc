@@ -85,34 +85,34 @@ void applier::contact::_update(
 
 
   if (obj.get_retain_nonstatus_information()) {
-    if (state.host_notification_period().is_set()) {
-      if (obj.get_modified_host_attributes()
-          & MODATTR_NOTIFICATION_TIMEPERIOD) {
-        try {
-          find_timeperiod(state.host_notification_period());
-          obj.set_host_notification_period_name(
-                *state.host_notification_period());
-        }
-        catch (not_found const& e) {
-          (void)e;
-          obj.set_modified_host_attributes(
+    if (state.host_notification_period().is_set()
+        && (obj.get_modified_host_attributes()
+            & MODATTR_NOTIFICATION_TIMEPERIOD)) {
+      try {
+        obj.set_host_notification_period(
+              &find_timeperiod(state.host_notification_period()));
+      }
+      catch (not_found const& e) {
+        // Target does not exist, remove modified attribute flag.
+        (void)e;
+        obj.set_modified_host_attributes(
               obj.get_modified_host_attributes()
               - MODATTR_NOTIFICATION_TIMEPERIOD);
-        }
       }
     }
-    if (state.service_notification_period().is_set()) {
-      if (obj.get_modified_service_attributes() & MODATTR_NOTIFICATION_TIMEPERIOD) {
-        try {
-          find_timeperiod(state.service_notification_period());
-          obj.set_service_notification_period_name(
-            *state.service_notification_period());
-        }
-        catch (not_found const& e) {
-          obj.set_modified_service_attributes(
-            obj.get_modified_service_attributes()
-            - MODATTR_NOTIFICATION_TIMEPERIOD);
-        }
+    if (state.service_notification_period().is_set()
+        && (obj.get_modified_service_attributes()
+            & MODATTR_NOTIFICATION_TIMEPERIOD)) {
+      try {
+        obj.set_service_notification_period(
+              &find_timeperiod(state.service_notification_period()));
+      }
+      catch (not_found const& e) {
+        // Target does not exist, remove modified attribute flag.
+        (void)e;
+        obj.set_modified_service_attributes(
+              obj.get_modified_service_attributes()
+              - MODATTR_NOTIFICATION_TIMEPERIOD);
       }
     }
     if (state.host_notifications_enabled().is_set()) {

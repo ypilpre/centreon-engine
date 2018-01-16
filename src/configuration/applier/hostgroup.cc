@@ -174,16 +174,16 @@ void applier::hostgroup::modify_object(
   config->hostgroups().insert(obj);
 
   // Modify properties.
-  modify_if_different(
+  modify_cstr_if_different(
     hg->action_url,
     NULL_IF_EMPTY(obj.action_url()));
-  modify_if_different(
+  modify_cstr_if_different(
     hg->alias,
     (obj.alias().empty() ? obj.hostgroup_name() : obj.alias()).c_str());
-  modify_if_different(
+  modify_cstr_if_different(
     hg->notes,
     NULL_IF_EMPTY(obj.notes()));
-  modify_if_different(
+  modify_cstr_if_different(
     hg->notes_url,
     NULL_IF_EMPTY(obj.notes_url()));
   hostgroup_other_props[obj.hostgroup_name()].hostgroup_id = obj.hostgroup_id();

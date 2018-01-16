@@ -155,6 +155,11 @@ std::string const& contactgroup::get_alias() const {
   return _alias;
 }
 
+void contactgroup::set_alias(std::string const& alias) {
+  _alias = alias;
+  return ;
+}
+
 void contactgroup::add_contact(std::string const& contact_name) {
   // Make sure we have the data we need.
   if (contact_name.empty())
@@ -172,11 +177,6 @@ void contactgroup::add_contact(std::string const& contact_name) {
           // build anymore.
     this,
     &tv);
-}
-
-void contactgroup::update_config(configuration::contactgroup const& obj) {
-  configuration::applier::modify_if_different(
-    _alias, obj.alias().empty() ? obj.contactgroup_name() : obj.alias());
 }
 
 bool contactgroup::contains_member(std::string const& name) const {

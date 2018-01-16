@@ -56,26 +56,38 @@ class                           contact {
   contact&                      operator=(contact const& other);
   bool                          operator<(contact const& other);
 
+  // Base properties.
   std::string const&            get_name() const;
+  std::string const&            get_address(int index) const;
   std::string const&            get_alias() const;
+  void                          set_alias(std::string const& alias);
+  bool                          get_can_submit_commands() const;
+  void                          set_can_submit_commands(bool can_submit);
   std::string const&            get_email() const;
+  void                          set_email(std::string const& email);
   std::string const&            get_pager() const;
-  bool                          check(int* w, int* e);
+  void                          set_pager(std::string const& pager);
+  bool                          get_retain_status_information() const;
+  void                          set_retain_status_information(bool retain);
+  bool                          get_retain_nonstatus_information() const;
+  void                          set_retain_nonstatus_information(bool retain);
+  std::string const&            get_timezone() const;
+  void                          set_timezone(std::string const& timezone);
 
-  // hosts methods
+  // Host notification properties.
   command_map const&            get_host_notification_commands() const;
   command_map&                  get_host_notification_commands();
+  bool                          get_host_notifications_enabled() const;
+  void                          set_host_notifications_enabled(bool enabled);
+  unsigned int                  get_host_notified_states() const;
+  void                          set_host_notified_states(
+                                  unsigned int notified_states);
   timeperiod_struct*            get_host_notification_period() const;
   void                          set_host_notification_period(
                                   timeperiod* tp);
 
-  std::string const&            get_host_notification_period_name() const;
-  void                          set_host_notification_period_name(
-                                  std::string const& name);
   void                          enable_host_notifications();
   void                          disable_host_notifications();
-  bool                          is_host_notifications_enabled() const;
-  void                          set_host_notifications_enabled(bool enabled);
 
   time_t                        get_last_host_notification() const;
   void                          set_last_host_notification(time_t t);
@@ -92,13 +104,14 @@ class                           contact {
                                   std::string const& command_name);
   void                          clear_host_notification_commands();
 
-  // services methods
+  // Service notification properties.
   command_map const&            get_service_notification_commands() const;
   command_map&                  get_service_notification_commands();
-  std::string const&            get_service_notification_period_name() const;
-  void                          set_service_notification_period_name(
-                                  std::string const& name);
-
+  bool                          get_service_notifications_enabled() const;
+  void                          set_service_notifications_enabled(bool enabled);
+  unsigned int                  get_service_notified_states() const;
+  void                          set_service_notified_states(
+                                  unsigned int notified_states);
   void                          set_service_notification_period(
                                   timeperiod* tp);
 
@@ -111,8 +124,6 @@ class                           contact {
   void                          set_modified_service_attributes(
                                   unsigned long attr);
   timeperiod_struct*            get_service_notification_period() const;
-  bool                          is_service_notifications_enabled() const;
-  void                          set_service_notifications_enabled(bool enabled);
   void                          enable_service_notifications();
   void                          disable_service_notifications();
   void                          add_service_notification_command(
@@ -121,7 +132,6 @@ class                           contact {
 
   bool                          contains_illegal_object_chars() const;
 
-  std::string const&            get_address(int index) const;
   std::list<shared_ptr<contactgroup> > const&
                                 get_contactgroups() const;
 
@@ -137,13 +147,10 @@ class                           contact {
   void                          set_customvar(customvar const& var);
   unsigned long                 get_modified_attributes() const;
   void                          set_modified_attributes(unsigned long attr);
-  std::string const&            get_timezone() const;
   void                          update_status(int aggregated_dump);
-  void                          update_config(
-                                  configuration::contact const& obj);
 
-  bool                          get_retain_status_information() const;
-  bool                          get_retain_nonstatus_information() const;
+
+  bool                          check(int* w, int* e);
 
  private:
 
@@ -157,9 +164,7 @@ class                           contact {
   std::string                   _timezone;
   command_map                   _host_notification_commands;
   command_map                   _service_notification_commands;
-  std::string                   _host_notification_period_name;
   timeperiod*                   _host_notification_period;
-  std::string                   _service_notification_period_name;
   timeperiod*                   _service_notification_period;
   unsigned long                 _modified_attributes;
   unsigned long                 _modified_host_attributes;

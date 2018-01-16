@@ -181,16 +181,16 @@ void applier::servicegroup::modify_object(
   servicegroup_other_props[obj.servicegroup_name()].servicegroup_id = obj.servicegroup_id();
 
   // Modify properties.
-  modify_if_different(
+  modify_cstr_if_different(
     sg->action_url,
     NULL_IF_EMPTY(obj.action_url()));
-  modify_if_different(
+  modify_cstr_if_different(
     sg->alias,
     (obj.alias().empty() ? obj.servicegroup_name() : obj.alias()).c_str());
-  modify_if_different(
+  modify_cstr_if_different(
     sg->notes,
     NULL_IF_EMPTY(obj.notes()));
-  modify_if_different(
+  modify_cstr_if_different(
     sg->notes_url,
     NULL_IF_EMPTY(obj.notes_url()));
 

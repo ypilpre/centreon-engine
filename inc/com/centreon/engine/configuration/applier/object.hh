@@ -70,14 +70,18 @@ namespace          configuration {
       virtual void _remove_object(shared_ptr<T> obj) = 0;
     };
 
-    template <typename T>
-    void modify_if_different(T& t1, T t2) {
-      if (t1 != t2)
-	t1 = t2;
-      return ;
-    }
+#define modify_if_different(obj, prop, value) \
+    if ((obj).get_ ## prop () != (value))        \
+      (obj).set_ ## prop (value);
 
-    void modify_if_different(char*& s1, char const* s2);
+    // template <typename T>
+    // void modify_if_different(T& t1, T t2) {
+    //   if (t1 != t2)
+    //     t1 = t2;
+    //   return ;
+    // }
+
+    void modify_cstr_if_different(char*& s1, char const* s2);
 
 //    void modify_if_different(
 //           std::vector<std::string> const& t1,

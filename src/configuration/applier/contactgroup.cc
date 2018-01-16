@@ -169,16 +169,13 @@ void applier::contactgroup::modify_object(
   config->contactgroups().erase(it_cfg);
   config->contactgroups().insert(obj);
 
-  // Modify properties.
-  cg->update_config(obj);
+  // Modify contactgroup.
+  modify_if_different(*cg, alias, obj.alias());
 
   // Were members modified ?
   if (obj.members() != old_cfg.members()) {
     // Delete all old contact group members.
     cg->get_members().clear();
-//    deleter::listmember(
-//      (*it_obj).second->members,
-//      &deleter::contactsmember);
 
     // Create new contact group members.
     for (set_string::const_iterator

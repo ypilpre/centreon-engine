@@ -26,7 +26,7 @@
 using namespace com::centreon::engine;
 using namespace com::centreon::engine::configuration;
 
-void applier::modify_if_different(char*& s1, char const* s2) {
+void applier::modify_cstr_if_different(char*& s1, char const* s2) {
   if (s1 != s2) {
     if (!s2) {
       delete[] s1;
@@ -37,4 +37,3 @@ void applier::modify_if_different(char*& s1, char const* s2) {
   }
   return ;
 }
-

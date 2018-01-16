@@ -188,67 +188,55 @@ void applier::service::_update(
       obj.set_ocp_enabled(*state.obsess_over_service());
     if (state.check_command().is_set()
         && (obj.get_modified_attributes() & MODATTR_CHECK_COMMAND)) {
-      if (utils::is_command_exist(*state.check_command()))
-        try {
-          configuration::applier::service svcaplr;
-          svcaplr.resolve_check_command(obj, *state.check_command());
-        }
-        catch (not_found const& e) {
-          // Retention application failed. No big deal,
-          // just silently ignore the exception.
-          (void)e;
-        }
-      else
+      try {
+        configuration::applier::service svcaplr;
+        svcaplr.resolve_check_command(obj, *state.check_command());
+      }
+      catch (not_found const& e) {
+        // Target does not exist, remove modified attribute flag.
+        (void)e;
         obj.set_modified_attributes(
           obj.get_modified_attributes() - MODATTR_CHECK_COMMAND);
+      }
     }
     if (state.check_period().is_set()
         && (obj.get_modified_attributes() & MODATTR_CHECK_TIMEPERIOD)) {
-      if (is_timeperiod_exist(*state.check_period()))
-        try {
-          configuration::applier::service svcaplr;
-          svcaplr.resolve_check_period(obj, *state.check_period());
-        }
-        catch (not_found const& e) {
-          // Retention application failed. No big deal,
-          // just silently ignore the exception.
-          (void)e;
-        }
-      else
+      try {
+        configuration::applier::service svcaplr;
+        svcaplr.resolve_check_period(obj, *state.check_period());
+      }
+      catch (not_found const& e) {
+        // Target does not exist, remove modified attribute flag.
+        (void)e;
         obj.set_modified_attributes(
           obj.get_modified_attributes() - MODATTR_CHECK_TIMEPERIOD);
+      }
     }
     if (state.notification_period().is_set()
         && (obj.get_modified_attributes() & MODATTR_NOTIFICATION_TIMEPERIOD)) {
-      if (is_timeperiod_exist(*state.notification_period()))
-        try {
-          configuration::applier::service svcaplr;
-          svcaplr.resolve_notification_period(obj, *state.notification_period());
-        }
-        catch (not_found const& e) {
-          // Retention application failed. No big deal,
-          // just silently ignore the exception.
-          (void)e;
-        }
-      else
+      try {
+        configuration::applier::service svcaplr;
+        svcaplr.resolve_notification_period(obj, *state.notification_period());
+      }
+      catch (not_found const& e) {
+        // Target does not exist, remove modified attribute flag.
+        (void)e;
         obj.set_modified_attributes(
           obj.get_modified_attributes() - MODATTR_NOTIFICATION_TIMEPERIOD);
+      }
     }
     if (state.event_handler().is_set()
         && (obj.get_modified_attributes() & MODATTR_EVENT_HANDLER_COMMAND)) {
-      if (utils::is_command_exist(*state.event_handler()))
-        try {
-          configuration::applier::service svcaplr;
-          svcaplr.resolve_event_handler(obj, *state.event_handler());
-        }
-        catch (not_found const& e) {
-          // Retention application failed. No big deal,
-          // just silently ignore the exception.
-          (void)e;
-        }
-      else
+      try {
+        configuration::applier::service svcaplr;
+        svcaplr.resolve_event_handler(obj, *state.event_handler());
+      }
+      catch (not_found const& e) {
+        // Target does not exist, remove modified attribute flag.
+        (void)e;
         obj.set_modified_attributes(
           obj.get_modified_attributes() - MODATTR_EVENT_HANDLER_COMMAND);
+      }
     }
     if (state.normal_check_interval().is_set()
         && (obj.get_modified_attributes() & MODATTR_NORMAL_CHECK_INTERVAL))

@@ -69,25 +69,6 @@ TEST_F(ContactConfig, ContactWithoutAlias) {
 }
 
 // Given a configuration contact
-// When a contact has this configuration applied to itself
-// Then it inherits its properties.
-TEST_F(ContactConfig, ContactUpdatedFromConfig) {
-  configuration::contact ctct("test");
-  std::auto_ptr<engine::contact> c(new engine::contact(ctct));
-  ctct.parse("contact_name", "test");
-  ctct.parse("alias", "test_alias");
-  ctct.parse("email", "test_email");
-  ctct.parse("host_notification_commands", "command1,command2");
-  ctct.parse("service_notification_commands", "svc_cmd1,svc_cmd2,svc_cmd3");
-  ctct.parse("pager", "test pager");
-  c->update_config(ctct);
-  ASSERT_EQ(c->get_name(), "test");
-  ASSERT_EQ(c->get_alias(), "test_alias");
-  ASSERT_EQ(c->get_email(), "test_email");
-  ASSERT_EQ(c->get_pager(), "test pager");
-}
-
-// Given a configuration contact
 // When a contact is created from it
 // Then it inherits its properties.
 TEST_F(ContactConfig, ContactFromConfig) {

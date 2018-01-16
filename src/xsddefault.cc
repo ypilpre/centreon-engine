@@ -368,12 +368,12 @@ int xsddefault_save_status_data() {
          "\tmodified_attributes=" << cntct->get_modified_attributes() << "\n"
          "\tmodified_host_attributes=" << cntct->get_modified_host_attributes() << "\n"
          "\tmodified_service_attributes=" << cntct->get_modified_service_attributes() << "\n"
-         "\thost_notification_period=" << (cntct->get_host_notification_period() ? cntct->get_host_notification_period_name() : "") << "\n"
-         "\tservice_notification_period=" << (cntct->get_service_notification_period() ? cntct->get_service_notification_period_name() : "") << "\n"
+         "\thost_notification_period=" << (cntct->get_host_notification_period() ? cntct->get_host_notification_period()->name : "") << "\n"
+         "\tservice_notification_period=" << (cntct->get_service_notification_period() ? cntct->get_service_notification_period()->name : "") << "\n"
          "\tlast_host_notification=" << static_cast<unsigned long>(cntct->get_last_host_notification()) << "\n"
          "\tlast_service_notification=" << static_cast<unsigned long>(cntct->get_last_service_notification()) << "\n"
-         "\thost_notifications_enabled=" << cntct->is_host_notifications_enabled() << "\n"
-         "\tservice_notifications_enabled=" << cntct->is_service_notifications_enabled() << "\n";
+         "\thost_notifications_enabled=" << cntct->get_host_notifications_enabled() << "\n"
+         "\tservice_notifications_enabled=" << cntct->get_service_notifications_enabled() << "\n";
     // custom variables
     for (customvar_set::const_iterator
            it(cntct->get_customvars().begin()),

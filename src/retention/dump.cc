@@ -86,15 +86,15 @@ std::ostream& dump::comments(std::ostream& os) {
 std::ostream& dump::contact(std::ostream& os, engine::contact const& obj) {
   os << "contact {\n"
     "contact_name=" << obj.get_name() << "\n"
-    "host_notification_period=" << obj.get_host_notification_period_name() << "\n"
-    "host_notifications_enabled=" << obj.is_host_notifications_enabled() << "\n"
+    "host_notification_period=" << (obj.get_host_notification_period() ? obj.get_host_notification_period()->name : "") << "\n"
+    "host_notifications_enabled=" << obj.get_host_notifications_enabled() << "\n"
     "last_host_notification=" << static_cast<unsigned long>(obj.get_last_host_notification()) << "\n"
     "last_service_notification=" << static_cast<unsigned long>(obj.get_last_service_notification()) << "\n"
     "modified_attributes=" << (obj.get_modified_attributes() & ~0L) << "\n"
     "modified_host_attributes=" << (obj.get_modified_host_attributes() & ~config->retained_contact_host_attribute_mask()) << "\n"
     "modified_service_attributes=" << (obj.get_modified_service_attributes() & ~config->retained_contact_service_attribute_mask()) << "\n"
-    "service_notification_period=" << (obj.get_service_notification_period() ? obj.get_service_notification_period_name() : "") << "\n"
-    "service_notifications_enabled=" << obj.is_service_notifications_enabled() << "\n";
+    "service_notification_period=" << (obj.get_service_notification_period() ? obj.get_service_notification_period()->name : "") << "\n"
+    "service_notifications_enabled=" << obj.get_service_notifications_enabled() << "\n";
 
   dump::customvariables(os, obj.get_customvars());
   os << "}\n";

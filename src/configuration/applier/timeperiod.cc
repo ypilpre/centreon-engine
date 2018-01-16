@@ -138,7 +138,7 @@ void applier::timeperiod::modify_object(
   config->timeperiods().insert(obj);
 
   // Modify properties.
-  modify_if_different(
+  modify_cstr_if_different(
     tp->alias,
     (obj.alias().empty() ? obj.timeperiod_name() : obj.alias()).c_str());
 

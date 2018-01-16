@@ -2115,13 +2115,11 @@ int cmd_change_object_char_var(int cmd, char* args) {
     break;
 
   case CMD_CHANGE_CONTACT_HOST_NOTIFICATION_TIMEPERIOD:
-    temp_contact->set_host_notification_period_name(temp_ptr);
     temp_contact->set_host_notification_period(temp_timeperiod);
     hattr = MODATTR_NOTIFICATION_TIMEPERIOD;
     break;
 
   case CMD_CHANGE_CONTACT_SVC_NOTIFICATION_TIMEPERIOD:
-    temp_contact->set_service_notification_period_name(temp_ptr);
     temp_contact->set_service_notification_period(temp_timeperiod);
     sattr = MODATTR_NOTIFICATION_TIMEPERIOD;
     break;

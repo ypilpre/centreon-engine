@@ -50,6 +50,7 @@ class                          contactgroup {
   bool                         operator!=(contactgroup const& other) const;
   std::string const&           get_name() const;
   std::string const&           get_alias() const;
+  void                         set_alias(std::string const& alias);
   bool                         check(int* w, int* e);
   umap<std::string, com::centreon::shared_ptr<contact> > const&
                                get_members() const;
@@ -60,8 +61,6 @@ class                          contactgroup {
   bool                         contains_member(std::string const& name) const;
   bool                         contains_illegal_object_chars() const;
   void                         add_contact(std::string const& contact_name);
-  void                         update_config(
-                                 configuration::contactgroup const& obj);
 
  private:
   std::string                  _name;

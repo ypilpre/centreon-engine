@@ -239,7 +239,46 @@ void applier::contact::modify_object(
   config->contacts().insert(obj);
 
   // Modify contact.
-  c->update_config(obj);
+  modify_if_different(
+    *c,
+    alias,
+    obj.alias().empty() ? obj.contact_name() : obj.alias());
+  modify_if_different(*c, email, obj.email());
+  modify_if_different(*c, pager, obj.pager());
+  modify_if_different(
+    *c,
+    service_notified_states,
+    obj.service_notification_options());
+  modify_if_different(
+    *c,
+    host_notified_states,
+    obj.host_notification_options());
+  modify_if_different(
+    *c,
+    host_notifications_enabled,
+    obj.host_notifications_enabled());
+  modify_if_different(
+    *c,
+    service_notifications_enabled,
+    obj.service_notifications_enabled());
+  modify_if_different(
+    *c,
+    can_submit_commands,
+    obj.can_submit_commands());
+  modify_if_different(
+    *c,
+    retain_status_information,
+    obj.retain_status_information());
+  modify_if_different(
+    *c,
+    retain_nonstatus_information,
+    obj.retain_nonstatus_information());
+  modify_if_different(
+    *c,
+    timezone,
+    obj.timezone());
+  // XXX
+  // modify_if_different(*c, address, obj.address());
 
   // Host notification commands.
   if (obj.host_notification_commands()
