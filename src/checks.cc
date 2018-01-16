@@ -708,16 +708,10 @@ int handle_async_service_check_result(
 
     /* Check if we need to send a recovery notification */
     if (!temp_service->get_recovery_been_sent() && !hard_state_change) {
-      ////////////////
-      // FIXME DBR  //
-      ////////////////
-//      temp_service->notify(notifier::PROBLEM);
-//      service_notification(
-//        temp_service,
-//        NOTIFICATION_NORMAL,
-//        NULL,
-//        NULL,
-//        NOTIFICATION_OPTION_NONE);
+      temp_service->notify(
+        notifier::RECOVERY,
+        "", "",
+        NOTIFICATION_OPTION_NONE);
     }
 
     /* should we obsessive over service checks? */
@@ -879,16 +873,16 @@ int handle_async_service_check_result(
 	  route_result = temp_host->get_current_state();
 
 	  /* possibly re-send host notifications... */
-          ////////////////
-          // FIXME DBR  //
-          ////////////////
-//          temp_host->notify(notifier::PROBLEM);
-//          host_notification(
-//            temp_host,
-//            NOTIFICATION_NORMAL,
-//            NULL,
-//            NULL,
-//            NOTIFICATION_OPTION_NONE);
+          if (route_result == 0)
+            temp_host->notify(
+              notifier::RECOVERY,
+              "", "",
+              NOTIFICATION_OPTION_NONE);
+          else
+            temp_host->notify(
+              notifier::PROBLEM,
+              "", "",
+              NOTIFICATION_OPTION_NONE);
 	}
     }
 
@@ -1059,15 +1053,19 @@ int handle_async_service_check_result(
 
       /* (re)send notifications out about this service problem if the host is up (and was at last check also) and the dependencies were okay... */
           ////////////////
-          // FIXME DBR  //
+          // FIXME DBR  // Maybe the following test is not needed and we should
+          // work only with notifier::PROBLEM
           ////////////////
-//      temp_service->notify(notifier::PROBLEM)
-//      service_notification(
-//        temp_service,
-//        NOTIFICATION_NORMAL,
-//        NULL,
-//        NULL,
-//        NOTIFICATION_OPTION_NONE);
+      if (temp_service->get_current_state() == 0)
+        temp_service->notify(
+          notifier::RECOVERY,
+          "", "",
+          NOTIFICATION_OPTION_NONE);
+      else
+        temp_service->notify(
+          notifier::PROBLEM,
+          "", "",
+          NOTIFICATION_OPTION_NONE);
 
       /* run the service event handler if we changed state from the last hard state or if this service is flagged as being volatile */
       if (hard_state_change == true
