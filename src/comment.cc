@@ -194,69 +194,6 @@ int comment::delete_all_service_comments(
   return (OK);
 }
 
-/* adds a comment to the list in memory */
-comment* comment::add_comment(
-      comment_type comment_type,
-      entry_type entry_type,
-      std::string const& host_name,
-      std::string const& svc_description,
-      time_t entry_time,
-      std::string const& author,
-      std::string const& comment_data,
-      int persistent,
-      bool expires,
-      time_t expire_time,
-      source_type source) {
-  /* make sure we have the data we need */
-//  if (host_name == NULL
-//      || author == NULL
-//      || comment_data == NULL
-//      || (comment_type == SERVICE_COMMENT
-//          && svc_description == NULL))
-//    return (ERROR);
-
-  comment* retval(new comment(
-                             comment_type,
-                             entry_type,
-                             host_name,
-                             (comment_type == comment::SERVICE_COMMENT)
-                               ? svc_description : "",
-                             entry_time,
-                             author,
-                             comment_data,
-                             persistent,
-                             expires,
-                             expire_time,
-                             source));
-
-  /* add comment to hash list */
-  //FIXME DBR:
-  //add_comment_to_hashlist(retval);
-
-  unsigned long comment_id(retval->get_id());
-  comment_list.insert(std::make_pair(comment_id, retval));
-
-  /* send data to event broker */
-  broker_comment_data(
-    NEBTYPE_COMMENT_LOAD,
-    NEBFLAG_NONE,
-    NEBATTR_NONE,
-    comment_type,
-    entry_type,
-    host_name,
-    svc_description,
-    entry_time,
-    author,
-    comment_data,
-    persistent,
-    source,
-    expires,
-    expire_time,
-    comment_id,
-    NULL);
-  return retval;
-}
-
 /* adds a new host or service comment */
 comment* comment::add_new_comment(
       comment::comment_type type,
@@ -270,7 +207,7 @@ comment* comment::add_new_comment(
       source_type source,
       bool expires,
       time_t expire_time) {
-  comment* retval(add_comment(
+  comment* retval(new comment(
                     type,
                     ent_type,
                     host_name,
@@ -279,11 +216,13 @@ comment* comment::add_new_comment(
                     author_name,
                     comment_data,
                     persistent,
-                    source,
                     expires,
-                    expire_time));
+                    expire_time,
+                    source));
 
   unsigned long comment_id(retval->get_id());
+  comment_list.insert(std::make_pair(comment_id, retval));
+
   /* send data to event broker */
   broker_comment_data(
     NEBTYPE_COMMENT_ADD,
@@ -346,7 +285,8 @@ comment::comment(
            bool persistent,
            bool expires,
            time_t expire_time,
-           source_type source)
+           source_type source,
+           unsigned long comment_id)
   : _comment_type(cmt_type),
     _entry_type(ent_type),
     _host_name(host_name),
@@ -354,11 +294,36 @@ comment::comment(
     _entry_time(entry_time),
     _author(author),
     _comment_data(comment_data),
-    _comment_id(_next_id++),
+    _comment_id((comment_id == 0) ? _next_id++ : comment_id),
     _persistent(persistent),
     _expires(expires),
     _expire_time(expire_time),
-    _source(source) {}
+    _source(source) {
+  if (_comment_id > _next_id)
+    _next_id = comment_id + 1;
+
+//  unsigned long comment_id(get_id());
+//  comment_list.insert(std::make_pair(comment_id, retval));
+
+  /* send data to event broker */
+  broker_comment_data(
+    NEBTYPE_COMMENT_LOAD,
+    NEBFLAG_NONE,
+    NEBATTR_NONE,
+    get_comment_type(),
+    get_entry_type(),
+    get_host_name(),
+    get_service_description(),
+    get_entry_time(),
+    get_author(),
+    get_comment_data(),
+    get_persistent(),
+    get_source(),
+    get_expires(),
+    get_expire_time(),
+    get_id(),
+    NULL);
+}
 
 comment::comment(comment const& other)
   : _author(other._author),

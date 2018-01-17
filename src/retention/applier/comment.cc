@@ -58,7 +58,7 @@ void applier::comment::_add_host_comment(
   host* hst(it->second.get());
 
   // add the comment.
-  engine::comment* new_comment(engine::comment::add_comment(
+  engine::comment* new_comment(new engine::comment(
     engine::comment::HOST_COMMENT,
     static_cast<engine::comment::entry_type>(obj.entry_type()),
     obj.host_name(),
@@ -69,8 +69,10 @@ void applier::comment::_add_host_comment(
     obj.persistent(),
     obj.expires(),
     obj.expire_time(),
-    static_cast<engine::comment::source_type>(obj.source())));
-  new_comment->set_id(obj.comment_id());
+    static_cast<engine::comment::source_type>(obj.source()),
+    obj.comment_id()));
+
+  comment_list.insert(std::make_pair(new_comment->get_id(), new_comment));
 
   // acknowledgement comments get deleted if they're not persistent
   // and the original problem is no longer acknowledged.
@@ -101,7 +103,7 @@ void applier::comment::_add_service_comment(
 
   // add the comment.
   engine::comment* new_comment(
-    engine::comment::add_comment(
+    new engine::comment(
       engine::comment::SERVICE_COMMENT,
       static_cast<engine::comment::entry_type>(obj.entry_type()),
       obj.host_name(),
@@ -112,8 +114,9 @@ void applier::comment::_add_service_comment(
       obj.persistent(),
       obj.expires(),
       obj.expire_time(),
-      static_cast<engine::comment::source_type>(obj.source())));
-  new_comment->set_id(obj.comment_id());
+      static_cast<engine::comment::source_type>(obj.source()),
+      obj.comment_id()));
+  comment_list.insert(std::make_pair(new_comment->get_id(), new_comment));
 
   // acknowledgement comments get deleted if they're not persistent
   // and the original problem is no longer acknowledged.
