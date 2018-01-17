@@ -150,10 +150,10 @@ struct grab_service_redirection {
     routines[MACRO_SERVICEPERFDATA].first =
       new member_grabber<service, std::string const&>(&service::get_perfdata);
     routines[MACRO_SERVICEPERFDATA].second = true;
-    // XXX
-    // // Check command.
-    // routines[MACRO_SERVICECHECKCOMMAND].first = &get_member_as_string<service, char*, &service::service_check_command>;
-    // routines[MACRO_SERVICECHECKCOMMAND].second = true;
+    // Check command.
+    routines[MACRO_SERVICECHECKCOMMAND].first =
+      new member_grabber<service, std::string const&>(&service::get_check_command_args);
+    routines[MACRO_SERVICECHECKCOMMAND].second = true;
     // Check type.
     routines[MACRO_SERVICECHECKTYPE].first =
       new function_grabber<service>(&get_service_check_type);
@@ -230,13 +230,14 @@ struct grab_service_redirection {
     routines[MACRO_SERVICEPERCENTCHANGE].first =
       new member_grabber<service, double>(&service::get_percent_state_change);
     routines[MACRO_SERVICEPERCENTCHANGE].second = true;
-    // XXX
-    // // Duration.
-    // routines[MACRO_SERVICEDURATION].first = &get_duration<service>;
-    // routines[MACRO_SERVICEDURATION].second = true;
-    // // Duration in seconds.
-    // routines[MACRO_SERVICEDURATIONSEC].first = &get_duration_sec<service>;
-    // routines[MACRO_SERVICEDURATIONSEC].second = true;
+    // Duration.
+    routines[MACRO_SERVICEDURATION].first =
+      new function_grabber<service>(&get_duration<service>);
+    routines[MACRO_SERVICEDURATION].second = true;
+    // Duration in seconds.
+    routines[MACRO_SERVICEDURATIONSEC].first =
+      new function_grabber<service>(&get_duration_sec<service>);
+    routines[MACRO_SERVICEDURATIONSEC].second = true;
     // Notification number.
     routines[MACRO_SERVICENOTIFICATIONNUMBER].first =
       new member_grabber<service, int>(&service::get_current_notification_number);
@@ -278,25 +279,26 @@ struct grab_service_redirection {
       new function_grabber<service>(
         (char const* (*)(service&, nagios_macros*))&get_service_group_names);
     routines[MACRO_SERVICEGROUPNAMES].second = true;
-    // XXX
-    // // Acknowledgement author.
-    // routines[MACRO_SERVICEACKAUTHOR].first = &get_macro_copy<service, MACRO_SERVICEACKAUTHOR>;
-    // routines[MACRO_SERVICEACKAUTHOR].second = true;
-    // // Acknowledgement author name.
-    // routines[MACRO_SERVICEACKAUTHORNAME].first = &get_macro_copy<service, MACRO_SERVICEACKAUTHORNAME>;
-    // routines[MACRO_SERVICEACKAUTHORNAME].second = true;
-    // // Acknowledgement author alias.
-    // routines[MACRO_SERVICEACKAUTHORALIAS].first = &get_macro_copy<service, MACRO_SERVICEACKAUTHORALIAS>;
-    // routines[MACRO_SERVICEACKAUTHORALIAS].second = true;
-    // // Acknowledgement comment.
-    // routines[MACRO_SERVICEACKCOMMENT].first = &get_macro_copy<service, MACRO_SERVICEACKCOMMENT>;
-    // routines[MACRO_SERVICEACKCOMMENT].second = true;
-    // // Acknowledgement comment.
-    // routines[MACRO_SERVICEACKCOMMENT].first = &get_macro_copy<service, MACRO_SERVICEACKCOMMENT>;
-    // routines[MACRO_SERVICEACKCOMMENT].second = true;
-    // // Acknowledgement comment.
-    // routines[MACRO_SERVICETIMEZONE].first = &get_service_macro_timezone;
-    // routines[MACRO_SERVICETIMEZONE].second = true;
+    // Acknowledgement author.
+    routines[MACRO_SERVICEACKAUTHOR].first =
+      new function_grabber<service>(&get_macro_copy<service, MACRO_SERVICEACKAUTHOR>);
+    routines[MACRO_SERVICEACKAUTHOR].second = true;
+    // Acknowledgement author name.
+    routines[MACRO_SERVICEACKAUTHORNAME].first =
+      new function_grabber<service>(&get_macro_copy<service, MACRO_SERVICEACKAUTHORNAME>);
+    routines[MACRO_SERVICEACKAUTHORNAME].second = true;
+    // Acknowledgement author alias.
+    routines[MACRO_SERVICEACKAUTHORALIAS].first =
+      new function_grabber<service>(&get_macro_copy<service, MACRO_SERVICEACKAUTHORALIAS>);
+    routines[MACRO_SERVICEACKAUTHORALIAS].second = true;
+    // Acknowledgement comment.
+    routines[MACRO_SERVICEACKCOMMENT].first =
+      new function_grabber<service>(&get_macro_copy<service, MACRO_SERVICEACKCOMMENT>);
+    routines[MACRO_SERVICEACKCOMMENT].second = true;
+    // Acknowledgement comment.
+    routines[MACRO_SERVICETIMEZONE].first =
+      new member_grabber<service, std::string const&>(&service::get_timezone);
+    routines[MACRO_SERVICETIMEZONE].second = true;
     // Service id.
     routines[MACRO_SERVICEID].first =
       new member_grabber<service, unsigned int>(&service::get_id);
@@ -406,10 +408,8 @@ int grab_service_macros_r(nagios_macros* mac, service* svc) {
     return (ERROR);
 
   // Save first/primary servicegroup pointer for later.
-  // XXX
-  // if (svc->servicegroups_ptr)
-  //   mac->servicegroup_ptr
-  //     = static_cast<servicegroup*>(svc->servicegroups_ptr->object_ptr);
+  if (!svc->get_groups().empty())
+    mac->servicegroup_ptr = svc->get_groups().begin()->second;
 
   return (OK);
 }

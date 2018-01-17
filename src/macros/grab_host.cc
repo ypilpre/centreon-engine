@@ -292,10 +292,10 @@ struct grab_host_redirection {
     routines[MACRO_HOSTPERFDATA].first =
       new member_grabber<host, std::string const&>(&host::get_perfdata);
     routines[MACRO_HOSTPERFDATA].second = true;
-    // XXX
-    // // Check command.
-    // routines[MACRO_HOSTCHECKCOMMAND].first = &get_member_as_string<host, char*, &host::host_check_command>;
-    // routines[MACRO_HOSTCHECKCOMMAND].second = true;
+    // Check command.
+    routines[MACRO_HOSTCHECKCOMMAND].first =
+      new member_grabber<host, std::string const&>(&host::get_check_command_args);
+    routines[MACRO_HOSTCHECKCOMMAND].second = true;
     // Attempt.
     routines[MACRO_HOSTATTEMPT].first =
       new member_grabber<host, int>(&host::get_current_attempt);
@@ -312,14 +312,14 @@ struct grab_host_redirection {
     routines[MACRO_HOSTPERCENTCHANGE].first =
       new member_grabber<host, double>(&host::get_percent_state_change);
     routines[MACRO_HOSTPERCENTCHANGE].second = true;
-    // XXX
-    // // Duration.
-    // routines[MACRO_HOSTDURATION].first =
-    //   new member_grabber<host, double>(&host::get_duration);
-    // routines[MACRO_HOSTDURATION].second = true;
-    // // Duration in seconds.
-    // routines[MACRO_HOSTDURATIONSEC].first = &get_duration_sec<host>;
-    // routines[MACRO_HOSTDURATIONSEC].second = true;
+    // Duration.
+    routines[MACRO_HOSTDURATION].first =
+      new function_grabber<host>(&get_duration<host>);
+    routines[MACRO_HOSTDURATION].second = true;
+    // Duration in seconds.
+    routines[MACRO_HOSTDURATIONSEC].first =
+      new function_grabber<host>(&get_duration_sec<host>);
+    routines[MACRO_HOSTDURATIONSEC].second = true;
     // Execution time.
     routines[MACRO_HOSTEXECUTIONTIME].first =
       new member_grabber<host, double>(&host::get_execution_time);
@@ -414,19 +414,22 @@ struct grab_host_redirection {
       new function_grabber<host>(
         &get_host_total_services<MACRO_TOTALHOSTSERVICESCRITICAL>);
     routines[MACRO_TOTALHOSTSERVICESCRITICAL].second = false;
-    // XXX
-    // // Acknowledgement author.
-    // routines[MACRO_HOSTACKAUTHOR].first = &get_macro_copy<host, MACRO_HOSTACKAUTHOR>;
-    // routines[MACRO_HOSTACKAUTHOR].second = true;
-    // // Acknowledgement author name.
-    // routines[MACRO_HOSTACKAUTHORNAME].first = &get_macro_copy<host, MACRO_HOSTACKAUTHORNAME>;
-    // routines[MACRO_HOSTACKAUTHORNAME].second = true;
-    // // Acknowledgement author alias.
-    // routines[MACRO_HOSTACKAUTHORALIAS].first = &get_macro_copy<host, MACRO_HOSTACKAUTHORALIAS>;
-    // routines[MACRO_HOSTACKAUTHORALIAS].second = true;
-    // // Acknowledgement comment.
-    // routines[MACRO_HOSTACKCOMMENT].first = &get_macro_copy<host, MACRO_HOSTACKCOMMENT>;
-    // routines[MACRO_HOSTACKCOMMENT].second = true;
+    // Acknowledgement author.
+    routines[MACRO_HOSTACKAUTHOR].first =
+      new function_grabber<host>(&get_macro_copy<host, MACRO_HOSTACKAUTHOR>);
+    routines[MACRO_HOSTACKAUTHOR].second = true;
+    // Acknowledgement author name.
+    routines[MACRO_HOSTACKAUTHORNAME].first =
+      new function_grabber<host>(&get_macro_copy<host, MACRO_HOSTACKAUTHORNAME>);
+    routines[MACRO_HOSTACKAUTHORNAME].second = true;
+    // Acknowledgement author alias.
+    routines[MACRO_HOSTACKAUTHORALIAS].first =
+      new function_grabber<host>(&get_macro_copy<host, MACRO_HOSTACKAUTHORALIAS>);
+    routines[MACRO_HOSTACKAUTHORALIAS].second = true;
+    // Acknowledgement comment.
+    routines[MACRO_HOSTACKCOMMENT].first =
+      new function_grabber<host>(&get_macro_copy<host, MACRO_HOSTACKCOMMENT>);
+    routines[MACRO_HOSTACKCOMMENT].second = true;
     // Host parents.
     routines[MACRO_HOSTPARENTS].first =
       new function_grabber<host>(&get_host_parents);
@@ -547,10 +550,8 @@ int grab_host_macros_r(nagios_macros* mac, host* hst) {
     return (ERROR);
 
   // Save pointer to host's first/primary hostgroup.
-  // XXX
-  // if (hst->hostgroups_ptr)
-  //   mac->hostgroup_ptr
-  //     = static_cast<hostgroup*>(hst->hostgroups_ptr->object_ptr);
+  if (!hst->get_groups().empty())
+    mac->hostgroup_ptr = hst->get_groups().begin()->second;
 
   return (OK);
 }

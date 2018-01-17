@@ -112,12 +112,12 @@ namespace  macros {
    *  @return Duration in a newly allocated string.
    */
   template <typename T>
-  char*    get_duration(T& t, nagios_macros* mac) {
+  char const* get_duration(T& t, nagios_macros* mac) {
     (void)mac;
 
     // Get duration.
     time_t now(time(NULL));
-    unsigned long duration(now - t.last_state_change);
+    unsigned long duration(now - t.get_last_state_change());
 
     // Break down duration.
     unsigned int days(duration / (24 * 60 * 60));
@@ -145,12 +145,12 @@ namespace  macros {
    *  @return Duration in second in a newly allocated string.
    */
   template <typename T>
-  char*    get_duration_sec(T& t, nagios_macros* mac) {
+  char const* get_duration_sec(T& t, nagios_macros* mac) {
     (void)mac;
 
     // Get duration.
     time_t now(time(NULL));
-    unsigned long duration(now - t.last_state_change);
+    unsigned long duration(now - t.get_last_state_change());
     return (string::dup(duration));
   }
 
@@ -163,7 +163,7 @@ namespace  macros {
    *  @return Copy of the requested macro.
    */
   template <typename T, unsigned int macro_id>
-  char*    get_macro_copy(T& t, nagios_macros* mac) {
+  char const* get_macro_copy(T& t, nagios_macros* mac) {
     (void)t;
     return (string::dup(mac->x[macro_id] ? mac->x[macro_id] : ""));
   }
