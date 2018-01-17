@@ -57,17 +57,18 @@ class           comment {
      COMMENTSOURCE_EXTERNAL  = 1
    };
 
-   static int   delete_all_comments(
+    static void delete_comment(unsigned long comment_id);
+    static int  delete_all_comments(     
                   unsigned int type,
                   std::string const& host_name,
                   std::string const& svc_description);
-    static int  delete_service_acknowledgement_comments(service* svc);
-    static int  delete_host_comment(unsigned long comment_id);
-    static int  delete_service_comment(unsigned long comment_id);
-    static int  delete_comment(unsigned int type, unsigned long comment_id);
     static int  delete_all_host_comments(std::string const& host_name);
     static int  delete_all_service_comments(std::string const& host_name, std::string const& svc_description);
-    static int  add_comment(
+    static int  delete_host_acknowledgement_comments(host* hst);
+    static int  delete_service_acknowledgement_comments(service* svc);
+
+    static comment*
+                add_comment(
                   comment_type comment_type,
                   entry_type entry_type,
                   std::string const& host_name,
@@ -75,36 +76,13 @@ class           comment {
                   time_t entry_time,
                   std::string const& author,
                   std::string const& comment_data,
-                  unsigned long comment_id,
                   int persistent,
-                  int expires,
+                  bool expires,
                   time_t expire_time,
                   source_type source);
 
-    static int  add_new_host_comment(
-                  comment::entry_type ent_type,
-                  std::string const& host_name,
-                  time_t entry_time,
-                  std::string const& author_name,
-                  std::string const& comment_data,
-                  int persistent,
-                  source_type source,
-                  int expires,
-                  time_t expire_time,
-                  unsigned long* comment_id);
-    static int add_new_service_comment(
-                  entry_type ent_type,
-                  std::string const& host_name,
-                  std::string const& svc_description,
-                  time_t entry_time,
-                  std::string const& author_name,
-                  std::string const& comment_data,
-                  int persistent,
-                  source_type source,
-                  int expires,
-                  time_t expire_time,
-                  unsigned long* comment_id);
-    static int add_new_comment(
+    static comment*
+                add_new_comment(
                   comment_type type,
                   entry_type ent_type,
                   std::string const& host_name,
@@ -114,21 +92,10 @@ class           comment {
                   std::string const& comment_data,
                   int persistent,
                   source_type source,
-                  int expires,
-                  time_t expire_time,
-                  unsigned long* comment_id);
+                  bool expires,
+                  time_t expire_time);
 
-    static int    delete_host_acknowledgement_comments(host* hst);
-
-
-    static comment*
-                find_comment(unsigned long comment_id, comment_type comment_type);
-    static comment*
-                find_host_comment(unsigned long comment_id);
-    static comment*
-                find_service_comment(unsigned long comment_id);
-
-    static int  check_for_expired_comment(unsigned long comment_id);
+    static void check_for_expired_comment(unsigned long comment_id);
 
                 comment(
                   comment_type cmt_type,
@@ -138,13 +105,13 @@ class           comment {
                   time_t entry_time,
                   std::string const& author,
                   std::string const& comment_data,
-                  unsigned long comment_id,
                   bool persistent,
                   bool expires,
                   time_t expire_time,
                   source_type source);
                 comment(comment const& other);
   comment&      operator=(comment const& other);                
+                ~comment();
   entry_type    get_entry_type() const;
   void          set_entry_type(entry_type ent_type);
   std::string   get_host_name() const;
@@ -157,8 +124,8 @@ class           comment {
   void          set_author(std::string const& author);
   std::string   get_comment_data() const;
   void          set_comment_data(std::string const& comment_data);
-  unsigned long get_comment_id() const;
-  void          set_comment_id(unsigned long comment_id);
+  unsigned long get_id() const;
+  void          set_id(unsigned long comment_id);
   bool          get_persistent() const;
   void          set_persistent(bool persistent);
   int           get_source() const;
@@ -171,6 +138,9 @@ class           comment {
   void          set_comment_type(unsigned int comment_type);
 
  private:
+  static unsigned long
+                _next_id;
+
   std::string   _host_name;
   std::string   _service_description;
   std::string   _author;

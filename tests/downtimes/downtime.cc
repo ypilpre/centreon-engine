@@ -88,10 +88,11 @@ TEST_F(Downtime, SimpleServiceFixedDowntime) {
     0, 20) == 0);
   std::auto_ptr<downtime> dt(scheduled_downtime_list.begin()->second);
 
+  ASSERT_TRUE(comment_list.size() == 1);
+
+  ASSERT_TRUE(comment_list.begin()->second->get_comment_data() == "This service has been scheduled for fixed downtime from 01-01-1970 01:00:40 to 01-01-1970 01:01:00. Notifications for the service will not be sent out during that time period.");
   // Only one downtime.
   ASSERT_EQ(dt->get_id(), 1);
-  // No comment for now.
-  ASSERT_EQ(dt->get_comment_id(), 0);
 
   // And host name and service description are available
   ASSERT_EQ(dt->get_host_name(), "test_host");
@@ -108,7 +109,7 @@ TEST_F(Downtime, SimpleServiceFixedDowntime) {
   dt->handle();
   dt->unschedule();
   std::map<unsigned long, comment*>::const_iterator it(comment_list.begin());
-  ASSERT_TRUE(it != comment_list.end());
+  ASSERT_TRUE(comment_list.size() == 1);
   ASSERT_TRUE(it->second->get_comment_data() == "This service has been scheduled for fixed downtime from 01-01-1970 01:00:40 to 01-01-1970 01:01:00. Notifications for the service will not be sent out during that time period.");
   ++it;
   ASSERT_TRUE(it == comment_list.end());

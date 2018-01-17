@@ -227,6 +227,7 @@ int cmd_add_comment(int cmd, time_t entry_time, char* args) {
   char* user(NULL);
   char* comment_data(NULL);
   int persistent(0);
+  comment* new_comment;
   int result(0);
 
   /* get the host name */
@@ -273,7 +274,7 @@ int cmd_add_comment(int cmd, time_t entry_time, char* args) {
     return (ERROR);
 
   /* add the comment */
-  result = comment::add_new_comment(
+  new_comment = comment::add_new_comment(
              (cmd == CMD_ADD_HOST_COMMENT) ? comment::HOST_COMMENT : comment::SERVICE_COMMENT,
              comment::USER_COMMENT,
              host_name,
@@ -284,9 +285,8 @@ int cmd_add_comment(int cmd, time_t entry_time, char* args) {
              persistent,
              comment::COMMENTSOURCE_EXTERNAL,
              false,
-             (time_t)0,
-             NULL);
-  if (result < 0)
+             (time_t)0);
+  if (new_comment == NULL)
     return (ERROR);
   return (OK);
 }
@@ -300,10 +300,7 @@ int cmd_delete_comment(int cmd, char* args) {
     return (ERROR);
 
   /* delete the specified comment */
-  if (cmd == CMD_DEL_HOST_COMMENT)
-    comment::delete_host_comment(comment_id);
-  else
-    comment::delete_service_comment(comment_id);
+  comment::delete_comment(comment_id);
 
   return (OK);
 }
@@ -330,14 +327,15 @@ int cmd_delete_all_comments(int cmd, char* args) {
     if ((temp_service = find_service(host_name, svc_description)) == NULL)
       return (ERROR);
   }
-
-  /* else verify that the host is valid */
-  try {
-    temp_host = find_host(host_name);
-  }
-  catch (not_found const& e) {
-    (void) e;
-    return (ERROR);
+  else {
+    /* else verify that the host is valid */
+    try {
+      temp_host = find_host(host_name);
+    }
+    catch (not_found const& e) {
+      (void) e;
+      return (ERROR);
+    }
   }
 
   /* delete comments */
@@ -2807,17 +2805,18 @@ void acknowledge_host_problem(
   update_host_status(hst, false);
 
   /* add a comment for the acknowledgement */
-  comment::add_new_host_comment(
+  comment::add_new_comment(
+    comment::HOST_COMMENT,
     comment::ACKNOWLEDGEMENT_COMMENT,
-    hst->get_host_name().c_str(),
+    hst->get_host_name(),
+    "",
     current_time,
     ack_author,
     ack_data,
     persistent,
     comment::COMMENTSOURCE_INTERNAL,
     false,
-    (time_t)0,
-    NULL);
+    (time_t)0);
 }
 
 /* acknowledges a service problem */
@@ -2872,18 +2871,18 @@ void acknowledge_service_problem(
   update_service_status(svc, false);
 
   /* add a comment for the acknowledgement */
-  comment::add_new_service_comment(
+  comment::add_new_comment(
+    comment::SERVICE_COMMENT,
     comment::ACKNOWLEDGEMENT_COMMENT,
-    svc->get_host_name().c_str(),
-    svc->get_description().c_str(),
+    svc->get_host_name(),
+    svc->get_description(),
     current_time,
     ack_author,
     ack_data,
     persistent,
     comment::COMMENTSOURCE_INTERNAL,
     false,
-    (time_t)0,
-    NULL);
+    (time_t)0);
 }
 
 /* removes a host acknowledgement */
