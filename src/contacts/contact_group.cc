@@ -23,11 +23,11 @@
 using namespace com::centreon::engine;
 using namespace com::centreon::engine::contacts;
 
-/**************************************                                         
-*                                     *                                         
-*           Public Methods            *                                         
-*                                     *                                         
-**************************************/                                         
+/**************************************
+*                                     *
+*           Public Methods            *
+*                                     *
+**************************************/
 
 /**
  * Constructor.
