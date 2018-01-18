@@ -544,14 +544,14 @@ int handle_async_service_check_result(
       temp_service->set_acknowledged(notifier::ACKNOWLEDGEMENT_NONE);
 
       /* remove any non-persistant comments associated with the ack */
-      comment::delete_service_acknowledgement_comments(temp_service);
+      temp_service->delete_acknowledgement_comments();
     }
     else if (temp_service->get_acknowledgement_type() == notifier::ACKNOWLEDGEMENT_STICKY
              && temp_service->get_current_state() == STATE_OK) {
       temp_service->set_acknowledged(notifier::ACKNOWLEDGEMENT_NONE);
 
       /* remove any non-persistant comments associated with the ack */
-      comment::delete_service_acknowledgement_comments(temp_service);
+      temp_service->delete_acknowledgement_comments();
     }
 
     /* do NOT reset current notification number!!! */

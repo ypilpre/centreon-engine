@@ -61,8 +61,7 @@ void applier::comment::_add_host_comment(
   engine::comment* new_comment(new engine::comment(
     engine::comment::HOST_COMMENT,
     static_cast<engine::comment::entry_type>(obj.entry_type()),
-    obj.host_name(),
-    NULL,
+    hst,
     obj.entry_time(),
     obj.author(),
     obj.comment_data(),
@@ -106,8 +105,7 @@ void applier::comment::_add_service_comment(
     new engine::comment(
       engine::comment::SERVICE_COMMENT,
       static_cast<engine::comment::entry_type>(obj.entry_type()),
-      obj.host_name(),
-      obj.service_description(),
+      svc,
       obj.entry_time(),
       obj.author(),
       obj.comment_data(),

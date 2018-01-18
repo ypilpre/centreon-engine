@@ -16,7 +16,6 @@
 ** along with Centreon Engine. If not, see
 ** <http://www.gnu.org/licenses/>.
 */
-
 #ifndef CCE_COMMENT_HH
 #  define CCE_COMMENT_HH
 
@@ -58,26 +57,13 @@ class           comment {
    };
 
     static void delete_comment(unsigned long comment_id);
-    static int  delete_all_comments(     
-                  unsigned int type,
-                  std::string const& host_name,
-                  std::string const& svc_description);
-
-    static int  delete_all_host_comments(std::string const& host_name);
-    static int  delete_all_service_comments(
-                  std::string const& host_name,
-                  std::string const& svc_description);
-
-    static int  delete_host_acknowledgement_comments(host* hst);
-    static int  delete_service_acknowledgement_comments(service* svc);
     static void check_for_expired_comment(unsigned long comment_id);
 
     static comment*
                 add_new_comment(
                   comment_type type,
                   entry_type ent_type,
-                  std::string const& host_name,
-                  std::string const& svc_description,
+                  notifications::notifier* parent,
                   time_t entry_time,
                   std::string const& author_name,
                   std::string const& comment_data,
@@ -89,8 +75,7 @@ class           comment {
                 comment(
                   comment_type cmt_type,
                   entry_type ent_type,
-                  std::string const& host_name,
-                  std::string const& service_name,
+                  notifications::notifier* parent,
                   time_t entry_time,
                   std::string const& author,
                   std::string const& comment_data,
@@ -105,6 +90,8 @@ class           comment {
 
   entry_type    get_entry_type() const;
   void          set_entry_type(entry_type ent_type);
+  notifications::notifier*
+                get_parent() const;
   std::string   get_host_name() const;
   void          set_host_name(std::string const& host_name);
   std::string   get_service_description() const;
@@ -132,8 +119,8 @@ class           comment {
   static unsigned long
                 _next_id;
 
-  std::string   _host_name;
-  std::string   _service_description;
+  notifications::notifier*
+                _parent;
   std::string   _author;
   std::string   _comment_data;
   unsigned int  _comment_type;
@@ -144,8 +131,6 @@ class           comment {
   bool          _persistent;
   bool          _expires;
   time_t        _expire_time;
-  notifications::notifier*
-                _parent;
 };
 
 CCE_END()
