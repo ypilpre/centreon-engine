@@ -1,5 +1,5 @@
 /*
-** Copyright 2017 Centreon
+** Copyright 2017-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -69,6 +69,7 @@ namespace              checks {
     int                get_retry_check_interval() const;
     void               set_retry_check_interval(int interval);
     std::string const& get_timezone() const;
+    void               set_timezone(std::string const& timezone);
 
     // Check runtime.
     int                get_check_options() const;
@@ -146,7 +147,9 @@ namespace              checks {
     bool               get_flapping() const;
     void               set_flapping(bool flapping);
     double             get_low_flap_threshold() const;
+    void               set_low_flap_threshold(double threshold);
     double             get_high_flap_threshold() const;
+    void               set_high_flap_threshold(double threshold);
     void               add_historical_state(int state);
     int                get_historical_state(int index) const;
 
@@ -156,6 +159,7 @@ namespace              checks {
     bool               get_freshness_checks_enabled() const;
     void               set_freshness_checks_enabled(bool enable);
     int                get_freshness_threshold() const;
+    void               set_freshness_threshold(int threshold);
 
    private:
     void               _internal_copy(checkable const& other);

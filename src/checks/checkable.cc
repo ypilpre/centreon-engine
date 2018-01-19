@@ -1,5 +1,5 @@
 /*
-** Copyright 2017 Centreon
+** Copyright 2017-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -263,6 +263,16 @@ void checkable::set_retry_check_interval(int interval) {
  */
 std::string const& checkable::get_timezone() const {
   return (_timezone);
+}
+
+/**
+ *  Set timezone.
+ *
+ *  @param[in] timezone  New timezone.
+ */
+void checkable::set_timezone(std::string const& timezone) {
+  _timezone = timezone;
+  return ;
 }
 
 /**************************************
@@ -889,12 +899,32 @@ double checkable::get_low_flap_threshold() const {
 }
 
 /**
+ *  Set low flap threshold.
+ *
+ *  @param[in] threshold  New low flap threshold.
+ */
+void checkable::set_low_flap_threshold(double threshold) {
+  _low_flap_threshold = threshold;
+  return ;
+}
+
+/**
  *  Get high flap threshold.
  *
  *  @return High flap threshold.
  */
 double checkable::get_high_flap_threshold() const {
   return (_high_flap_threshold);
+}
+
+/**
+ *  Set high flap threshold.
+ *
+ *  @param[in] threshold  New high flap threshold.
+ */
+void checkable::set_high_flap_threshold(double threshold) {
+  _high_flap_threshold = threshold;
+  return ;
 }
 
 /**
@@ -969,6 +999,16 @@ void checkable::set_freshness_checks_enabled(bool enable) {
  */
 int checkable::get_freshness_threshold() const {
   return (_freshness_threshold);
+}
+
+/**
+ *  Set freshness threshold.
+ *
+ *  @param[in] threshold  New threshold.
+ */
+void checkable::set_freshness_threshold(int threshold) {
+  _freshness_threshold = threshold;
+  return ;
 }
 
 /**************************************

@@ -1,5 +1,5 @@
 /*
-** Copyright 2017 Centreon
+** Copyright 2017-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -103,12 +103,14 @@ namespace           notifications {
     acknowledgement_type
                       get_acknowledgement_type() const;
     void              enable_state_notification(int state);
+    void              clear_contacts();
     std::list<shared_ptr<engine::contact> >
                       get_contacts_list();
     umap<std::string, shared_ptr<engine::contact> > const&
                       get_contacts() const;
     umap<std::string, shared_ptr<engine::contact> >&
                       get_contacts();
+    void              clear_contactgroups();
     umap<std::string, shared_ptr<engine::contactgroup> > const&
                       get_contactgroups() const;
     umap<std::string, shared_ptr<engine::contactgroup> >&
@@ -143,8 +145,16 @@ namespace           notifications {
     time_t            get_last_acknowledgement() const;
     void              set_last_acknowledgement(time_t last_acknowledgement);
     bool              get_recovery_been_sent() const;
-    bool              set_notified_on_down(bool value);
-    bool              set_notified_on_unreachable(bool value);
+    bool              get_notify_on_down() const;
+    void              set_notify_on_down(bool notify);
+    bool              get_notify_on_downtime() const;
+    void              set_notify_on_downtime(bool notify);
+    bool              get_notify_on_flapping() const;
+    void              set_notify_on_flapping(bool notify);
+    bool              get_notify_on_recovery() const;
+    void              set_notify_on_recovery(bool notify);
+    bool              get_notify_on_unreachable() const;
+    void              set_notify_on_unreachable(bool notify);
     void              set_current_notification_number(int number);
     void              set_initial_notif_time(time_t initial);
 //    void              set_no_more_notifications(bool no_more);
@@ -152,6 +162,11 @@ namespace           notifications {
     timeperiod*       get_notification_period() const;
     void              set_notification_period(timeperiod* tperiod);
     long              get_notification_interval() const;
+    void              set_notification_interval(long interval);
+    int               get_first_notification_delay() const;
+    void              set_first_notification_delay(int delay);
+    int               get_recovery_notification_delay() const;
+    void              set_recovery_notification_delay(int delay);
     int               schedule_downtime(
                         downtime::downtime_type type,
                         time_t entry_time,
@@ -212,6 +227,8 @@ namespace           notifications {
                       _contact_groups;
     bool              _notifications_enabled;
     int               _scheduled_downtime_depth;
+    int               _first_notification_delay;
+    int               _recovery_notification_delay;
   };
 }
 

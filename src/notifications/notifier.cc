@@ -1,5 +1,5 @@
 /*
-** Copyright 2017 Centreon
+** Copyright 2017-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -298,6 +298,14 @@ static bool _compare_shared_ptr(
 }
 
 /**
+ *  Clear contact list.
+ */
+void notifier::clear_contacts() {
+  _contacts.clear();
+  return ;
+}
+
+/**
  *  get the users to notify in a string form each one separated by a comma.
  *
  *  @return A string.
@@ -358,6 +366,14 @@ umap<std::string, shared_ptr<engine::contact> > const& notifier::get_contacts() 
 
 umap<std::string, shared_ptr<engine::contact> >& notifier::get_contacts() {
   return _contacts;
+}
+
+/**
+ *  Clear contact group list.
+ */
+void notifier::clear_contactgroups() {
+  _contact_groups.clear();
+  return ;
 }
 
 umap<std::string, shared_ptr<engine::contactgroup> > const& notifier::get_contactgroups() const {
@@ -560,6 +576,11 @@ long notifier::get_notification_interval() const {
   return _notification_interval;
 }
 
+void notifier::set_notification_interval(long interval) {
+  _notification_interval = interval;
+  return ;
+}
+
 time_t notifier::get_last_notification() const {
   return _last_notification;
 }
@@ -574,6 +595,24 @@ void notifier::set_last_notification(time_t last_notification) {
 
 void notifier::set_next_notification(time_t next_notification) {
   _next_notification = next_notification;
+}
+
+int notifier::get_first_notification_delay() const {
+  return (_first_notification_delay);
+}
+
+void notifier::set_first_notification_delay(int delay) {
+  _first_notification_delay = delay;
+  return ;
+}
+
+int notifier::get_recovery_notification_delay() const {
+  return (_recovery_notification_delay);
+}
+
+void notifier::set_recovery_notification_delay(int delay) {
+  _recovery_notification_delay = delay;
+  return ;
 }
 
 bool notifier::contains_contact(contact* user) const {
@@ -616,6 +655,116 @@ void notifier::set_initial_notif_time(time_t initial) {
 
 void notifier::set_recovery_been_sent(bool sent) {
   // FIXME DBR: to implement...
+}
+
+/**
+ *  Check if object should notify on down states.
+ *
+ *  @return True if object should notify.
+ */
+bool notifier::get_notify_on_down() const {
+  return (_notified_states & ON_DOWN);
+}
+
+/**
+ *  Set whether or not object should notify on down states.
+ *
+ *  @param[in] notify  True to notify.
+ */
+void notifier::set_notify_on_down(bool notify) {
+  if (notify)
+    _notified_states |= ON_DOWN;
+  else
+    _notified_states &= ~ON_DOWN;
+  return ;
+}
+
+/**
+ *  Check if object should notify when in downtime.
+ *
+ *  @return True if object should notify.
+ */
+bool notifier::get_notify_on_downtime() const {
+  return (_notified_states & ON_DOWNTIME);
+}
+
+/**
+ *  Set whether or not not object should notify when flapping.
+ *
+ *  @param[in] notify  True to notify.
+ */
+void notifier::set_notify_on_downtime(bool notify) {
+  if (notify)
+    _notified_states |= ON_DOWNTIME;
+  else
+    _notified_states &= ~ON_DOWNTIME;
+  return ;
+}
+
+/**
+ *  Check if object should notify when flapping.
+ *
+ *  @return True if object should notify.
+ */
+bool notifier::get_notify_on_flapping() const {
+  return (_notified_states & ON_FLAPPING);
+}
+
+/**
+ *  Set whether or not not object should notify when flapping.
+ *
+ *  @param[in] notify  True to notify.
+ */
+void notifier::set_notify_on_flapping(bool notify) {
+  if (notify)
+    _notified_states |= ON_FLAPPING;
+  else
+    _notified_states &= ~ON_FLAPPING;
+  return ;
+}
+
+/**
+ *  Check if object should notify when recovering.
+ *
+ *  @return True if object should notify.
+ */
+bool notifier::get_notify_on_recovery() const {
+  return (_notified_states & ON_RECOVERY);
+}
+
+/**
+ *  Set whether or not not object should notify when recovering.
+ *
+ *  @param[in] notify  True to notify.
+ */
+void notifier::set_notify_on_recovery(bool notify) {
+  if (notify)
+    _notified_states |= ON_RECOVERY;
+  else
+    _notified_states &= ~ON_RECOVERY;
+  return ;
+}
+
+/**
+ *  Check if object should notify on unreachable states.
+ *
+ *  @return True if object should notify.
+ */
+bool notifier::get_notify_on_unreachable() const {
+  return (_notified_states & ON_UNREACHABLE);
+}
+
+/**
+ *  Set whether or not object should notify on unreachable states.
+ *
+ *  @param[in] notify  True to notify.
+ */
+void notifier::set_notify_on_unreachable(bool notify) {
+  if (notify)
+    _notified_states |= ON_UNREACHABLE;
+  else
+    _notified_states &= ~ON_UNREACHABLE;
+  return ;
 }
 
 timeperiod* notifier::get_notification_period() const {

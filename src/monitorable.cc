@@ -1,5 +1,5 @@
 /*
-** Copyright 2017 Centreon
+** Copyright 2017-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -84,6 +84,14 @@ void monitorable::set_action_url(std::string const& action_url) {
 }
 
 /**
+ *  Clear custom variables.
+ */
+void monitorable::clear_customvars() {
+  _vars.clear();
+  return ;
+}
+
+/**
  *  Get custom variables.
  *
  *  @return Set of this object's custom variables.
@@ -128,6 +136,44 @@ void monitorable::set_display_name(std::string const& display) {
  */
 std::string const& monitorable::get_host_name() const {
   return (_host_name);
+}
+
+/**
+ *  Get icon image.
+ *
+ *  @return Icon image.
+ */
+std::string const& monitorable::get_icon_image() const {
+  return (_icon_image);
+}
+
+/**
+ *  Set icon image.
+ *
+ *  @param[in] image  New image.
+ */
+void monitorable::set_icon_image(std::string const& image) {
+  _icon_image = image;
+  return ;
+}
+
+/**
+ *  Get alternative icon image.
+ *
+ *  @return Alternative icon image.
+ */
+std::string const& monitorable::get_icon_image_alt() const {
+  return (_icon_image_alt);
+}
+
+/**
+ *  Set alternative icon image.
+ *
+ *  @param[in] image  New image.
+ */
+void monitorable::set_icon_image_alt(std::string const& image) {
+  _icon_image_alt = image;
+  return ;
 }
 
 /**

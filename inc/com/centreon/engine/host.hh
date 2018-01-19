@@ -1,5 +1,5 @@
 /*
-** Copyright 2017 Centreon
+** Copyright 2017-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -48,13 +48,39 @@ class                        host : public monitorable {
 
   // Configuration.
   std::string const&         get_address() const;
+  void                       set_address(std::string const& address);
   std::string const&         get_alias() const;
+  void                       set_alias(std::string const& alias);
   int                        get_circular_path_checked() const;
   void                       set_circular_path_checked(int check_level);
   int                        get_initial_state() const;
+  void                       set_initial_state(int state);
   bool                       get_stalk_on_down() const;
+  void                       set_stalk_on_down(bool stalk);
   bool                       get_stalk_on_unreachable() const;
+  void                       set_stalk_on_unreachable(bool stalk);
   bool                       get_stalk_on_up() const;
+  void                       set_stalk_on_up(bool stalk);
+  std::string const&         get_statusmap_image() const;
+  void                       set_statusmap_image(std::string const& image);
+  std::string const&         get_vrml_image() const;
+  void                       set_vrml_image(std::string const& image);
+
+  // (Useless) coordinates.
+  bool                       get_have_2d_coords() const;
+  void                       set_have_2d_coords(bool has_coords);
+  bool                       get_have_3d_coords() const;
+  void                       set_have_3d_coords(bool has_coords);
+  int                        get_x_2d() const;
+  void                       set_x_2d(int x);
+  int                        get_y_2d() const;
+  void                       set_y_2d(int y);
+  int                        get_x_3d() const;
+  void                       set_x_3d(int x);
+  int                        get_y_3d() const;
+  void                       set_y_3d(int y);
+  int                        get_z_3d() const;
+  void                       set_z_3d(int z);
 
   // Links with other objects.
   void                       add_child(shared_ptr<host> hst);
@@ -85,17 +111,14 @@ class                        host : public monitorable {
 
   // Flap detection.
   bool                       get_flap_detection_on_up() const;
+  void                       set_flap_detection_on_up(bool detection);
   bool                       get_flap_detection_on_down() const;
+  void                       set_flap_detection_on_down(bool detection);
   bool                       get_flap_detection_on_unreachable() const;
+  void                       set_flap_detection_on_unreachable(bool detection);
   time_t                     get_last_historical_state_update() const;
   void                       set_last_historical_state_update(
                                time_t last_update);
-
-  // Notification.
-  bool                       get_notify_on_down() const;
-  void                       set_notify_on_down(bool notify);
-  bool                       get_notify_on_unreachable() const;
-  void                       set_notify_on_unreachable(bool notify);
 
  protected:
   void                       _checkable_macro_builder(nagios_macros& mac);
@@ -111,20 +134,27 @@ class                        host : public monitorable {
   bool                       _flap_detection_on_down;
   bool                       _flap_detection_on_unreachable;
   bool                       _flap_detection_on_up;
+  bool                       _have_2d_coords;
+  bool                       _have_3d_coords;
   int                        _initial_state;
   time_t                     _last_historical_state_update;
   time_t                     _last_time_down;
   time_t                     _last_time_unreachable;
   time_t                     _last_time_up;
-  bool                       _notify_on_down;
-  bool                       _notify_on_unreachable;
   std::list<shared_ptr<host> >
                              _parents;
   bool                       _should_reschedule_current_check;
   bool                       _stalk_on_down;
   bool                       _stalk_on_unreachable;
   bool                       _stalk_on_up;
+  std::string                _statusmap_image;
   int                        _total_service_check_interval;
+  std::string                _vrml_image;
+  int                        _x_2d;
+  int                        _y_2d;
+  int                        _x_3d;
+  int                        _y_3d;
+  int                        _z_3d;
 };
 
 CCE_END()

@@ -1,5 +1,5 @@
 /*
-** Copyright 2017 Centreon
+** Copyright 2017-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -66,12 +66,22 @@ host& host::operator=(host const& other) {
 **************************************/
 
 /**
- *  Get the ip address.
+ *  Get the address of the host.
  *
- *  @return a string representing the ip address.
+ *  @return A string representing the host's address.
  */
 std::string const& host::get_address() const {
   return (_address);
+}
+
+/**
+ *  Set the address of the host.
+ *
+ *  @param[in] address  New host address.
+ */
+void host::set_address(std::string const& address) {
+  _address = address;
+  return ;
 }
 
 /**
@@ -81,6 +91,16 @@ std::string const& host::get_address() const {
  */
 std::string const& host::get_alias() const {
   return (_alias);
+}
+
+/**
+ *  Set the alias.
+ *
+ *  @param[in] alias  New alias.
+ */
+void host::set_alias(std::string const& alias) {
+  _alias = alias;
+  return ;
 }
 
 /**
@@ -112,12 +132,32 @@ int host::get_initial_state() const {
 }
 
 /**
+ *  Set initial state.
+ *
+ *  @param[in] state  New initial state.
+ */
+void host::set_initial_state(int state) {
+  _initial_state = state;
+  return ;
+}
+
+/**
  *  Check if host should be stalked on down states.
  *
  *  @return True if host should be stalked.
  */
 bool host::get_stalk_on_down() const {
   return (_stalk_on_down);
+}
+
+/**
+ *  Set whether host should be stalked on down states.
+ *
+ *  @param[in] stalk  True if host should be stalked.
+ */
+void host::set_stalk_on_down(bool stalk) {
+  _stalk_on_down = stalk;
+  return ;
 }
 
 /**
@@ -130,12 +170,208 @@ bool host::get_stalk_on_unreachable() const {
 }
 
 /**
+ *  Set whether host should be stalked on unreachable states.
+ *
+ *  @param[in] stalk  True if host should be stalked.
+ */
+void host::set_stalk_on_unreachable(bool stalk) {
+  _stalk_on_unreachable = stalk;
+  return ;
+}
+
+/**
  *  Check if host should be stalked on up states.
  *
  *  @return True if host should be stalked.
  */
 bool host::get_stalk_on_up() const {
   return (_stalk_on_up);
+}
+
+/**
+ *  Set whether host should be stalked on up states.
+ *
+ *  @param[in] stalk  True if host should be stalked.
+ */
+void host::set_stalk_on_up(bool stalk) {
+  _stalk_on_up = stalk;
+  return ;
+}
+
+/**
+ *  Get status map image.
+ *
+ *  @return Status map image.
+ */
+std::string const& host::get_statusmap_image() const {
+  return (_statusmap_image);
+}
+
+/**
+ *  Set status map image.
+ *
+ *  @param[in] image  Status map image.
+ */
+void host::set_statusmap_image(std::string const& image) {
+  _statusmap_image = image;
+  return ;
+}
+
+/**
+ *  Get VRML image.
+ *
+ *  @return VRML image.
+ */
+std::string const& host::get_vrml_image() const {
+  return (_vrml_image);
+}
+
+/**
+ *  Set VRML image.
+ *
+ *  @param[in] image  VRML image.
+ */
+void host::set_vrml_image(std::string const& image) {
+  _vrml_image = image;
+  return ;
+}
+
+/**************************************
+*                                     *
+*             Coordinates             *
+*                                     *
+**************************************/
+
+/**
+ *  Check if host has 2D coordinates.
+ *
+ *  @return True if host has 2D coordinates.
+ */
+bool host::get_have_2d_coords() const {
+  return (_have_2d_coords);
+}
+
+/**
+ *  Set if host has 2D coordinates.
+ *
+ *  @param[in] have_coords  True if host has 2D coordinates.
+ */
+void host::set_have_2d_coords(bool have_coords) {
+  _have_2d_coords = have_coords;
+}
+
+/**
+ *  Check if host has 3D coordinates.
+ *
+ *  @return True if host has 3D coordinates.
+ */
+bool host::get_have_3d_coords() const {
+  return (_have_3d_coords);
+}
+
+/**
+ *  Set if host has 3D coordinates.
+ *
+ *  @param[in] have_coords  True if host has 3D coordinates.
+ */
+void host::set_have_3d_coords(bool have_coords) {
+  _have_3d_coords = have_coords;
+  return ;
+}
+
+/**
+ *  Get x coordinate (2D).
+ *
+ *  @return X coordinate.
+ */
+int host::get_x_2d() const {
+  return (_x_2d);
+}
+
+/**
+ *  Set x coordinate (2D).
+ *
+ *  @param[in] x_2d  X coordinate.
+ */
+void host::set_x_2d(int x) {
+  _x_2d = x;
+  return ;
+}
+
+/**
+ *  Get y coordinate (2D).
+ *
+ *  @return Y coordinate.
+ */
+int host::get_y_2d() const {
+  return (_y_2d);
+}
+
+/**
+ *  Set y coordinate (2D).
+ *
+ *  @param[in] y  Y coordinate.
+ */
+void host::set_y_2d(int y) {
+  _y_2d = y;
+  return ;
+}
+
+/**
+ *  Get x coordinate (3D).
+ *
+ *  @return X coordinate.
+ */
+int host::get_x_3d() const {
+  return (_x_3d);
+}
+
+/**
+ *  Set x coordinate (3D).
+ *
+ *  @param[in] x  X coordinate.
+ */
+void host::set_x_3d(int x) {
+  _x_3d = x;
+  return ;
+}
+
+/**
+ *  Get y coordinate (3D).
+ *
+ *  @return Y coordinate.
+ */
+int host::get_y_3d() const {
+  return (_y_3d);
+}
+
+/**
+ *  Set y coordinate (3D).
+ *
+ *  @param[in] y  Y coordinate.
+ */
+void host::set_y_3d(int y) {
+  _y_3d = y;
+  return ;
+}
+
+/**
+ *  Get z coordinate (3D).
+ *
+ *  @return Z coordinate.
+ */
+int host::get_z_3d() const {
+  return (_z_3d);
+}
+
+/**
+ *  Set z coordinate (3D).
+ *
+ *  @param[in] z  Z coordinate.
+ */
+void host::set_z_3d(int z) {
+  _z_3d = z;
+  return ;
 }
 
 /**************************************
@@ -356,6 +592,16 @@ bool host::get_flap_detection_on_up() const {
 }
 
 /**
+ *  Enable or disable flap detection for UP state.
+ *
+ *  @param[in] detection  True to enable flap detection.
+ */
+void host::set_flap_detection_on_up(bool detection) {
+  _flap_detection_on_up = detection;
+  return ;
+}
+
+/**
  *  Check if flap detection is enabled for DOWN state.
  *
  *  @return True if flap detection is enabled for DOWN state.
@@ -365,12 +611,32 @@ bool host::get_flap_detection_on_down() const {
 }
 
 /**
+ *  Enable or disable flap detection for DOWN state.
+ *
+ *  @param[in] detection  True to enable flap detection.
+ */
+void host::set_flap_detection_on_down(bool detection) {
+  _flap_detection_on_down = detection;
+  return ;
+}
+
+/**
  *  Check if flap detection is enabled for UNREACHABLE state.
  *
  *  @return True if flap detection is enabled for UNREACHABLE state.
  */
 bool host::get_flap_detection_on_unreachable() const {
   return (_flap_detection_on_unreachable);
+}
+
+/**
+ *  Enable or disable flap detection for UNREACHABLE state.
+ *
+ *  @param[in] detection  True to enable flap detection.
+ */
+void host::set_flap_detection_on_unreachable(bool detection) {
+  _flap_detection_on_unreachable = detection;
+  return ;
 }
 
 /**
@@ -394,51 +660,6 @@ void host::set_last_historical_state_update(time_t last_update) {
 
 /**************************************
 *                                     *
-*            Notification             *
-*                                     *
-**************************************/
-
-/**
- *  Check if host should notify on down states.
- *
- *  @return True if host should notify.
- */
-bool host::get_notify_on_down() const {
-  return (_notify_on_down);
-}
-
-/**
- *  Set whether or not host should notify on down states.
- *
- *  @param[in] notify  True to notify.
- */
-void host::set_notify_on_down(bool notify) {
-  _notify_on_down = notify;
-  return ;
-}
-
-/**
- *  Check if host should notify on unreachable states.
- *
- *  @return True if host should notify.
- */
-bool host::get_notify_on_unreachable() const {
-  return (_notify_on_unreachable);
-}
-
-/**
- *  Set whether or not host should notify on unreachable states.
- *
- *  @param[in] notify  True to notify.
- */
-void host::set_notify_on_unreachable(bool notify) {
-  _notify_on_unreachable = notify;
-  return ;
-}
-
-
-/**************************************
-*                                     *
 *          Private methods            *
 *                                     *
 **************************************/
@@ -454,8 +675,6 @@ void host::_internal_copy(host const& other) {
   _last_time_down = other._last_time_down;
   _last_time_unreachable = other._last_time_unreachable;
   _last_time_up = other._last_time_up;
-  _notify_on_down = other._notify_on_down;
-  _notify_on_unreachable = other._notify_on_unreachable;
   _parents = other._parents;
   _should_reschedule_current_check = other._should_reschedule_current_check;
   _stalk_on_down = other._stalk_on_down;

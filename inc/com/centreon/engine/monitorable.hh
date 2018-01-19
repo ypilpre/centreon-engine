@@ -1,5 +1,5 @@
 /*
-** Copyright 2017 Centreon
+** Copyright 2017-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -43,11 +43,16 @@ class                  monitorable : public notifications::notifier {
   monitorable&         operator=(monitorable const& other);
   std::string const&   get_action_url() const;
   void                 set_action_url(std::string const& action_url);
+  void                 clear_customvars();
   customvar_set const& get_customvars() const;
   void                 set_customvar(customvar const& var);
   std::string const&   get_display_name() const;
   void                 set_display_name(std::string const& display);
   std::string const&   get_host_name() const;
+  std::string const&   get_icon_image() const;
+  void                 set_icon_image(std::string const& image);
+  std::string const&   get_icon_image_alt() const;
+  void                 set_icon_image_alt(std::string const& image);
   unsigned int         get_id() const;
   void                 set_id(unsigned int id);
   std::string const&   get_notes() const;
@@ -65,6 +70,8 @@ class                  monitorable : public notifications::notifier {
   std::string          _action_url;
   std::string          _display_name;
   std::string          _host_name;
+  std::string          _icon_image;
+  std::string          _icon_image_alt;
   unsigned int         _id;
   std::string          _notes;
   std::string          _notes_url;
