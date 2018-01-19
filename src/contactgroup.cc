@@ -85,64 +85,22 @@ contactgroup& contactgroup::operator=(contactgroup const& other) {
  */
 contactgroup::~contactgroup() {}
 
-bool contactgroup::check(int* w, int* e) {
-  (void)w;
-  int errors(0);
-
-  // Check all the group members.
-  for (umap<std::string, shared_ptr<contact> >::iterator
-         it(get_members().begin()),
-         end(get_members().end());
-         it != end;
-         ++it) {
-    shared_ptr<contact> ctct;
-    umap<std::string, shared_ptr<contact> >::const_iterator
-      itf(configuration::applier::state::instance().contacts().find(it->first));
-    if (itf != configuration::applier::state::instance().contacts().end())
-      ctct = itf->second;
-    if (!ctct.get()) {
-      logger(log_verification_error, basic)
-        << "Error: Contact '" << it->first
-        << "' specified in contact group '" << get_name()
-        << "' is not defined anywhere!";
-      errors++;
-    }
-
-    // Save the contact pointer for later.
-    it->second = ctct;
-  }
-
-  // Check for illegal characters in contact group name.
-  if (contains_illegal_object_chars()) {
-    logger(log_verification_error, basic)
-      << "Error: The name of contact group '" << get_name()
-      << "' contains one or more illegal characters.";
-    errors++;
-  }
-//  if (contains_illegal_object_chars(cg->group_name) == true) {
-//    logger(log_verification_error, basic)
-//      << "Error: The name of contact group '" << cg->group_name
-//      << "' contains one or more illegal characters.";
-//    errors++;
-//  }
-
-  // Add errors.
-  if (e)
-    *e += errors;
-
-  return (errors == 0);
-}
-
 std::string const& contactgroup::get_name() const {
   return _name;
 }
 
-umap<std::string, shared_ptr<contact> > const& contactgroup::get_members() const {
-  return _members;
+void contactgroup::add_member(shared_ptr<contact> cntct) {
+  _members[cntct->get_name()] = cntct;
+  return ;
 }
 
-umap<std::string, shared_ptr<contact> >& contactgroup::get_members() {
-  return _members;
+void contactgroup::clear_members() {
+  _members.clear();
+  return ;
+}
+
+umap<std::string, shared_ptr<contact> > const& contactgroup::get_members() const {
+  return (_members);
 }
 
 bool contactgroup::contains_illegal_object_chars() const {

@@ -1,5 +1,5 @@
 /*
-** Copyright 2017 Centreon
+** Copyright 2017-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -51,12 +51,11 @@ class                          contactgroup {
   std::string const&           get_name() const;
   std::string const&           get_alias() const;
   void                         set_alias(std::string const& alias);
-  bool                         check(int* w, int* e);
+  void                         add_member(
+                                 com::centreon::shared_ptr<contact> cntct);
+  void                         clear_members();
   umap<std::string, com::centreon::shared_ptr<contact> > const&
                                get_members() const;
-
-  umap<std::string, com::centreon::shared_ptr<contact> >&
-                               get_members();
 
   bool                         contains_member(std::string const& name) const;
   bool                         contains_illegal_object_chars() const;

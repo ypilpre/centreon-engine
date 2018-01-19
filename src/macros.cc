@@ -302,7 +302,7 @@ int grab_custom_macro_value_r(
       delimiter_len = strlen(arg2);
 
       /* concatenate macro values for all contactgroup members */
-      for (umap<std::string, shared_ptr<contact> >::iterator
+      for (umap<std::string, shared_ptr<contact> >::const_iterator
              it(temp_contactgroup->get_members().begin()),
              end(temp_contactgroup->get_members().end());
            it != end;
@@ -846,7 +846,7 @@ int grab_standard_contactgroup_macro(
 
   case MACRO_CONTACTGROUPMEMBERS:
     /* get the member list */
-    for (umap<std::string, shared_ptr<contact> >::iterator
+    for (umap<std::string, shared_ptr<contact> >::const_iterator
            it(temp_contactgroup->get_members().begin()),
            end(temp_contactgroup->get_members().end());
          it != end;

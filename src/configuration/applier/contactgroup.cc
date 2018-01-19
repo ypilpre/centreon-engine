@@ -175,7 +175,7 @@ void applier::contactgroup::modify_object(
   // Were members modified ?
   if (obj.members() != old_cfg.members()) {
     // Delete all old contact group members.
-    cg->get_members().clear();
+    cg->clear_members();
 
     // Create new contact group members.
     for (set_string::const_iterator
@@ -248,21 +248,50 @@ void applier::contactgroup::remove_object(
  */
 void applier::contactgroup::resolve_object(
                               configuration::contactgroup const& obj) {
+  // Failure flag.
+  bool failure(false);
+
   // Logging.
   logger(logging::dbg_config, logging::more)
     << "Resolving contact group '" << obj.contactgroup_name() << "'";
 
-  // Find contact group.
-  umap<std::string, shared_ptr<engine::contactgroup> >::iterator
-    it(applier::state::instance().contactgroups_find(obj.key()));
-  if (applier::state::instance().contactgroups().end() == it)
-    throw (engine_error() << "Error: Cannot resolve non-existing "
-           << "contact group '" << obj.contactgroup_name() << "'");
+  try {
+    // Find contact group.
+    engine::contactgroup& grp(
+      *applier::state::instance().contactgroups_find(obj.key())->second.get());
 
-  // Resolve contact group.
-  if (!it->second->check(&config_warnings, &config_errors))
-    throw (engine_error() << "Error: Cannot resolve contact group "
-           << obj.contactgroup_name() << "'");
+    // Remove old links.
+    grp.clear_members();
+
+    // Check all the group members.
+    for (set_string::const_iterator
+           it(obj.members().begin()),
+           end(obj.members().end());
+         it != end;
+         ++it) {
+      shared_ptr<engine::contact> cntct(
+        configuration::applier::state::instance().contacts_find(*it)->second);
+      grp.add_member(cntct);
+    }
+
+    // Check for illegal characters in contact group name.
+    if (contains_illegal_object_chars(grp.get_name().c_str())) {
+      logger(logging::log_verification_error, logging::basic)
+        << "Error: The name of contact group '" << grp.get_name()
+        << "' contains one or more illegal characters.";
+      ++config_errors;
+      failure = true;
+    }
+
+    if (failure)
+      throw (error() << "please check logs above");
+  }
+  catch (std::exception const& e) {
+    throw (engine_error() << "Could not resolve contact '"
+           << obj.contactgroup_name() << "': " << e.what());
+  }
+
+  return ;
 }
 
 /**

@@ -1,6 +1,6 @@
 /*
-** Copyright 1999-2010      Ethan Galstad
-** Copyright 2011-2013,2016 Centreon
+** Copyright 1999-2010           Ethan Galstad
+** Copyright 2011-2013,2016-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -1203,7 +1203,7 @@ int grab_macro_value_r(
         delimiter_len = strlen(arg[1]);
 
         /* concatenate macro values for all contactgroup members */
-        for (umap<std::string, shared_ptr<contact> >::iterator
+        for (umap<std::string, shared_ptr<contact> >::const_iterator
                it(temp_contactgroup->get_members().begin()),
                end(temp_contactgroup->get_members().end());
              it != end;
