@@ -1,6 +1,6 @@
 /*
-** Copyright 1999-2009      Ethan Galstad
-** Copyright 2011-2013,2017 Centreon
+** Copyright 1999-2009           Ethan Galstad
+** Copyright 2011-2013,2017-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -106,7 +106,7 @@ char* get_next_string_from_buf(
         int* start_index,
         int bufsize);
 // tests whether or not an object name (host, service, etc.) contains illegal characters
-int contains_illegal_object_chars(char* name);
+bool contains_illegal_object_chars(char const* name);
 char* escape_newlines(char* rawbuf);
 // compares two strings for equality
 int compare_strings(char* val1a, char* val2a);

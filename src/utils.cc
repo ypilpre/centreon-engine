@@ -1,7 +1,7 @@
 /*
 ** Copyright 1999-2009           Ethan Galstad
 ** Copyright 2009-2012           Icinga Development Team (http://www.icinga.org)
-** Copyright 2011-2014,2016-2017 Centreon
+** Copyright 2011-2014,2016-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -622,10 +622,10 @@ char* get_next_string_from_buf(
  *  @return True if the object name contains an illegal character, false
  *          otherwise.
  */
-int contains_illegal_object_chars(char* name) {
+bool contains_illegal_object_chars(char const* name) {
   if (!name || !illegal_object_chars)
     return (false);
-  return (strpbrk(name, illegal_object_chars) ? TRUE : FALSE);
+  return (strpbrk(name, illegal_object_chars) ? true : false);
 }
 
 /* escapes newlines in a string */
@@ -1185,4 +1185,3 @@ servicegroup_struct& find_servicegroup(std::string const& name) {
 
   return (*it->second.get());
 }
-

@@ -1,5 +1,5 @@
 /*
-** Copyright 2017 Centreon
+** Copyright 2017-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -59,7 +59,7 @@ contact::contact(configuration::contact const& obj)
     _alias((obj.alias().empty()) ? obj.contact_name() : obj.alias()),
     _email(obj.email()),
     _pager(obj.pager()),
-    _address(obj.address()),
+    _addresses(obj.address()),
     _service_notified_states(
         ((obj.service_notification_options() & configuration::service::ok)
          ? notifier::ON_RECOVERY : 0)
@@ -337,172 +337,6 @@ void contact::set_service_notified_states(unsigned int notified_states) {
 }
 
 /**
- *  Checks contact
- *
- * @param[out] w Number of warnings returned by the check
- * @param[out] e Number of errors returned by the check
- *
- * @return true if no errors are returned.
- */
-bool contact::check(int* w, int* e) {
-  int warnings(0);
-  int errors(0);
-
-  /* check service notification commands */
-  if (get_service_notification_commands().empty()) {
-    logger(log_verification_error, basic)
-      << "Error: Contact '" << get_name() << "' has no service "
-      "notification commands defined!";
-    errors++;
-  }
-  else
-    for (command_map::iterator
-           it(get_service_notification_commands().begin()),
-           end(get_service_notification_commands().end());
-           it != end;
-           ++it) {
-      std::string buf(it->first);
-      size_t index(buf.find(buf, '!'));
-      std::string command_name(buf.substr(0, index));
-      shared_ptr<command> temp_command;
-      try {
-        temp_command = find_command(command_name);
-      }
-      catch (not_found const& e) {
-        (void)e;
-        logger(log_verification_error, basic)
-          << "Error: Service notification command '"
-          << command_name << "' specified for contact '"
-          << get_name() << "' is not defined anywhere!";
-	++errors;
-      }
-
-      /* save pointer to the command for later */
-      it->second = temp_command;
-    }
-
-  /* check host notification commands */
-  if (get_host_notification_commands().empty()) {
-    logger(log_verification_error, basic)
-      << "Error: Contact '" << get_name() << "' has no host "
-      "notification commands defined!";
-    errors++;
-  }
-  else
-    for (command_map::iterator
-           it(get_host_notification_commands().begin()),
-           end(get_host_notification_commands().end());
-           it != end;
-           ++it) {
-      std::string buf(it->first);
-      size_t index(buf.find('!'));
-      std::string command_name(buf.substr(0, index));
-      shared_ptr<command> cmd;
-      try {
-        cmd = find_command(command_name);
-      }
-      catch (not_found const& e) {
-        (void)e;
-        logger(log_verification_error, basic)
-          << "Error: Host notification command '" << command_name
-          << "' specified for contact '" << get_name()
-          << "' is not defined anywhere!";
-	++errors;
-      }
-
-      /* save pointer to the command for later */
-      it->second = cmd;
-    }
-
-  // XXX : move entier method to applier
-  // /* check service notification timeperiod */
-  // if (get_service_notification_period_name().empty()) {
-  //   logger(log_verification_error, basic)
-  //     << "Warning: Contact '" << get_name() << "' has no service "
-  //     "notification time period defined!";
-  //   warnings++;
-  // }
-  // else {
-  //   timeperiod* temp_timeperiod;
-  //   try {
-  //     temp_timeperiod = &find_timeperiod(get_service_notification_period_name());
-  //   }
-  //   catch (not_found const& e) {
-  //     (void)e;
-  //     logger(log_verification_error, basic)
-  //       << "Error: Service notification period '"
-  //       << get_service_notification_period_name()
-  //       << "' specified for contact '" << get_name()
-  //       << "' is not defined anywhere!";
-  //     ++errors;
-  //   }
-  //   set_service_notification_period(temp_timeperiod);
-  // }
-
-  // /* check host notification timeperiod */
-  // if (get_host_notification_period_name().empty()) {
-  //   logger(log_verification_error, basic)
-  //     << "Warning: Contact '" << get_name() << "' has no host "
-  //     "notification time period defined!";
-  //   warnings++;
-  // }
-  // else {
-  //   timeperiod* temp_timeperiod;
-  //   try {
-  //     temp_timeperiod = &find_timeperiod(get_host_notification_period_name());
-  //   }
-  //   catch (not_found const& e) {
-  //     (void)e;
-  //     logger(log_verification_error, basic)
-  //       << "Error: Host notification period '"
-  //       << get_host_notification_period_name()
-  //       << "' specified for contact '" << get_name()
-  //       << "' is not defined anywhere!";
-  //     ++errors;
-  //   }
-
-  //   /* save the pointer to the host notification timeperiod for later */
-  //   set_host_notification_period(temp_timeperiod);
-  // }
-
-  /* check for sane host recovery options */
-  if (notify_on_host_recovery()
-      && !notify_on_host_down()
-      && !notify_on_host_unreachable()) {
-    logger(log_verification_error, basic)
-      << "Warning: Host recovery notification option for contact '"
-      << get_name() << "' doesn't make any sense - specify down "
-      "and/or unreachable options as well";
-    warnings++;
-  }
-
-  /* check for sane service recovery options */
-  if (notify_on_service_recovery()
-      && !notify_on_service_critical()
-      && !notify_on_service_warning()) {
-    logger(log_verification_error, basic)
-      << "Warning: Service recovery notification option for contact '"
-      << get_name() << "' doesn't make any sense - specify critical "
-      "and/or warning options as well";
-    warnings++;
-  }
-
-  /* check for illegal characters in contact name */
-  if (contains_illegal_object_chars()) {
-    logger(log_verification_error, basic)
-      << "Error: The name of contact '" << get_name()
-      << "' contains one or more illegal characters.";
-    errors++;
-  }
-
-  if (w != NULL)
-    *w += warnings;
-  if (e != NULL)
-    *e += errors;
-  return (errors == 0);
-}
-
-/**
  *  host_notification_commands getter
  *
  *  @return an unordered map indexed by names of the host notification commands
@@ -570,18 +404,13 @@ bool contact::notify_on_host_unreachable() const {
   return (_host_notified_states & notifier::ON_UNREACHABLE);
 }
 
-bool contact::contains_illegal_object_chars() const {
-  if (_name.empty() || !illegal_object_chars)
-    return false;
-  return (_name.find(illegal_object_chars) != std::string::npos);
+void contact::clear_contactgroups() {
+  _contact_groups.clear();
+  return ;
 }
 
 std::list<shared_ptr<contactgroup> > const& contact::get_contactgroups() const {
-  return _contact_groups;
-}
-
-std::list<shared_ptr<contactgroup> >& contact::get_contactgroups() {
-  return _contact_groups;
+  return (_contact_groups);
 }
 
 customvar_set const& contact::get_customvars() const {
@@ -611,9 +440,27 @@ void contact::set_customvar(customvar const& var) {
   }
 }
 
-
 std::string const& contact::get_address(int index) const {
-  return _address[index];
+  return (_addresses[index]);
+}
+
+/**
+ *  Get all addresses.
+ *
+ *  @return Array of addresses.
+ */
+std::vector<std::string> const& contact::get_addresses() const {
+  return (_addresses);
+}
+
+/**
+ *  Set addresses.
+ *
+ *  @param[in] addresses  New addresses.
+ */
+void contact::set_addresses(std::vector<std::string> const& addresses) {
+  _addresses = addresses;
+  return ;
 }
 
 /**

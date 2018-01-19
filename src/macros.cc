@@ -1,6 +1,6 @@
 /*
 ** Copyright 1999-2010           Ethan Galstad
-** Copyright 2011-2013,2016-2017 Centreon
+** Copyright 2011-2013,2016-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -763,7 +763,7 @@ int grab_standard_contact_macro_r(
     std::string buf;
     /* get the contactgroup names */
     /* find all contactgroups this contact is a member of */
-    for (std::list<shared_ptr<contactgroup> >::iterator
+    for (std::list<shared_ptr<contactgroup> >::const_iterator
            it(temp_contact->get_contactgroups().begin()),
            end(temp_contact->get_contactgroups().end());
          it != end;

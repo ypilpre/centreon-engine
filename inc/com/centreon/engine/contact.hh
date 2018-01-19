@@ -1,5 +1,5 @@
 /*
-** Copyright 2017 Centreon
+** Copyright 2017-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -59,6 +59,10 @@ class                           contact {
   // Base properties.
   std::string const&            get_name() const;
   std::string const&            get_address(int index) const;
+  std::vector<std::string> const&
+                                get_addresses() const;
+  void                          set_addresses(
+                                  std::vector<std::string> const& addresses);
   std::string const&            get_alias() const;
   void                          set_alias(std::string const& alias);
   bool                          get_can_submit_commands() const;
@@ -130,13 +134,9 @@ class                           contact {
                                   std::string const& command_name);
   void                          clear_service_notification_commands();
 
-  bool                          contains_illegal_object_chars() const;
-
+  void                          clear_contactgroups();
   std::list<shared_ptr<contactgroup> > const&
                                 get_contactgroups() const;
-
-  std::list<shared_ptr<contactgroup> >&
-                                get_contactgroups();
 
   void                          add_custom_variable(
                                   char const* varname,
@@ -149,9 +149,6 @@ class                           contact {
   void                          set_modified_attributes(unsigned long attr);
   void                          update_status(int aggregated_dump);
 
-
-  bool                          check(int* w, int* e);
-
  private:
 
   std::string                   _name;
@@ -160,7 +157,7 @@ class                           contact {
   std::string                   _pager;
   bool                          _can_submit_commands;
 
-  std::vector<std::string>      _address;
+  std::vector<std::string>      _addresses;
   std::string                   _timezone;
   command_map                   _host_notification_commands;
   command_map                   _service_notification_commands;
