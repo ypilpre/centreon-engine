@@ -55,6 +55,8 @@ class                  monitorable : public notifications::notifier {
   void                 set_icon_image_alt(std::string const& image);
   unsigned int         get_id() const;
   void                 set_id(unsigned int id);
+  int                  get_initial_state() const;
+  void                 set_initial_state(int state);
   std::string const&   get_notes() const;
   void                 set_notes(std::string const& notes);
   std::string const&   get_notes_url() const;
@@ -73,6 +75,7 @@ class                  monitorable : public notifications::notifier {
   std::string          _icon_image;
   std::string          _icon_image_alt;
   unsigned int         _id;
+  int                  _initial_state;
   std::string          _notes;
   std::string          _notes_url;
   bool                 _retain_nonstate_info;

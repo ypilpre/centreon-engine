@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2017 Centreon
+** Copyright 2011-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -248,234 +248,251 @@ void applier::service::modify_object(
   config->services().insert(obj);
 
   // Modify properties.
+  modify_if_different(*s, display_name, obj.display_name());
+  modify_if_different(*s, check_command_args, obj.check_command());
+  modify_if_different(*s, event_handler_args, obj.event_handler());
+  modify_if_different(
+    *s,
+    event_handler_enabled,
+    obj.event_handler_enabled());
+  modify_if_different(*s, initial_state, obj.initial_state());
+  modify_if_different(*s, normal_check_interval, obj.check_interval());
+  modify_if_different(*s, retry_check_interval, obj.retry_interval());
+  modify_if_different(*s, max_attempts, obj.max_check_attempts());
+  modify_if_different(
+    *s,
+    notification_interval,
+    obj.notification_interval());
+  modify_if_different(
+    *s,
+    first_notification_delay,
+    obj.first_notification_delay());
+  modify_if_different(
+    *s,
+    notify_on_unknown,
+    static_cast<bool>(
+      obj.notification_options() & configuration::service::unknown));
+  modify_if_different(
+    *s,
+    notify_on_warning,
+    static_cast<bool>(
+      obj.notification_options() & configuration::service::warning));
+  modify_if_different(
+    *s,
+    notify_on_critical,
+    static_cast<bool>(
+      obj.notification_options() & configuration::service::critical));
+  modify_if_different(
+    *s,
+    notify_on_recovery,
+    static_cast<bool>(
+      obj.notification_options() & configuration::service::ok));
+  modify_if_different(
+    *s,
+    notify_on_flapping,
+    static_cast<bool>(
+      obj.notification_options() & configuration::service::flapping));
+  modify_if_different(
+    *s,
+    notify_on_downtime,
+    static_cast<bool>(
+      obj.notification_options() & configuration::service::downtime));
+  modify_if_different(
+    *s,
+    stalk_on_ok,
+    static_cast<bool>(
+      obj.stalking_options() & configuration::service::ok));
+  modify_if_different(
+    *s,
+    stalk_on_warning,
+    static_cast<bool>(
+      obj.stalking_options() & configuration::service::warning));
+  modify_if_different(
+    *s,
+    stalk_on_unknown,
+    static_cast<bool>(
+      obj.stalking_options() & configuration::service::unknown));
+  modify_if_different(
+    *s,
+    stalk_on_critical,
+    static_cast<bool>(
+      obj.stalking_options() & configuration::service::critical));
+  modify_if_different(
+    *s,
+    flap_detection_enabled,
+    obj.flap_detection_enabled());
+  modify_if_different(
+    *s,
+    low_flap_threshold,
+    obj.low_flap_threshold());
+  modify_if_different(
+    *s,
+    high_flap_threshold,
+    obj.high_flap_threshold());
+  modify_if_different(
+    *s,
+    flap_detection_on_ok,
+    static_cast<bool>(
+      obj.flap_detection_options() & configuration::service::ok));
+  modify_if_different(
+    *s,
+    flap_detection_on_warning,
+    static_cast<bool>(
+      obj.flap_detection_options() & configuration::service::warning));
+  modify_if_different(
+    *s,
+    flap_detection_on_unknown,
+    static_cast<bool>(
+      obj.flap_detection_options() & configuration::service::unknown));
+  modify_if_different(
+    *s,
+    flap_detection_on_critical,
+    static_cast<bool>(
+      obj.flap_detection_options() & configuration::service::critical));
+  modify_if_different(*s, process_perfdata, obj.process_perf_data());
+  modify_if_different(
+    *s,
+    freshness_checks_enabled,
+    obj.check_freshness());
+  modify_if_different(
+    *s,
+    freshness_threshold,
+    obj.freshness_threshold());
+  modify_if_different(
+    *s,
+    passive_checks_enabled,
+    obj.checks_passive());
+  modify_if_different(*s, event_handler_args, obj.event_handler());
+  modify_if_different(
+    *s,
+    active_checks_enabled,
+    obj.checks_active());
+  modify_if_different(
+    *s,
+    retain_state_info,
+    obj.retain_status_information());
+  modify_if_different(
+    *s,
+    retain_nonstate_info,
+    obj.retain_nonstatus_information());
+  modify_if_different(
+    *s,
+    notifications_enabled,
+    obj.notifications_enabled());
+  modify_if_different(
+    *s,
+    ocp_enabled,
+    obj.obsess_over_service());
+  modify_if_different(*s, notes, obj.notes());
+  modify_if_different(*s, notes_url, obj.notes_url());
+  modify_if_different(*s, action_url, obj.action_url());
+  modify_if_different(*s, icon_image, obj.icon_image());
+  modify_if_different(*s, icon_image_alt, obj.icon_image_alt());
+  modify_if_different(*s, volatile, obj.is_volatile());
+  modify_if_different(*s, timezone, obj.timezone());
+  // XXX modify_if_different(*s, host_id, obj.host_id());
+  modify_if_different(*s, id, obj.service_id());
   // XXX
-  // modify_if_different(
-  //   s->display_name,
-  //   NULL_IF_EMPTY(obj.display_name()));
-  // modify_if_different(
-  //   s->service_check_command,
-  //   NULL_IF_EMPTY(obj.check_command()));
-  // modify_if_different(
-  //   s->event_handler,
-  //   NULL_IF_EMPTY(obj.event_handler()));
-  // modify_if_different(
-  //   s->event_handler_enabled,
-  //   static_cast<int>(obj.event_handler_enabled()));
-  // modify_if_different(
-  //   s->initial_state,
-  //   static_cast<int>(obj.initial_state()));
-  // modify_if_different(
-  //   s->check_interval,
-  //   static_cast<double>(obj.check_interval()));
-  // modify_if_different(
-  //   s->retry_interval,
-  //   static_cast<double>(obj.retry_interval()));
-  // modify_if_different(
-  //   s->max_attempts,
-  //   static_cast<int>(obj.max_check_attempts()));
-  // modify_if_different(
-  //   s->notification_interval,
-  //   static_cast<double>(obj.notification_interval()));
-  // modify_if_different(
-  //   s->first_notification_delay,
-  //   static_cast<double>(obj.first_notification_delay()));
-  // modify_if_different(
-  //   s->notify_on_unknown,
-  //   static_cast<int>(static_cast<bool>(
-  //     obj.notification_options() & configuration::service::unknown)));
-  // modify_if_different(
-  //   s->notify_on_warning,
-  //   static_cast<int>(static_cast<bool>(
-  //     obj.notification_options() & configuration::service::warning)));
-  // modify_if_different(
-  //   s->notify_on_critical,
-  //   static_cast<int>(static_cast<bool>(
-  //     obj.notification_options() & configuration::service::critical)));
-  // modify_if_different(
-  //   s->notify_on_recovery,
-  //   static_cast<int>(static_cast<bool>(
-  //     obj.notification_options() & configuration::service::ok)));
-  // modify_if_different(
-  //   s->notify_on_flapping,
-  //   static_cast<int>(static_cast<bool>(
-  //     obj.notification_options() & configuration::service::flapping)));
-  // modify_if_different(
-  //   s->notify_on_downtime,
-  //   static_cast<int>(static_cast<bool>(
-  //     obj.notification_options() & configuration::service::downtime)));
-  // modify_if_different(
-  //   s->stalk_on_ok,
-  //   static_cast<int>(static_cast<bool>(
-  //     obj.stalking_options() & configuration::service::ok)));
-  // modify_if_different(
-  //   s->stalk_on_warning,
-  //   static_cast<int>(static_cast<bool>(
-  //     obj.stalking_options() & configuration::service::warning)));
-  // modify_if_different(
-  //   s->stalk_on_unknown,
-  //   static_cast<int>(static_cast<bool>(
-  //     obj.stalking_options() & configuration::service::unknown)));
-  // modify_if_different(
-  //   s->stalk_on_critical,
-  //   static_cast<int>(static_cast<bool>(
-  //     obj.stalking_options() & configuration::service::critical)));
-  // modify_if_different(
-  //   s->notification_period,
-  //   NULL_IF_EMPTY(obj.notification_period()));
-  // modify_if_different(
-  //   s->check_period,
-  //   NULL_IF_EMPTY(obj.check_period()));
-  // modify_if_different(
-  //   s->flap_detection_enabled,
-  //   static_cast<int>(obj.flap_detection_enabled()));
-  // modify_if_different(
-  //   s->low_flap_threshold,
-  //   static_cast<double>(obj.low_flap_threshold()));
-  // modify_if_different(
-  //   s->high_flap_threshold,
-  //   static_cast<double>(obj.high_flap_threshold()));
-  // modify_if_different(
-  //   s->flap_detection_on_ok,
-  //   static_cast<int>(static_cast<bool>(
-  //     obj.flap_detection_options() & configuration::service::ok)));
-  // modify_if_different(
-  //   s->flap_detection_on_warning,
-  //   static_cast<int>(static_cast<bool>(
-  //     obj.flap_detection_options() & configuration::service::warning)));
-  // modify_if_different(
-  //   s->flap_detection_on_unknown,
-  //   static_cast<int>(static_cast<bool>(
-  //     obj.flap_detection_options() & configuration::service::unknown)));
-  // modify_if_different(
-  //   s->flap_detection_on_critical,
-  //   static_cast<int>(static_cast<bool>(
-  //     obj.flap_detection_options() & configuration::service::critical)));
-  // modify_if_different(
-  //   s->process_performance_data,
-  //   static_cast<int>(obj.process_perf_data()));
-  // modify_if_different(
-  //   s->check_freshness,
-  //   static_cast<int>(obj.check_freshness()));
-  // modify_if_different(
-  //   s->freshness_threshold,
-  //   static_cast<int>(obj.freshness_threshold()));
-  // modify_if_different(
-  //   s->accept_passive_service_checks,
-  //   static_cast<int>(obj.checks_passive()));
-  // modify_if_different(
-  //   s->event_handler,
-  //   NULL_IF_EMPTY(obj.event_handler()));
-  // modify_if_different(
-  //   s->checks_enabled,
-  //   static_cast<int>(obj.checks_active()));
-  // modify_if_different(
-  //   s->retain_status_information,
-  //   static_cast<int>(obj.retain_status_information()));
-  // modify_if_different(
-  //   s->retain_nonstatus_information,
-  //   static_cast<int>(obj.retain_nonstatus_information()));
-  // modify_if_different(
-  //   s->notifications_enabled,
-  //   static_cast<int>(obj.notifications_enabled()));
-  // modify_if_different(
-  //   s->obsess_over_service,
-  //   static_cast<int>(obj.obsess_over_service()));
-  // modify_if_different(s->notes, NULL_IF_EMPTY(obj.notes()));
-  // modify_if_different(s->notes_url, NULL_IF_EMPTY(obj.notes_url()));
-  // modify_if_different(s->action_url, NULL_IF_EMPTY(obj.action_url()));
-  // modify_if_different(s->icon_image, NULL_IF_EMPTY(obj.icon_image()));
-  // modify_if_different(
-  //   s->icon_image_alt,
-  //   NULL_IF_EMPTY(obj.icon_image_alt()));
-  // modify_if_different(
-  //   s->is_volatile,
-  //   static_cast<int>(obj.is_volatile()));
-  // service_other_props[std::make_pair(
-  //                            *obj.hosts().begin(),
-  //                            obj.service_description())].timezone = obj.timezone();
-  // service_other_props[std::make_pair(
-  //                            *obj.hosts().begin(),
-  //                            obj.service_description())].host_id = obj.host_id();
-  // service_other_props[std::make_pair(
-  //                            *obj.hosts().begin(),
-  //                            obj.service_description())].service_id = obj.service_id();
   // service_other_props[std::make_pair(
   //                            *obj.hosts().begin(),
   //                            obj.service_description())].acknowledgement_timeout
   //   = obj.get_acknowledgement_timeout() * config->interval_length();
-  // service_other_props[std::make_pair(
-  //                            *obj.hosts().begin(),
-  //                            obj.service_description())].recovery_notification_delay
-  //   = obj.recovery_notification_delay();
+  modify_if_different(
+    *s,
+    recovery_notification_delay,
+    obj.recovery_notification_delay());
 
-  // // Contacts.
-  // if (obj.contacts() != obj_old.contacts()) {
-  //   // Delete old contacts.
-  //   deleter::listmember(s->contacts, &deleter::contactsmember);
+  // Contacts.
+  if (obj.contacts() != obj_old.contacts()) {
+    // Remove contacts.
+    s->clear_contacts();
 
-  //   // Add contacts to host.
-  //   for (set_string::const_iterator
-  //          it(obj.contacts().begin()),
-  //          end(obj.contacts().end());
-  //        it != end;
-  //        ++it)
-  //     if (!add_contact_to_service(s, it->c_str()))
-  //       throw (engine_error() << "Could not add contact '"
-  //              << *it << "' to service '" << service_description
-  //              << "' on host '" << host_name << "'");
-  // }
+    // Add contacts to host.
+    for (set_string::const_iterator
+           it(obj.contacts().begin()),
+           end(obj.contacts().end());
+         it != end;
+         ++it) {
+      contact_map::iterator cntct(state::instance().contacts_find(*it));
+      if (cntct == state::instance().contacts().end())
+        throw (engine_error() << "Could not add contact '"
+               << *it << "' to service '" << obj.service_description()
+               << "' on host '" << *obj.hosts().begin() << "'");
+      s->add_contact(cntct->second);
+    }
+  }
 
-  // // Contact groups.
-  // if (obj.contactgroups() != obj_old.contactgroups()) {
-  //   // Delete old contact groups.
-  //   deleter::listmember(
-  //     s->contact_groups,
-  //     &deleter::contactgroupsmember);
+  // Contact groups.
+  if (obj.contactgroups() != obj_old.contactgroups()) {
+    // Remove old contact groups.
+    s->clear_contactgroups();
 
-  //   // Add contact groups to host.
-  //   for (set_string::const_iterator
-  //          it(obj.contactgroups().begin()),
-  //          end(obj.contactgroups().end());
-  //        it != end;
-  //        ++it)
-  //     if (!add_contactgroup_to_service(s, it->c_str()))
-  //       throw (engine_error() << "Could not add contact group '"
-  //              << *it << "' to service '" << service_description
-  //              << "' on host '" << host_name << "'");
-  // }
+    // Add contact groups to host.
+    for (set_string::const_iterator
+           it(obj.contactgroups().begin()),
+           end(obj.contactgroups().end());
+         it != end;
+         ++it) {
+      contactgroup_map::iterator
+        grp(state::instance().contactgroups_find(*it));
+      if (grp == state::instance().contactgroups().end())
+        throw (engine_error() << "Could not add contact group '"
+               << *it << "' to service '" << obj.service_description()
+               << "' on host '" << *obj.hosts().begin() << "'");
+      s->add_contactgroup(grp->second);
+    }
+  }
 
-  // // Custom variables.
-  // if (obj.customvariables() != obj_old.customvariables()) {
-  //   // Delete old custom variables.
-  //   remove_all_custom_variables_from_service(s);
+  // Custom variables.
+  if (obj.customvariables() != obj_old.customvariables()) {
+    // Delete old custom variables.
+    timeval tv(get_broker_timestamp(NULL));
+    for (customvar_set::const_iterator
+           it(s->get_customvars().begin()),
+           end(s->get_customvars().end());
+         it != end;
+         ++it)
+      broker_custom_variable(
+        NEBTYPE_SERVICECUSTOMVARIABLE_DELETE,
+        NEBFLAG_NONE,
+        NEBATTR_NONE,
+        s,
+        it->second.get_name().c_str(),
+        it->second.get_value().c_str(),
+        &tv);
+    s->clear_customvars();
 
-  //   // Add custom variables.
-  //   for (map_customvar::const_iterator
-  //          it(obj.customvariables().begin()),
-  //          end(obj.customvariables().end());
-  //        it != end;
-  //        ++it)
-  //     if (!add_custom_variable_to_service(
-  //            s,
-  //            it->first.c_str(),
-  //            it->second.c_str()))
-  //       throw (engine_error() << "Could not add custom variable '"
-  //              << it->first << "' to service '" << service_description
-  //              << "' on host '" << host_name << "'");
-  // }
+    // Add custom variables.
+    for (map_customvar::const_iterator
+           it(obj.customvariables().begin()),
+           end(obj.customvariables().end());
+         it != end;
+         ++it) {
+      s->set_customvar(customvar(it->first, it->second));
+      broker_custom_variable(
+        NEBTYPE_SERVICECUSTOMVARIABLE_ADD,
+        NEBFLAG_NONE,
+        NEBATTR_NONE,
+        s,
+        it->first.c_str(),
+        it->second.c_str(),
+        &tv);
+    }
+  }
 
-  // // Notify event broker.
-  // timeval tv(get_broker_timestamp(NULL));
-  // broker_adaptive_service_data(
-  //   NEBTYPE_SERVICE_UPDATE,
-  //   NEBFLAG_NONE,
-  //   NEBATTR_NONE,
-  //   s,
-  //   CMD_NONE,
-  //   MODATTR_ALL,
-  //   MODATTR_ALL,
-  //   &tv);
-  // return ;
+  // Notify event broker.
+  timeval tv(get_broker_timestamp(NULL));
+  broker_adaptive_service_data(
+    NEBTYPE_SERVICE_UPDATE,
+    NEBFLAG_NONE,
+    NEBATTR_NONE,
+    s,
+    CMD_NONE,
+    MODATTR_ALL,
+    MODATTR_ALL,
+    &tv);
+
+  return ;
 }
 
 /**

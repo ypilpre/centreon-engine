@@ -1,5 +1,5 @@
 /*
-** Copyright 2017 Centreon
+** Copyright 2017-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -50,10 +50,15 @@ class                service : public monitorable {
   // Configuration.
   std::string const& get_description() const;
   bool               get_stalk_on_critical() const;
+  void               set_stalk_on_critical(bool stalk);
   bool               get_stalk_on_ok() const;
+  void               set_stalk_on_ok(bool stalk);
   bool               get_stalk_on_unknown() const;
+  void               set_stalk_on_unknown(bool stalk);
   bool               get_stalk_on_warning() const;
+  void               set_stalk_on_warning(bool stalk);
   bool               get_volatile() const;
+  void               set_volatile(bool is_volatile);
 
   // Links with other objects.
   host*              get_host() const;
@@ -75,9 +80,13 @@ class                service : public monitorable {
 
   // Flap detection.
   bool               get_flap_detection_on_ok() const;
+  void               set_flap_detection_on_ok(bool detection);
   bool               get_flap_detection_on_warning() const;
+  void               set_flap_detection_on_warning(bool detection);
   bool               get_flap_detection_on_unknown() const;
+  void               set_flap_detection_on_unknown(bool detection);
   bool               get_flap_detection_on_critical() const;
+  void               set_flap_detection_on_critical(bool detection);
 
   // Notification.
   bool               get_notify_on_critical() const;

@@ -123,25 +123,6 @@ void host::set_circular_path_checked(int check_level) {
 }
 
 /**
- *  Get initial state.
- *
- *  @return Initial state.
- */
-int host::get_initial_state() const {
-  return (_initial_state);
-}
-
-/**
- *  Set initial state.
- *
- *  @param[in] state  New initial state.
- */
-void host::set_initial_state(int state) {
-  _initial_state = state;
-  return ;
-}
-
-/**
  *  Check if host should be stalked on down states.
  *
  *  @return True if host should be stalked.
@@ -671,7 +652,6 @@ void host::set_last_historical_state_update(time_t last_update) {
  */
 void host::_internal_copy(host const& other) {
   _children = other._children;
-  _initial_state = other._initial_state;
   _last_time_down = other._last_time_down;
   _last_time_unreachable = other._last_time_unreachable;
   _last_time_up = other._last_time_up;

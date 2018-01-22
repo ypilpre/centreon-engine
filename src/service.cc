@@ -1,5 +1,5 @@
 /*
-** Copyright 2017 Centreon
+** Copyright 2017-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -87,6 +87,16 @@ bool service::get_stalk_on_critical() const {
 }
 
 /**
+ *  Set whether or not service should be stalked on critical state.
+ *
+ *  @param[in] stalk  True to stalk.
+ */
+void service::set_stalk_on_critical(bool stalk) {
+  _stalk_on_critical = stalk;
+  return ;
+}
+
+/**
  *  Check if this service should be stalked on ok state.
  *
  *  @return True if the service should be stalked on ok state.
@@ -96,12 +106,32 @@ bool service::get_stalk_on_ok() const {
 }
 
 /**
- *  Check if this service should be stalk on unknown state.
+ *  Set whether or not service should be stalked on ok state.
+ *
+ *  @param[in] stalk  True to stalk.
+ */
+void service::set_stalk_on_ok(bool stalk) {
+  _stalk_on_ok = stalk;
+  return ;
+}
+
+/**
+ *  Check if this service should be stalked on unknown state.
  *
  *  @return If this service should be stalked on unknown state.
  */
 bool service::get_stalk_on_unknown() const {
   return (_stalk_on_unknown);
+}
+
+/**
+ *  Set whether or not service should be stalked on unknown state.
+ *
+ *  @param[in] stalk  True to stalk.
+ */
+void service::set_stalk_on_unknown(bool stalk) {
+  _stalk_on_unknown = stalk;
+  return ;
 }
 
 /**
@@ -114,12 +144,32 @@ bool service::get_stalk_on_warning() const {
 }
 
 /**
+ *  Set whether or not service should be stalked on warning state.
+ *
+ *  @param[in] stalk  True to stalk.
+ */
+void service::set_stalk_on_warning(bool stalk) {
+  _stalk_on_warning = stalk;
+  return ;
+}
+
+/**
  *  Check if this warning is volatile.
  *
  *  @return True if service is volatile.
  */
 bool service::get_volatile() const {
   return (_volatile);
+}
+
+/**
+ *  Mark service as volatile or not.
+ *
+ *  @param[in] is_volatile  True if service is volatile.
+ */
+void service::set_volatile(bool is_volatile) {
+  _volatile = is_volatile;
+  return ;
 }
 
 /**************************************
@@ -270,12 +320,32 @@ bool service::get_flap_detection_on_ok() const {
 }
 
 /**
+ *  Enable or not flap detection for OK state.
+ *
+ *  @param[in] detection  True to enable.
+ */
+void service::set_flap_detection_on_ok(bool detection) {
+  _flap_detection_on_ok = detection;
+  return ;
+}
+
+/**
  *  Check if flap detection is enabled for WARNING state.
  *
  *  @return True if flap detection is enabled for WARNING state.
  */
 bool service::get_flap_detection_on_warning() const {
   return (_flap_detection_on_warning);
+}
+
+/**
+ *  Enable or not flap detection for WARNING state.
+ *
+ *  @param[in] detection  True to enable.
+ */
+void service::set_flap_detection_on_warning(bool detection) {
+  _flap_detection_on_warning = detection;
+  return ;
 }
 
 /**
@@ -288,12 +358,32 @@ bool service::get_flap_detection_on_unknown() const {
 }
 
 /**
+ *  Enable or not flap detection for UNKNOWN state.
+ *
+ *  @param[in] detection  True to enable.
+ */
+void service::set_flap_detection_on_unknown(bool detection) {
+  _flap_detection_on_unknown = detection;
+  return ;
+}
+
+/**
  *  Check if flap detection is enabled for CRITICAL state.
  *
  *  @return True if flap detection is enabled for CRITICAL state.
  */
 bool service::get_flap_detection_on_critical() const {
   return (_flap_detection_on_critical);
+}
+
+/**
+ *  Enable or not flap detection for CRITICAL state.
+ *
+ *  @param[in] detection  True to enable.
+ */
+void service::set_flap_detection_on_critical(bool detection) {
+  _flap_detection_on_critical = detection;
+  return ;
 }
 
 /**************************************

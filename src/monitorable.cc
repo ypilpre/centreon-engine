@@ -196,6 +196,25 @@ void monitorable::set_id(unsigned int id) {
 }
 
 /**
+ *  Get initial state.
+ *
+ *  @return Initial state.
+ */
+int monitorable::get_initial_state() const {
+  return (_initial_state);
+}
+
+/**
+ *  Set initial state.
+ *
+ *  @param[in] state  New initial state.
+ */
+void monitorable::set_initial_state(int state) {
+  _initial_state = state;
+  return ;
+}
+
+/**
  *  Get notes.
  *
  *  @return Notes.

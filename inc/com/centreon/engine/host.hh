@@ -53,8 +53,6 @@ class                        host : public monitorable {
   void                       set_alias(std::string const& alias);
   int                        get_circular_path_checked() const;
   void                       set_circular_path_checked(int check_level);
-  int                        get_initial_state() const;
-  void                       set_initial_state(int state);
   bool                       get_stalk_on_down() const;
   void                       set_stalk_on_down(bool stalk);
   bool                       get_stalk_on_unreachable() const;
@@ -136,7 +134,6 @@ class                        host : public monitorable {
   bool                       _flap_detection_on_up;
   bool                       _have_2d_coords;
   bool                       _have_3d_coords;
-  int                        _initial_state;
   time_t                     _last_historical_state_update;
   time_t                     _last_time_down;
   time_t                     _last_time_unreachable;
