@@ -560,7 +560,12 @@ bool notifier::_custom_filter() {
 }
 
 int notifier::get_current_notification_id() const {
-  return _current_notification_id;
+  return (_current_notification_id);
+}
+
+void notifier::set_current_notification_id(int id) {
+  _current_notification_id = id;
+  return ;
 }
 
 /**

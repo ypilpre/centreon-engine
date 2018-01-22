@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2013,2015-2017 Centreon
+** Copyright 2011-2013,2015-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -148,9 +148,8 @@ void applier::service::_update(
       obj.set_notify_on_critical(*state.notified_on_critical());
     if (state.current_notification_number().is_set())
       obj.set_current_notification_number(*state.current_notification_number());
-    // XXX
-    // if (state.current_notification_id().is_set())
-    //   obj.set_current_notification_id(*state.current_notification_id());
+    if (state.current_notification_id().is_set())
+      obj.set_current_notification_id(*state.current_notification_id());
     if (state.last_notification().is_set())
       obj.set_last_notification(*state.last_notification());
     if (state.percent_state_change().is_set())

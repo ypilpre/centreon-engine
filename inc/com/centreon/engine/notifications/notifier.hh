@@ -117,6 +117,7 @@ namespace           notifications {
                       get_contactgroups();
 
     int               get_current_notification_id() const;
+    void              set_current_notification_id(int id);
     int               get_current_notification_number() const;
     unsigned int      get_current_notifications_flag() const;
     time_t            get_last_notification() const;

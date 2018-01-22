@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2013,2015-2017 Centreon
+** Copyright 2011-2013,2015-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -144,9 +144,8 @@ void applier::host::_update(
       obj.set_last_notification(*state.last_notification());
     if (state.current_notification_number().is_set())
       obj.set_current_notification_number(*state.current_notification_number());
-    // XXX
-    // if (state.current_notification_id().is_set())
-    //   obj.set_current_notification_id(*state.current_notification_id());
+    if (state.current_notification_id().is_set())
+      obj.set_current_notification_id(*state.current_notification_id());
     if (state.percent_state_change().is_set())
       obj.set_percent_state_change(*state.percent_state_change());
     // XXX
