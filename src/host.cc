@@ -17,20 +17,35 @@
 ** <http://www.gnu.org/licenses/>.
 */
 
-#include "com/centreon/engine/configuration/host.hh"
 #include "com/centreon/engine/host.hh"
 #include "com/centreon/engine/service.hh"
 
 using namespace com::centreon::engine;
 
 /**
- *  Constructor.
- *
- *  @param[in] cfg  Base configuration.
+ *  Default constructor.
  */
-host::host(configuration::host const& cfg)
-// XXX
-  : monitorable(cfg.host_name()) {}
+host::host()
+  : _circular_path_checked(0),
+    _flap_detection_on_down(false),
+    _flap_detection_on_unreachable(false),
+    _flap_detection_on_up(false),
+    _have_2d_coords(false),
+    _have_3d_coords(false),
+    _last_historical_state_update(0),
+    _last_time_down(0),
+    _last_time_unreachable(0),
+    _last_time_up(0),
+    _should_reschedule_current_check(false),
+    _stalk_on_down(false),
+    _stalk_on_unreachable(false),
+    _stalk_on_up(false),
+    _total_service_check_interval(0),
+    _x_2d(0),
+    _y_2d(0),
+    _x_3d(0),
+    _y_3d(0),
+    _z_3d(0) {}
 
 /**
  *  Copy constructor.
@@ -366,15 +381,17 @@ void host::set_z_3d(int z) {
  *
  *  @param[in] hst  Child of this host.
  */
-void host::add_child(shared_ptr<host> hst) {
-  // XXX
+void host::add_child(host* hst) {
+  _children.push_back(hst);
+  return ;
 }
 
 /**
  *  Clear child list of this host.
  */
 void host::clear_children() {
-  // XXX
+  _children.clear();
+  return ;
 }
 
 /**
@@ -382,7 +399,7 @@ void host::clear_children() {
  *
  *  @return List of children.
  */
-std::list<shared_ptr<host> > const& host::get_children() const {
+std::list<host*> const& host::get_children() const {
   return (_children);
 }
 
@@ -416,7 +433,7 @@ hostgroup_set const& host::get_groups() const {
  *
  *  @param[in] hst  New parent.
  */
-void host::add_parent(shared_ptr<host> hst) {
+void host::add_parent(host* hst) {
   _parents.push_back(hst);
   return ;
 }
@@ -425,7 +442,8 @@ void host::add_parent(shared_ptr<host> hst) {
  *  Clear parent list of this host.
  */
 void host::clear_parents() {
-  // XXX
+  _parents.clear();
+  return ;
 }
 
 /**
@@ -433,7 +451,7 @@ void host::clear_parents() {
  *
  *  @return List of parents.
  */
-std::list<shared_ptr<host> > const& host::get_parents() const {
+std::list<host*> const& host::get_parents() const {
   return (_parents);
 }
 
@@ -442,7 +460,7 @@ std::list<shared_ptr<host> > const& host::get_parents() const {
  *
  *  @param[in] svc  Service.
  */
-void host::add_service(shared_ptr<service> svc) {
+void host::add_service(service* svc) {
   _total_service_check_interval += svc->get_normal_check_interval();
   // XXX
 }
@@ -460,10 +478,10 @@ void host::clear_services() {
  *
  *  @return List of services of this host.
  */
-std::list<shared_ptr<service> > const& host::get_services() const {
+std::list<service*> const& host::get_services() const {
   // XXX
-  static std::list<shared_ptr<service> > retval;
-  return retval;
+  static std::list<service*> retval;
+  return (retval);
 }
 
 /**
@@ -651,7 +669,16 @@ void host::set_last_historical_state_update(time_t last_update) {
  *  @param[in] other  Object to copy.
  */
 void host::_internal_copy(host const& other) {
+  _address = other._address;
+  _alias = other._alias;
   _children = other._children;
+  _circular_path_checked = other._circular_path_checked;
+  _flap_detection_on_down = other._flap_detection_on_down;
+  _flap_detection_on_unreachable = other._flap_detection_on_unreachable;
+  _flap_detection_on_up = other._flap_detection_on_up;
+  _have_2d_coords = other._have_2d_coords;
+  _have_3d_coords = other._have_3d_coords;
+  _last_historical_state_update = other._last_historical_state_update;
   _last_time_down = other._last_time_down;
   _last_time_unreachable = other._last_time_unreachable;
   _last_time_up = other._last_time_up;
@@ -660,6 +687,14 @@ void host::_internal_copy(host const& other) {
   _stalk_on_down = other._stalk_on_down;
   _stalk_on_unreachable = other._stalk_on_unreachable;
   _stalk_on_up = other._stalk_on_up;
+  _statusmap_image = other._statusmap_image;
+  _total_service_check_interval = other._total_service_check_interval;
+  _vrml_image = other._vrml_image;
+  _x_2d = other._x_2d;
+  _y_2d = other._y_2d;
+  _x_3d = other._x_3d;
+  _y_3d = other._y_3d;
+  _z_3d = other._z_3d;
   return ;
 }
 

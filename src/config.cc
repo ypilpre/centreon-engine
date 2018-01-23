@@ -1,6 +1,6 @@
 /*
 ** Copyright 1999-2008           Ethan Galstad
-** Copyright 2011-2013,2015-2017 Centreon
+** Copyright 2011-2013,2015-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -77,7 +77,7 @@ static int dfs_host_path(host* root) {
 
     /* If a child is not checked, check it */
     if (child_status == DFS_UNCHECKED)
-      child_status = dfs_host_path((*it).get());
+      child_status = dfs_host_path(*it);
 
     /* If a child already temporary checked, its a problem,
      * loop inside, and its a acked status */
@@ -317,7 +317,7 @@ int check_servicegroup(servicegroup* sg, int* w, int* e) {
 
     // Add service to group and group to service links.
     temp_service->add_group(sg);
-    it->second = shared_ptr<service>(temp_service);
+    it->second = temp_service;
   }
 
   // Check for illegal characters in servicegroup name.

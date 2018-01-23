@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2013,2015-2017 Centreon
+** Copyright 2011-2013,2015-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -93,8 +93,6 @@ namespace                  configuration {
     set_string const&      hostgroups() const throw ();
     set_string&            hosts() throw ();
     set_string const&      hosts() const throw ();
-    unsigned int           host_id() const throw ();
-    void                   host_id(unsigned int id);
     std::string const&     icon_image() const throw ();
     std::string const&     icon_image_alt() const throw ();
     unsigned int           initial_state() const throw ();
@@ -205,7 +203,6 @@ namespace                  configuration {
     opt<unsigned int>      _high_flap_threshold;
     group<set_string>      _hostgroups;
     group<set_string>      _hosts;
-    unsigned int           _host_id;
     std::string            _icon_image;
     std::string            _icon_image_alt;
     opt<unsigned int>      _initial_state;

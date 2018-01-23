@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2013,2015,2017 Centreon
+** Copyright 2011-2013,2015,2017-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -207,14 +207,11 @@ void applier::servicegroup::modify_object(
         NEBTYPE_SERVICEGROUPMEMBER_DELETE,
         NEBFLAG_NONE,
         NEBATTR_NONE,
-        it->second.get(),
+        it->second,
         sg,
         &tv);
     }
     it_obj->second->members.clear();
-//    deleter::listmember(
-//      it_obj->second->members,
-//      &deleter::servicesmember);
 
     // Create new service group members.
     for (set_pair_string::const_iterator

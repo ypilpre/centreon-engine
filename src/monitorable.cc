@@ -24,15 +24,11 @@ using namespace com::centreon::engine;
 /**
  *  Default constructor.
  */
-monitorable::monitorable() {}
-
-/**
- *  constructor.
- *
- *  @param[in] host_name Host name of this monitorable.
- */
-monitorable::monitorable(std::string const& host_name)
-  : _host_name(host_name) {}
+monitorable::monitorable()
+  : _id(0),
+    _initial_state(0),
+    _retain_nonstate_info(true),
+    _retain_state_info(true) {}
 
 /**
  *  Copy constructor.
@@ -296,7 +292,15 @@ void monitorable::set_retain_state_info(bool retain) {
  *  @param[in] other  Object to copy.
  */
 void monitorable::_internal_copy(monitorable const& other) {
+  _action_url = other._action_url;
+  _display_name = other._display_name;
   _host_name = other._host_name;
+  _icon_image = other._icon_image;
+  _icon_image_alt = other._icon_image_alt;
+  _id = other._id;
+  _initial_state = other._initial_state;
+  _notes = other._notes;
+  _notes_url = other._notes_url;
   _retain_nonstate_info = other._retain_nonstate_info;
   _retain_state_info = other._retain_state_info;
   _vars = other._vars;

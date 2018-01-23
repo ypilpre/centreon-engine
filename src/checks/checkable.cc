@@ -17,6 +17,7 @@
 ** <http://www.gnu.org/licenses/>.
 */
 
+#include <cstring>
 #include "com/centreon/engine/checks/checkable.hh"
 #include "com/centreon/engine/broker.hh"
 #include "com/centreon/engine/commands/command.hh"
@@ -28,9 +29,50 @@ using namespace com::centreon::engine::commands;
  *  Default constructor.
  */
 checkable::checkable()
-  : _flapping(false)
-  // XXX
-{}
+  : _active_checks_enabled(true),
+    _being_freshened(false),
+    _check_command(NULL),
+    _check_options(0),
+    _check_period(NULL),
+    _check_type(0),
+    _current_attempt(0),
+    _current_event_id(0),
+    _current_problem_id(0),
+    _current_state(0),
+    _current_state_type(0),
+    _event_handler(0),
+    _event_handler_enabled(false),
+    _executing(false),
+    _execution_time(0),
+    _flap_detection_enabled(false),
+    _flapping(false),
+    _freshness_checks_enabled(false),
+    _freshness_threshold(0),
+    _has_been_checked(false),
+    _high_flap_threshold(0.0),
+    _historical_state_index(0),
+    _host_problem_at_last_check(0),
+    _last_check(0),
+    _last_event_id(0),
+    _last_hard_state(0),
+    _last_hard_state_change(0),
+    _last_problem_id(0),
+    _last_state(0),
+    _last_state_change(0),
+    _latency(0.0),
+    _low_flap_threshold(0.0),
+    _max_attempts(0),
+    _modified_attributes(0),
+    _next_check(0),
+    _normal_check_interval(0),
+    _ocp_enabled(false),
+    _passive_checks_enabled(true),
+    _percent_state_change(0.0),
+    _process_perfdata(false),
+    _retry_check_interval(0),
+    _should_be_scheduled(false) {
+  memset(_historical_states, 0, sizeof(_historical_states));
+}
 
 /**
  *  Copy constructor.
@@ -90,7 +132,7 @@ void checkable::set_active_checks_enabled(bool enable) {
  *  @return Check command of this object. NULL for none.
  */
 command* checkable::get_check_command() const {
-  return (_check_command.get());
+  return (_check_command);
 }
 
 /**
@@ -98,7 +140,7 @@ command* checkable::get_check_command() const {
  *
  *  @param[in] cmd  Check command object.
  */
-void checkable::set_check_command(shared_ptr<command> cmd) {
+void checkable::set_check_command(commands::command* cmd) {
   _check_command = cmd;
   return ;
 }
@@ -794,7 +836,7 @@ void checkable::set_percent_state_change(double change) {
  *  @return Event handler object. NULL if none.
  */
 command* checkable::get_event_handler() const {
-  return (_event_handler.get());
+  return (_event_handler);
 }
 
 /**
@@ -802,7 +844,7 @@ command* checkable::get_event_handler() const {
  *
  *  @param[in] cmd  Event handler object.
  */
-void checkable::set_event_handler(shared_ptr<command> cmd) {
+void checkable::set_event_handler(commands::command* cmd) {
   _event_handler = cmd;
   return ;
 }
@@ -1045,6 +1087,12 @@ void checkable::_internal_copy(checkable const& other) {
   _freshness_checks_enabled = other._freshness_checks_enabled;
   _freshness_threshold = other._freshness_threshold;
   _has_been_checked = other._has_been_checked;
+  _high_flap_threshold = other._high_flap_threshold;
+  memcpy(
+    _historical_states,
+    other._historical_states,
+    sizeof(_historical_states));
+  _historical_state_index = other._historical_state_index;
   _host_problem_at_last_check = other._host_problem_at_last_check;
   _last_check = other._last_check;
   _last_event_id = other._last_event_id;
@@ -1055,6 +1103,7 @@ void checkable::_internal_copy(checkable const& other) {
   _last_state_change = other._last_state_change;
   _latency = other._latency;
   _long_output = other._long_output;
+  _low_flap_threshold = other._low_flap_threshold;
   _max_attempts = other._max_attempts;
   _modified_attributes = other._modified_attributes;
   _next_check = other._next_check;
@@ -1069,10 +1118,6 @@ void checkable::_internal_copy(checkable const& other) {
   _should_be_scheduled = other._should_be_scheduled;
   _timezone = other._timezone;
   return ;
-}
-
-bool checkable::is_in_downtime() const {
-  return _in_downtime;
 }
 
 /**

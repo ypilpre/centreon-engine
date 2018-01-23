@@ -30,7 +30,6 @@ struct hostgroup_struct;
 CCE_BEGIN()
 
 // Forward declarations.
-namespace configuration { class host; }
 class service;
 
 /**
@@ -41,7 +40,7 @@ class service;
  */
 class                        host : public monitorable {
  public:
-                             host(configuration::host const& cfg);
+                             host();
                              host(host const& other);
                              ~host();
   host&                      operator=(host const& other);
@@ -81,19 +80,19 @@ class                        host : public monitorable {
   void                       set_z_3d(int z);
 
   // Links with other objects.
-  void                       add_child(shared_ptr<host> hst);
+  void                       add_child(host* hst);
   void                       clear_children();
-  std::list<shared_ptr<host> > const&    get_children() const;
+  std::list<host*> const&    get_children() const;
   void                       add_group(hostgroup_struct* hg);
   void                       clear_groups();
   umap<std::string, hostgroup_struct*> const&
                              get_groups() const;
-  void                       add_parent(shared_ptr<host> hst);
+  void                       add_parent(host* hst);
   void                       clear_parents();
-  std::list<shared_ptr<host> > const&    get_parents() const;
-  void                       add_service(shared_ptr<service> svc);
+  std::list<host*> const&    get_parents() const;
+  void                       add_service(service* svc);
   void                       clear_services();
-  std::list<shared_ptr<service> > const& get_services() const;
+  std::list<service*> const& get_services() const;
   int                        get_total_service_check_interval() const;
 
   // State runtime.
@@ -124,10 +123,9 @@ class                        host : public monitorable {
  private:
   void                       _internal_copy(host const& other);
 
-  std::list<shared_ptr<host> >
-                             _children;
   std::string                _address;
   std::string                _alias;
+  std::list<host*>           _children;
   int                        _circular_path_checked;
   bool                       _flap_detection_on_down;
   bool                       _flap_detection_on_unreachable;
@@ -138,8 +136,7 @@ class                        host : public monitorable {
   time_t                     _last_time_down;
   time_t                     _last_time_unreachable;
   time_t                     _last_time_up;
-  std::list<shared_ptr<host> >
-                             _parents;
+  std::list<host*>           _parents;
   bool                       _should_reschedule_current_check;
   bool                       _stalk_on_down;
   bool                       _stalk_on_unreachable;
@@ -158,6 +155,6 @@ CCE_END()
 
 using com::centreon::engine::host;
 
-typedef std::list<shared_ptr<host> > host_set;
+typedef std::list<host*> host_set;
 
 #endif // !CCE_HOST_HH

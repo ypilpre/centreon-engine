@@ -982,7 +982,7 @@ int notifier::schedule_downtime(
         break;
     }
     /* check all child hosts... */
-    for (std::list<shared_ptr<host> >::const_iterator
+    for (host_set::const_iterator
            it(temp_host->get_children().begin()),
            end(temp_host->get_children().end());
          it != end;

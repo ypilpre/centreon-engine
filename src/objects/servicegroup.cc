@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2013,2017 Centreon
+** Copyright 2011-2013,2017-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -49,7 +49,6 @@ bool operator==(
   return (is_equal(obj1.group_name, obj2.group_name)
           && is_equal(obj1.alias, obj2.alias)
           && obj1.members == obj2.members
-          //&& is_equal(obj1.members, obj2.members)
           && is_equal(obj1.notes, obj2.notes)
           && is_equal(obj1.notes_url, obj2.notes_url)
           && is_equal(obj1.action_url, obj2.action_url));
@@ -169,17 +168,10 @@ int is_host_member_of_servicegroup(servicegroup* group, host* hst) {
          end(group->members.end());
        it != end;
        ++it) {
-    if (it->second.get() && it->second->get_host() == hst)
-      return true;
+    if (it->second && it->second->get_host() == hst)
+      return (true);
   }
-  return false;
-//  for (servicesmember* member(group->members);
-//       member;
-//       member = member->next)
-//    if (member->service_ptr
-//        && (member->service_ptr->get_host() == hst))
-//      return (true);
-//  return (false);
+  return (false);
 }
 
 /**
@@ -203,9 +195,9 @@ int is_service_member_of_servicegroup(
          end(group->members.end());
        it != end;
        ++it)
-    if (it->second.get() == svc)
-      return true;
-  return false;
+    if (it->second == svc)
+      return (true);
+  return (false);
 }
 
 /**
@@ -257,7 +249,7 @@ bool com::centreon::engine::add_service_to_servicegroup(
     return (NULL);
   }
 
-  grp->members[make_pair(host_name, svc_description)] = shared_ptr<service>();
+  grp->members[make_pair(host_name, svc_description)] = NULL;
 
   try {
     // Notify event broker.

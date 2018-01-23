@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2013 Merethis
+** Copyright 2011-2013,2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -20,7 +20,6 @@
 #ifndef CCE_OBJECTS_SERVICEGROUP_HH
 #  define CCE_OBJECTS_SERVICEGROUP_HH
 
-#  include "com/centreon/shared_ptr.hh"
 #  include "com/centreon/unordered_hash.hh"
 
 /* Forward declaration. */
@@ -34,7 +33,7 @@ struct service_struct;
 typedef struct                servicegroup_struct {
   char*                       group_name;
   char*                       alias;
-  umap<std::pair<std::string, std::string>, com::centreon::shared_ptr<com::centreon::engine::service> >
+  umap<std::pair<std::string, std::string>, com::centreon::engine::service*>
                               members;
   char*                       notes;
   char*                       notes_url;

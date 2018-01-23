@@ -241,8 +241,8 @@ int grab_custom_macro_value_r(
              it != end;
              ++it) {
 
-          if ((temp_service = it->second.get()) == NULL)
-            continue;
+          if ((temp_service = it->second) == NULL)
+            continue ;
 
           /* get the macro value for this service */
           grab_custom_macro_value_r(
@@ -253,7 +253,7 @@ int grab_custom_macro_value_r(
             &temp_buffer);
 
           if (temp_buffer == NULL)
-            continue;
+            continue ;
 
           /* add macro value to already running macro */
           if (*output == NULL)
@@ -630,7 +630,7 @@ int grab_standard_servicegroup_macro_r(
            end(temp_servicegroup->members.end());
          it != end;
          ++it) {
-      temp_service = it->second.get();
+      temp_service = it->second;
       if (temp_len != 0)
         ++temp_len;
       temp_len += temp_service->get_host_name().length()
@@ -650,7 +650,7 @@ int grab_standard_servicegroup_macro_r(
            end(temp_servicegroup->members.end());
          it != end;
          ++it) {
-      temp_service = it->second.get();
+      temp_service = it->second;
       temp_buffer = *output + init_len;
       if (init_len == 0)      /* If our buffer didn't contain anything, we just need to write "%s,%s" */
         init_len += sprintf(

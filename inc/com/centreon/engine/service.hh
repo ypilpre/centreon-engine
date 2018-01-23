@@ -32,7 +32,6 @@ CCE_BEGIN()
 
 // Forward declarations.
 class host;
-namespace configuration { class service; }
 
 /**
  *  @class service service.hh "com/centreon/engine/service.hh"
@@ -42,7 +41,7 @@ namespace configuration { class service; }
  */
 class                service : public monitorable {
  public:
-                     service(configuration::service const& cfg);
+                     service();
                      service(service const& other);
                      ~service();
   service&           operator=(service const& other);
@@ -126,7 +125,7 @@ CCE_END()
 
 using com::centreon::engine::service;
 
-typedef std::list<shared_ptr<service> > service_set;
-typedef umap<std::pair<std::string, std::string>, com::centreon::shared_ptr<service> > service_map;
+typedef std::list<service*> service_set;
+typedef umap<std::pair<std::string, std::string>, service*> service_map;
 
 #endif // !CCE_SERVICE_HH

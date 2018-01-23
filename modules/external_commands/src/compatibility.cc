@@ -1,6 +1,6 @@
 /*
 ** Copyright 2002-2006           Ethan Galstad
-** Copyright 2011-2013,2015-2016 Centreon
+** Copyright 2011-2013,2015-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -1061,8 +1061,8 @@ int process_hostgroup_command(int cmd,
              end(temp_host->get_services().end());
            it != end;
            ++it) {
-        if ((temp_service = it->get()) == NULL)
-          continue;
+        if ((temp_service = *it) == NULL)
+          continue ;
 
         switch (cmd) {
 
@@ -1157,14 +1157,14 @@ int process_host_command(int cmd,
            end(temp_host->get_services().end());
          it != end;
          ++it) {
-      if ((temp_service = it->get()) == NULL)
-        continue;
+      if ((temp_service = *it) == NULL)
+        continue ;
       if (cmd == CMD_ENABLE_HOST_SVC_NOTIFICATIONS)
         enable_service_notifications(temp_service);
       else
         disable_service_notifications(temp_service);
     }
-    break;
+    break ;
 
   case CMD_ENABLE_HOST_SVC_CHECKS:
   case CMD_DISABLE_HOST_SVC_CHECKS:
@@ -1173,14 +1173,14 @@ int process_host_command(int cmd,
            end(temp_host->get_services().end());
          it != end;
          ++it) {
-      if ((temp_service = it->get()) == NULL)
-        continue;
+      if ((temp_service = *it) == NULL)
+        continue ;
       if (cmd == CMD_ENABLE_HOST_SVC_CHECKS)
         enable_service_checks(temp_service);
       else
         disable_service_checks(temp_service);
     }
-    break;
+    break ;
 
   case CMD_ENABLE_HOST_CHECK:
     enable_host_checks(temp_host.get());

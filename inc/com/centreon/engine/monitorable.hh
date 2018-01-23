@@ -37,7 +37,6 @@ CCE_BEGIN()
 class                  monitorable : public notifications::notifier {
  public:
                        monitorable();
-                       monitorable(std::string const& host_name);
                        monitorable(monitorable const& other);
   virtual              ~monitorable();
   monitorable&         operator=(monitorable const& other);

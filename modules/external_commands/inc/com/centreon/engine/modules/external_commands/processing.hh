@@ -250,8 +250,8 @@ namespace         modules {
                end(group->members.end());
              it != end;
              ++it)
-          if (it->second.get())
-            (*fptr)(it->second.get());
+          if (it->second)
+            (*fptr)(it->second);
       }
 
       template <void (*fptr)(host*)>

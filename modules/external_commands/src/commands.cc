@@ -1,6 +1,6 @@
 /*
 ** Copyright 1999-2008           Ethan Galstad
-** Copyright 2011-2013,2015-2016 Centreon
+** Copyright 2011-2013,2015-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -25,6 +25,8 @@
 #include <sys/time.h>
 #include "com/centreon/engine/broker.hh"
 #include "com/centreon/engine/checks/checker.hh"
+#include "com/centreon/engine/configuration/applier/host.hh"
+#include "com/centreon/engine/configuration/applier/service.hh"
 #include "com/centreon/engine/configuration/applier/state.hh"
 #include "com/centreon/engine/contact.hh"
 #include "com/centreon/engine/downtime_finder.hh"
@@ -454,32 +456,26 @@ int cmd_schedule_check(int cmd, char* args) {
   /* schedule service checks */
   else if (cmd == CMD_SCHEDULE_HOST_SVC_CHECKS
            || cmd == CMD_SCHEDULE_FORCED_HOST_SVC_CHECKS) {
-    for (std::list<shared_ptr<service> >::const_iterator
+    for (service_set::const_iterator
            it(temp_host->get_services().begin()),
            end(temp_host->get_services().end());
          it != end;
          ++it) {
       schedule_service_check(
-        (*it).get(), delay_time,
+        *it,
+        delay_time,
         (cmd == CMD_SCHEDULE_FORCED_HOST_SVC_CHECKS)
-        ? CHECK_OPTION_FORCE_EXECUTION : CHECK_OPTION_NONE);
+        ? CHECK_OPTION_FORCE_EXECUTION
+        : CHECK_OPTION_NONE);
     }
-//    for (temp_servicesmember = temp_host->services;
-//         temp_servicesmember != NULL;
-//         temp_servicesmember = temp_servicesmember->next) {
-//      if ((temp_service = temp_servicesmember->service_ptr) == NULL)
-//        continue;
-//      schedule_service_check(
-//        temp_service, delay_time,
-//        (cmd == CMD_SCHEDULE_FORCED_HOST_SVC_CHECKS)
-//        ? CHECK_OPTION_FORCE_EXECUTION : CHECK_OPTION_NONE);
-//    }
   }
   else
     schedule_service_check(
-      temp_service.get(), delay_time,
+      temp_service.get(),
+      delay_time,
       (cmd == CMD_SCHEDULE_FORCED_SVC_CHECK)
-      ? CHECK_OPTION_FORCE_EXECUTION : CHECK_OPTION_NONE);
+      ? CHECK_OPTION_FORCE_EXECUTION
+      : CHECK_OPTION_NONE);
 
   return (OK);
 }
@@ -513,15 +509,15 @@ int cmd_schedule_host_service_checks(int cmd, char* args, int force) {
   delay_time = strtoul(temp_ptr, NULL, 10);
 
   /* reschedule all services on the specified host */
-  for (std::list<shared_ptr<service> >::const_iterator
+  for (service_set::const_iterator
          it(temp_host->get_services().begin()),
          end(temp_host->get_services().end());
        it != end;
        ++it) {
     schedule_service_check(
-      it->get(),
+      *it,
       delay_time,
-      (force) ? CHECK_OPTION_FORCE_EXECUTION : CHECK_OPTION_NONE);
+      force ? CHECK_OPTION_FORCE_EXECUTION : CHECK_OPTION_NONE);
   }
 
   return (OK);
@@ -759,7 +755,7 @@ int process_passive_host_check(
       char const* host_name,
       int return_code,
       char const* output) {
-  shared_ptr<host const> temp_host;
+  shared_ptr<host> temp_host;
   char const* real_host_name(NULL);
 
   /* skip this host check result if we aren't accepting passive host checks */
@@ -1890,6 +1886,8 @@ int cmd_change_object_char_var(int cmd, char* args) {
   unsigned long attr(MODATTR_NONE);
   unsigned long hattr(MODATTR_NONE);
   unsigned long sattr(MODATTR_NONE);
+  configuration::applier::host hstaplr;
+  configuration::applier::service svcaplr;
 
   /* SECURITY PATCH - disable these for the time being */
   switch (cmd) {
@@ -2040,51 +2038,42 @@ int cmd_change_object_char_var(int cmd, char* args) {
     break;
 
   case CMD_CHANGE_HOST_EVENT_HANDLER:
-    temp_host->set_event_handler_args(temp_ptr);
-    temp_host->set_event_handler(temp_command);
+    hstaplr.resolve_event_handler(*temp_host, temp_ptr);
     attr = MODATTR_EVENT_HANDLER_COMMAND;
     break;
 
   case CMD_CHANGE_HOST_CHECK_COMMAND:
-    temp_host->set_check_command_args(temp_ptr);
-    temp_host->set_check_command(temp_command);
+    hstaplr.resolve_check_command(*temp_host, temp_ptr);
     attr = MODATTR_CHECK_COMMAND;
     break;
 
   case CMD_CHANGE_HOST_CHECK_TIMEPERIOD:
-    //FIXME DBR: is this string always needed ?
-    //delete[] temp_host->check_period;
-    //temp_host->check_period = temp_ptr;
-    temp_host->set_check_period(temp_timeperiod);
+    hstaplr.resolve_check_period(*temp_host, temp_ptr);
     attr = MODATTR_CHECK_TIMEPERIOD;
     break;
 
   case CMD_CHANGE_HOST_NOTIFICATION_TIMEPERIOD:
-    temp_host->set_notification_period(temp_timeperiod);
+    hstaplr.resolve_notification_period(*temp_host, temp_ptr);
     attr = MODATTR_NOTIFICATION_TIMEPERIOD;
     break;
 
   case CMD_CHANGE_SVC_EVENT_HANDLER:
-    temp_service->set_event_handler_args(temp_ptr);
-    temp_service->set_event_handler(temp_command);
+    svcaplr.resolve_event_handler(*temp_service, temp_ptr);
     attr = MODATTR_EVENT_HANDLER_COMMAND;
     break;
 
   case CMD_CHANGE_SVC_CHECK_COMMAND:
-    temp_service->set_check_command_args(temp_ptr);
-    temp_service->set_check_command(temp_command);
+    svcaplr.resolve_check_command(*temp_service, temp_ptr);
     attr = MODATTR_CHECK_COMMAND;
     break;
 
   case CMD_CHANGE_SVC_CHECK_TIMEPERIOD:
-    //FIXME DBR: what is this string ?
-    //temp_service->set_check_period = temp_ptr;
-    temp_service->set_check_period(temp_timeperiod);
+    svcaplr.resolve_check_period(*temp_service, temp_ptr);
     attr = MODATTR_CHECK_TIMEPERIOD;
     break;
 
   case CMD_CHANGE_SVC_NOTIFICATION_TIMEPERIOD:
-    temp_service->set_notification_period(temp_timeperiod);
+    svcaplr.resolve_notification_period(*temp_service, temp_ptr);
     attr = MODATTR_NOTIFICATION_TIMEPERIOD;
     break;
 
@@ -2728,7 +2717,7 @@ void disable_and_propagate_notifications(
          end(hst->get_children().end());
        it != end;
        ++it) {
-    host* child_host(it->get());
+    host* child_host(*it);
 
     /* recurse... */
     disable_and_propagate_notifications(
@@ -2749,7 +2738,7 @@ void disable_and_propagate_notifications(
              send(child_host->get_services().end());
            sit != send;
            ++it) {
-        disable_service_notifications(sit->get());
+        disable_service_notifications(*sit);
       }
     }
   }
@@ -2793,7 +2782,7 @@ void acknowledge_host_problem(
 
   /* send out an acknowledgement notification */
     ///////////////
-    // FIXME DBR // notify is a filter here and should be managed by the 
+    // FIXME DBR // notify is a filter here and should be managed by the
     // notify() method
     ///////////////
   if (notify)

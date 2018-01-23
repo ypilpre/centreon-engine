@@ -218,10 +218,11 @@ host* com::centreon::engine::add_host_to_hostgroup(
     return (NULL);
   }
 
-  shared_ptr<host> obj(new host(host_name));
-  grp->members[host_name] = obj;
-
+  shared_ptr< ::host> obj;
   try {
+    obj = configuration::applier::state::instance().hosts_find(host_name);
+    grp->members[host_name] = obj;
+
     // Notify event broker.
     timeval tv(get_broker_timestamp(NULL));
     broker_group_member(
@@ -234,7 +235,7 @@ host* com::centreon::engine::add_host_to_hostgroup(
   }
   catch (...) {
     grp->members.erase(host_name);
-    return NULL;
+    return (NULL);
   }
 
   return (obj.get());

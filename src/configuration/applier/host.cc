@@ -82,7 +82,8 @@ void applier::host::add_object(
   // Create host.
   shared_ptr< ::host> h;
   try {
-    h = new ::host(obj);
+    h = new ::host();
+    // XXX
     config->hosts().insert(obj);
   }
   catch (std::exception const& e) {
@@ -240,10 +241,8 @@ void applier::host::modify_object(
     *h,
     notifications_enabled,
     obj.notifications_enabled());
-  modify_if_different(*h, check_command_args, obj.check_command());
   modify_if_different(*h, active_checks_enabled, obj.checks_active());
   modify_if_different(*h, passive_checks_enabled, obj.checks_passive());
-  modify_if_different(*h, event_handler_args, obj.event_handler());
   modify_if_different(
     *h,
     event_handler_enabled,
@@ -413,7 +412,7 @@ void applier::host::modify_object(
     // Delete old parents.
     {
       timeval tv(get_broker_timestamp(NULL));
-      for (std::list<shared_ptr<engine::host> >::const_iterator
+      for (host_set::const_iterator
              it(h->get_parents().begin()),
              end(h->get_parents().end());
            it != end;
@@ -422,7 +421,7 @@ void applier::host::modify_object(
           NEBTYPE_PARENT_DELETE,
           NEBFLAG_NONE,
           NEBATTR_NONE,
-          it->get(),
+          *it,
           NULL,
           h,
           NULL,
@@ -559,20 +558,14 @@ void applier::host::resolve_object(
 
     // Resolve event handler.
     if (!obj.event_handler().empty()) {
-      // Get the command name.
-      std::string command_name(obj.event_handler().substr(
-                                 0,
-                                 obj.event_handler().find_first_of('!')));
-
       try {
         // Get command.
-        hst.set_event_handler(find_command(command_name));
-        hst.set_event_handler_args(obj.event_handler());
+        resolve_event_handler(hst, obj.event_handler());
       }
       catch (not_found const& e) {
         (void)e;
         logger(logging::log_verification_error, logging::basic)
-          << "Error: Event handler command '" << command_name
+          << "Error: Event handler command '" << obj.event_handler()
           << "' specified for host '" << hst.get_host_name()
           << "' not defined anywhere";
         ++config_errors;
@@ -643,9 +636,7 @@ void applier::host::resolve_object(
     // Resolve notification period.
     if (!obj.notification_period().empty())
       try {
-        hst.set_notification_period(
-          configuration::applier::state::instance().timeperiods_find(
-            obj.notification_period()).get());
+        resolve_notification_period(hst, obj.notification_period());
       }
       catch (not_found const& e) {
         (void)e;
@@ -713,7 +704,7 @@ void applier::host::resolve_check_command(
   std::string command_name(cmd.substr(
                              0,
                              cmd.find_first_of('!')));
-  hst.set_check_command(find_command(command_name));
+  hst.set_check_command(find_command(command_name).get());
   hst.set_check_command_args(cmd);
   return ;
 }
@@ -745,7 +736,7 @@ void applier::host::resolve_event_handler(
   std::string command_name(cmd.substr(
                              0,
                              cmd.find_first_of('!')));
-  hst.set_event_handler(find_command(command_name));
+  hst.set_event_handler(find_command(command_name).get());
   hst.set_event_handler_args(cmd);
   return ;
 }

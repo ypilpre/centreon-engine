@@ -270,7 +270,7 @@ static int handle_service_macro(
                  end(sg->members.end());
                it != end;
                ++it) {
-            service* svc(it->second.get());
+            service* svc(it->second);
             if (svc) {
               // Get the macro value for this service.
               char* buffer(NULL);

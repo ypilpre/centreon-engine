@@ -17,7 +17,6 @@
 ** <http://www.gnu.org/licenses/>.
 */
 
-#include "com/centreon/engine/configuration/service.hh"
 #include "com/centreon/engine/macros/grab_service.hh"
 #include "com/centreon/engine/macros/clear_service.hh"
 #include "com/centreon/engine/macros/clear_servicegroup.hh"
@@ -26,14 +25,26 @@
 using namespace com::centreon::engine;
 
 /**
- *  Constructor.
- *
- *  @param[in] cfg  Base configuration.
+ *  Default constructor.
  */
-service::service(configuration::service const& cfg)
-// XXX
-  : monitorable(*cfg.hosts().begin()),
-    _description(cfg.service_description()) {}
+service::service()
+  : _host(NULL),
+    _flap_detection_on_critical(false),
+    _flap_detection_on_ok(false),
+    _flap_detection_on_unknown(false),
+    _flap_detection_on_warning(false),
+    _last_time_critical(0),
+    _last_time_ok(0),
+    _last_time_unknown(0),
+    _last_time_warning(0),
+    _notify_on_critical(false),
+    _notify_on_unknown(false),
+    _notify_on_warning(false),
+    _stalk_on_critical(false),
+    _stalk_on_ok(false),
+    _stalk_on_unknown(false),
+    _stalk_on_warning(false),
+    _volatile(false) {}
 
 /**
  *  Copy constructor.
@@ -463,6 +474,10 @@ void service::set_notify_on_warning(bool notify) {
 void service::_internal_copy(service const& other) {
   _description = other._description;
   _host = other._host;
+  _flap_detection_on_critical = other._flap_detection_on_critical;
+  _flap_detection_on_ok = other._flap_detection_on_ok;
+  _flap_detection_on_unknown = other._flap_detection_on_unknown;
+  _flap_detection_on_warning = other._flap_detection_on_warning;
   _last_time_critical = other._last_time_critical;
   _last_time_ok = other._last_time_ok;
   _last_time_unknown = other._last_time_unknown;

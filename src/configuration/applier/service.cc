@@ -94,7 +94,8 @@ void applier::service::add_object(
   // Create service.
   shared_ptr< ::service> svc;
   try {
-    svc = new ::service(obj);
+    svc = new ::service();
+    // XXX
     config->services().insert(obj);
   }
   catch (std::exception const& e) {
@@ -249,8 +250,6 @@ void applier::service::modify_object(
 
   // Modify properties.
   modify_if_different(*s, display_name, obj.display_name());
-  modify_if_different(*s, check_command_args, obj.check_command());
-  modify_if_different(*s, event_handler_args, obj.event_handler());
   modify_if_different(
     *s,
     event_handler_enabled,
@@ -362,7 +361,6 @@ void applier::service::modify_object(
     *s,
     passive_checks_enabled,
     obj.checks_passive());
-  modify_if_different(*s, event_handler_args, obj.event_handler());
   modify_if_different(
     *s,
     active_checks_enabled,
@@ -390,7 +388,6 @@ void applier::service::modify_object(
   modify_if_different(*s, icon_image_alt, obj.icon_image_alt());
   modify_if_different(*s, volatile, obj.is_volatile());
   modify_if_different(*s, timezone, obj.timezone());
-  // XXX modify_if_different(*s, host_id, obj.host_id());
   modify_if_different(*s, id, obj.service_id());
   // XXX
   // service_other_props[std::make_pair(
@@ -597,34 +594,25 @@ void applier::service::resolve_object(
     }
 
     // Resolve check command.
-    {
-      // Get the command name.
-      std::string command_name(obj.check_command().substr(
-                                 0,
-                                 obj.check_command().find_first_of('!')));
-      try {
-        // Set resolved command and arguments.
-        svc.set_check_command(find_command(command_name));
-        svc.set_check_command_args(obj.check_command());
-      }
-      catch (not_found const& e) {
-        (void)e;
-        logger(logging::log_verification_error, logging::basic)
-          << "Error: Service check command '" << command_name
-          << "' specified in service '" << svc.get_description()
-          << "' for host '" << svc.get_host_name()
-          << "' not defined anywhere!";
-        ++config_errors;
-        failure = true;
-      }
+    try {
+      // Set resolved command and arguments.
+      resolve_check_command(svc, obj.check_command());
+    }
+    catch (not_found const& e) {
+      (void)e;
+      logger(logging::log_verification_error, logging::basic)
+        << "Error: Service check command '" << obj.check_command()
+        << "' specified in service '" << svc.get_description()
+        << "' for host '" << svc.get_host_name()
+        << "' not defined anywhere!";
+      ++config_errors;
+      failure = true;
     }
 
     // Resolve check period.
     if (!obj.check_period().empty()) {
       try {
-        svc.set_check_period(
-          configuration::applier::state::instance().timeperiods_find(
-            obj.check_period()).get());
+        resolve_check_period(svc, obj.check_period());
       }
       catch (not_found const& e) {
         (void)e;
@@ -647,20 +635,14 @@ void applier::service::resolve_object(
 
     // Resolve event handler.
     if (!obj.event_handler().empty()) {
-      // Get the command name.
-      std::string command_name(obj.event_handler().substr(
-                                 0,
-                                 obj.event_handler().find_first_of('!')));
-
       try {
         // Get command.
-        svc.set_event_handler(find_command(command_name));
-        svc.set_event_handler_args(obj.event_handler());
+        resolve_event_handler(svc, obj.event_handler());
       }
       catch (not_found const& e) {
         (void)e;
         logger(logging::log_verification_error, logging::basic)
-          << "Error: Event handler command '" << command_name
+          << "Error: Event handler command '" << obj.event_handler()
           << "' specified in service '" << svc.get_description()
           << "' for host '" << svc.get_host_name()
           << "' not defined anywhere";
@@ -714,9 +696,7 @@ void applier::service::resolve_object(
     // Resolve notification period.
     if (!obj.notification_period().empty())
       try {
-        svc.set_notification_period(
-          configuration::applier::state::instance().timeperiods_find(
-            obj.notification_period()).get());
+        resolve_notification_period(svc, obj.notification_period());
       }
       catch (not_found const& e) {
         (void)e;
@@ -784,7 +764,7 @@ void applier::service::resolve_check_command(
   std::string command_name(cmd.substr(
                              0,
                              cmd.find_first_of('!')));
-  svc.set_check_command(find_command(command_name));
+  svc.set_check_command(find_command(command_name).get());
   svc.set_check_command_args(cmd);
   return ;
 }
@@ -816,7 +796,7 @@ void applier::service::resolve_event_handler(
   std::string command_name(cmd.substr(
                              0,
                              cmd.find_first_of('!')));
-  svc.set_event_handler(find_command(command_name));
+  svc.set_event_handler(find_command(command_name).get());
   svc.set_event_handler_args(cmd);
   return ;
 }
@@ -890,8 +870,7 @@ void applier::service::_inherits_special_vars(
                          configuration::service& obj,
                          configuration::state const& s) {
   // Detect if any special variable has not been defined.
-  if (!obj.host_id()
-      || !obj.contacts_defined()
+  if (!obj.contacts_defined()
       || !obj.contactgroups_defined()
       || !obj.notification_interval_defined()
       || !obj.notification_period_defined()
@@ -906,8 +885,6 @@ void applier::service::_inherits_special_vars(
              << *obj.hosts().begin() << "' does not exist");
 
     // Inherits variables.
-    if (!obj.host_id())
-      obj.host_id(it->host_id());
     if (!obj.contacts_defined() && !obj.contactgroups_defined()) {
       obj.contacts() = it->contacts();
       obj.contactgroups() = it->contactgroups();
