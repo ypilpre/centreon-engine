@@ -1,5 +1,5 @@
 /*
-** Copyright 2017 Centreon
+** Copyright 2017-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -80,7 +80,8 @@ TEST_F(ApplierService, NewServiceFromConfig) {
   ASSERT_TRUE(svc.parse("service_description", "test description"));
   svc_aply.add_object(svc);
   svc_aply.expand_objects(*config);
-  service_map const& sm(configuration::applier::state::instance().services());
+  umap<std::pair<std::string, std::string>, com::centreon::shared_ptr<engine::service> > const&
+    sm(configuration::applier::state::instance().services());
   ASSERT_EQ(sm.size(), 1);
   ASSERT_EQ(sm.begin()->first.first, "test_host");
   ASSERT_EQ(sm.begin()->first.second, "test description");
@@ -108,9 +109,11 @@ TEST_F(ApplierService, ServicesEquality) {
   svc_aply.add_object(csvc);
   ASSERT_TRUE(csvc.parse("host_name", "test_host1"));
   svc_aply.add_object(csvc);
-  service_map const& sm(configuration::applier::state::instance().services());
+  umap<std::pair<std::string, std::string>, com::centreon::shared_ptr<engine::service> > const&
+    sm(configuration::applier::state::instance().services());
   ASSERT_EQ(sm.size(), 2);
-  service_map::const_iterator it(sm.begin());
+  umap<std::pair<std::string, std::string>, com::centreon::shared_ptr<engine::service> >::const_iterator
+    it(sm.begin());
   shared_ptr<engine::service> svc1(it->second);
   ++it;
   shared_ptr<engine::service> svc2(it->second);

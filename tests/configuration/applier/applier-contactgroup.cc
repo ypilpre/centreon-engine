@@ -36,11 +36,14 @@ using namespace com::centreon::engine::configuration;
 using namespace com::centreon::engine::configuration::applier;
 
 extern configuration::state* config;
+extern int config_errors;
+extern int config_warnings;
 
 class ApplierContactgroup : public ::testing::Test {
  public:
   void SetUp() {
-//    set_time(20);
+    config_errors = 0;
+    config_warnings = 0;
     if (config == NULL)
       config = new configuration::state;
     configuration::applier::state::load();  // Needed to create a contact
@@ -51,35 +54,42 @@ class ApplierContactgroup : public ::testing::Test {
     delete config;
     config = NULL;
   }
-
 };
 
 // Given a contactgroup applier and a configuration contactgroup
 // Then the add_object() of the applier creates the contactgroup.
 TEST_F(ApplierContactgroup, NewContactgroupFromConfig) {
-  configuration::applier::contactgroup aply_grp;
+  configuration::applier::contactgroup aplyr;
   configuration::contactgroup grp("test_group");
-  aply_grp.add_object(grp);
+  aplyr.add_object(grp);
   contactgroup_map const& cgs(configuration::applier::state::instance().contactgroups());
   ASSERT_EQ(cgs.size(), 1);
 }
 
-// Given a contactgroup applier and a configuration contactgroup
-// Then the add_object() of the applier creates the contactgroup.
-TEST_F(ApplierContactgroup, ContactgroupAddContact) {
-//  configuration::applier::contactgroup aply_grp;
-//  configuration::applier::command aply_cmd;
-//  configuration::applier::contact aply;
-//
-//  configuration::contactgroup grp("test_group");
-//  configuration::contact ct("test_contact");
-//  configuration::command cmd("test_cmd");
-//  ct.parse("host_notification_command", "test_cmd");
-//  ct.parse("service_notification_command", "test_cmd");
-//  cmd.parse("command_name", "test_cmd");
-//  cmd.parse("command_line", "echo 'hello'");
-//  aply_grp.add_object(grp);
-//  aply_cmd.add_object(cmd);
-//  aply.add_object(ct);
-//  ASSERT_THROW(aply.resolve_object(ct), std::exception);
+// Given an empty contactgroup
+// When the resolve_object() method is called
+// Then no warning, nor error are given
+TEST_F(ApplierContactgroup, ResolveEmptyContactgroup) {
+  configuration::applier::contactgroup aplyr;
+  configuration::contactgroup grp("test");
+  aplyr.add_object(grp);
+  aplyr.expand_objects(*config);
+  aplyr.resolve_object(grp);
+  ASSERT_EQ(config_warnings, 0);
+  ASSERT_EQ(config_errors, 0);
+}
+
+// Given a contactgroup with a non-existing contact
+// When the resolve_object() method is called
+// Then an exception is thrown
+// And the method returns 1 error
+TEST_F(ApplierContactgroup, ResolveInexistentContact) {
+  configuration::applier::contactgroup aplyr;
+  configuration::contactgroup grp("test");
+  grp.parse("members", "non_existing_contact");
+  aplyr.add_object(grp);
+  aplyr.expand_objects(*config);
+  ASSERT_THROW(aplyr.resolve_object(grp), std::exception);
+  ASSERT_EQ(config_warnings, 0);
+  ASSERT_EQ(config_errors, 1);
 }

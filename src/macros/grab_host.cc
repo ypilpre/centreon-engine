@@ -65,7 +65,7 @@ static void generate_host_total_services(
            end(hst.get_services().end());
          it != end;
          ++it) {
-      shared_ptr<service> temp_service(*it);
+      com::centreon::shared_ptr<service> temp_service(*it);
       if (!temp_service.is_null()) {
         total_host_services++;
         switch (temp_service->get_current_state()) {
@@ -131,7 +131,7 @@ static char* get_host_group_names(host& hst, nagios_macros* mac) {
          end(hst.get_groups().end());
        it != end;
        ++it) {
-    hostgroup* temp_hostgroup(it->second);
+    hostgroup* temp_hostgroup(*it);
     if (!buf.empty())
       buf.append(",");
     buf.append(temp_hostgroup->group_name);
@@ -551,7 +551,7 @@ int grab_host_macros_r(nagios_macros* mac, host* hst) {
 
   // Save pointer to host's first/primary hostgroup.
   if (!hst->get_groups().empty())
-    mac->hostgroup_ptr = hst->get_groups().begin()->second;
+    mac->hostgroup_ptr = *hst->get_groups().begin();
 
   return (OK);
 }

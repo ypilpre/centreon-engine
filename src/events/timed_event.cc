@@ -2,7 +2,7 @@
 ** Copyright 2007-2008           Ethan Galstad
 ** Copyright 2007,2010           Andreas Ericsson
 ** Copyright 2010                Max Schubert
-** Copyright 2011-2013,2016-2017 Centreon
+** Copyright 2011-2013,2016-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -437,36 +437,39 @@ void add_event(
  *  Adjusts a timestamp variable in accordance with a system
  *  time change.
  *
- *  @param[in]  last_time       The last time.
- *  @param[in]  current_time    The current time.
- *  @param[in]  time_difference The time difference.
- *  @param[out] ts              The time struct to fill.
+ *  @param[in] last_time        The last time.
+ *  @param[in] current_time     The current time.
+ *  @param[in] time_difference  The time difference.
+ *  @param[in] ts               The time to adjust.
+ *
+ *  @return The adjusted time value.
  */
-void adjust_timestamp_for_time_change(
-       time_t last_time,
-       time_t current_time,
-       unsigned long time_difference,
-       time_t* ts) {
+time_t adjusted_timestamp_for_time_change(
+         time_t last_time,
+         time_t current_time,
+         unsigned long time_difference,
+         time_t ts) {
   logger(dbg_functions, basic)
-    << "adjust_timestamp_for_time_change()";
+    << "adjusted_timestamp_for_time_change()";
+  time_t retval;
 
-  // we shouldn't do anything with epoch or invalid values.
-  if ((*ts == (time_t)0) || (*ts == (time_t)-1))
-    return ;
+  // We shouldn't do anything with epoch or invalid values.
+  if ((ts == (time_t)0) || (ts == (time_t)-1))
+    return (ts);
 
-  // we moved back in time...
+  // We moved back in time...
   if (last_time > current_time) {
-    // we can't precede the UNIX epoch.
-    if (time_difference > (unsigned long)*ts)
-      *ts = (time_t)0;
+    // We can't precede the UNIX epoch.
+    if (time_difference > (unsigned long)ts)
+      retval = (time_t)0;
     else
-      *ts = (time_t)(*ts - time_difference);
+      retval = (time_t)(ts - time_difference);
   }
-
-  // we moved into the future...
+  // We moved into the future...
   else
-    *ts = (time_t)(*ts + time_difference);
-  return;
+    retval = (time_t)(ts + time_difference);
+
+  return (retval);
 }
 
 /**
@@ -540,24 +543,24 @@ void compensate_for_system_time_change(
 
     // else use standard adjustment.
     else
-      adjust_timestamp_for_time_change(
-        last_time,
-        current_time,
-        time_difference,
-        &tmp->run_time);
+      tmp->run_time = adjusted_timestamp_for_time_change(
+                        last_time,
+                        current_time,
+                        time_difference,
+                        tmp->run_time);
   }
 
-  // resort event list (some events may be out of order at this point).
+  // Resort event list (some events may be out of order at this point).
   resort_event_list(&event_list_high, &event_list_high_tail);
 
-  // adjust the next run time for all low priority timed events.
+  // Adjust the next run time for all low priority timed events.
   for (timed_event* tmp(event_list_low); tmp; tmp = tmp->next) {
 
-    // skip special events that occur at specific times...
+    // Skip special events that occur at specific times...
     if (!tmp->compensate_for_time_change)
       continue;
 
-    // use custom timing function.
+    // Use custom timing function.
     if (tmp->timing_func) {
       union {
         time_t (*func)(void);
@@ -567,127 +570,134 @@ void compensate_for_system_time_change(
       tmp->run_time = (*timing.func)();
     }
 
-    // else use standard adjustment.
+    // Else use standard adjustment.
     else
-      adjust_timestamp_for_time_change(
-        last_time,
-        current_time,
-        time_difference,
-        &tmp->run_time);
+      tmp->run_time = adjusted_timestamp_for_time_change(
+                        last_time,
+                        current_time,
+                        time_difference,
+                        tmp->run_time);
   }
 
-  // resort event list (some events may be out of order at this point).
+  // Resort event list (some events may be out of order at this point).
   resort_event_list(&event_list_low, &event_list_low_tail);
 
-  // adjust service timestamps.
+  // Adjust service timestamps.
   for (umap<std::pair<std::string, std::string>, com::centreon::shared_ptr< ::service> >::iterator
          it(configuration::applier::state::instance().services().begin()),
          end(configuration::applier::state::instance().services().end());
        it != end;
        ++it) {
     service* svc(it->second.get());
+    svc->set_last_notification(
+      adjusted_timestamp_for_time_change(
+        last_time,
+        current_time,
+        time_difference,
+        svc->get_last_notification()));
+    svc->set_last_check(
+      adjusted_timestamp_for_time_change(
+        last_time,
+        current_time,
+        time_difference,
+        svc->get_last_check()));
+    svc->set_next_check(
+      adjusted_timestamp_for_time_change(
+        last_time,
+        current_time,
+        time_difference,
+        svc->get_next_check()));
+    svc->set_last_state_change(
+      adjusted_timestamp_for_time_change(
+        last_time,
+        current_time,
+        time_difference,
+        svc->get_last_state_change()));
+    svc->set_last_hard_state_change(
+      adjusted_timestamp_for_time_change(
+        last_time,
+        current_time,
+        time_difference,
+        svc->get_last_hard_state_change()));
+    svc->set_initial_notif_time(
+      adjusted_timestamp_for_time_change(
+        last_time,
+        current_time,
+        time_difference,
+        svc->get_initial_notif_time()));
+    svc->set_last_acknowledgement(
+      adjusted_timestamp_for_time_change(
+        last_time,
+        current_time,
+        time_difference,
+        svc->get_last_acknowledgement()));
+
+    // Recalculate next re-notification time.
     // XXX
-    // adjust_timestamp_for_time_change(
-    //   last_time,
-    //   current_time,
-    //   time_difference,
-    //   &svc->last_notification);
-    // adjust_timestamp_for_time_change(
-    //   last_time,
-    //   current_time,
-    //   time_difference,
-    //   &svc->last_check);
-    // adjust_timestamp_for_time_change(
-    //   last_time,
-    //   current_time,
-    //   time_difference,
-    //   &svc->next_check);
-    // adjust_timestamp_for_time_change(
-    //   last_time,
-    //   current_time,
-    //   time_difference,
-    //   &svc->last_state_change);
-    // adjust_timestamp_for_time_change(
-    //   last_time,
-    //   current_time,
-    //   time_difference,
-    //   &svc->last_hard_state_change);
-    // adjust_timestamp_for_time_change(
-    //   last_time,
-    //   current_time,
-    //   time_difference,
-    //   &service_other_props[std::make_pair(
-    //                               svc->host_ptr->name,
-    //                               svc->description)].initial_notif_time);
-    // adjust_timestamp_for_time_change(
-    //   last_time,
-    //   current_time,
-    //   time_difference,
-    //   &service_other_props[std::make_pair(
-    //                               svc->host_ptr->name,
-    //                               svc->description)].last_acknowledgement);
+    // svc->set_next_notification(
+    //   get_next_service_notification_time(
+    //     svc,
+    //     svc->get_last_notification()));
 
-    // recalculate next re-notification time.
-    ///////////////
-    // FIXME DBR //
-    ///////////////
-//    svc->next_notification
-//      = get_next_service_notification_time(
-//          svc,
-//          svc->last_notification);
-
-    // update the status data.
+    // Update the status data.
     update_service_status(svc, false);
   }
 
-  // adjust host timestamps.
+  // Adjust host timestamps.
   for (umap<std::string, com::centreon::shared_ptr< ::host> >::iterator
          it(configuration::applier::state::instance().hosts().begin()),
          end(configuration::applier::state::instance().hosts().end());
        it != end;
        ++it) {
     host* hst(it->second.get());
-    // XXX
-    // adjust_timestamp_for_time_change(
-    //   last_time,
-    //   current_time,
-    //   time_difference,
-    //   &hst->last_host_notification);
-    // adjust_timestamp_for_time_change(
-    //   last_time,
-    //   current_time,
-    //   time_difference,
-    //   &hst->last_check);
-    // adjust_timestamp_for_time_change(
-    //   last_time,
-    //   current_time,
-    //   time_difference,
-    //   &hst->next_check);
-    // adjust_timestamp_for_time_change(
-    //   last_time,
-    //   current_time,
-    //   time_difference,
-    //   &hst->last_state_change);
-    // adjust_timestamp_for_time_change(
-    //   last_time,
-    //   current_time,
-    //   time_difference,
-    //   &hst->last_hard_state_change);
-    // adjust_timestamp_for_time_change(
-    //   last_time,
-    //   current_time,
-    //   time_difference,
-    //   &hst->last_state_history_update);
-    // adjust_timestamp_for_time_change(
-    //   last_time,
-    //   current_time,
-    //   time_difference,
-    //   &host_other_props[hst->name].initial_notif_time);
-    // adjust_timestamp_for_time_change(
-    //   last_time,
-    //   current_time,
-    //   time_difference,
-    //   &host_other_props[hst->name].last_acknowledgement);
+    hst->set_last_notification(
+      adjusted_timestamp_for_time_change(
+        last_time,
+        current_time,
+        time_difference,
+        hst->get_last_notification()));
+    hst->set_last_check(
+      adjusted_timestamp_for_time_change(
+        last_time,
+        current_time,
+        time_difference,
+        hst->get_last_check()));
+    hst->set_next_check(
+      adjusted_timestamp_for_time_change(
+        last_time,
+        current_time,
+        time_difference,
+        hst->get_next_check()));
+    hst->set_last_state_change(
+      adjusted_timestamp_for_time_change(
+        last_time,
+        current_time,
+        time_difference,
+        hst->get_last_state_change()));
+    hst->set_last_hard_state_change(
+      adjusted_timestamp_for_time_change(
+        last_time,
+        current_time,
+        time_difference,
+        hst->get_last_hard_state_change()));
+    hst->set_last_historical_state_update(
+      adjusted_timestamp_for_time_change(
+        last_time,
+        current_time,
+        time_difference,
+        hst->get_last_historical_state_update()));
+    hst->set_initial_notif_time(
+      adjusted_timestamp_for_time_change(
+        last_time,
+        current_time,
+        time_difference,
+        hst->get_initial_notif_time()));
+    hst->set_last_acknowledgement(
+      adjusted_timestamp_for_time_change(
+        last_time,
+        current_time,
+        time_difference,
+        hst->get_last_acknowledgement()));
 
     // recalculate next re-notification time.
     ///////////////
@@ -698,30 +708,31 @@ void compensate_for_system_time_change(
 //          hst,
 //          hst->last_host_notification);
 
-    // update the status data.
+    // Update the status data.
     update_host_status(hst, false);
   }
 
-  // adjust program timestamps.
-  adjust_timestamp_for_time_change(
-    last_time,
-    current_time,
-    time_difference,
-    &program_start);
-  adjust_timestamp_for_time_change(
-    last_time,
-    current_time,
-    time_difference,
-    &event_start);
-  adjust_timestamp_for_time_change(
-    last_time,
-    current_time,
-    time_difference,
-    &last_command_check);
+  // Adjust program timestamps.
+  program_start = adjusted_timestamp_for_time_change(
+                    last_time,
+                    current_time,
+                    time_difference,
+                    program_start);
+  event_start = adjusted_timestamp_for_time_change(
+                  last_time,
+                  current_time,
+                  time_difference,
+                  event_start);
+  last_command_check = adjusted_timestamp_for_time_change(
+                         last_time,
+                         current_time,
+                         time_difference,
+                         last_command_check);
 
-  // update the status data.
+  // Update the status data.
   update_program_status(false);
-  return;
+
+  return ;
 }
 
 /**

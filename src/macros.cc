@@ -287,12 +287,11 @@ int grab_custom_macro_value_r(
         return (ERROR);
 
       /* get the contact macro value */
-      // XXX
-      // result = grab_custom_object_macro_r(
-      //            mac,
-      //            macro_name + 8,
-      //            temp_contact->custom_variables,
-      //            output);
+      result = grab_custom_object_macro_r(
+                 mac,
+                 macro_name + 8,
+                 temp_contact->get_customvars(),
+                 output);
     }
     /* a contact macro with a contactgroup name and delimiter */
     else {
@@ -302,14 +301,14 @@ int grab_custom_macro_value_r(
       delimiter_len = strlen(arg2);
 
       /* concatenate macro values for all contactgroup members */
-      for (umap<std::string, shared_ptr<contact> >::const_iterator
+      for (umap<std::string, contact*>::const_iterator
              it(temp_contactgroup->get_members().begin()),
              end(temp_contactgroup->get_members().end());
            it != end;
            ++it) {
 
-        if ((temp_contact = it->second.get()) == NULL)
-          continue;
+        if ((temp_contact = it->second) == NULL)
+          continue ;
 
         /* get the macro value for this contact */
         grab_custom_macro_value_r(
@@ -845,8 +844,8 @@ int grab_standard_contactgroup_macro(
     break;
 
   case MACRO_CONTACTGROUPMEMBERS:
-    /* get the member list */
-    for (umap<std::string, shared_ptr<contact> >::const_iterator
+    // Get the member list.
+    for (umap<std::string, contact*>::const_iterator
            it(temp_contactgroup->get_members().begin()),
            end(temp_contactgroup->get_members().end());
          it != end;

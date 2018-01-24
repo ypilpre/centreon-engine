@@ -64,7 +64,7 @@ class                service : public monitorable {
   void               set_host(host* hst);
   void               add_group(servicegroup_struct* sg);
   void               clear_groups();
-  umap<std::string, servicegroup_struct*> const&
+  std::list<servicegroup_struct*> const&
                      get_groups() const;
 
   // State runtime.
@@ -107,6 +107,8 @@ class                service : public monitorable {
   bool               _flap_detection_on_ok;
   bool               _flap_detection_on_unknown;
   bool               _flap_detection_on_warning;
+  std::list<servicegroup_struct*>
+                     _groups;
   time_t             _last_time_critical;
   time_t             _last_time_ok;
   time_t             _last_time_unknown;

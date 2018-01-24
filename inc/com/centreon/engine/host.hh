@@ -85,7 +85,7 @@ class                        host : public monitorable {
   std::list<host*> const&    get_children() const;
   void                       add_group(hostgroup_struct* hg);
   void                       clear_groups();
-  umap<std::string, hostgroup_struct*> const&
+  std::list<hostgroup_struct*> const&
                              get_groups() const;
   void                       add_parent(host* hst);
   void                       clear_parents();
@@ -130,6 +130,8 @@ class                        host : public monitorable {
   bool                       _flap_detection_on_down;
   bool                       _flap_detection_on_unreachable;
   bool                       _flap_detection_on_up;
+  std::list<hostgroup_struct*>
+                             _groups;
   bool                       _have_2d_coords;
   bool                       _have_3d_coords;
   time_t                     _last_historical_state_update;
@@ -137,6 +139,7 @@ class                        host : public monitorable {
   time_t                     _last_time_unreachable;
   time_t                     _last_time_up;
   std::list<host*>           _parents;
+  std::list<service*>        _services;
   bool                       _should_reschedule_current_check;
   bool                       _stalk_on_down;
   bool                       _stalk_on_unreachable;

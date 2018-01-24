@@ -337,39 +337,21 @@ void contact::set_service_notified_states(unsigned int notified_states) {
 }
 
 /**
- *  host_notification_commands getter
+ *  Get host notification commands list.
  *
- *  @return an unordered map indexed by names of the host notification commands
+ *  @return A list of commands.
  */
-command_map& contact::get_host_notification_commands() {
-  return _host_notification_commands;
+std::list<std::pair<commands::command*, std::string> > const& contact::get_host_notification_commands() const {
+  return (_host_notification_commands);
 }
 
 /**
- *  host_notification_commands getter
+ *  Get service notification commands list.
  *
- *  @return an unordered map indexed by names of the host notification commands
+ *  @return A list of commands.
  */
-command_map const& contact::get_host_notification_commands() const {
-  return _host_notification_commands;
-}
-
-/**
- *  service_notification_commands getter
- *
- *  @return an unordered map indexed by names of the service notification commands
- */
-command_map& contact::get_service_notification_commands() {
-  return _service_notification_commands;
-}
-
-/**
- *  service_notification_commands getter
- *
- *  @return an unordered map indexed by names of the service notification commands
- */
-command_map const& contact::get_service_notification_commands() const {
-  return _service_notification_commands;
+std::list<std::pair<commands::command*, std::string> > const& contact::get_service_notification_commands() const {
+  return (_service_notification_commands);
 }
 
 void contact::set_host_notification_period(timeperiod* tp) {
@@ -543,22 +525,32 @@ void contact::set_service_notifications_enabled(bool enabled) {
   _service_notifications_enabled = enabled;
 }
 
-void contact::add_host_notification_command(std::string const& command_name) {
-  // Make sure we have the data we need.
-  if (command_name.empty())
-    throw (engine_error()
-             << "Error: Host notification command is empty");
-
-  _host_notification_commands[command_name] = shared_ptr<command>(0);
+/**
+ *  Add new host notification command to contact.
+ *
+ *  @param[in,out] cmd   Command that will be used by contact for
+ *                       host notification.
+ *  @param[in]     args  Optional command arguments.
+ */
+void contact::add_host_notification_command(
+                commands::command* cmd,
+                std::string const& args) {
+  _host_notification_commands.push_back(std::make_pair(cmd, args));
+  return ;
 }
 
-void contact::add_service_notification_command(std::string const& command_name) {
-  // Make sure we have the data we need.
-  if (command_name.empty())
-    throw (engine_error()
-             << "Error: Service notification command is empty");
-
-  _service_notification_commands[command_name] = shared_ptr<command>(0);
+/**
+ *  Add new service notification command to contact.
+ *
+ *  @param[in,out] cmd   Command that will be used by contact for
+ *                       service notification.
+ *  @param[in]     args  Optional command arguments.
+ */
+void contact::add_service_notification_command(
+                commands::command* cmd,
+                std::string const& args) {
+  _service_notification_commands.push_back(std::make_pair(cmd, args));
+  return ;
 }
 
 void contact::clear_host_notification_commands() {

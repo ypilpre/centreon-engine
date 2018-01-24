@@ -101,9 +101,8 @@ void applier::host::_update(
       obj.set_long_output(*state.long_plugin_output());
     if (state.performance_data().is_set())
       obj.set_perfdata(*state.performance_data());
-    // XXX
-    // if (state.last_acknowledgement().is_set())
-    //   obj.set_last_acknowledgement(*state.last_acknowledgement());
+    if (state.last_acknowledgement().is_set())
+      obj.set_last_acknowledgement(*state.last_acknowledgement());
     if (state.last_check().is_set())
       obj.set_last_check(*state.last_check());
     if (state.next_check().is_set()

@@ -1,5 +1,5 @@
 /*
-** Copyright 2017 Centreon
+** Copyright 2017-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -77,39 +77,4 @@ TEST_F(ContactgroupConfig, NewContactgroupWithNonEmptyAlias) {
   ctg.parse("alias", "alias_test");
   std::auto_ptr<engine::contactgroup> c(new engine::contactgroup(ctg));
   ASSERT_EQ(c->get_alias(), "alias_test");
-}
-
-// Given an empty contactgroup
-// When the check method is executed
-// Then no warning, nor error are given.
-// And the method returns true (errors count == 0)
-TEST_F(ContactgroupConfig, TestContactgroupCheck) {
-  configuration::contactgroup ctg("test");
-  std::auto_ptr<engine::contactgroup> c(new engine::contactgroup(ctg));
-  int w = 0, e = 0;
-  ASSERT_TRUE(c->check(&w, &e));
-}
-
-// Given a contactgroup
-// When the add_contact method is called with an empty name
-// Then an exception is thrown.
-TEST_F(ContactgroupConfig, TestContactgroupCheckWithBadContact) {
-  configuration::contactgroup ctg("test");
-  std::auto_ptr<engine::contactgroup> c(new engine::contactgroup(ctg));
-  ASSERT_THROW(c->add_contact(""), std::exception);
-}
-
-// Given a contactgroup
-// When the add_contact method is called with a non empty name
-// corresponding to a non existing contact
-// Then an error is given
-// And the method returns false.
-TEST_F(ContactgroupConfig, TestContactgroupCheckWithOneInexistentContact) {
-  configuration::contactgroup ctg("test");
-  std::auto_ptr<engine::contactgroup> c(new engine::contactgroup(ctg));
-  c->add_contact("centreon");
-  int w(0), e(0);
-  ASSERT_FALSE(c->check(&w, &e));
-  ASSERT_EQ(w, 0);
-  ASSERT_EQ(e, 1);
 }

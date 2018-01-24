@@ -1,5 +1,5 @@
 /*
-** Copyright 2017 Centreon
+** Copyright 2017-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -47,8 +47,7 @@ class FlappingNotification : public ::testing::Test {
     contact_map& cm = configuration::applier::state::instance().contacts();
     configuration::contact ctct("test");
     cm["test"] = shared_ptr<engine::contact>(new engine::contact(ctct));
-
-    _notifier->add_contact(configuration::applier::state::instance().contacts_find("test")->second);
+    _notifier->add_contact(configuration::applier::state::instance().contacts_find("test").get());
   }
 
   void TearDown() {
@@ -117,4 +116,3 @@ TEST_F(FlappingNotification, StartStartFlapping) {
   last_notification = _notifier->get_last_notification();
   ASSERT_EQ(now, last_notification);
 }
-

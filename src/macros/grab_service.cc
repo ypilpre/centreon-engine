@@ -1,6 +1,6 @@
 /*
 ** Copyright 1999-2010           Ethan Galstad
-** Copyright 2011-2013,2016-2017 Centreon
+** Copyright 2011-2013,2016-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -78,7 +78,7 @@ static char* get_service_group_names(service& svc, nagios_macros* mac) {
          end(svc.get_groups().end());
        it != end;
        ++it) {
-    servicegroup* temp_servicegroup(it->second);
+    servicegroup* temp_servicegroup(*it);
     if (!buf.empty())
       buf.append(",");
     buf.append(temp_servicegroup->group_name);
@@ -409,7 +409,7 @@ int grab_service_macros_r(nagios_macros* mac, service* svc) {
 
   // Save first/primary servicegroup pointer for later.
   if (!svc->get_groups().empty())
-    mac->servicegroup_ptr = svc->get_groups().begin()->second;
+    mac->servicegroup_ptr = *svc->get_groups().begin();
 
   return (OK);
 }

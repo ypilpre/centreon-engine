@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2013,2015,2017 Centreon
+** Copyright 2011-2013,2015,2017-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -27,6 +27,7 @@
 #include "com/centreon/engine/error.hh"
 #include "com/centreon/engine/globals.hh"
 #include "com/centreon/engine/logging/logger.hh"
+#include "com/centreon/engine/not_found.hh"
 #include "com/centreon/engine/shared.hh"
 
 using namespace com::centreon::engine::configuration;
@@ -94,20 +95,7 @@ void applier::contactgroup::add_object(
   applier::state::instance().contactgroups().insert(
     std::make_pair(name, cg));
 
-  // Apply resolved contacts on contactgroup.
-  for (set_string::const_iterator
-         it(obj.members().begin()),
-         end(obj.members().end());
-       it != end;
-       ++it)
-    try {
-      cg->add_contact(*it);
-    }
-    catch (std::exception const& e) {
-      throw (engine_error() << "Error: Could not add contact '" << *it
-             << "' to contact group '" << obj.contactgroup_name()
-             << "' :" << e.what());
-    }
+  return ;
 }
 
 /**
@@ -158,7 +146,7 @@ void applier::contactgroup::modify_object(
 
   // Find contact group object.
   umap<std::string, shared_ptr<engine::contactgroup> >::iterator
-    it_obj(applier::state::instance().contactgroups_find(obj.key()));
+    it_obj(applier::state::instance().contactgroups().find(obj.key()));
   if (it_obj == applier::state::instance().contactgroups().end())
     throw (engine_error() << "Error: Could not modify non-existing "
            << "contact group object '" << obj.contactgroup_name() << "'");
@@ -171,27 +159,6 @@ void applier::contactgroup::modify_object(
 
   // Modify contactgroup.
   modify_if_different(*cg, alias, obj.alias());
-
-  // Were members modified ?
-  if (obj.members() != old_cfg.members()) {
-    // Delete all old contact group members.
-    cg->clear_members();
-
-    // Create new contact group members.
-    for (set_string::const_iterator
-           it(obj.members().begin()),
-           end(obj.members().end());
-         it != end;
-         ++it)
-      try {
-        cg->add_contact(*it);
-      }
-      catch (std::exception const& e) {
-        throw (engine_error() << "Error: Could not add contact member '"
-               << *it << "' to contact group '" << obj.contactgroup_name()
-               << "' :" << e.what());
-      }
-  }
 
   // Notify event broker.
   timeval tv(get_broker_timestamp(NULL));
@@ -217,7 +184,7 @@ void applier::contactgroup::remove_object(
 
   // Find contact group.
   umultimap<std::string, shared_ptr<engine::contactgroup> >::iterator
-    it(applier::state::instance().contactgroups_find(obj.key()));
+    it(applier::state::instance().contactgroups().find(obj.key()));
   if (it != applier::state::instance().contactgroups().end()) {
     engine::contactgroup* grp(it->second.get());
 
@@ -258,7 +225,16 @@ void applier::contactgroup::resolve_object(
   try {
     // Find contact group.
     engine::contactgroup& grp(
-      *applier::state::instance().contactgroups_find(obj.key())->second.get());
+      *applier::state::instance().contactgroups_find(obj.key()));
+
+    // Check for illegal characters in contact group name.
+    if (contains_illegal_object_chars(grp.get_name().c_str())) {
+      logger(logging::log_verification_error, logging::basic)
+        << "Error: The name of contact group '" << grp.get_name()
+        << "' contains one or more illegal characters.";
+      ++config_errors;
+      failure = true;
+    }
 
     // Remove old links.
     grp.clear_members();
@@ -269,18 +245,18 @@ void applier::contactgroup::resolve_object(
            end(obj.members().end());
          it != end;
          ++it) {
-      shared_ptr<engine::contact> cntct(
-        configuration::applier::state::instance().contacts_find(*it)->second);
-      grp.add_member(cntct);
-    }
-
-    // Check for illegal characters in contact group name.
-    if (contains_illegal_object_chars(grp.get_name().c_str())) {
-      logger(logging::log_verification_error, logging::basic)
-        << "Error: The name of contact group '" << grp.get_name()
-        << "' contains one or more illegal characters.";
-      ++config_errors;
-      failure = true;
+      try {
+        grp.add_member(
+          configuration::applier::state::instance().contacts_find(*it).get());
+      }
+      catch (not_found const& e) {
+        (void)e;
+        logger(logging::log_verification_error, logging::basic)
+          << "Error: Member '" << *it << "' of contact group '"
+          << grp.get_name() << "' is not defined anywhere!";
+        ++config_errors;
+        failure = true;
+      }
     }
 
     if (failure)

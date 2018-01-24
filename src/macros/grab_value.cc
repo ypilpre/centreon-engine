@@ -406,12 +406,12 @@ static int handle_contact_macro(
       size_t delimiter_len(strlen(arg2));
 
       // Concatenate macro values for all contactgroup members.
-      for (umap<std::string, shared_ptr<contact> >::const_iterator
+      for (umap<std::string, contact*>::const_iterator
              it(cg->get_members().begin()),
              end(cg->get_members().end());
            it != end;
            ++it) {
-        contact* cntct(it->second.get());
+        contact* cntct(it->second);
         if (cntct) {
           // Get the macro value for this contact.
           char* buffer(NULL);
@@ -676,11 +676,7 @@ static int handle_summary_macro(
       // Filter totals based on contact if necessary.
       bool authorized(
              mac->contact_ptr
-             // XXX
-             ? false
-             // ? is_contact_for_service(   FIXME DBR: il y a une méthode contains_contact
-             //     temp_service,
-             //     mac->contact_ptr)
+             ? temp_service->contains_contact(mac->contact_ptr)
              : true);
       if (authorized) {
         bool problem(true);
@@ -1203,20 +1199,13 @@ int grab_macro_value_r(
         delimiter_len = strlen(arg[1]);
 
         /* concatenate macro values for all contactgroup members */
-        for (umap<std::string, shared_ptr<contact> >::const_iterator
+        for (umap<std::string, contact*>::const_iterator
                it(temp_contactgroup->get_members().begin()),
                end(temp_contactgroup->get_members().end());
              it != end;
              ++it) {
-          if ((temp_contact = it->second.get()) == NULL)
-            continue;
-          try {
-            temp_contact = &find_contact(it->first);
-          }
-          catch (not_found const& e) {
-            (void)e;
-            continue;
-          }
+          if ((temp_contact = it->second) == NULL)
+            continue ;
 
           /* get the macro value for this contact */
           grab_contact_address_macro(x, temp_contact, &temp_buffer);

@@ -1565,14 +1565,14 @@ int process_contactgroup_command(int cmd,
   case CMD_DISABLE_CONTACTGROUP_SVC_NOTIFICATIONS:
 
     /* loop through all contactgroup members */
-    for (umap<std::string, shared_ptr<engine::contact> >::const_iterator
+    for (umap<std::string, engine::contact*>::const_iterator
            it(temp_contactgroup->get_members().begin()),
            end(temp_contactgroup->get_members().end());
          it != end;
          ++it) {
-      if (it->second.is_null())
-        continue;
-      engine::contact* temp_member = it->second.get();
+      if (!it->second)
+        continue ;
+      engine::contact* temp_member(it->second);
 
       switch (cmd) {
 

@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2013,2017 Centreon
+** Copyright 2011-2013,2017-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -95,18 +95,14 @@ namespace           configuration {
       contact_map const&
                     contacts() const throw ();
       contact_map&  contacts() throw ();
-      contact_map::const_iterator
+      shared_ptr< ::contact>
                     contacts_find(configuration::contact::key_type const& k) const;
-      contact_map::iterator
-                    contacts_find(configuration::contact::key_type const& k);
       contactgroup_map const&
                     contactgroups() const throw ();
       contactgroup_map&
                     contactgroups() throw ();
-      contactgroup_map::const_iterator
+      shared_ptr< ::contactgroup>
                     contactgroups_find(configuration::contactgroup::key_type const& k) const;
-      contactgroup_map::iterator
-                    contactgroups_find(configuration::contactgroup::key_type const& k);
       umap<std::string, shared_ptr< ::host> > const&
                     hosts() const throw ();
       umap<std::string, shared_ptr< ::host> >&

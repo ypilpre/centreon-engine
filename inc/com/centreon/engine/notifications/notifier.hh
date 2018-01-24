@@ -27,7 +27,6 @@
 #  include "com/centreon/engine/globals.hh"
 #  include "com/centreon/engine/macros/defines.hh"
 #  include "com/centreon/engine/namespace.hh"
-#  include "com/centreon/shared_ptr.hh"
 
 CCE_BEGIN()
 
@@ -95,8 +94,8 @@ namespace           notifications {
     notifier&         operator=(notifier const& other);
     bool              contains_contact(engine::contact* user) const;
     bool              contains_contact(std::string const& username) const;
-    void              add_contact(shared_ptr<engine::contact> user);
-    void              add_contactgroup(shared_ptr<engine::contactgroup> cg);
+    void              add_contact(engine::contact* user);
+    void              add_contactgroup(engine::contactgroup* cg);
     void              delete_acknowledgement_comments();
     void              set_notifications_enabled(bool enabled);
     bool              get_notifications_enabled() const;
@@ -104,16 +103,16 @@ namespace           notifications {
                       get_acknowledgement_type() const;
     void              enable_state_notification(int state);
     void              clear_contacts();
-    std::list<shared_ptr<engine::contact> >
+    std::list<engine::contact*>
                       get_contacts_list();
-    umap<std::string, shared_ptr<engine::contact> > const&
+    umap<std::string, engine::contact*> const&
                       get_contacts() const;
-    umap<std::string, shared_ptr<engine::contact> >&
+    umap<std::string, engine::contact*>&
                       get_contacts();
     void              clear_contactgroups();
-    umap<std::string, shared_ptr<engine::contactgroup> > const&
+    umap<std::string, engine::contactgroup*> const&
                       get_contactgroups() const;
-    umap<std::string, shared_ptr<engine::contactgroup> >&
+    umap<std::string, engine::contactgroup*>&
                       get_contactgroups();
 
     int               get_current_notification_id() const;
@@ -157,6 +156,7 @@ namespace           notifications {
     bool              get_notify_on_unreachable() const;
     void              set_notify_on_unreachable(bool notify);
     void              set_current_notification_number(int number);
+    time_t            get_initial_notif_time() const;
     void              set_initial_notif_time(time_t initial);
 //    void              set_no_more_notifications(bool no_more);
     void              set_recovery_been_sent(bool sent);
@@ -222,9 +222,9 @@ namespace           notifications {
     bool              _escalate_notification;
 
     int               _notified_states;
-    umap<std::string, shared_ptr<engine::contact> >
+    umap<std::string, engine::contact*>
                       _contacts;
-    umap<std::string, shared_ptr<engine::contactgroup> >
+    umap<std::string, engine::contactgroup*>
                       _contact_groups;
     bool              _notifications_enabled;
     int               _scheduled_downtime_depth;

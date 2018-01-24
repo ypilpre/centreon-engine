@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2013 Merethis
+** Copyright 2011-2013,2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -20,6 +20,7 @@
 #ifndef CCE_OBJECTS_HOSTGROUP_HH
 #  define CCE_OBJECTS_HOSTGROUP_HH
 
+#  include <list>
 #  include "com/centreon/engine/namespace.hh"
 #  include "com/centreon/shared_ptr.hh"
 #  include "com/centreon/unordered_hash.hh"
@@ -43,7 +44,7 @@ typedef struct             hostgroup_struct {
   struct hostgroup_struct* nexthash;
 }                          hostgroup;
 
-typedef umap<std::string, hostgroup*> hostgroup_set;
+typedef std::list<hostgroup*> hostgroup_set;
 
 /* Other HOSTGROUP structure. */
 struct                      hostgroup_other_properties {

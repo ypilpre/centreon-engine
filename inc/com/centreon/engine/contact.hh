@@ -79,8 +79,8 @@ class                           contact {
   void                          set_timezone(std::string const& timezone);
 
   // Host notification properties.
-  command_map const&            get_host_notification_commands() const;
-  command_map&                  get_host_notification_commands();
+  std::list<std::pair<commands::command*, std::string> > const&
+                                get_host_notification_commands() const;
   bool                          get_host_notifications_enabled() const;
   void                          set_host_notifications_enabled(bool enabled);
   unsigned int                  get_host_notified_states() const;
@@ -105,12 +105,13 @@ class                           contact {
   bool                          notify_on_host_unreachable() const;
   bool                          notify_on_host_warning() const;
   void                          add_host_notification_command(
-                                  std::string const& command_name);
+                                  commands::command* cmd,
+                                  std::string const& args);
   void                          clear_host_notification_commands();
 
   // Service notification properties.
-  command_map const&            get_service_notification_commands() const;
-  command_map&                  get_service_notification_commands();
+  std::list<std::pair<commands::command*, std::string> > const&
+                                get_service_notification_commands() const;
   bool                          get_service_notifications_enabled() const;
   void                          set_service_notifications_enabled(bool enabled);
   unsigned int                  get_service_notified_states() const;
@@ -131,7 +132,8 @@ class                           contact {
   void                          enable_service_notifications();
   void                          disable_service_notifications();
   void                          add_service_notification_command(
-                                  std::string const& command_name);
+                                  commands::command* cmd,
+                                  std::string const& args);
   void                          clear_service_notification_commands();
 
   void                          clear_contactgroups();
@@ -159,8 +161,10 @@ class                           contact {
 
   std::vector<std::string>      _addresses;
   std::string                   _timezone;
-  command_map                   _host_notification_commands;
-  command_map                   _service_notification_commands;
+  std::list<std::pair<commands::command*, std::string> >
+                                _host_notification_commands;
+  std::list<std::pair<commands::command*, std::string> >
+                                _service_notification_commands;
   timeperiod*                   _host_notification_period;
   timeperiod*                   _service_notification_period;
   unsigned long                 _modified_attributes;
@@ -180,7 +184,8 @@ class                           contact {
   bool                          _retain_status_information;
 };
 
-
 CCE_END()
+
+using com::centreon::engine::contact;
 
 #endif // !CCE_CONTACT_HH

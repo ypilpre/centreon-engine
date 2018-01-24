@@ -409,14 +409,16 @@ std::list<host*> const& host::get_children() const {
  *  @param[in] hg  Host group.
  */
 void host::add_group(hostgroup_struct* hg) {
-  // XXX
+  _groups.push_back(hg);
+  return ;
 }
 
 /**
  *  Clear group list of this host.
  */
 void host::clear_groups() {
-  // XXX
+  _groups.clear();
+  return ;
 }
 
 /**
@@ -425,7 +427,7 @@ void host::clear_groups() {
  *  @return Groups of this host.
  */
 hostgroup_set const& host::get_groups() const {
-  // XXX
+  return (_groups);
 }
 
 /**
@@ -461,16 +463,18 @@ std::list<host*> const& host::get_parents() const {
  *  @param[in] svc  Service.
  */
 void host::add_service(service* svc) {
+  _services.push_back(svc);
   _total_service_check_interval += svc->get_normal_check_interval();
-  // XXX
+  return ;
 }
 
 /**
  *  Clear the service list of this host.
  */
 void host::clear_services() {
+  _services.clear();
   _total_service_check_interval = 0;
-  // XXX
+  return ;
 }
 
 /**
@@ -479,9 +483,7 @@ void host::clear_services() {
  *  @return List of services of this host.
  */
 std::list<service*> const& host::get_services() const {
-  // XXX
-  static std::list<service*> retval;
-  return (retval);
+  return (_services);
 }
 
 /**
@@ -683,6 +685,7 @@ void host::_internal_copy(host const& other) {
   _last_time_unreachable = other._last_time_unreachable;
   _last_time_up = other._last_time_up;
   _parents = other._parents;
+  _services = other._services;
   _should_reschedule_current_check = other._should_reschedule_current_check;
   _stalk_on_down = other._stalk_on_down;
   _stalk_on_unreachable = other._stalk_on_unreachable;

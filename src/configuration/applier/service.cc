@@ -410,12 +410,12 @@ void applier::service::modify_object(
            end(obj.contacts().end());
          it != end;
          ++it) {
-      contact_map::iterator cntct(state::instance().contacts_find(*it));
+      contact_map::iterator cntct(state::instance().contacts().find(*it));
       if (cntct == state::instance().contacts().end())
         throw (engine_error() << "Could not add contact '"
                << *it << "' to service '" << obj.service_description()
                << "' on host '" << *obj.hosts().begin() << "'");
-      s->add_contact(cntct->second);
+      s->add_contact(cntct->second.get());
     }
   }
 
@@ -431,12 +431,12 @@ void applier::service::modify_object(
          it != end;
          ++it) {
       contactgroup_map::iterator
-        grp(state::instance().contactgroups_find(*it));
+        grp(state::instance().contactgroups().find(*it));
       if (grp == state::instance().contactgroups().end())
         throw (engine_error() << "Could not add contact group '"
                << *it << "' to service '" << obj.service_description()
                << "' on host '" << *obj.hosts().begin() << "'");
-      s->add_contactgroup(grp->second);
+      s->add_contactgroup(grp->second.get());
     }
   }
 
@@ -660,7 +660,7 @@ void applier::service::resolve_object(
       try {
         svc.add_contact(
           configuration::applier::state::instance().contacts_find(
-            *it)->second);
+                                                      *it).get());
       }
       catch (not_found const& e) {
         (void)e;
@@ -681,7 +681,7 @@ void applier::service::resolve_object(
       try {
         svc.add_contactgroup(
           configuration::applier::state::instance().contactgroups_find(
-            *it)->second);
+                                                      *it).get());
       }
       catch (not_found const& e) {
         logger(logging::log_verification_error, logging::basic)

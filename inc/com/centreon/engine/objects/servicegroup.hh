@@ -20,6 +20,7 @@
 #ifndef CCE_OBJECTS_SERVICEGROUP_HH
 #  define CCE_OBJECTS_SERVICEGROUP_HH
 
+#  include <list>
 #  include "com/centreon/unordered_hash.hh"
 
 /* Forward declaration. */
@@ -42,7 +43,7 @@ typedef struct                servicegroup_struct {
   struct servicegroup_struct* nexthash;
 }                             servicegroup;
 
-typedef umap<std::string, servicegroup*> servicegroup_set;
+typedef std::list<servicegroup*> servicegroup_set;
 
 /* Other HOSTGROUP structure. */
 struct                        servicegroup_other_properties {

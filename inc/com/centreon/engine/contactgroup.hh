@@ -51,29 +51,25 @@ class                          contactgroup {
   std::string const&           get_name() const;
   std::string const&           get_alias() const;
   void                         set_alias(std::string const& alias);
-  void                         add_member(
-                                 com::centreon::shared_ptr<contact> cntct);
+  void                         add_member(contact* cntct);
   void                         clear_members();
-  umap<std::string, com::centreon::shared_ptr<contact> > const&
+  umap<std::string, contact*> const&
                                get_members() const;
+  bool                         has_member(std::string const& name) const;
 
-  bool                         contains_member(std::string const& name) const;
   bool                         contains_illegal_object_chars() const;
-  void                         add_contact(std::string const& contact_name);
 
  private:
   std::string                  _name;
   std::string                  _alias;
-  umap<std::string, com::centreon::shared_ptr<contact> >
-                               _members;
+  umap<std::string, contact*>  _members;
 };
 
 CCE_END()
 
-using com::centreon::shared_ptr;
 using com::centreon::engine::contactgroup;
 
-typedef umap<std::string, shared_ptr<contactgroup> > contactgroup_map;
+typedef umap<std::string, com::centreon::shared_ptr<contactgroup> > contactgroup_map;
 typedef std::list<contactgroup*> contactgroup_list;
 
 #endif // !CCE_CONTACTGROUP_HH

@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2013,2015-2017 Centreon
+** Copyright 2011-2013,2015-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -296,25 +296,15 @@ contact_map& applier::state::contacts() throw () {
 /**
  *  Find a contact from its key.
  *
- *  @param[in] k Contact name.
+ *  @param[in] k  Contact name.
  *
- *  @return Iterator to the element if found, contacts().end()
- *          otherwise.
+ *  @return Contact pointer if found. Will throw not_found if not found.
  */
-contact_map::const_iterator applier::state::contacts_find(configuration::contact::key_type const& k) const {
-  return (_contacts.find(k));
-}
-
-/**
- *  Find a contact from its key.
- *
- *  @param[in] k Contact name.
- *
- *  @return Iterator to the element if found, contacts().end()
- *          otherwise.
- */
-contact_map::iterator applier::state::contacts_find(configuration::contact::key_type const& k) {
-  return (_contacts.find(k));
+shared_ptr< ::contact> applier::state::contacts_find(configuration::contact::key_type const& k) const {
+  contact_map::const_iterator it(_contacts.find(k));
+  if (it == _contacts.end())
+    throw (not_found_error() << "Could not find contact '" << k << "'");
+  return (it->second);
 }
 
 /**
@@ -338,25 +328,17 @@ umap<std::string, shared_ptr<engine::contactgroup> >& applier::state::contactgro
 /**
  *  Find a contact group from its key.
  *
- *  @param[in] k Contact group key.
+ *  @param[in] k  Contact group key.
  *
- *  @return Iterator to the element if found, contactgroups().end()
- *          otherwise.
+ *  @return Contact group pointer if found. Will throw not_found if not
+ *          found.
  */
-umap<std::string, shared_ptr<engine::contactgroup> >::const_iterator applier::state::contactgroups_find(configuration::contactgroup::key_type const& k) const {
-  return (_contactgroups.find(k));
-}
-
-/**
- *  Find a contact group from its key.
- *
- *  @param[in] k Contact group key.
- *
- *  @return Iterator to the element if found, contactgroups().end()
- *          otherwise.
- */
-umap<std::string, shared_ptr<engine::contactgroup> >::iterator applier::state::contactgroups_find(configuration::contactgroup::key_type const& k) {
-  return (_contactgroups.find(k));
+shared_ptr< ::contactgroup> applier::state::contactgroups_find(configuration::contactgroup::key_type const& k) const {
+  contactgroup_map::const_iterator it(_contactgroups.find(k));
+  if (it == _contactgroups.end())
+    throw (not_found_error() << "Could not find contact group '"
+           << k << "'");
+  return (it->second);
 }
 
 /**

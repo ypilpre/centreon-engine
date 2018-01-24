@@ -333,12 +333,12 @@ namespace         modules {
           return ;
         }
 
-        for (umap<std::string, shared_ptr<contact> >::const_iterator
+        for (umap<std::string, contact*>::const_iterator
                it(group->get_members().begin()),
                end(group->get_members().end());
              it != end;
              ++it) {
-          contact* ctct = it->second.get();
+          contact* ctct(it->second);
           (*fptr)(ctct);
         }
 

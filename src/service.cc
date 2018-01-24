@@ -214,14 +214,16 @@ void service::set_host(host* hst) {
  *  @param[in] sg  Service group.
  */
 void service::add_group(servicegroup_struct* sg) {
-  // XXX
+  _groups.push_back(sg);
+  return ;
 }
 
 /**
  *  Clear groups of this service.
  */
 void service::clear_groups() {
-  // XXX
+  _groups.clear();
+  return ;
 }
 
 /**
@@ -230,7 +232,7 @@ void service::clear_groups() {
  *  @return Groups of this service.
  */
 servicegroup_set const& service::get_groups() const {
-  // XXX
+  return (_groups);
 }
 
 /**************************************

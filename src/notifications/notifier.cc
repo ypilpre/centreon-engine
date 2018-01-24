@@ -25,7 +25,6 @@
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/notifications/notifier.hh"
 #include "com/centreon/engine/service.hh"
-#include "com/centreon/shared_ptr.hh"
 
 using namespace com::centreon;
 using namespace com::centreon::engine;
@@ -90,11 +89,11 @@ notifier::~notifier() {
     << "notifier: destructor";
 }
 
-void notifier::add_contactgroup(shared_ptr<engine::contactgroup> cg) {
+void notifier::add_contactgroup(engine::contactgroup* cg) {
   _contact_groups[cg->get_name()] = cg;
 }
 
-void notifier::add_contact(shared_ptr<engine::contact> user) {
+void notifier::add_contact(engine::contact* user) {
   _contacts[user->get_name()] = user;
 }
 
@@ -169,7 +168,7 @@ void notifier::notify(
     delete_acknowledgement_comments();
   }
 
-  std::list<shared_ptr<engine::contact> > users_to_notify = get_contacts_list();
+  std::list<engine::contact*> users_to_notify = get_contacts_list();
   if (users_to_notify.empty())
     return ;
 
@@ -182,9 +181,9 @@ void notifier::notify(
 
       // Notify each contact
       for (
-        std::list<shared_ptr<engine::contact> >::iterator
-                                                it(users_to_notify.begin()),
-                                                end(users_to_notify.end());
+        std::list<engine::contact*>::iterator
+          it(users_to_notify.begin()),
+          end(users_to_notify.end());
         it != end;
         ++it) {
 
@@ -291,9 +290,9 @@ void notifier::notify(
   }
 }
 
-static bool _compare_shared_ptr(
-    shared_ptr<engine::contact> const& a,
-    shared_ptr<engine::contact> const& b) {
+static bool _compare_pointers(
+              engine::contact* const& a,
+              engine::contact* const& b) {
   return (*a < *b);
 }
 
@@ -310,15 +309,15 @@ void notifier::clear_contacts() {
  *
  *  @return A string.
  */
-std::list<shared_ptr<engine::contact> > notifier::get_contacts_list() {
+std::list<engine::contact*> notifier::get_contacts_list() {
 
   /* See if this notification should be escalated */
   _escalate_notification = should_be_escalated();
 
-  std::list<shared_ptr<engine::contact> > retval;
+  std::list<engine::contact*> retval;
 
   for (
-    umap<std::string, shared_ptr<engine::contact> >::const_iterator
+    umap<std::string, engine::contact*>::const_iterator
       it(_contacts.begin()),
       end(_contacts.end());
     it != end;
@@ -326,7 +325,7 @@ std::list<shared_ptr<engine::contact> > notifier::get_contacts_list() {
     retval.push_back(it->second);
   }
 
-  retval.sort(_compare_shared_ptr);
+  retval.sort(_compare_pointers);
   retval.unique();
   return retval;
 }
@@ -360,11 +359,11 @@ notifier::notifier_filter notifier::_get_filter(notification_type type) const {
   return _filter[type];
 }
 
-umap<std::string, shared_ptr<engine::contact> > const& notifier::get_contacts() const {
+umap<std::string, engine::contact*> const& notifier::get_contacts() const {
   return _contacts;
 }
 
-umap<std::string, shared_ptr<engine::contact> >& notifier::get_contacts() {
+umap<std::string, engine::contact*>& notifier::get_contacts() {
   return _contacts;
 }
 
@@ -376,11 +375,11 @@ void notifier::clear_contactgroups() {
   return ;
 }
 
-umap<std::string, shared_ptr<engine::contactgroup> > const& notifier::get_contactgroups() const {
+umap<std::string, engine::contactgroup*> const& notifier::get_contactgroups() const {
   return _contact_groups;
 }
 
-umap<std::string, shared_ptr<engine::contactgroup> >& notifier::get_contactgroups() {
+umap<std::string, engine::contactgroup*>& notifier::get_contactgroups() {
   return _contact_groups;
 }
 
@@ -626,17 +625,17 @@ bool notifier::contains_contact(contact* user) const {
 }
 
 bool notifier::contains_contact(std::string const& username) const {
-  umap<std::string, shared_ptr<contact> >::const_iterator it(
+  umap<std::string, contact*>::const_iterator it(
     get_contacts().find(username));
   if (it != get_contacts().end())
     return true;
 
-  for (umap<std::string, shared_ptr<engine::contactgroup> >::const_iterator
+  for (umap<std::string, engine::contactgroup*>::const_iterator
          cgit(get_contactgroups().begin()),
          end(get_contactgroups().end());
        cgit != end;
        ++cgit) {
-    if (cgit->second->contains_member(username))
+    if (cgit->second->has_member(username))
       return true;
   }
   return false;
@@ -652,6 +651,10 @@ notifier::acknowledgement_type notifier::get_acknowledgement_type() const {
 
 void notifier::set_acknowledged(acknowledgement_type type) {
   _current_acknowledgement = type;
+}
+
+time_t notifier::get_initial_notif_time() const {
+  // FIXME DBR: to implement...
 }
 
 void notifier::set_initial_notif_time(time_t initial) {
@@ -987,7 +990,7 @@ int notifier::schedule_downtime(
            end(temp_host->get_children().end());
          it != end;
          ++it) {
-      shared_ptr<host> child_host(*it);
+      host* child_host(*it);
 
       /* recurse... */
       child_host->schedule_downtime(

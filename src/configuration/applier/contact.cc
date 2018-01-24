@@ -116,38 +116,6 @@ void applier::contact::add_object(configuration::contact const& obj) {
   applier::state::instance().contacts().insert(
     std::make_pair(name, c));
 
-  // Add all the host notification commands.
-  for (list_string::const_iterator
-         it(obj.host_notification_commands().begin()),
-         end(obj.host_notification_commands().end());
-       it != end;
-       ++it)
-    try {
-      c->add_host_notification_command(*it);
-    }
-    catch (std::exception const& e) {
-      throw (engine_error()
-        << "contact: Could not add host notification command '"
-        << *it << "' to contact '" << obj.contact_name() << "' :"
-        << e.what());
-    }
-
-  // Add all the service notification commands.
-  for (list_string::const_iterator
-	 it(obj.service_notification_commands().begin()),
-	 end(obj.service_notification_commands().end());
-       it != end;
-       ++it)
-    try {
-      c->add_service_notification_command(*it);
-    }
-    catch (std::exception const& e) {
-      throw (engine_error()
-	     << "contact: Could not add service notification command '"
-	     << *it << "' to contact '" << obj.contact_name() << "' :"
-             << e.what());
-    }
-
   // Add all custom variables.
   for (map_customvar::const_iterator
            it(obj.customvariables().begin()),
@@ -227,8 +195,8 @@ void applier::contact::modify_object(
            << obj.contact_name() << "'");
 
   // Find contact object.
-  umap<std::string, shared_ptr<engine::contact> >::iterator
-    it_obj(applier::state::instance().contacts_find(obj.key()));
+  umap<std::string, shared_ptr< ::contact> >::iterator
+    it_obj(applier::state::instance().contacts().find(obj.key()));
   if (it_obj == applier::state::instance().contacts().end())
     throw (engine_error() << "Could not modify non-existing "
            << "contact object '" << obj.contact_name() << "'");
@@ -279,48 +247,6 @@ void applier::contact::modify_object(
     timezone,
     obj.timezone());
   modify_if_different(*c, addresses, obj.address());
-
-  // Host notification commands.
-  if (obj.host_notification_commands()
-      != old_cfg.host_notification_commands()) {
-    c->clear_host_notification_commands();
-
-    for (list_string::const_iterator
-           it(obj.host_notification_commands().begin()),
-           end(obj.host_notification_commands().end());
-         it != end;
-         ++it)
-      try {
-        c->add_host_notification_command(*it);
-      }
-      catch (std::exception const& e) {
-        throw (engine_error()
-               << "Could not add host notification command '"
-               << *it << "' to contact '" << obj.contact_name()
-               << "' :" << e.what());
-      }
-  }
-
-  // Service notification commands.
-  if (obj.service_notification_commands()
-      != old_cfg.service_notification_commands()) {
-    c->clear_service_notification_commands();
-
-    for (list_string::const_iterator
-           it(obj.service_notification_commands().begin()),
-           end(obj.service_notification_commands().end());
-         it != end;
-         ++it)
-      try {
-        c->add_service_notification_command(*it);
-      }
-      catch (std::exception const& e) {
-        throw (engine_error()
-               << "Could not add service notification command '"
-               << *it << "' to contact '" << obj.contact_name()
-               << "' :" << e.what());
-      }
-  }
 
   // Custom variables.
   if (std::operator!=(obj.customvariables(), old_cfg.customvariables())) {
@@ -374,7 +300,7 @@ void applier::contact::remove_object(
 
   // Find contact.
   umap<std::string, shared_ptr<engine::contact> >::iterator
-    it(applier::state::instance().contacts_find(obj.key()));
+    it(applier::state::instance().contacts().find(obj.key()));
   if (it != applier::state::instance().contacts().end()) {
     engine::contact* cntct(it->second.get());
 
@@ -421,7 +347,7 @@ void applier::contact::resolve_object(
   try {
     // Find contact.
     engine::contact& cntct(
-        *applier::state::instance().contacts_find(obj.key())->second.get());
+      *applier::state::instance().contacts_find(obj.key()));
 
     // Remove old links.
     cntct.clear_service_notification_commands();
@@ -439,17 +365,17 @@ void applier::contact::resolve_object(
       failure = true;
     }
     else
-      for (command_map::iterator
-             it(cntct.get_service_notification_commands().begin()),
-             end(cntct.get_service_notification_commands().end());
+      for (list_string::const_iterator
+             it(obj.service_notification_commands().begin()),
+             end(obj.service_notification_commands().end());
            it != end;
            ++it) {
-        std::string buf(it->first);
+        std::string buf(*it);
         size_t index(buf.find(buf, '!'));
         std::string command_name(buf.substr(0, index));
-        shared_ptr<commands::command> temp_command;
+        shared_ptr<commands::command> cmd;
         try {
-          temp_command = find_command(command_name);
+          cmd = find_command(command_name);
         }
         catch (not_found const& e) {
           (void)e;
@@ -460,13 +386,11 @@ void applier::contact::resolve_object(
           ++config_errors;
           failure = true;
         }
-
-        // Save pointer to the command for later.
-        it->second = temp_command;
+        cntct.add_service_notification_command(cmd.get(), *it);
       }
 
     // Resolve host notification commands.
-    if (cntct.get_host_notification_commands().empty()) {
+    if (obj.host_notification_commands().empty()) {
       logger(logging::log_verification_error, logging::basic)
         << "Error: Contact '" << cntct.get_name() << "' has no host "
            "notification commands defined!";
@@ -474,12 +398,12 @@ void applier::contact::resolve_object(
       failure = true;
     }
     else
-      for (command_map::iterator
-             it(cntct.get_host_notification_commands().begin()),
-             end(cntct.get_host_notification_commands().end());
+      for (list_string::const_iterator
+             it(obj.host_notification_commands().begin()),
+             end(obj.host_notification_commands().end());
            it != end;
            ++it) {
-        std::string buf(it->first);
+        std::string buf(*it);
         size_t index(buf.find('!'));
         std::string command_name(buf.substr(0, index));
         shared_ptr<commands::command> cmd;
@@ -495,9 +419,7 @@ void applier::contact::resolve_object(
           ++config_errors;
           failure = true;
         }
-
-        // Save pointer to the command for later.
-        it->second = cmd;
+        cntct.add_host_notification_command(cmd.get(), *it);
       }
 
     // Resolve service notification timeperiod.

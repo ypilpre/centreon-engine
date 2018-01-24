@@ -1,5 +1,5 @@
 /*
-** Copyright 2017 Centreon
+** Copyright 2017-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -89,7 +89,7 @@ std::string const& contactgroup::get_name() const {
   return _name;
 }
 
-void contactgroup::add_member(shared_ptr<contact> cntct) {
+void contactgroup::add_member(contact* cntct) {
   _members[cntct->get_name()] = cntct;
   return ;
 }
@@ -99,7 +99,7 @@ void contactgroup::clear_members() {
   return ;
 }
 
-umap<std::string, shared_ptr<contact> > const& contactgroup::get_members() const {
+umap<std::string, contact*> const& contactgroup::get_members() const {
   return (_members);
 }
 
@@ -118,27 +118,6 @@ void contactgroup::set_alias(std::string const& alias) {
   return ;
 }
 
-void contactgroup::add_contact(std::string const& contact_name) {
-  // Make sure we have the data we need.
-  if (contact_name.empty())
-    throw (engine_error() << "Error: Contact name is empty");
-
-  _members[contact_name] = shared_ptr<contact>(0);
-
-  // Notify event broker.
-  timeval tv(get_broker_timestamp(NULL));
-  broker_group_member(
-    NEBTYPE_CONTACTGROUPMEMBER_ADD,
-    NEBFLAG_NONE,
-    NEBATTR_NONE,
-    NULL, // FIXME DBR this should be the contactmember almost empty we don't
-          // build anymore.
-    this,
-    &tv);
-}
-
-bool contactgroup::contains_member(std::string const& name) const {
-  umap<std::string, shared_ptr<contact> >::const_iterator it(
-    get_members().find(name));
-  return (it != get_members().end());
+bool contactgroup::has_member(std::string const& name) const {
+  return (_members.find(name) != _members.end());
 }

@@ -1,5 +1,5 @@
 /*
-** Copyright 2017 Centreon
+** Copyright 2017-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -47,8 +47,7 @@ class AcknowledgementNotification : public ::testing::Test {
     contact_map& cm = configuration::applier::state::instance().contacts();
     configuration::contact ctct("test");
     cm["test"] = shared_ptr<engine::contact>(new engine::contact(ctct));
-
-    _notifier->add_contact(configuration::applier::state::instance().contacts_find("test")->second);
+    _notifier->add_contact(configuration::applier::state::instance().contacts_find("test").get());
   }
 
   void TearDown() {
