@@ -639,7 +639,8 @@ int check_serviceescalation(serviceescalation* se, int* w, int* e) {
     // Find the contact.
     contact* temp_contact(NULL);
     try {
-      temp_contact = &find_contact(it->first);
+      temp_contact = configuration::applier::state::instance().contacts_find(
+                       it->first).get();
     }
     catch (not_found const& e) {
       (void)e;
@@ -664,7 +665,8 @@ int check_serviceescalation(serviceescalation* se, int* w, int* e) {
     // Find the contact group.
     contactgroup* temp_contactgroup(NULL);
     try {
-      temp_contactgroup = &find_contactgroup(it->first);
+      temp_contactgroup = configuration::applier::state::instance().contactgroups_find(
+                            it->first).get();
     }
     catch (not_found const& e) {
       (void)e;
@@ -747,7 +749,8 @@ int check_hostescalation(hostescalation* he, int* w, int* e) {
     // Find the contact.
     contact* temp_contact(NULL);
     try {
-      temp_contact = &find_contact(it->first);
+      temp_contact = configuration::applier::state::instance().contacts_find(
+                       it->first).get();
     }
     catch (not_found const& e) {
       logger(log_verification_error, basic)
@@ -770,7 +773,8 @@ int check_hostescalation(hostescalation* he, int* w, int* e) {
     // Find the contact group.
     contactgroup* temp_contactgroup(NULL);
     try {
-      temp_contactgroup = &find_contactgroup(it->first);
+      temp_contactgroup = configuration::applier::state::instance().contactgroups_find(
+                            it->first).get();
     }
     catch (not_found const& e) {
       (void)e;

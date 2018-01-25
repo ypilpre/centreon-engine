@@ -20,6 +20,7 @@
 
 #include <cstdlib>
 #include "com/centreon/engine/broker.hh"
+#include "com/centreon/engine/configuration/applier/state.hh"
 #include "com/centreon/engine/flapping.hh"
 #include "com/centreon/engine/globals.hh"
 #include "com/centreon/engine/logging/logger.hh"
@@ -1118,7 +1119,8 @@ int process_host_command(int cmd,
 
   /* find the host */
   try {
-    temp_host = find_host(host_name);
+    temp_host = configuration::applier::state::instance().hosts_find(
+                  host_name);
   }
   catch (not_found const& e) {
     (void) e;
@@ -1270,8 +1272,14 @@ int process_service_command(int cmd,
     return (ERROR);
 
   /* find the service */
-  if ((temp_service = find_service(host_name, svc_description)) == NULL)
+  try {
+    temp_service = configuration::applier::state::instance().services_find(
+                     std::make_pair(host_name, svc_description));
+  }
+  catch (not_found const& e) {
+    (void)e;
     return (ERROR);
+  }
 
   switch (cmd) {
   case CMD_ENABLE_SVC_NOTIFICATIONS:
@@ -1387,9 +1395,14 @@ int process_servicegroup_command(int cmd,
            end(temp_servicegroup->members.end());
          it != end;
          ++it) {
-      temp_service = find_service(it->first.first, it->first.second);
-      if (temp_service == NULL)
-        continue;
+      try {
+        temp_service = configuration::applier::state::instance().services_find(
+                         std::make_pair(it->first.first, it->first.second));
+      }
+      catch (not_found const& e) {
+        (void)e;
+        continue ;
+      }
 
       switch (cmd) {
 
@@ -1439,11 +1452,12 @@ int process_servicegroup_command(int cmd,
            ++it) {
 
         try {
-          temp_host = find_host(it->first.first);
+          temp_host = configuration::applier::state::instance().hosts_find(
+                        it->first.first);
         }
         catch (not_found const& e) {
           (void) e;
-          continue;
+          continue ;
         }
 
         if (hst_set.find(temp_host.get()) != hst_set.end())
@@ -1504,11 +1518,12 @@ int process_contact_command(int cmd,
 
   /* find the contact */
   try {
-    temp_contact = &find_contact(contact_name);
+    temp_contact = configuration::applier::state::instance().contacts_find(
+                     contact_name).get();
   }
   catch (not_found const& e) {
     (void)e;
-    return ERROR;
+    return (ERROR);
   }
 
   switch (cmd) {
@@ -1550,11 +1565,12 @@ int process_contactgroup_command(int cmd,
 
   /* find the contactgroup */
   try {
-    temp_contactgroup = &find_contactgroup(contactgroup_name);
+    temp_contactgroup = configuration::applier::state::instance().contactgroups_find(
+                          contactgroup_name).get();
   }
   catch (not_found const& e) {
     (void)e;
-    return ERROR;
+    return (ERROR);
   }
 
   switch (cmd) {

@@ -383,7 +383,18 @@ static int handle_contact_macro(
   if (arg2 == NULL) {
     // Find the contact for on-demand macros
     // or use saved contact pointer.
-    contact* cntct(arg1 ? &find_contact(arg1) : mac->contact_ptr);
+    contact* cntct(NULL);
+    if (arg1) {
+      try {
+        cntct = configuration::applier::state::instance().contacts_find(
+                  arg1).get();
+      }
+      catch (not_found const& e) {
+        (void)e;
+      }
+    }
+    else
+      cntct = mac->contact_ptr;
     if (!cntct)
       retval = ERROR;
     else {
@@ -399,7 +410,14 @@ static int handle_contact_macro(
   }
   // A contact macro with a contactgroup name and delimiter.
   else if (arg1 && arg2) {
-    contactgroup* cg(&find_contactgroup(arg1));
+    contactgroup* cg(NULL);
+    try {
+      cg = configuration::applier::state::instance().contactgroups_find(
+             arg1).get();
+    }
+    catch (not_found const& e) {
+      (void)e;
+    }
     if (!cg)
       retval = ERROR;
     else {
@@ -475,7 +493,18 @@ static int handle_contactgroup_macro(
 
   // Use the saved contactgroup pointer.
   // or find the contactgroup for on-demand macros.
-  contactgroup* cg(arg1 ? &find_contactgroup(arg1) : mac->contactgroup_ptr);
+  contactgroup* cg(NULL);
+  if (arg1) {
+    try {
+      cg = configuration::applier::state::instance().contactgroups_find(
+             arg1).get();
+    }
+    catch (not_found const& e) {
+      (void)e;
+    }
+  }
+  else
+    cg = mac->contactgroup_ptr;
   if (!cg)
     retval = ERROR;
   else {
@@ -1193,8 +1222,14 @@ int grab_macro_value_r(
     else {
       /* on-demand contact macro with a contactgroup and a delimiter */
       if (arg[1] != NULL) {
-        if ((temp_contactgroup = &find_contactgroup(arg[0])) == NULL)
+        try {
+          temp_contactgroup = configuration::applier::state::instance().contactgroups_find(
+                                arg[0]).get();
+        }
+        catch (not_found const& e) {
+          (void)e;
           return (ERROR);
+        }
 
         delimiter_len = strlen(arg[1]);
 
@@ -1233,7 +1268,11 @@ int grab_macro_value_r(
       /* else on-demand contact macro */
       else {
         /* find the contact */
-        if ((temp_contact = &find_contact(arg[0])) == NULL) {
+        try {
+          temp_contact = configuration::applier::state::instance().contacts_find(
+                           arg[0]).get();
+        }
+        catch (not_found const& e) {
           delete[] buf;
           return (ERROR);
         }

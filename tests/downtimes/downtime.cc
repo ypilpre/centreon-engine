@@ -1,5 +1,5 @@
 /*
-** Copyright 2017 Centreon
+** Copyright 2017-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -65,6 +65,16 @@ class Downtime : public ::testing::Test {
     delete config;
     config = NULL;
   }
+
+  shared_ptr< ::host> get_test_host() {
+    return (configuration::applier::state::instance().hosts_find(
+              "test_host"));
+  }
+
+  shared_ptr< ::service> get_test_service() {
+    return (configuration::applier::state::instance().services_find(
+              std::make_pair("test_host", "test description")));
+  }
 };
 
 // Given a service
@@ -74,9 +84,7 @@ class Downtime : public ::testing::Test {
 // When it is unscheduled, a new comment is added
 // And the downtime is removed.
 TEST_F(Downtime, SimpleServiceFixedDowntime) {
-  shared_ptr<engine::service> svc(find_service(
-                                    "test_host",
-                                    "test description"));
+  shared_ptr<engine::service> svc(get_test_service());
   set_time(20);
   ASSERT_TRUE(svc->schedule_downtime(
     downtime::SERVICE_DOWNTIME,
@@ -122,9 +130,8 @@ TEST_F(Downtime, SimpleServiceFixedDowntime) {
 // When it is unscheduled, a new comment is added
 // And the downtime is removed.
 TEST_F(Downtime, SimpleServiceFlexibleDowntime) {
-  shared_ptr<engine::service> svc(find_service(
-                                    "test_host",
-                                    "test description"));
+  shared_ptr<engine::service> svc(get_test_service());
+
   // No comment for now.
   ASSERT_TRUE(comment_list.empty());
   set_time(20);
@@ -172,8 +179,7 @@ TEST_F(Downtime, SimpleServiceFlexibleDowntime) {
 // When it is unscheduled, a new comment is added
 // And the downtime is removed.
 TEST_F(Downtime, SimpleHostFixedDowntime) {
-  shared_ptr<engine::host> hst(find_host(
-                                    "test_host"));
+  shared_ptr<engine::host> hst(get_test_host());
   set_time(20);
   ASSERT_TRUE(hst->schedule_downtime(
     downtime::HOST_DOWNTIME,
@@ -217,8 +223,8 @@ TEST_F(Downtime, SimpleHostFixedDowntime) {
 // When it is unscheduled, a new comment is added
 // And the downtime is removed.
 TEST_F(Downtime, SimpleHostFlexibleDowntime) {
-  shared_ptr<engine::host> hst(find_host(
-                                    "test_host"));
+  shared_ptr<engine::host> hst(get_test_host());
+
   // No comment for now.
   ASSERT_TRUE(comment_list.empty());
   set_time(20);
@@ -266,8 +272,8 @@ TEST_F(Downtime, SimpleHostFlexibleDowntime) {
 // When it is unscheduled, a new comment is added
 // And the downtime is removed.
 TEST_F(Downtime, SimpleHostFlexibleDowntime2) {
-  shared_ptr<engine::host> hst(find_host(
-                                    "test_host"));
+  shared_ptr<engine::host> hst(get_test_host());
+
   // No comment for now.
   ASSERT_TRUE(comment_list.empty());
   hst->set_current_state(0);

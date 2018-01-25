@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2013,2015-2017 Centreon
+** Copyright 2011-2013,2015-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -236,7 +236,7 @@ std::ostream& dump::host(std::ostream& os, ::host const& obj) {
     "flap_detection_enabled=" << obj.get_flap_detection_enabled() << "\n"
     "has_been_checked=" << obj.get_has_been_checked() << "\n"
     "is_flapping=" << obj.get_flapping() << "\n"
-    // XXX "last_acknowledgement=" << obj.get_last_acknowledgement() << "\n"
+    "last_acknowledgement=" << obj.get_last_acknowledgement() << "\n"
     "last_check=" << static_cast<unsigned long>(obj.get_last_check()) << "\n"
     "last_event_id=" << obj.get_last_event_id() << "\n"
     "last_hard_state=" << obj.get_last_hard_state() << "\n"
@@ -427,7 +427,7 @@ std::ostream& dump::service(std::ostream& os, ::service const& obj) {
     "flap_detection_enabled=" << obj.get_flap_detection_enabled() << "\n"
     "has_been_checked=" << obj.get_has_been_checked() << "\n"
     "is_flapping=" << obj.get_flapping() << "\n"
-    // XXX "last_acknowledgement=" << obj.get_last_acknowledgement() << "\n"
+    "last_acknowledgement=" << obj.get_last_acknowledgement() << "\n"
     "last_check=" << static_cast<unsigned long>(obj.get_last_check()) << "\n"
     "last_event_id=" << obj.get_last_event_id() << "\n"
     "last_hard_state=" << obj.get_last_hard_state() << "\n"

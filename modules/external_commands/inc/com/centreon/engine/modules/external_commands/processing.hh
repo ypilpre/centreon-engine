@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2013,2015 Merethis
+** Copyright 2011-2013,2015,2017-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -24,6 +24,7 @@
 #  include <map>
 #  include <string>
 #  include "com/centreon/concurrency/mutex.hh"
+#  include "com/centreon/engine/configuration/applier/state.hh"
 #  include "com/centreon/engine/contactgroup.hh"
 #  include "com/centreon/engine/host.hh"
 #  include "com/centreon/engine/namespace.hh"
@@ -147,10 +148,16 @@ namespace         modules {
         (void)entry_time;
 
         char* name(my_strtok(args, ";"));
-        shared_ptr<host> hst(::find_host(name));
-        if (hst.is_null())
+        host* hst(NULL);
+        try {
+          hst = configuration::applier::state::instance().hosts_find(
+                  name).get();
+        }
+        catch (not_found const& e) {
+          (void)e;
           return ;
-        (*fptr)(hst.get());
+        }
+        (*fptr)(hst);
       }
 
       template <void (*fptr)(host*, char*)>
@@ -162,10 +169,16 @@ namespace         modules {
         (void)entry_time;
 
         char* name(my_strtok(args, ";"));
-        shared_ptr<host> hst(::find_host(name));
-        if (hst.is_null())
+        host* hst(NULL);
+        try {
+          hst = configuration::applier::state::instance().hosts_find(
+                  name).get();
+        }
+        catch (not_found const& e) {
+          (void)e;
           return ;
-        (*fptr)(hst.get(), args + strlen(name) + 1);
+        }
+        (*fptr)(hst, args + strlen(name) + 1);
       }
 
       template <void (*fptr)(host*)>
@@ -206,10 +219,16 @@ namespace         modules {
 
         char* name(my_strtok(args, ";"));
         char* description(my_strtok(NULL, ";"));
-        shared_ptr<service> svc(::find_service(name, description));
-        if (svc.is_null())
+        service* svc(NULL);
+        try {
+          svc = configuration::applier::state::instance().services_find(
+                  std::make_pair(name, description)).get();
+        }
+        catch (not_found const& e) {
+          (void)e;
           return ;
-        (*fptr)(svc.get());
+        }
+        (*fptr)(svc);
       }
 
       template <void (*fptr)(service*, char*)>
@@ -222,10 +241,16 @@ namespace         modules {
 
         char* name(my_strtok(args, ";"));
         char* description(my_strtok(NULL, ";"));
-        shared_ptr<service> svc(::find_service(name, description));
-        if (svc.is_null())
+        service* svc(NULL);
+        try {
+          svc = configuration::applier::state::instance().services_find(
+                  std::make_pair(name, description)).get();
+        }
+        catch (not_found const& e) {
+          (void)e;
           return ;
-        (*fptr)(svc.get(), args + strlen(name) + strlen(description) + 2);
+        }
+        (*fptr)(svc, args + strlen(name) + strlen(description) + 2);
       }
 
       template <void (*fptr)(service*)>
@@ -305,9 +330,10 @@ namespace         modules {
         (void)entry_time;
 
         char* name(my_strtok(args, ";"));
-        contact* cntc;
+        contact* cntc(NULL);
         try {
-          cntc = &::find_contact(name);
+          cntc = configuration::applier::state::instance().contacts_find(
+                   name).get();
         }
         catch (not_found const& e) {
           return ;
@@ -324,9 +350,10 @@ namespace         modules {
         (void)entry_time;
 
         char* group_name(my_strtok(args, ";"));
-        contactgroup* group;
+        contactgroup* group(NULL);
         try {
-          group = &::find_contactgroup(group_name);
+          group = configuration::applier::state::instance().contactgroups_find(
+                    group_name).get();
         }
         catch (not_found const& e) {
           (void)e;

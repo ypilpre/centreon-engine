@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2013,2016-2017 Centreon
+** Copyright 2011-2013,2016-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -41,11 +41,13 @@ void applier::contact::apply(
        it != end;
        ++it) {
     try {
-      engine::contact& cntct(find_contact((*it)->contact_name().c_str()));
+      engine::contact& cntct(
+        *configuration::applier::state::instance().contacts_find(
+           (*it)->contact_name()));
       _update(config, **it, cntct);
     }
     catch (...) {
-      // ignore exception for the retention.
+      // Ignore exception for the retention.
     }
   }
 }

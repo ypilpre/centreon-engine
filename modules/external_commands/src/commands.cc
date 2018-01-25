@@ -53,6 +53,20 @@ using namespace com::centreon::engine::commands;
 using namespace com::centreon::engine::logging;
 using namespace com::centreon::engine::notifications;
 
+static shared_ptr<service> find_service(
+                             std::string const& hst_name,
+                             std::string const& svc_desc) {
+  shared_ptr<service> retval;
+  try {
+    retval = configuration::applier::state::instance().services_find(
+               std::make_pair(hst_name, svc_desc));
+  }
+  catch (not_found const& e) {
+    (void)e;
+  }
+  return (retval);
+}
+
 /*
 ** Deletes all host and service downtimes on a host by hostname,
 ** optionally filtered by service description, start time and comment.
@@ -68,7 +82,7 @@ static int delete_downtime_by_hostname_service_description_start_time_comment(
 
   shared_ptr<host> hst;
   if (hostname != NULL && *hostname != 0)
-    hst = find_host(hostname);
+    hst = configuration::applier::state::instance().hosts_find(hostname);
   shared_ptr<service> svc;
   if (service_description != NULL && *service_description != 0)
     svc = find_service(hostname, service_description);
@@ -249,7 +263,7 @@ int cmd_add_comment(int cmd, time_t entry_time, char* args) {
   else {
     /* else verify that the host is valid */
     try {
-      temp_host = find_host(host_name);
+      temp_host = configuration::applier::state::instance().hosts_find(host_name);
     }
     catch (not_found const& e) {
       (void) e;
@@ -335,7 +349,7 @@ int cmd_delete_all_comments(int cmd, char* args) {
 
   /* else verify that the host is valid */
   try {
-    temp_host = find_host(host_name);
+    temp_host = configuration::applier::state::instance().hosts_find(host_name);
   }
   catch (not_found const& e) {
     (void) e;
@@ -378,7 +392,7 @@ int cmd_delay_notification(int cmd, char* args) {
   /* else verify that the host is valid */
   else {
     try {
-      temp_host = find_host(host_name);
+      temp_host = configuration::applier::state::instance().hosts_find(host_name);
     }
     catch (not_found const& e) {
       (void) e;
@@ -420,7 +434,7 @@ int cmd_schedule_check(int cmd, char* args) {
 
     /* verify that the host is valid */
     try {
-      temp_host = find_host(host_name);
+      temp_host = configuration::applier::state::instance().hosts_find(host_name);
     }
     catch (not_found const& e) {
       (void) e;
@@ -496,7 +510,7 @@ int cmd_schedule_host_service_checks(int cmd, char* args, int force) {
 
   /* verify that the host is valid */
   try {
-    temp_host = find_host(host_name);
+    temp_host = configuration::applier::state::instance().hosts_find(host_name);
   }
   catch (not_found const& e) {
     (void) e;
@@ -621,7 +635,7 @@ int process_passive_service_check(
     return (ERROR);
 
   /* find the host by its name or address */
-  if (find_host(host_name) != NULL)
+  if (configuration::applier::state::instance().hosts_find(host_name) != NULL)
     real_host_name = host_name;
   else {
     for (umap<std::string, shared_ptr<host> >::iterator
@@ -772,7 +786,7 @@ int process_passive_host_check(
 
   /* find the host by its name or address */
   try {
-    temp_host = find_host(host_name);
+    temp_host = configuration::applier::state::instance().hosts_find(host_name);
     real_host_name = host_name;
   }
   catch (not_found const& e) {
@@ -862,7 +876,7 @@ int cmd_acknowledge_problem(int cmd, char* args) {
 
   /* verify that the host is valid */
   try {
-    temp_host = find_host(host_name);
+    temp_host = configuration::applier::state::instance().hosts_find(host_name);
   }
   catch (not_found const& e) {
     (void) e;
@@ -949,7 +963,7 @@ int cmd_remove_acknowledgement(int cmd, char* args) {
 
   /* verify that the host is valid */
   try {
-    temp_host = find_host(host_name);
+    temp_host = configuration::applier::state::instance().hosts_find(host_name);
   }
   catch (not_found const& e) {
     (void) e;
@@ -1035,7 +1049,7 @@ int cmd_schedule_downtime(int cmd, time_t entry_time, char* args) {
 
     /* verify that the host is valid */
     try {
-      temp_host = find_host(host_name);
+      temp_host = configuration::applier::state::instance().hosts_find(host_name);
     }
     catch (not_found const& e) {
       (void) e;
@@ -1611,7 +1625,7 @@ int cmd_change_object_int_var(int cmd, char* args) {
 
     /* verify that the host is valid */
     try {
-      temp_host = find_host(host_name);
+      temp_host = configuration::applier::state::instance().hosts_find(host_name);
     }
     catch (not_found const& e) {
       (void) e;
@@ -1628,7 +1642,8 @@ int cmd_change_object_int_var(int cmd, char* args) {
 
     /* verify that the contact is valid */
     try {
-      temp_contact = &find_contact(contact_name);
+      temp_contact = configuration::applier::state::instance().contacts_find(
+                       contact_name).get();
     }
     catch (not_found const& e) {
       return (ERROR);
@@ -1919,7 +1934,7 @@ int cmd_change_object_char_var(int cmd, char* args) {
 
     /* verify that the host is valid */
     try {
-      temp_host = find_host(host_name);
+      temp_host = configuration::applier::state::instance().hosts_find(host_name);
     }
     catch (not_found const& e) {
       (void) e;
@@ -1958,7 +1973,8 @@ int cmd_change_object_char_var(int cmd, char* args) {
 
     /* verify that the contact is valid */
     try {
-      temp_contact = &find_contact(contact_name);
+      temp_contact = configuration::applier::state::instance().contacts_find(
+                       contact_name).get();
     }
     catch (not_found const& e) {
       (void)e;
@@ -2260,7 +2276,7 @@ int cmd_change_object_custom_var(int cmd, char* args) {
 
   case CMD_CHANGE_CUSTOM_HOST_VAR:
     try {
-      temp_host = find_host(name1);
+      temp_host = configuration::applier::state::instance().hosts_find(name1);
     }
     catch (not_found const& e) {
       (void) e;
@@ -2277,7 +2293,8 @@ int cmd_change_object_custom_var(int cmd, char* args) {
 
   case CMD_CHANGE_CUSTOM_CONTACT_VAR:
     try {
-      temp_contact = &find_contact(name1);
+      temp_contact = configuration::applier::state::instance().contacts_find(
+                       name1).get();
     }
     catch (not_found const& e) {
       (void)e;

@@ -1007,38 +1007,6 @@ void free_memory(nagios_macros* mac) {
 }
 
 /**
- *  Given a contact name, find a contact from the list in memory.
- *
- *  @param[in] name contact name.
- *
- *  @return contact object if found, an exception is thrown otherwise.
- */
-com::centreon::engine::contact& find_contact(std::string const& name) {
-  umap<std::string, shared_ptr<com::centreon::engine::contact> >::iterator
-    it(configuration::applier::state::instance().contacts().find(name));
-  if (it == configuration::applier::state::instance().contacts().end())
-    throw (not_found_error() << "Could not find contact '" << name << "'");
-
-  return *it->second.get();
-}
-
-/**
- *  Given a contact group name, find a contact group from the list in memory.
- *
- *  @param[in] name contact group name.
- *
- *  @return contactgroup object if found, an exception is thrown otherwise.
- */
-com::centreon::engine::contactgroup& find_contactgroup(std::string const& name) {
-  umap<std::string, shared_ptr<com::centreon::engine::contactgroup> >::iterator
-    it(configuration::applier::state::instance().contactgroups().find(name));
-  if (it == configuration::applier::state::instance().contactgroups().end())
-    throw (not_found_error() << "Could not find contactgroup '" << name << "'");
-
-  return *it->second.get();
-}
-
-/**
  *  Given a command name, find a command from the list in memory.
  *
  *  @param[in] name Command name.
@@ -1094,52 +1062,6 @@ timeperiod& find_timeperiod(std::string const& name) {
     throw (not_found_error() << "Could not find timeperiod '" << name << "'");
 
   return (*it->second.get());
-}
-
-/**
- *  Given a host name, find the host from the list in memory.
- *
- *  @param[in] name host name.
- *
- *  @return host object if found, NULL otherwise.
- */
-shared_ptr<com::centreon::engine::host> find_host(std::string const& name) {
-  if (name.empty())
-    throw (not_found_error()
-      << "Could not find a host with an empty name");
-
-  umap<std::string, shared_ptr<com::centreon::engine::host> >::const_iterator
-    it(configuration::applier::state::instance().hosts().find(name));
-  if (it == configuration::applier::state::instance().hosts().end())
-    throw (not_found_error()
-      << "Could not find host '" << name << "'");
-
-  return (it->second);
-}
-
-/**
- *  Given a host name and a service description, find the service from the list
- *  in memory.
- *
- *  @param[in] name host name.
- *  @param[in] description service description.
- *
- *  @return service object if found, NULL otherwise.
- */
-shared_ptr<com::centreon::engine::service> find_service(
-                                  std::string const& host_name,
-                                  std::string const& description) {
-  if (host_name.empty() || description.empty())
-    return NULL;
-
-  umap<std::pair<std::string, std::string>,
-       shared_ptr<com::centreon::engine::service> >::const_iterator
-    it(configuration::applier::state::instance().services().find(
-      std::make_pair(host_name, description)));
-  if (it == configuration::applier::state::instance().services().end())
-    return NULL;
-
-  return (it->second);
 }
 
 /**

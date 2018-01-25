@@ -279,8 +279,14 @@ int grab_custom_macro_value_r(
     if (arg2 == NULL) {
       /* find the contact for on-demand macros */
       if (arg1) {
-        if ((temp_contact = &find_contact(arg1)) == NULL)
+        try {
+          temp_contact = configuration::applier::state::instance().contacts_find(
+                           arg1).get();
+        }
+        catch (not_found const& e) {
+          (void)e;
           return (ERROR);
+        }
       }
       /* else use saved contact pointer */
       else if ((temp_contact = mac->contact_ptr) == NULL)
@@ -295,8 +301,14 @@ int grab_custom_macro_value_r(
     }
     /* a contact macro with a contactgroup name and delimiter */
     else {
-      if ((temp_contactgroup = &find_contactgroup(arg1)) == NULL)
+      try {
+        temp_contactgroup = configuration::applier::state::instance().contactgroups_find(
+                              arg1).get();
+      }
+      catch (not_found const& e) {
+        (void)e;
         return (ERROR);
+      }
 
       delimiter_len = strlen(arg2);
 

@@ -313,7 +313,8 @@ TEST_F(ApplierContact, ResolveContactWithMultipleHostNotificationCommand) {
 
   // Then
   std::list<std::pair<commands::command*, std::string> > const&
-    commands(find_contact(ctct.contact_name()).get_host_notification_commands());
+    commands(configuration::applier::state::instance().contacts_find(
+               ctct.contact_name())->get_host_notification_commands());
   ASSERT_EQ(commands.size(), 3);
   std::list<std::pair<commands::command*, std::string> >::const_iterator
     it(commands.begin()),
