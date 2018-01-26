@@ -258,7 +258,7 @@ static void _exec_event_host_check(timed_event* event) {
                             + (double)(tv.tv_usec / 1000) / 1000.0);
 
   logger(dbg_events, basic)
-    << "** Host Check Event ==> Host: '" << hst->get_host_name()
+    << "** Host Check Event ==> Host: '" << hst->get_name()
     << "', Options: " << event->event_options
     << ", Latency: " << latency << " sec";
 
@@ -1070,7 +1070,7 @@ bool operator==(
           || (obj1.event_type == EVENT_EXPIRE_HOST_ACK))) {
     host& hst1(*(host*)obj1.event_data);
     host& hst2(*(host*)obj2.event_data);
-    if (hst1.get_host_name() != hst2.get_host_name())
+    if (hst1.get_name() != hst2.get_name())
       return (false);
   }
   else if (is_not_null
@@ -1139,7 +1139,7 @@ std::ostream& operator<<(std::ostream& os, timed_event const& obj) {
            || obj.event_type == EVENT_EXPIRE_HOST_ACK) {
     host& hst(*(host*)obj.event_data);
     os << "  event_data:                 "
-       << hst.get_host_name() << "\n";
+       << hst.get_name() << "\n";
   }
   else if (obj.event_type == EVENT_SERVICE_CHECK
            || obj.event_type == EVENT_EXPIRE_SERVICE_ACK) {

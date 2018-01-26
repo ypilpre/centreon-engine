@@ -47,7 +47,6 @@ class                  monitorable : public notifications::notifier {
   void                 set_customvar(customvar const& var);
   std::string const&   get_display_name() const;
   void                 set_display_name(std::string const& display);
-  std::string const&   get_host_name() const;
   std::string const&   get_icon_image() const;
   void                 set_icon_image(std::string const& image);
   std::string const&   get_icon_image_alt() const;
@@ -70,7 +69,6 @@ class                  monitorable : public notifications::notifier {
 
   std::string          _action_url;
   std::string          _display_name;
-  std::string          _host_name;
   std::string          _icon_image;
   std::string          _icon_image_alt;
   unsigned int         _id;

@@ -1,6 +1,6 @@
 /*
 ** Copyright 1999-2010 Ethan Galstad
-** Copyright 2011-2017 Centreon
+** Copyright 2011-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -1816,7 +1816,7 @@ void schedule_host_check(host* hst, time_t check_time, int options) {
   logger(dbg_checks, basic)
     << "Scheduling a "
     << (options & CHECK_OPTION_FORCE_EXECUTION ? "forced" : "non-forced")
-    << ", active check of host '" << hst->get_host_name() << "' @ "
+    << ", active check of host '" << hst->get_name() << "' @ "
     << my_ctime(&check_time);
 
   /* don't schedule a check if active checks of this host are disabled */
@@ -1952,7 +1952,7 @@ unsigned int check_host_dependencies(host* hst, int dependency_type) {
   logger(dbg_functions, basic)
     << "check_host_dependencies()";
 
-  std::string id(hst->get_host_name());
+  std::string id(hst->get_name());
   umultimap<std::string, shared_ptr<hostdependency> > const&
     dependencies(state::instance().hostdependencies());
 
@@ -2048,12 +2048,12 @@ void check_for_orphaned_hosts() {
 
       /* log a warning */
       logger(log_runtime_warning, basic)
-        << "Warning: The check of host '" << temp_host->get_host_name()
+        << "Warning: The check of host '" << temp_host->get_name()
         << "' looks like it was orphaned (results never came back).  "
         "I'm scheduling an immediate check of the host...";
 
       logger(dbg_checks, more)
-        << "Host '" << temp_host->get_host_name()
+        << "Host '" << temp_host->get_name()
         << "' was orphaned, so we're scheduling an immediate check...";
 
       /* decrement the number of running host checks */
@@ -2160,7 +2160,7 @@ int is_host_result_fresh(
   int tseconds = 0;
 
   logger(dbg_checks, most) << "Checking freshness of host '"
-    << temp_host->get_host_name() << "'...";
+    << temp_host->get_name() << "'...";
 
   /* use user-supplied freshness threshold or auto-calculate a freshness threshold to use? */
   if (temp_host->get_freshness_threshold() == 0) {
@@ -2225,7 +2225,7 @@ int is_host_result_fresh(
     /* log a warning */
     if (log_this == true)
       logger(log_runtime_warning, basic)
-        << "Warning: The results of host '" << temp_host->get_host_name()
+        << "Warning: The results of host '" << temp_host->get_name()
         << "' are stale by " << days << "d " << hours << "h "
         << minutes << "m " << seconds << "s (threshold="
         << tdays << "d " << thours << "h " << tminutes << "m "
@@ -2233,7 +2233,7 @@ int is_host_result_fresh(
         " the host.";
 
     logger(dbg_checks, more)
-      << "Check results for host '" << temp_host->get_host_name()
+      << "Check results for host '" << temp_host->get_name()
       << "' are stale by " << days << "d " << hours << "h " << minutes
       << "m " << seconds << "s (threshold=" << tdays << "d " << thours
       << "h " << tminutes << "m " << tseconds << "s).  "
@@ -2243,7 +2243,7 @@ int is_host_result_fresh(
   }
   else
     logger(dbg_checks, more)
-      << "Check results for host '" << temp_host->get_host_name()
+      << "Check results for host '" << temp_host->get_name()
       << "' are fresh.";
 
   return (true);
@@ -2271,7 +2271,7 @@ int perform_on_demand_host_check_3x(
     return (ERROR);
 
   logger(dbg_checks, basic)
-    << "** On-demand check for host '" << hst->get_host_name() << "'...";
+    << "** On-demand check for host '" << hst->get_name() << "'...";
 
   /* check the status of the host */
   result = run_sync_host_check_3x(
@@ -2340,7 +2340,7 @@ int run_scheduled_host_check_3x(
     return (ERROR);
 
   logger(dbg_checks, basic)
-    << "Attempting to run scheduled check of host '" << hst->get_host_name()
+    << "Attempting to run scheduled check of host '" << hst->get_name()
     << "': check options=" << check_options << ", latency=" << latency;
 
   /* attempt to run the check */
@@ -2391,7 +2391,7 @@ int run_scheduled_host_check_3x(
         hst->set_next_check((time_t)(next_valid_time + (60 * 60 * 24 * 7)));
 
         logger(log_runtime_warning, basic)
-          << "Warning: Check of host '" << hst->get_host_name()
+          << "Warning: Check of host '" << hst->get_name()
           << "' could not be "
           "rescheduled properly.  Scheduling check for next week...";
 
@@ -2488,7 +2488,7 @@ int handle_async_host_check_result_3x(
 
   logger(dbg_checks, more)
     << "** Handling async check result for host '"
-    << temp_host->get_host_name() << "'...";
+    << temp_host->get_name() << "'...";
 
   logger(dbg_checks, most)
     << "\tCheck Type:         "
@@ -2645,7 +2645,7 @@ int handle_async_host_check_result_3x(
     if (queued_check_result->exited_ok == false) {
 
       logger(log_runtime_warning, basic)
-        << "Warning:  Check of host '" << temp_host->get_host_name()
+        << "Warning:  Check of host '" << temp_host->get_name()
         << "' did not exit properly!";
 
       temp_host->set_output("(Host check did not exit properly)");
@@ -2661,7 +2661,7 @@ int handle_async_host_check_result_3x(
 
       logger(log_runtime_warning, basic)
         << "Warning: return (code of " << queued_check_result->return_code
-        << " for check of host '" << temp_host->get_host_name()
+        << " for check of host '" << temp_host->get_name()
         << "' was out of bounds."
         << ((queued_check_result->return_code == 126
              || queued_check_result->return_code == 127)
@@ -2720,7 +2720,7 @@ int handle_async_host_check_result_3x(
     config->cached_host_check_horizon());
 
   logger(dbg_checks, more)
-    << "** Async check result for host '" << temp_host->get_host_name()
+    << "** Async check result for host '" << temp_host->get_name()
     << "' handled: new state=" << temp_host->get_current_state();
 
   /* high resolution start time for event broker */
@@ -2780,7 +2780,7 @@ int process_host_check_result_3x(
     << "process_host_check_result_3x()";
 
   logger(dbg_checks, more)
-    << "HOST: " << hst->get_host_name()
+    << "HOST: " << hst->get_name()
     << ", ATTEMPT=" << hst->get_current_attempt() << "/" << hst->get_max_attempts()
     << ", CHECK TYPE=" << (hst->get_check_type() == HOST_CHECK_ACTIVE ? "ACTIVE" : "PASSIVE")
     << ", STATE TYPE=" << (hst->get_current_state_type() == HARD_STATE ? "HARD" : "SOFT")
@@ -2805,7 +2805,7 @@ int process_host_check_result_3x(
   if (hst->get_check_type() == HOST_CHECK_PASSIVE) {
     if (config->log_passive_checks() == true)
       logger(log_passive_check, basic)
-        << "PASSIVE HOST CHECK: " << hst->get_host_name() << ";"
+        << "PASSIVE HOST CHECK: " << hst->get_name() << ";"
         << new_state << ";" << hst->get_output();
   }
   /******* HOST WAS DOWN/UNREACHABLE INITIALLY *******/
@@ -2855,7 +2855,7 @@ int process_host_check_result_3x(
           continue ;
         if (parent_host->get_current_state() != HOST_UP) {
           logger(dbg_checks, more)
-            << "Check of parent host '" << parent_host->get_host_name()
+            << "Check of parent host '" << parent_host->get_name()
             << "' queued.";
           check_hostlist.push_back(parent_host);
           //add_object_to_objectlist(&check_hostlist, (void*)parent_host);
@@ -2876,7 +2876,7 @@ int process_host_check_result_3x(
           continue ;
         if (child_host->get_current_state() != HOST_UP) {
           logger(dbg_checks, more)
-            << "Check of child host '" << child_host->get_host_name()
+            << "Check of child host '" << child_host->get_name()
             << "' queued.";
           check_hostlist.push_back(child_host);
           //add_object_to_objectlist(&check_hostlist, (void*)child_host);
@@ -3014,7 +3014,7 @@ int process_host_check_result_3x(
 
             logger(dbg_checks, more)
               << "Running serial check parent host '"
-              << parent_host->get_host_name() << "'...";
+              << parent_host->get_name() << "'...";
 
             /* run an immediate check of the parent host */
             run_sync_host_check_3x(
@@ -3078,7 +3078,7 @@ int process_host_check_result_3x(
             continue ;
           if (child_host->get_current_state() != HOST_UNREACHABLE) {
             logger(dbg_checks, more) << "Check of child host '"
-              << child_host->get_host_name() << "' queued.";
+              << child_host->get_name() << "' queued.";
             check_hostlist.push_back(child_host);
             //add_object_to_objectlist(
             //  &check_hostlist,
@@ -3153,7 +3153,7 @@ int process_host_check_result_3x(
             //  &check_hostlist,
             //  (void*)parent_host);
             logger(dbg_checks, more) << "Check of host '"
-              << parent_host->get_host_name() << "' queued.";
+              << parent_host->get_name() << "' queued.";
           }
         }
 
@@ -3173,7 +3173,7 @@ int process_host_check_result_3x(
           if (child_host->get_current_state() != HOST_UNREACHABLE) {
             logger(dbg_checks, more)
               << "Check of child host '"
-              << child_host->get_host_name() << "' queued.";
+              << child_host->get_name() << "' queued.";
             check_hostlist.push_back(child_host);
             //add_object_to_objectlist(
             //  &check_hostlist,
@@ -3191,7 +3191,7 @@ int process_host_check_result_3x(
             << "Propagating predictive dependency checks to hosts this "
             "one depends on...";
 
-          std::string id(hst->get_host_name());
+          std::string id(hst->get_name());
           umultimap<std::string, shared_ptr<hostdependency> > const&
             dependencies(state::instance().hostdependencies());
           for (umultimap<std::string, shared_ptr<hostdependency> >::const_iterator
@@ -3204,7 +3204,7 @@ int process_host_check_result_3x(
               master_host = (host*)temp_dependency->master_host_ptr;
               logger(dbg_checks, more)
                 << "Check of host '"
-                << master_host->get_host_name() << "' queued.";
+                << master_host->get_name() << "' queued.";
               check_hostlist.push_back(master_host);
               //add_object_to_objectlist(
               //  &check_hostlist,
@@ -3217,7 +3217,7 @@ int process_host_check_result_3x(
   }
 
   logger(dbg_checks, more)
-    << "Pre-handle_host_state() Host: " << hst->get_host_name()
+    << "Pre-handle_host_state() Host: " << hst->get_name()
     << ", Attempt=" << hst->get_current_attempt() << "/"
     << hst->get_max_attempts()
     << ", Type=" << (hst->get_current_state_type() == HARD_STATE ? "HARD" : "SOFT")
@@ -3227,7 +3227,7 @@ int process_host_check_result_3x(
   handle_host_state(hst);
 
   logger(dbg_checks, more)
-    << "Post-handle_host_state() Host: " << hst->get_host_name()
+    << "Post-handle_host_state() Host: " << hst->get_name()
     << ", Attempt=" << hst->get_current_attempt() << "/"
     << hst->get_max_attempts()
     << ", Type=" << (hst->get_current_state_type() == HARD_STATE ? "HARD" : "SOFT")
@@ -3313,7 +3313,7 @@ int process_host_check_result_3x(
     temp_host = (it->get());
 
     logger(dbg_checks, most)
-      << "ASYNC CHECK OF HOST: " << temp_host->get_host_name()
+      << "ASYNC CHECK OF HOST: " << temp_host->get_name()
       << ", CURRENTTIME: " << current_time
       << ", LASTHOSTCHECK: " << temp_host->get_last_check()
       << ", CACHEDTIMEHORIZON: " << check_timestamp_horizon
@@ -3425,7 +3425,7 @@ int adjust_host_check_attempt_3x(host* hst, int is_active) {
 
   logger(dbg_checks, most)
     << "Adjusting check attempt number for host '"
-    << hst->get_host_name() << "': current attempt="
+    << hst->get_name() << "': current attempt="
     << hst->get_current_attempt() << "/" << hst->get_max_attempts()
     << ", state=" << hst->get_current_state()
     << ", state type=" << hst->get_current_state_type();
@@ -3461,7 +3461,7 @@ int determine_host_reachability(host* hst) {
     return (HOST_DOWN);
 
   logger(dbg_checks, most)
-    << "Determining state of host '" << hst->get_host_name()
+    << "Determining state of host '" << hst->get_name()
     << "': current state=" << hst->get_current_state();
 
   /* host is UP - no translation needed */

@@ -1,5 +1,5 @@
 /*
-** Copyright 2017 Centreon
+** Copyright 2017-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -71,17 +71,20 @@ downtime::downtime(downtime const& other)
  *  Destructor.
  */
 downtime::~downtime() {
+  std::string hst_name;
   std::string svc_descr;
 
   /* remove the downtime from the list in memory */
   /* first remove the comment associated with this downtime */
   if (get_type() == HOST_DOWNTIME) {
     comment::delete_host_comment(get_comment_id());
+    hst_name = static_cast<host*>(get_parent())->get_name();
     svc_descr = "";
   }
   else {
     service* svc(static_cast<service*>(get_parent()));
     comment::delete_service_comment(get_comment_id());
+    hst_name = svc->get_host_name();
     svc_descr = svc->get_description();
   }
 
@@ -91,7 +94,7 @@ downtime::~downtime() {
     NEBFLAG_NONE,
     NEBATTR_NONE,
     get_type(),
-    get_host_name(),
+    hst_name,
     svc_descr,
     get_entry_time(),
     get_author(),
@@ -133,10 +136,6 @@ void downtime::_internal_copy(downtime const& other) {
   _triggered_by = other._triggered_by;
   _duration = other._duration;
   _downtime_id = other._downtime_id;
-}
-
-std::string const& downtime::get_host_name() const {
-  return static_cast<monitorable*>(_parent)->get_host_name();
 }
 
 downtime::downtime_type downtime::get_type() const {
@@ -240,7 +239,7 @@ int downtime::registration() {
   if (_type == HOST_DOWNTIME) {
     logger(dbg_downtime, basic)
       << " Type:        Host Downtime\n"
-         " Host:        " << hst->get_host_name();
+         " Host:        " << hst->get_name();
   }
   else {
     logger(dbg_downtime, basic)
@@ -275,7 +274,7 @@ int downtime::registration() {
     comment::add_new_comment(
       comment::HOST_COMMENT,
       comment::DOWNTIME_COMMENT,
-      hst->get_host_name(),
+      hst->get_name(),
       "",
       time(NULL),
       "(Centreon Engine Process)",
@@ -330,7 +329,8 @@ int downtime::unschedule() {
   service* svc(NULL);
   timed_event* temp_event(NULL);
   int attr(0);
-  std::string descr;
+  std::string hst_name;
+  std::string svc_desc;
 
   logger(dbg_functions, basic)
     << "unschedule_downtime()";
@@ -338,11 +338,13 @@ int downtime::unschedule() {
   /* find the host or service associated with this downtime */
   if (get_type() == HOST_DOWNTIME) {
     hst = static_cast<host*>(_parent);
-    descr = "";
+    hst_name = hst->get_name();
+    svc_desc = "";
   }
   else {
     svc = static_cast<service*>(_parent);
-    descr = svc->get_description();
+    hst_name = svc->get_host_name();
+    svc_desc = svc->get_description();
   }
 
   /* decrement pending flex downtime if necessary ... */
@@ -360,8 +362,8 @@ int downtime::unschedule() {
       NEBFLAG_NONE,
       attr,
       get_type(),
-      get_host_name(),
-      descr,
+      hst_name,
+      svc_desc,
       get_entry_time(),
       get_author(),
       get_comment(),
@@ -381,7 +383,7 @@ int downtime::unschedule() {
       /* log a notice - this is parsed by the history CGI */
       if (hst->get_scheduled_downtime_depth() == 0) {
         logger(log_info_message, basic)
-          << "HOST DOWNTIME ALERT: " << hst->get_host_name()
+          << "HOST DOWNTIME ALERT: " << hst->get_name()
           << ";CANCELLED; Scheduled downtime for host has been "
           "cancelled.";
 
@@ -487,7 +489,8 @@ void downtime::handle() {
   service* svc(NULL);
   downtime* this_downtime;
   time_t event_time(0UL);
-  std::string descr;
+  std::string hst_name;
+  std::string svc_desc;
 
   logger(dbg_functions, basic)
     << "handle downtime " << get_id();
@@ -495,11 +498,13 @@ void downtime::handle() {
   /* find the host or service associated with this downtime */
   if (get_type() == HOST_DOWNTIME) {
     hst = static_cast<host*>(get_parent());
-    descr = "";
+    hst_name = hst->get_name();
+    svc_desc = "";
   }
   else if (get_type() == SERVICE_DOWNTIME) {
     svc = static_cast<service*>(get_parent());
-    descr = svc->get_description();
+    hst_name = svc->get_host_name();
+    svc_desc = svc->get_description();
   }
   else
     throw engine_error()
@@ -553,8 +558,8 @@ void downtime::handle() {
       NEBFLAG_NONE,
       attr,
       get_type(),
-      get_host_name(),
-      descr,
+      hst_name,
+      svc_desc,
       get_entry_time(),
       get_author(),
       get_comment(),
@@ -573,12 +578,12 @@ void downtime::handle() {
         && _parent->get_scheduled_downtime_depth() == 0) {
 
       logger(dbg_downtime, basic)
-        << "Host '" << hst->get_host_name() << "' has exited from a period "
+        << "Host '" << hst->get_name() << "' has exited from a period "
         "of scheduled downtime (id=" << get_id() << ").";
 
       /* log a notice - this one is parsed by the history CGI */
       logger(log_info_message, basic)
-        << "HOST DOWNTIME ALERT: " << hst->get_host_name()
+        << "HOST DOWNTIME ALERT: " << hst->get_name()
         << ";STOPPED; Host has exited from a period of scheduled "
         "downtime";
 
@@ -661,8 +666,8 @@ void downtime::handle() {
       NEBFLAG_NONE,
       NEBATTR_NONE,
       get_type(),
-      get_host_name(),
-      descr,
+      hst_name,
+      svc_desc,
       get_entry_time(),
       get_author(),
       get_comment(),
@@ -681,7 +686,7 @@ void downtime::handle() {
     if (get_type() == HOST_DOWNTIME)
       /* log a notice - this one is parsed by the history CGI */
       logger(log_info_message, basic)
-        << "HOST DOWNTIME ALERT: " << hst->get_host_name()
+        << "HOST DOWNTIME ALERT: " << hst->get_name()
         << ";STARTED; Host has entered a period of scheduled downtime";
     else
       /* log a notice - this one is parsed by the history CGI */

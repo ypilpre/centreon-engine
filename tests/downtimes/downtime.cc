@@ -39,22 +39,37 @@ extern configuration::state* config;
 class Downtime : public ::testing::Test {
  public:
   void SetUp() {
+    // Initialization.
     if (config == NULL)
       config = new configuration::state;
     configuration::applier::state::load();
-    configuration::applier::host hst_aply;
-    configuration::applier::service svc_aply;
-    configuration::service csvc;
-    ASSERT_TRUE(csvc.parse("service_description", "test description"));
-    configuration::host hst;
-    ASSERT_TRUE(hst.parse("host_name", "test_host"));
-    hst_aply.add_object(hst);
-    ASSERT_TRUE(csvc.parse("hosts", "test_host"));
-    configuration::applier::command cmd_aply;
+
+    // Create command.
     configuration::command cmd("cmd");
     cmd.parse("command_line", "echo 1");
-    csvc.parse("check_command", "cmd");
-    svc_aply.add_object(csvc);
+    configuration::applier::command cmd_aply;
+    cmd_aply.add_object(cmd);
+    cmd_aply.expand_objects(*config);
+    cmd_aply.resolve_object(cmd);
+
+    // Create host.
+    configuration::host hst;
+    hst.parse("host_name", "test_host");
+    hst.parse("check_command", "cmd");
+    configuration::applier::host hst_aply;
+    hst_aply.add_object(hst);
+    hst_aply.expand_objects(*config);
+    hst_aply.resolve_object(hst);
+
+    // Create service.
+    configuration::service svc;
+    svc.parse("hosts", "test_host");
+    svc.parse("service_description", "test description");
+    svc.parse("check_command", "cmd");
+    configuration::applier::service svc_aply;
+    svc_aply.add_object(svc);
+    svc_aply.expand_objects(*config);
+    svc_aply.resolve_object(svc);
   }
 
   void TearDown() {
@@ -91,9 +106,11 @@ TEST_F(Downtime, SimpleServiceFixedDowntime) {
     time(NULL),
     "admin",
     "test downtime",
-    40, 60,
+    40,
+    60,
     true,
-    0, 20) == 0);
+    0,
+    20) == 0);
   std::auto_ptr<downtime> dt(scheduled_downtime_list.begin()->second);
 
   // Only one downtime.
@@ -102,8 +119,8 @@ TEST_F(Downtime, SimpleServiceFixedDowntime) {
   ASSERT_EQ(dt->get_comment_id(), 0);
 
   // And host name and service description are available
-  ASSERT_EQ(dt->get_host_name(), "test_host");
   engine::service* serv(static_cast<engine::service*>(dt->get_parent()));
+  ASSERT_EQ(serv->get_host_name(), "test_host");
   ASSERT_EQ(serv->get_description(), "test description");
 
   // When it is time to start the downtime
@@ -149,8 +166,8 @@ TEST_F(Downtime, SimpleServiceFlexibleDowntime) {
   ASSERT_EQ(dt->get_id(), 1);
 
   // And host name and service description are available
-  ASSERT_EQ(dt->get_host_name(), "test_host");
   engine::service* s(static_cast<engine::service*>(dt->get_parent()));
+  ASSERT_EQ(s->get_host_name(), "test_host");
   ASSERT_EQ(s->get_description(), "test description");
 
   std::map<unsigned long, comment*>::const_iterator it(comment_list.begin());
@@ -201,7 +218,8 @@ TEST_F(Downtime, SimpleHostFixedDowntime) {
   ASSERT_TRUE(it == comment_list.end());
 
   // And host name and service description are available
-  ASSERT_EQ(dt->get_host_name(), "test_host");
+  engine::host* h(static_cast<engine::host*>(dt->get_parent()));
+  ASSERT_EQ(h->get_name(), "test_host");
 
   // When it is time to start the downtime
   set_time(41);
@@ -242,7 +260,8 @@ TEST_F(Downtime, SimpleHostFlexibleDowntime) {
   ASSERT_EQ(dt->get_id(), 1);
 
   // And host name and service description are available
-  ASSERT_EQ(dt->get_host_name(), "test_host");
+  engine::host* h(static_cast<engine::host*>(dt->get_parent()));
+  ASSERT_EQ(h->get_name(), "test_host");
 
   std::map<unsigned long, comment*>::const_iterator it(comment_list.begin());
   ASSERT_TRUE(it != comment_list.end());
@@ -292,7 +311,8 @@ TEST_F(Downtime, SimpleHostFlexibleDowntime2) {
   ASSERT_EQ(dt->get_id(), 1);
 
   // And host name and service description are available
-  ASSERT_EQ(dt->get_host_name(), "test_host");
+  engine::host* h(static_cast<engine::host*>(dt->get_parent()));
+  ASSERT_EQ(h->get_name(), "test_host");
 
   std::map<unsigned long, comment*>::const_iterator it(comment_list.begin());
   ASSERT_TRUE(it != comment_list.end());

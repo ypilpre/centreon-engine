@@ -126,15 +126,6 @@ void monitorable::set_display_name(std::string const& display) {
 }
 
 /**
- *  Get host name.
- *
- *  @return This object's host name.
- */
-std::string const& monitorable::get_host_name() const {
-  return (_host_name);
-}
-
-/**
  *  Get icon image.
  *
  *  @return Icon image.
@@ -294,7 +285,6 @@ void monitorable::set_retain_state_info(bool retain) {
 void monitorable::_internal_copy(monitorable const& other) {
   _action_url = other._action_url;
   _display_name = other._display_name;
-  _host_name = other._host_name;
   _icon_image = other._icon_image;
   _icon_image_alt = other._icon_image_alt;
   _id = other._id;

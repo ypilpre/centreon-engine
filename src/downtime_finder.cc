@@ -1,5 +1,5 @@
 /*
-** Copyright 2016 Centreon
+** Copyright 2016-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -21,6 +21,7 @@
 #include "com/centreon/engine/downtime.hh"
 #include "com/centreon/engine/downtime_finder.hh"
 #include "com/centreon/engine/globals.hh"
+#include "com/centreon/engine/host.hh"
 #include "com/centreon/engine/service.hh"
 #include "com/centreon/shared_ptr.hh"
 
@@ -106,10 +107,11 @@ bool downtime_finder::_match_criteria(
                         downtime_finder::criteria const& crit) {
   bool retval;
   if (crit.first == "host") {
-    retval = (crit.second == dt->get_host_name());
+    host* hst(static_cast<host*>(dt->get_parent()));
+    retval = (crit.second == hst->get_name());
   }
   else if (crit.first == "service") {
-    service* svc = static_cast<service*>(dt->get_parent());
+    service* svc(static_cast<service*>(dt->get_parent()));
     retval = (crit.second == svc->get_description());
   }
   else if (crit.first == "start") {

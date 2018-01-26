@@ -1,7 +1,7 @@
 /*
-** Copyright 2002-2010      Ethan Galstad
-** Copyright 2010           Nagios Core Development Team
-** Copyright 2011-2013,2017 Centreon
+** Copyright 2002-2010           Ethan Galstad
+** Copyright 2010                Nagios Core Development Team
+** Copyright 2011-2013,2017-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -81,7 +81,7 @@ void broker_acknowledgement_data(
   }
   else {
     temp_host = (host*)data;
-    ds.host_name = temp_host->get_host_name().c_str();
+    ds.host_name = temp_host->get_name().c_str();
     ds.service_description = NULL;
     ds.state = temp_host->get_current_state();
   }
@@ -559,7 +559,7 @@ int broker_contact_notification_data(
   }
   else {
     temp_host = (host*)data;
-    ds.host_name = temp_host->get_host_name().c_str();
+    ds.host_name = temp_host->get_name().c_str();
     ds.service_description = NULL;
     ds.state = temp_host->get_current_state();
     ds.output = temp_host->get_output().c_str();
@@ -649,7 +649,7 @@ int broker_contact_notification_method_data(
   }
   else {
     temp_host = (host*)data;
-    ds.host_name = temp_host->get_host_name().c_str();
+    ds.host_name = temp_host->get_name().c_str();
     ds.service_description = NULL;
     ds.state = temp_host->get_current_state();
     ds.output = temp_host->get_output().c_str();
@@ -883,7 +883,7 @@ int broker_event_handler(
   }
   else {
     temp_host = (host*)data;
-    ds.host_name = temp_host->get_host_name().c_str();
+    ds.host_name = temp_host->get_name().c_str();
     ds.service_description = NULL;
   }
   ds.object_ptr = data;
@@ -997,7 +997,7 @@ void broker_flapping_data(
   }
   else {
     temp_host = (host*)data;
-    ds.host_name = temp_host->get_host_name().c_str();
+    ds.host_name = temp_host->get_name().c_str();
     ds.service_description = NULL;
     // XXX ds.comment_id = temp_host->flapping_comment_id;
   }
@@ -1149,7 +1149,7 @@ int broker_host_check(
   ds.flags = flags;
   ds.attr = attr;
   ds.timestamp = get_broker_timestamp(timestamp);
-  ds.host_name = hst->get_host_name().c_str();
+  ds.host_name = hst->get_name().c_str();
   ds.object_ptr = hst;
   ds.check_type = check_type;
   ds.current_attempt = hst->get_current_attempt();
@@ -1346,7 +1346,7 @@ int broker_notification_data(
   }
   else {
     temp_host = (host*)data;
-    ds.host_name = temp_host->get_host_name().c_str();
+    ds.host_name = temp_host->get_name().c_str();
     ds.service_description = NULL;
     ds.state = temp_host->get_current_state();
     ds.output = temp_host->get_output().c_str();
@@ -1690,7 +1690,7 @@ void broker_statechange_data(
   }
   else {
     temp_host = (host*)data;
-    ds.host_name = temp_host->get_host_name().c_str();
+    ds.host_name = temp_host->get_name().c_str();
     ds.service_description = NULL;
     ds.output = temp_host->get_output().c_str();
   }

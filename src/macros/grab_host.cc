@@ -200,7 +200,7 @@ static char const* get_host_parents(host& hst, nagios_macros* mac) {
        it != end;
        ++it) {
     if (!retval.empty())
-      retval.append((*it)->get_host_name());
+      retval.append((*it)->get_name());
     retval.append(",");
   }
   return (string::dup(retval.c_str()));
@@ -223,7 +223,7 @@ static char const* get_host_children(host& hst, nagios_macros* mac) {
        it != end;
        ++it) {
     if (!retval.empty())
-      retval.append((*it)->get_host_name());
+      retval.append((*it)->get_name());
     retval.append(",");
   }
   return (string::dup(retval.c_str()));
@@ -242,7 +242,7 @@ struct grab_host_redirection {
   grab_host_redirection() {
     // Name.
     routines[MACRO_HOSTNAME].first =
-      new member_grabber<host, std::string const&>(&host::get_host_name);
+      new member_grabber<host, std::string const&>(&host::get_name);
     routines[MACRO_HOSTNAME].second = true;
     // Display name.
     routines[MACRO_HOSTDISPLAYNAME].first =

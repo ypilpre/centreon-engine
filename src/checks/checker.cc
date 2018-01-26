@@ -1,6 +1,6 @@
 /*
-** Copyright 1999-2010      Ethan Galstad
-** Copyright 2011-2014,2017 Centreon
+** Copyright 1999-2010           Ethan Galstad
+** Copyright 2011-2014,2017-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -281,10 +281,10 @@ void checker::run(
     throw (engine_error() << "Attempt to run check on invalid host");
   if (!hst->get_check_command())
     throw (engine_error() << "Attempt to run active check on host '"
-           << hst->get_host_name() << "' with no check command");
+           << hst->get_name() << "' with no check command");
 
   logger(dbg_checks, basic)
-    << "** Running async check of host '" << hst->get_host_name()
+    << "** Running async check of host '" << hst->get_name()
     << "'...";
 
   // Check if the host is viable now.
@@ -294,7 +294,7 @@ void checker::run(
         time_is_valid,
         preferred_time) == ERROR)
     throw (checks_viability_failure() << "Check of host '"
-           << hst->get_host_name() << "' is not viable");
+           << hst->get_name() << "' is not viable");
 
   // If this check is a rescheduled check, propagate the rescheduled check flag
   // to the host. This solves the problem when a new host check is
@@ -307,7 +307,7 @@ void checker::run(
   if (hst->get_executing()
         && !(check_options & CHECK_OPTION_FORCE_EXECUTION)) {
     logger(dbg_checks, basic)
-      << "A check of this host (" << hst->get_host_name()
+      << "A check of this host (" << hst->get_name()
       << ") is already being executed, so we'll pass for the moment...";
     return ;
   }
@@ -343,18 +343,18 @@ void checker::run(
   if (NEBERROR_CALLBACKCANCEL == res)
     throw (engine_error()
            << "Some broker module cancelled check of host '"
-           << hst->get_host_name() << "'");
+           << hst->get_name() << "'");
   // Host check was overriden by NEB module.
   else if (NEBERROR_CALLBACKOVERRIDE == res) {
     logger(dbg_functions, basic)
            << "Some broker module overrode check of host '"
-           << hst->get_host_name() << "' so we'll bail out";
+           << hst->get_name() << "' so we'll bail out";
     return ;
   }
 
   // Checking starts.
   logger(dbg_functions, basic)
-    << "Checking host '" << hst->get_host_name() << "'...";
+    << "Checking host '" << hst->get_name() << "'...";
 
   // Clear check options.
   if (scheduled_check)
@@ -408,7 +408,7 @@ void checker::run(
   check_result_info.output_file_fd = -1;
   check_result_info.output_file_fp = NULL;
   check_result_info.output_file = NULL;
-  check_result_info.host_name = string::dup(hst->get_host_name().c_str());
+  check_result_info.host_name = string::dup(hst->get_name().c_str());
   check_result_info.service_description = NULL;
   check_result_info.latency = latency;
   check_result_info.next = NULL;
@@ -535,8 +535,7 @@ void checker::run(
   if (!svc->get_check_command())
     throw (engine_error() << "Attempt to run active check on service '"
            << svc->get_description() << "' on host '"
-           << svc->get_host()->get_host_name()
-           << "' with no check command");
+           << svc->get_host_name() << "' with no check command");
 
   logger(dbg_checks, basic)
     << "** Running async check of service '" << svc->get_description()
@@ -760,10 +759,10 @@ void checker::run_sync(
   if (!hst->get_check_command())
     throw (engine_error()
            << "Attempt to run synchronous active check on host '"
-           << hst->get_host_name() << "' with no check command");
+           << hst->get_name() << "' with no check command");
 
   logger(dbg_checks, basic)
-    << "** Run sync check of host '" << hst->get_host_name() << "'...";
+    << "** Run sync check of host '" << hst->get_name() << "'...";
 
   // Check if the host is viable now.
   if (check_host_check_viability_3x(hst, check_options, NULL, NULL)
@@ -997,10 +996,10 @@ int checker::_execute_sync(host* hst) {
   if (!hst->get_check_command())
     throw (engine_error()
            << "Attempt to run synchronous active check on host '"
-           << hst->get_host_name() << "' with no check command");
+           << hst->get_name() << "' with no check command");
 
   logger(dbg_checks, basic) << "** Executing sync check of host '"
-    << hst->get_host_name() << "'...";
+    << hst->get_name() << "'...";
 
   // Send broker event.
   timeval start_time;
@@ -1177,7 +1176,7 @@ int checker::_execute_sync(host* hst) {
     res.output = oss.str();
     logger(log_runtime_warning, basic)
       << "Warning: Host check command '" << processed_cmd
-      << "' for host '" << hst->get_host_name() << "' timed out after "
+      << "' for host '" << hst->get_name() << "' timed out after "
       << config->host_check_timeout() << " seconds";
   }
 

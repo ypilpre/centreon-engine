@@ -644,7 +644,7 @@ int process_passive_service_check(
          it != end;
          ++it) {
       if (it->second->get_address() == host_name) {
-        real_host_name = it->second->get_host_name().c_str();
+        real_host_name = it->second->get_name().c_str();
         break;
       }
     }
@@ -798,7 +798,7 @@ int process_passive_host_check(
          ++it) {
       if (it->second->get_address() == host_name) {
         temp_host = it->second.get();
-        real_host_name = it->second->get_host_name().c_str();
+        real_host_name = it->second->get_name().c_str();
         break;
       }
     }
@@ -892,7 +892,7 @@ int cmd_acknowledge_problem(int cmd, char* args) {
 
     /* verify that the service is valid */
     if ((temp_service = find_service(
-                          temp_host->get_host_name(),
+                          temp_host->get_name(),
                           svc_description)) == NULL)
       return (ERROR);
   }
@@ -979,7 +979,7 @@ int cmd_remove_acknowledgement(int cmd, char* args) {
 
     /* verify that the service is valid */
     if ((temp_service = find_service(
-                           temp_host->get_host_name(),
+                           temp_host->get_name(),
                            svc_description)).is_null())
       return (ERROR);
   }
@@ -1064,7 +1064,7 @@ int cmd_schedule_downtime(int cmd, time_t entry_time, char* args) {
         return (ERROR);
 
       /* verify that the service is valid */
-      if ((temp_service = find_service(temp_host->get_host_name(), svc_description)) == NULL)
+      if ((temp_service = find_service(temp_host->get_name(), svc_description)) == NULL)
         return (ERROR);
     }
   }
@@ -1525,7 +1525,7 @@ int cmd_delete_downtime_by_hostgroup_name(int cmd, char* args) {
     temp_host = it->second.get();
     if (temp_host == NULL)
       continue ;
-    if (host_name != NULL && temp_host->get_host_name() != host_name)
+    if (host_name != NULL && temp_host->get_name() != host_name)
       continue ;
     deleted = delete_downtime_by_hostname_service_description_start_time_comment(
                 host_name,
@@ -2815,7 +2815,7 @@ void acknowledge_host_problem(
   /* add a comment for the acknowledgement */
   comment::add_new_host_comment(
     comment::ACKNOWLEDGEMENT_COMMENT,
-    hst->get_host_name().c_str(),
+    hst->get_name().c_str(),
     current_time,
     ack_author,
     ack_data,

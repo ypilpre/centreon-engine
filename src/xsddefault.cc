@@ -1,7 +1,7 @@
 /*
-** Copyright 2000-2009           Ethan Galstad
-** Copyright 2009                Nagios Core Development Team and Community Contributors
-** Copyright 2011-2013,2015,2017 Centreon
+** Copyright 2000-2009                Ethan Galstad
+** Copyright 2009                     Nagios Core Development Team and Community Contributors
+** Copyright 2011-2013,2015,2017-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -216,7 +216,7 @@ int xsddefault_save_status_data() {
     host* hst(it->second.get());
     stream
       << "hoststatus {\n"
-      "\thost_name=" << hst->get_host_name() << "\n"
+      "\thost_name=" << hst->get_name() << "\n"
          "\tmodified_attributes=" << hst->get_modified_attributes() << "\n"
          "\tcheck_command=" << hst->get_check_command_args() << "\n"
          "\tcheck_period=" << (hst->get_check_period() ? hst->get_check_period()->name : "") << "\n"

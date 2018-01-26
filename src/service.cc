@@ -17,6 +17,7 @@
 ** <http://www.gnu.org/licenses/>.
 */
 
+#include "com/centreon/engine/host.hh"
 #include "com/centreon/engine/macros/grab_service.hh"
 #include "com/centreon/engine/macros/clear_service.hh"
 #include "com/centreon/engine/macros/clear_servicegroup.hh"
@@ -86,6 +87,16 @@ service& service::operator=(service const& other) {
  */
 std::string const& service::get_description() const {
   return (_description);
+}
+
+/**
+ *  Set service description.
+ *
+ *  @param[in] description  New service description.
+ */
+void service::set_description(std::string const& description) {
+  _description = description;
+  return ;
 }
 
 /**
@@ -196,6 +207,15 @@ void service::set_volatile(bool is_volatile) {
  */
 host* service::get_host() const {
   return (_host);
+}
+
+/**
+ *  Get service's host name.
+ *
+ *  @return Host name if service has an host. Empty otherwise.
+ */
+std::string service::get_host_name() const {
+  return (_host ? _host->get_name() : "");
 }
 
 /**

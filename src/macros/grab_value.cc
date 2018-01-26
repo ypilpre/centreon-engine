@@ -223,7 +223,7 @@ static int handle_service_macro(
         try {
           service* svc(configuration::applier::state::instance().services_find(
                          std::make_pair(
-                                mac->host_ptr->get_host_name(),
+                                mac->host_ptr->get_name(),
                                 arg2)).get());
 
           // Get the service macro value.

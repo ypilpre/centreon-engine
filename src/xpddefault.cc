@@ -1,6 +1,6 @@
 /*
-** Copyright 2000-2008      Ethan Galstad
-** Copyright 2011-2013,2017 Centreon
+** Copyright 2000-2008           Ethan Galstad
+** Copyright 2011-2013,2017-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -439,7 +439,7 @@ int xpddefault_run_host_performance_data_command(
   if (early_timeout == true)
     logger(log_runtime_warning, basic)
       << "Warning: Host performance data command '"
-      << processed_command_line << "' for host '" << hst->get_host_name()
+      << processed_command_line << "' for host '" << hst->get_name()
       << "' timed out after " << config->perfdata_timeout()
       << " seconds";
 

@@ -148,14 +148,16 @@ std::ostream& dump::customvariables(
  *  @return The output stream.
  */
 std::ostream& dump::downtime(std::ostream& os, engine::downtime const& obj) {
-  if (obj.get_type() == downtime::HOST_DOWNTIME)
-    os << "hostdowntime {\n";
-  else
-    os << "servicedowntime {\n";
-  os << "host_name=" << obj.get_host_name() << "\n";
-  if (obj.get_type() == downtime::SERVICE_DOWNTIME) {
+  if (obj.get_type() == downtime::HOST_DOWNTIME) {
+    engine::host* hst(static_cast<engine::host*>(obj.get_parent()));
+    os << "hostdowntime {\n"
+       << "host_name=" << hst->get_name() << "\n";
+  }
+  else {
     engine::service* svc(static_cast<engine::service*>(obj.get_parent()));
-    os << "service_description=" << svc->get_description() << "\n";
+    os << "servicedowntime {\n"
+       << "host_name=" << svc->get_host_name() << "\n"
+       << "service_description=" << svc->get_description() << "\n";
   }
   os << "author=" << obj.get_author() << "\n"
     "comment=" << obj.get_comment() << "\n"
@@ -215,7 +217,7 @@ std::ostream& dump::header(std::ostream& os) {
  */
 std::ostream& dump::host(std::ostream& os, ::host const& obj) {
   os << "host {\n"
-    "host_name=" << obj.get_host_name() << "\n"
+    "host_name=" << obj.get_name() << "\n"
     "acknowledgement_type=" << obj.get_acknowledgement_type() << "\n"
     "active_checks_enabled=" << obj.get_active_checks_enabled() << "\n"
     "check_command=" << obj.get_check_command_args() << "\n"

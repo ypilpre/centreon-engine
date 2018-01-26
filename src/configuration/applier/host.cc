@@ -83,7 +83,73 @@ void applier::host::add_object(
   shared_ptr< ::host> h;
   try {
     h = new ::host();
-    // XXX
+    // Self properties.
+    h->set_address(obj.address());
+    h->set_alias(obj.alias());
+    h->set_flap_detection_on_down(
+      obj.flap_detection_options() & configuration::host::down);
+    h->set_flap_detection_on_unreachable(
+      obj.flap_detection_options() & configuration::host::unreachable);
+    h->set_flap_detection_on_up(
+      obj.flap_detection_options() & configuration::host::up);
+    h->set_have_2d_coords(obj.have_coords_2d());
+    h->set_have_3d_coords(obj.have_coords_3d());
+    h->set_stalk_on_down(
+      obj.stalking_options() & configuration::host::down);
+    h->set_stalk_on_unreachable(
+      obj.stalking_options() & configuration::host::unreachable);
+    h->set_stalk_on_up(
+      obj.stalking_options() & configuration::host::up);
+    h->set_statusmap_image(obj.statusmap_image());
+    h->set_vrml_image(obj.vrml_image());
+    h->set_x_2d(obj.coords_2d().x());
+    h->set_y_2d(obj.coords_2d().y());
+    h->set_x_3d(obj.coords_3d().x());
+    h->set_y_3d(obj.coords_3d().y());
+    h->set_z_3d(obj.coords_3d().z());
+    // Inherited from monitorable.
+    h->set_action_url(obj.action_url());
+    h->set_display_name(obj.display_name());
+    h->set_icon_image(obj.icon_image());
+    h->set_icon_image_alt(obj.icon_image_alt());
+    h->set_id(obj.host_id());
+    h->set_initial_state(obj.initial_state());
+    h->set_name(obj.host_name());
+    h->set_notes(obj.notes());
+    h->set_notes_url(obj.notes_url());
+    h->set_retain_nonstate_info(obj.retain_nonstatus_information());
+    h->set_retain_state_info(obj.retain_status_information());
+    // XXX customvars
+    // Inherited from notifier.
+    h->set_notifications_enabled(obj.notifications_enabled());
+    h->set_notify_on_downtime(
+      obj.notification_options() & configuration::host::downtime);
+    h->set_notify_on_flapping(
+      obj.notification_options() & configuration::host::flapping);
+    h->set_notify_on_recovery(
+      obj.notification_options() & configuration::host::up);
+    h->set_notify_on_unreachable(
+      obj.notification_options() & configuration::host::unreachable);
+    h->set_notification_interval(obj.notification_interval());
+    h->set_first_notification_delay(obj.first_notification_delay());
+    h->set_recovery_notification_delay(obj.recovery_notification_delay());
+    // Inherited from checkable.
+    h->set_active_checks_enabled(obj.checks_active());
+    h->set_event_handler_enabled(obj.event_handler_enabled());
+    h->set_flap_detection_enabled(obj.flap_detection_enabled());
+    h->set_freshness_checks_enabled(obj.check_freshness());
+    h->set_freshness_threshold(obj.freshness_threshold());
+    h->set_high_flap_threshold(obj.high_flap_threshold());
+    h->set_low_flap_threshold(obj.low_flap_threshold());
+    h->set_max_attempts(obj.max_check_attempts());
+    h->set_normal_check_interval(obj.check_interval());
+    h->set_ocp_enabled(obj.obsess_over_host());
+    h->set_passive_checks_enabled(obj.checks_passive());
+    h->set_process_perfdata(obj.process_perf_data());
+    h->set_retry_check_interval(obj.retry_interval());
+    h->set_timezone(obj.timezone());
+
+    // Add host to global configuration set.
     config->hosts().insert(obj);
   }
   catch (std::exception const& e) {
@@ -528,7 +594,7 @@ void applier::host::resolve_object(
       (void)e;
       logger(logging::log_verification_error, logging::basic)
         << "Error: Host check command '" << obj.check_command()
-        << "' specified for host '" << hst.get_host_name()
+        << "' specified for host '" << hst.get_name()
         << "' is not defined anywhere!";
       ++config_errors;
       failure = true;
@@ -543,7 +609,7 @@ void applier::host::resolve_object(
         (void)e;
         logger(logging::log_verification_error, logging::basic)
           << "Error: Check period '" << obj.check_period()
-          << "' specified for host '" << hst.get_host_name()
+          << "' specified for host '" << hst.get_name()
           << "' is not defined anywhere!";
         ++config_errors;
         failure = true;
@@ -551,7 +617,7 @@ void applier::host::resolve_object(
     }
     else {
       logger(logging::log_verification_error, logging::basic)
-        << "Warning: Host '" << hst.get_host_name()
+        << "Warning: Host '" << hst.get_name()
         << "' has no check time period defined!";
       ++config_warnings;
     }
@@ -566,7 +632,7 @@ void applier::host::resolve_object(
         (void)e;
         logger(logging::log_verification_error, logging::basic)
           << "Error: Event handler command '" << obj.event_handler()
-          << "' specified for host '" << hst.get_host_name()
+          << "' specified for host '" << hst.get_name()
           << "' not defined anywhere";
         ++config_errors;
         failure = true;
@@ -588,7 +654,7 @@ void applier::host::resolve_object(
         (void)e;
         logger(logging::log_verification_error, logging::basic)
           << "Error: '" << *it << "' is not a valid parent for host '"
-          << hst.get_host_name() << "'!";
+          << hst.get_name() << "'!";
         ++config_errors;
         failure = true;
       }
@@ -608,7 +674,7 @@ void applier::host::resolve_object(
         (void)e;
         logger(logging::log_verification_error, logging::basic)
           << "Error: Contact '" << *it << "' specified in host '"
-          << hst.get_host_name() << "' is not defined anywhere!";
+          << hst.get_name() << "' is not defined anywhere!";
         ++config_errors;
         failure = true;
       }
@@ -628,7 +694,7 @@ void applier::host::resolve_object(
         (void)e;
         logger(logging::log_verification_error, logging::basic)
           << "Error: Contact group '" << *it << "' specified in host '"
-          << hst.get_host_name() << "' is not defined anywhere!";
+          << hst.get_name() << "' is not defined anywhere!";
         ++config_errors;
         failure = true;
       }
@@ -642,7 +708,7 @@ void applier::host::resolve_object(
         (void)e;
         logger(logging::log_verification_error, logging::basic)
           << "Error: Notification period '" << obj.notification_period()
-          << "' specified for host '" << hst.get_host_name()
+          << "' specified for host '" << hst.get_name()
           << "' is not defined anywhere!";
         ++config_errors;
         failure = true;

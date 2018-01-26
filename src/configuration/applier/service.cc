@@ -95,7 +95,71 @@ void applier::service::add_object(
   shared_ptr< ::service> svc;
   try {
     svc = new ::service();
-    // XXX
+    // Self properties.
+    svc->set_description(obj.service_description());
+    svc->set_stalk_on_critical(
+      obj.stalking_options() & configuration::service::critical);
+    svc->set_stalk_on_ok(
+      obj.stalking_options() & configuration::service::ok);
+    svc->set_stalk_on_unknown(
+      obj.stalking_options() & configuration::service::unknown);
+    svc->set_stalk_on_warning(
+      obj.stalking_options() & configuration::service::warning);
+    svc->set_volatile(obj.is_volatile());
+    svc->set_flap_detection_on_critical(
+      obj.flap_detection_options() & configuration::service::critical);
+    svc->set_flap_detection_on_ok(
+      obj.flap_detection_options() & configuration::service::ok);
+    svc->set_flap_detection_on_warning(
+      obj.flap_detection_options() & configuration::service::warning);
+    svc->set_flap_detection_on_unknown(
+      obj.flap_detection_options() & configuration::service::unknown);
+    svc->set_notify_on_critical(
+      obj.notification_options() & configuration::service::critical);
+    svc->set_notify_on_unknown(
+      obj.notification_options() & configuration::service::unknown);
+    svc->set_notify_on_warning(
+      obj.notification_options() & configuration::service::warning);
+    // Inherited from monitorable.
+    svc->set_action_url(obj.action_url());
+    svc->set_display_name(obj.display_name());
+    svc->set_icon_image(obj.icon_image());
+    svc->set_icon_image_alt(obj.icon_image_alt());
+    svc->set_id(obj.service_id());
+    svc->set_initial_state(obj.initial_state());
+    svc->set_notes(obj.notes());
+    svc->set_notes_url(obj.notes_url());
+    svc->set_retain_nonstate_info(obj.retain_nonstatus_information());
+    svc->set_retain_state_info(obj.retain_status_information());
+    // XXX customvars
+    // Inherited from notifier.
+    svc->set_notifications_enabled(obj.notifications_enabled());
+    svc->set_notify_on_downtime(
+      obj.notification_options() & configuration::service::downtime);
+    svc->set_notify_on_flapping(
+      obj.notification_options() & configuration::service::flapping);
+    svc->set_notify_on_recovery(
+      obj.notification_options() & configuration::service::ok);
+    svc->set_notification_interval(obj.notification_interval());
+    svc->set_first_notification_delay(obj.first_notification_delay());
+    svc->set_recovery_notification_delay(obj.recovery_notification_delay());
+    // Inherited from checkable.
+    svc->set_active_checks_enabled(obj.checks_active());
+    svc->set_event_handler_enabled(obj.event_handler_enabled());
+    svc->set_flap_detection_enabled(obj.flap_detection_enabled());
+    svc->set_freshness_checks_enabled(obj.check_freshness());
+    svc->set_freshness_threshold(obj.freshness_threshold());
+    svc->set_high_flap_threshold(obj.high_flap_threshold());
+    svc->set_low_flap_threshold(obj.low_flap_threshold());
+    svc->set_max_attempts(obj.max_check_attempts());
+    svc->set_normal_check_interval(obj.check_interval());
+    svc->set_ocp_enabled(obj.obsess_over_service());
+    svc->set_passive_checks_enabled(obj.checks_passive());
+    svc->set_process_perfdata(obj.process_perf_data());
+    svc->set_retry_check_interval(obj.retry_interval());
+    svc->set_timezone(obj.timezone());
+
+    // Add service to global configuration set.
     config->services().insert(obj);
   }
   catch (std::exception const& e) {

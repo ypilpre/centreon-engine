@@ -151,7 +151,7 @@ int pre_flight_circular_check(int* w, int* e) {
        ++it) {
     if (dfs_get_status(it->second.get()) == DFS_LOOPY)
       logger(log_verification_error, basic)
-        << "Error: The host '" << it->second->get_host_name()
+        << "Error: The host '" << it->second->get_name()
         << "' is part of a circular parent/child chain!";
     /* clean DFS status */
     dfs_set_status(it->second.get(), DFS_UNCHECKED);
@@ -362,7 +362,7 @@ int check_hostgroup(hostgroup* hg, int* w, int* e) {
     catch (not_found const& e) {
       (void)e;
       logger(log_verification_error, basic)
-        << "Error: Host '" << temp_host->get_host_name()
+        << "Error: Host '" << temp_host->get_name()
         << "' specified in host group '" << hg->group_name
         << "' is not defined anywhere!";
       ++errors;

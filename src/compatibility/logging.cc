@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2013,2017 Centreon
+** Copyright 2011-2013,2017-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -224,7 +224,7 @@ int log_service_event(service const* svc) {
  *  @return Return true on success.
  */
 int log_host_event(host const* hst) {
-  if (!hst || hst->get_host_name().empty())
+  if (!hst || hst->get_name().empty())
     return (ERROR);
 
   unsigned long log_options(NSLOG_HOST_UP);
@@ -237,7 +237,7 @@ int log_host_event(host const* hst) {
   }
   char const* state_type(tab_state_type[hst->get_current_state_type()]);
 
-  logger(log_options, basic) << "HOST ALERT: " << hst->get_host_name()
+  logger(log_options, basic) << "HOST ALERT: " << hst->get_name()
     << ";" << state << ";" << state_type << ";"
     << hst->get_current_attempt() << ";" << hst->get_output();
 
@@ -251,7 +251,7 @@ int log_host_event(host const* hst) {
  *  @param[in] hst   Host object.
  */
 void log_host_state(unsigned int type, host* hst) {
-  if (!hst->get_host_name().empty()) {
+  if (!hst->get_name().empty()) {
     char const* type_str(tab_initial_state[type]);
     char const* state("UP");
     if ((hst->get_current_state() > 0)
@@ -260,7 +260,7 @@ void log_host_state(unsigned int type, host* hst) {
       state = tab_host_states[hst->get_current_state()].str;
     char const* state_type(tab_state_type[hst->get_current_state_type()]);
     logger(log_info_message, basic) << type_str << " HOST STATE: "
-      << hst->get_host_name() << ";" << state << ";" << state_type
+      << hst->get_name() << ";" << state << ";" << state_type
       << ";" << hst->get_current_attempt() << ";" << hst->get_output();
   }
   return ;

@@ -166,7 +166,7 @@ int grab_custom_macro_value_r(
         grab_custom_macro_value_r(
           mac,
           macro_name,
-          temp_host->get_host_name().c_str(),
+          temp_host->get_name().c_str(),
           NULL,
           &temp_buffer);
 
@@ -212,7 +212,7 @@ int grab_custom_macro_value_r(
       try {
         temp_service = configuration::applier::state::instance().services_find(
           std::make_pair(
-                 mac->host_ptr ? mac->host_ptr->get_host_name() : "",
+                 mac->host_ptr ? mac->host_ptr->get_name() : "",
                  arg2)).get();
       }
       catch (not_found const& e) {
@@ -523,9 +523,9 @@ int grab_standard_hostgroup_macro_r(
          ++it) {
       host* temp_host = it->second.get();
       if (temp_len == 0)
-        temp_len += temp_host->get_host_name().length() + 1;
+        temp_len += temp_host->get_name().length() + 1;
       else
-        temp_len += temp_host->get_host_name().length() + 2;
+        temp_len += temp_host->get_name().length() + 2;
     }
     /* allocate or reallocate the memory buffer */
     if (*output == NULL)
@@ -544,9 +544,9 @@ int grab_standard_hostgroup_macro_r(
       host* temp_host = it->second.get();
       temp_buffer = *output + init_len;
       if (init_len == 0)      /* If our buffer didn't contain anything, we just need to write "%s,%s" */
-        init_len += sprintf(temp_buffer, "%s", temp_host->get_host_name().c_str());
+        init_len += sprintf(temp_buffer, "%s", temp_host->get_name().c_str());
       else
-        init_len += sprintf(temp_buffer, ",%s", temp_host->get_host_name().c_str());
+        init_len += sprintf(temp_buffer, ",%s", temp_host->get_name().c_str());
     }
     break;
 

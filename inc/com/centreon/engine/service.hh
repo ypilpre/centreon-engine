@@ -48,6 +48,7 @@ class                service : public monitorable {
 
   // Configuration.
   std::string const& get_description() const;
+  void               set_description(std::string const& description);
   bool               get_stalk_on_critical() const;
   void               set_stalk_on_critical(bool stalk);
   bool               get_stalk_on_ok() const;
@@ -61,6 +62,7 @@ class                service : public monitorable {
 
   // Links with other objects.
   host*              get_host() const;
+  std::string        get_host_name() const;
   void               set_host(host* hst);
   void               add_group(servicegroup_struct* sg);
   void               clear_groups();

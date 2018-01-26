@@ -1,6 +1,6 @@
 /*
-** Copyright 1999-2010      Ethan Galstad
-** Copyright 2011-2013,2017 Centreon
+** Copyright 1999-2010           Ethan Galstad
+** Copyright 2011-2013,2017-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -217,7 +217,7 @@ int obsessive_compulsive_host_check_processor(host* hst) {
   if (early_timeout == true)
     logger(log_runtime_warning, basic)
       << "Warning: OCHP command '" << processed_command
-      << "' for host '" << hst->get_host_name() << "' timed out after "
+      << "' for host '" << hst->get_name() << "' timed out after "
       << config->ochp_timeout() << " seconds";
 
   /* free memory */
@@ -699,7 +699,7 @@ int run_global_host_event_handler(nagios_macros* mac, host* hst) {
     return (ERROR);
 
   logger(dbg_eventhandlers, more)
-    << "Running global event handler for host '" << hst->get_host_name()
+    << "Running global event handler for host '" << hst->get_name()
     << "'...";
 
   /* get start time */
@@ -733,7 +733,7 @@ int run_global_host_event_handler(nagios_macros* mac, host* hst) {
 
   if (config->log_event_handlers() == true) {
     std::ostringstream oss;
-    oss << "GLOBAL HOST EVENT HANDLER: " << hst->get_host_name()
+    oss << "GLOBAL HOST EVENT HANDLER: " << hst->get_name()
 	<< "$HOSTSTATE$;$HOSTSTATETYPE$;$HOSTATTEMPT$;"
 	<< config->global_host_event_handler();
     process_macros_r(
@@ -855,7 +855,7 @@ int run_host_event_handler(nagios_macros* mac, host* hst) {
     return (ERROR);
 
   logger(dbg_eventhandlers, more)
-    << "Running event handler for host '" << hst->get_host_name()
+    << "Running event handler for host '" << hst->get_name()
     << "'...";
 
   /* get start time */
@@ -889,7 +889,7 @@ int run_host_event_handler(nagios_macros* mac, host* hst) {
 
   if (config->log_event_handlers() == true) {
     std::ostringstream oss;
-    oss << "HOST EVENT HANDLER: " << hst->get_host_name()
+    oss << "HOST EVENT HANDLER: " << hst->get_name()
 	<< ";$HOSTSTATE$;$HOSTSTATETYPE$;$HOSTATTEMPT$;"
 	<< hst->get_event_handler_args();
     process_macros_r(

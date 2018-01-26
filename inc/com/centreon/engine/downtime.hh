@@ -62,7 +62,6 @@ class                downtime {
 
   unsigned long      get_comment_id() const;
   //void               set_comment_id(unsigned long id);
-  std::string const& get_host_name() const;
   downtime_type      get_type() const;
   unsigned long      get_id() const;
   void               set_id(unsigned long id);

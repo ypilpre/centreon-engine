@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2017 Centreon
+** Copyright 2011-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -576,7 +576,7 @@ void applier::scheduler::_calculate_host_scheduling_params() {
     else {
       hst.set_should_be_scheduled(false);
       logger(dbg_events, more) << "Host "
-        << hst.get_host_name() << " should not be scheduled.";
+        << hst.get_name() << " should not be scheduled.";
     }
 
     ++scheduling_info.total_hosts;
@@ -899,7 +899,7 @@ void applier::scheduler::_schedule_host_events(
     ::host& hst(*hosts[i]);
 
     logger(dbg_events, most)
-      << "Host '" <<  hst.get_host_name() << "'";
+      << "Host '" <<  hst.get_name() << "'";
 
     // skip hosts that shouldn't be scheduled.
     if (!hst.get_should_be_scheduled()) {

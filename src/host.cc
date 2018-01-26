@@ -138,6 +138,25 @@ void host::set_circular_path_checked(int check_level) {
 }
 
 /**
+ *  Get host name.
+ *
+ *  @return Host name.
+ */
+std::string const& host::get_name() const {
+  return (_name);
+}
+
+/**
+ *  Set host name.
+ *
+ *  @param[in] name  New host name.
+ */
+void host::set_name(std::string const& name) {
+  _name = name;
+  return ;
+}
+
+/**
  *  Check if host should be stalked on down states.
  *
  *  @return True if host should be stalked.
@@ -684,6 +703,7 @@ void host::_internal_copy(host const& other) {
   _last_time_down = other._last_time_down;
   _last_time_unreachable = other._last_time_unreachable;
   _last_time_up = other._last_time_up;
+  _name = other._name;
   _parents = other._parents;
   _services = other._services;
   _should_reschedule_current_check = other._should_reschedule_current_check;

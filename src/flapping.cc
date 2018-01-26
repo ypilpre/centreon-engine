@@ -1,6 +1,6 @@
 /*
-** Copyright 2001-2009      Ethan Galstad
-** Copyright 2011-2013,2017 Centreon
+** Copyright 2001-2009           Ethan Galstad
+** Copyright 2011-2013,2017-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -195,7 +195,7 @@ void check_for_host_flapping(
     return;
 
   logger(dbg_flapping, more)
-    << "Checking host '" << hst->get_host_name() << "' for flapping...";
+    << "Checking host '" << hst->get_name() << "' for flapping...";
 
   time(&current_time);
 
@@ -476,12 +476,12 @@ void set_host_flap(
     return;
 
   logger(dbg_flapping, more)
-    << "Host '" << hst->get_host_name() << "' started flapping!";
+    << "Host '" << hst->get_name() << "' started flapping!";
 
   /* log a notice - this one is parsed by the history CGI */
   logger(log_runtime_warning, basic)
     << com::centreon::logging::setprecision(1)
-    << "HOST FLAPPING ALERT: " << hst->get_host_name()
+    << "HOST FLAPPING ALERT: " << hst->get_name()
     << ";STARTED; Host appears to have started flapping ("
     << percent_change << "% change > "
     << high_threshold << "% threshold)";
@@ -549,12 +549,12 @@ void clear_host_flap(
     return;
 
   logger(dbg_flapping, basic)
-    << "Host '" << hst->get_host_name() << "' stopped flapping.";
+    << "Host '" << hst->get_name() << "' stopped flapping.";
 
   /* log a notice - this one is parsed by the history CGI */
   logger(log_info_message, basic)
     << com::centreon::logging::setprecision(1)
-    << "HOST FLAPPING ALERT: " << hst->get_host_name()
+    << "HOST FLAPPING ALERT: " << hst->get_name()
     << ";STOPPED; Host appears to have stopped flapping ("
     << percent_change << "% change < "
     << low_threshold << "% threshold)";
@@ -709,7 +709,7 @@ void enable_host_flap_detection(host* hst) {
     return;
 
   logger(dbg_flapping, more) << "Enabling flap detection for host '"
-    << hst->get_host_name() << "'.";
+    << hst->get_name() << "'.";
 
   /* nothing to do... */
   if (hst->get_flap_detection_enabled())
@@ -751,7 +751,7 @@ void disable_host_flap_detection(host* hst) {
     return;
 
   logger(dbg_functions, more) << "Disabling flap detection for host '"
-    << hst->get_host_name() << "'.";
+    << hst->get_name() << "'.";
 
   /* nothing to do... */
   if (!hst->get_flap_detection_enabled())
@@ -799,7 +799,7 @@ void handle_host_flap_detection_disabled(host* hst) {
 
     /* log a notice - this one is parsed by the history CGI */
     logger(log_info_message, basic)
-      << "HOST FLAPPING ALERT: " << hst->get_host_name()
+      << "HOST FLAPPING ALERT: " << hst->get_name()
       << ";DISABLED; Flap detection has been disabled";
 
     /* send data to event broker */
