@@ -51,7 +51,7 @@ std::ostream& dump::comment(std::ostream& os, com::centreon::engine::comment con
     os << "service_description=" << obj.get_service_description() << "\n";
   os << "author=" << obj.get_author() << "\n"
     "comment_data=" << obj.get_comment_data() << "\n"
-    "comment_id=" << obj.get_comment_id() << "\n"
+    "comment_id=" << obj.get_id() << "\n"
     "entry_time=" << static_cast<unsigned long>(obj.get_entry_time()) << "\n"
     "expire_time=" << static_cast<unsigned long>(obj.get_expire_time()) << "\n"
     "expires=" << obj.get_expires() << "\n"

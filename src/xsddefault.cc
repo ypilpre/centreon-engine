@@ -388,27 +388,33 @@ int xsddefault_save_status_data() {
   }
 
   // save all comments
-  // FIXME DBR: next must be review...
-//  for (comment* com = comment_list; com; com = com->next) {
-//    if (com->comment_type == HOST_COMMENT)
-//      stream << "hostcomment {\n";
-//    else
-//      stream << "servicecomment {\n";
-//    stream << "\thost_name=" << com->host_name << "\n";
-//    if (com->comment_type == SERVICE_COMMENT)
-//      stream << "\tservice_description=" << com->service_description << "\n";
-//    stream
-//      << "\tentry_type=" << com->entry_type << "\n"
-//         "\tcomment_id=" << com->comment_id << "\n"
-//         "\tsource=" << com->source << "\n"
-//         "\tpersistent=" << com->persistent << "\n"
-//         "\tentry_time=" << static_cast<unsigned long>(com->entry_time) << "\n"
-//         "\texpires=" << com->expires << "\n"
-//         "\texpire_time=" << static_cast<unsigned long>(com->expire_time) << "\n"
-//         "\tauthor=" << com->author << "\n"
-//         "\tcomment_data=" << com->comment_data << "\n"
-//         "\t}\n\n";
-//  }
+  for (std::map<unsigned long, comment*>::const_iterator
+         it(comment_list.begin()),
+         end(comment_list.end());
+       it != end;
+       ++it) {
+    comment* com(it->second);
+    if (com->get_comment_type() == comment::HOST_COMMENT)
+      stream << "hostcomment {\n";
+    else
+      stream << "servicecomment {\n";
+    stream << "\thost_name=" << com->get_host_name() << "\n";
+
+    if (com->get_comment_type() == comment::SERVICE_COMMENT)
+      stream << "\tservice_description=" << com->get_service_description() << "\n";
+
+    stream
+      << "\tentry_type=" << com->get_entry_type() << "\n"
+         "\tcomment_id=" << com->get_id() << "\n"
+         "\tsource=" << com->get_source() << "\n"
+         "\tpersistent=" << com->get_persistent() << "\n"
+         "\tentry_time=" << static_cast<unsigned long>(com->get_entry_time()) << "\n"
+         "\texpires=" << com->get_expires() << "\n"
+         "\texpire_time=" << static_cast<unsigned long>(com->get_expire_time()) << "\n"
+         "\tauthor=" << com->get_author() << "\n"
+         "\tcomment_data=" << com->get_comment_data() << "\n"
+         "\t}\n\n";
+  }
 
   // save all downtime
   // FIXME DBR: downtimes need to be reviewed

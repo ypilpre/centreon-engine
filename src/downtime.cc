@@ -55,7 +55,9 @@ downtime::downtime(
     _end_time(end_time),
     _fixed(fixed),
     _triggered_by(triggered_by),
-    _duration(duration) {}
+    _comment_id(0),
+    _duration(duration),
+    _in_effect(false) {}
 
 /**
  *  Copy constructor.
@@ -77,16 +79,15 @@ downtime::~downtime() {
   /* remove the downtime from the list in memory */
   /* first remove the comment associated with this downtime */
   if (get_type() == HOST_DOWNTIME) {
-    comment::delete_host_comment(get_comment_id());
     hst_name = static_cast<host*>(get_parent())->get_name();
     svc_descr = "";
   }
   else {
     service* svc(static_cast<service*>(get_parent()));
-    comment::delete_service_comment(get_comment_id());
     hst_name = svc->get_host_name();
     svc_descr = svc->get_description();
   }
+  comment::delete_comment(get_comment_id());
 
   /* send data to event broker */
   broker_downtime_data(
@@ -130,12 +131,14 @@ void downtime::_internal_copy(downtime const& other) {
   _entry_time = other._entry_time;
   _author = other._author;
   _comment_data = other._comment_data;
+  _comment_id = other._comment_id;
   _start_time = other._start_time;
   _end_time = other._end_time;
   _fixed = other._fixed;
   _triggered_by = other._triggered_by;
   _duration = other._duration;
   _downtime_id = other._downtime_id;
+  _in_effect = other._in_effect;
 }
 
 downtime::downtime_type downtime::get_type() const {
@@ -256,8 +259,9 @@ int downtime::registration() {
        " Trigger ID:  " << _triggered_by;
 
   /* add a non-persistent comment to the host or service regarding the scheduled outage */
+  comment* new_comment;
   if (_type == SERVICE_DOWNTIME)
-    comment::add_new_comment(
+    new_comment = comment::add_new_comment(
       comment::SERVICE_COMMENT,
       comment::DOWNTIME_COMMENT,
       svc->get_host_name(),
@@ -268,10 +272,9 @@ int downtime::registration() {
       0,
       comment::COMMENTSOURCE_INTERNAL,
       false,
-      (time_t)0,
-      &_comment_id);   // FIXME DBR: should be computed automatically
+      (time_t)0);
   else
-    comment::add_new_comment(
+    new_comment = comment::add_new_comment(
       comment::HOST_COMMENT,
       comment::DOWNTIME_COMMENT,
       hst->get_name(),
@@ -282,8 +285,9 @@ int downtime::registration() {
       0,
       comment::COMMENTSOURCE_INTERNAL,
       false,
-      (time_t)0,
-      &_comment_id);     // FIXME DBR: should be computed automatically
+      (time_t)0);
+
+  set_comment_id(new_comment->get_id());
 
   /*** SCHEDULE DOWNTIME - FLEXIBLE (NON-FIXED) DOWNTIME IS HANDLED AT A LATER POINT ***/
 
@@ -321,6 +325,9 @@ unsigned long downtime::get_comment_id() const {
   return _comment_id;
 }
 
+void downtime::set_comment_id(unsigned long comment_id) {
+  _comment_id = comment_id;
+}
 
 /* unschedules a host or service downtime */
 int downtime::unschedule() {
