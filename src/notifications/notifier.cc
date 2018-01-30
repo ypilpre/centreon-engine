@@ -55,15 +55,9 @@ notifier::notifier()
  *
  * @param[in] other Object to copy.
  */
-notifier::notifier(notifier const& other)
-  : _current_notifications(other._current_notifications),
-    _last_notification(other._last_notification),
-    _current_notification_number(other._current_notification_number),
-    _notified_states(other._notified_states),
-    _notification_interval(other._notification_interval),
-    _in_downtime(other._in_downtime),
-    _scheduled_downtime_depth(other._scheduled_downtime_depth),
-    _current_acknowledgement(other._current_acknowledgement) {}
+notifier::notifier(notifier const& other) : checks::checkable(other) {
+  _internal_copy(other);
+}
 
 /**
  * Assignment operator.
@@ -73,11 +67,10 @@ notifier::notifier(notifier const& other)
  * @return This object
  */
 notifier& notifier::operator=(notifier const& other) {
-  _current_notifications = other._current_notifications;
-  _last_notification = other._last_notification;
-  _current_notification_number = other._current_notification_number;
-  _notified_states = other._notified_states;
-  _notification_interval = other._notification_interval;
+  if (this != &other) {
+    checks::checkable::operator=(other);
+    _internal_copy(other);
+  }
   return (*this);
 }
 
@@ -789,7 +782,8 @@ bool notifier::get_recovery_been_sent() const {
 }
 
 void notifier::set_current_notification_number(int number) {
-  // FIXME DBR: to implement...
+  _current_notification_number = number;
+  return ;
 }
 
 int notifier::get_pending_flex_downtime() const {
@@ -905,7 +899,7 @@ bool notifier::get_no_more_notifications() const {
 }
 
 int notifier::get_scheduled_downtime_depth() const {
-  return 0;
+  return (_scheduled_downtime_depth);
 }
 
 void notifier::set_last_acknowledgement(time_t last_acknowledgement) {
@@ -918,10 +912,12 @@ time_t notifier::get_last_acknowledgement() const {
 
 void notifier::inc_scheduled_downtime_depth() {
   ++_scheduled_downtime_depth;
+  return ;
 }
 
 void notifier::dec_scheduled_downtime_depth() {
   --_scheduled_downtime_depth;
+  return ;
 }
 
 int notifier::schedule_downtime(
@@ -1020,4 +1016,31 @@ std::string notifier::get_info() {
     oss << "Notifier: host '"
         << svc->get_host_name() << "'";
   return oss.str();
+}
+
+/**
+ *  Copy internal data members.
+ *
+ *  @param[in] other  Object to copy.
+ */
+void notifier::_internal_copy(notifier const& other) {
+  _contacts = other._contacts;
+  _contact_groups = other._contact_groups;
+  _current_acknowledgement = other._current_acknowledgement;
+  _current_notification_id = other._current_notification_id;
+  _current_notification_number = other._current_notification_number;
+  _current_notifications = other._current_notifications;
+  _escalate_notification = other._escalate_notification;
+  _first_notification_delay = other._first_notification_delay;
+  _in_downtime = other._in_downtime;
+  _last_acknowledgement = other._last_acknowledgement;
+  _last_notification = other._last_notification;
+  _next_notification = other._next_notification;
+  _notification_interval = other._notification_interval;
+  _notifications_enabled = other._notifications_enabled;
+  _notified_states = other._notified_states;
+  _pending_flex_downtime = other._pending_flex_downtime;
+  _recovery_notification_delay = other._recovery_notification_delay;
+  _scheduled_downtime_depth = other._scheduled_downtime_depth;
+  return ;
 }

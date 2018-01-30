@@ -1,5 +1,5 @@
 ##
-## Copyright 2016 Centreon
+## Copyright 2016-2018 Centreon
 ##
 ## This file is part of Centreon Engine.
 ##
@@ -48,6 +48,7 @@ if (WITH_TESTING)
     "${TESTS_DIR}/downtimes/downtime.cc"
     "${TESTS_DIR}/downtime_finder.cc"
     "${TESTS_DIR}/main.cc"
+    "${TESTS_DIR}/macros/host.cc"
     "${TESTS_DIR}/notifications/notifier/acknowledgement_notification.cc"
     "${TESTS_DIR}/notifications/notifier/check_notification_management.cc"
     "${TESTS_DIR}/notifications/notifier/flapping_notification.cc"

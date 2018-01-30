@@ -65,22 +65,22 @@ static void generate_host_total_services(
            end(hst.get_services().end());
          it != end;
          ++it) {
-      com::centreon::shared_ptr<service> temp_service(*it);
-      if (!temp_service.is_null()) {
-        total_host_services++;
+      service* temp_service(*it);
+      if (temp_service) {
+        ++total_host_services;
         switch (temp_service->get_current_state()) {
          case STATE_OK:
-          total_host_services_ok++;
-          break;
+          ++total_host_services_ok;
+          break ;
          case STATE_WARNING:
-          total_host_services_warning++;
-          break;
+          ++total_host_services_warning;
+          break ;
          case STATE_UNKNOWN:
-          total_host_services_unknown++;
-          break;
+          ++total_host_services_unknown;
+          break ;
          case STATE_CRITICAL:
-          total_host_services_critical++;
-          break;
+          ++total_host_services_critical;
+          break ;
         }
       }
     }
@@ -200,8 +200,8 @@ static char const* get_host_parents(host& hst, nagios_macros* mac) {
        it != end;
        ++it) {
     if (!retval.empty())
-      retval.append((*it)->get_name());
-    retval.append(",");
+      retval.append(",");
+    retval.append((*it)->get_name());
   }
   return (string::dup(retval.c_str()));
 }
@@ -223,8 +223,8 @@ static char const* get_host_children(host& hst, nagios_macros* mac) {
        it != end;
        ++it) {
     if (!retval.empty())
-      retval.append((*it)->get_name());
-    retval.append(",");
+      retval.append(",");
+    retval.append((*it)->get_name());
   }
   return (string::dup(retval.c_str()));
 }

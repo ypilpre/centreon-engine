@@ -69,8 +69,10 @@ host::~host() {}
  *  @return This object.
  */
 host& host::operator=(host const& other) {
-  if (this != &other)
+  if (this != &other) {
+    monitorable::operator=(other);
     _internal_copy(other);
+  }
   return (*this);
 }
 

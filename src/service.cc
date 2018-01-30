@@ -69,8 +69,10 @@ service::~service() {}
  *  @return This object.
  */
 service& service::operator=(service const& other) {
-  if (this != &other)
+  if (this != &other) {
+    monitorable::operator=(other);
     _internal_copy(other);
+  }
   return (*this);
 }
 

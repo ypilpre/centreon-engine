@@ -204,6 +204,7 @@ namespace           notifications {
     bool              _downtimestart_filter();
     bool              _downtimestopcancelled_filter();
     bool              _custom_filter();
+    void              _internal_copy(notifier const& other);
 
     void              _problem_macro_builder(nagios_macros& mac);
     void              _recovery_macro_builder(nagios_macros& mac);
