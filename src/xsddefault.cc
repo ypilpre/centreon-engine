@@ -417,27 +417,35 @@ int xsddefault_save_status_data() {
   }
 
   // save all downtime
-  // FIXME DBR: downtimes need to be reviewed
-//  for (scheduled_downtime* dt = scheduled_downtime_list; dt; dt = dt->next) {
-//    if (dt->type == HOST_DOWNTIME)
-//      stream << "hostdowntime {\n";
-//    else
-//      stream << "servicedowntime {\n";
-//    stream << "\thost_name=" << dt->host_name << "\n";
-//    if (dt->type == SERVICE_DOWNTIME)
-//      stream << "\tservice_description=" << dt->service_description << "\n";
-//    stream
-//      << "\tdowntime_id=" << dt->downtime_id << "\n"
-//         "\tentry_time=" << static_cast<unsigned long>(dt->entry_time) << "\n"
-//         "\tstart_time=" << static_cast<unsigned long>(dt->start_time) << "\n"
-//         "\tend_time=" << static_cast<unsigned long>(dt->end_time) << "\n"
-//         "\ttriggered_by=" << dt->triggered_by << "\n"
-//         "\tfixed=" << dt->fixed << "\n"
-//         "\tduration=" << dt->duration << "\n"
-//         "\tauthor=" << dt->author << "\n"
-//         "\tcomment=" << dt->comment << "\n"
-//         "\t}\n\n";
-//  }
+  for (std::map<unsigned long, downtime*>::const_iterator
+         it(scheduled_downtime_list.begin()),
+         end(scheduled_downtime_list.end());
+       it != end;
+       ++it) {
+    downtime* dt(it->second);
+    if (dt->get_type() == downtime::HOST_DOWNTIME) {
+      host* hst(static_cast<host*>(dt->get_parent()));
+      stream << "hostdowntime {\n";
+      stream << "\thost_name=" << hst->get_name() << "\n";
+    }
+    else {
+      service* svc(static_cast<service*>(dt->get_parent()));
+      stream << "servicedowntime {\n";
+      stream << "\thost_name=" << svc->get_host_name() << "\n"
+             << "\tservice_description=" << svc->get_description() << "\n";
+    }
+    stream
+      << "\tdowntime_id=" << dt->get_id() << "\n"
+         "\tentry_time=" << static_cast<unsigned long>(dt->get_entry_time()) << "\n"
+         "\tstart_time=" << static_cast<unsigned long>(dt->get_start_time()) << "\n"
+         "\tend_time=" << static_cast<unsigned long>(dt->get_end_time()) << "\n"
+         "\ttriggered_by=" << dt->get_triggered_by() << "\n"
+         "\tfixed=" << dt->get_fixed() << "\n"
+         "\tduration=" << dt->get_duration() << "\n"
+         "\tauthor=" << dt->get_author() << "\n"
+         "\tcomment=" << dt->get_comment() << "\n"
+         "\t}\n\n";
+  }
 
   // Write data in buffer.
   stream.flush();
