@@ -19,7 +19,6 @@
 
 #include <gtest/gtest.h>
 #include <list>
-#include <map>
 #include "com/centreon/engine/host.hh"
 #include "com/centreon/engine/macros/grab_host.hh"
 #include "com/centreon/engine/service.hh"
@@ -153,7 +152,7 @@ TEST_F(MacrosHost, GrabLastStateId) {
 }
 
 TEST_F(MacrosHost, GrabCheckType) {
-  _expected = "1";
+  _expected = "PASSIVE";
   _host.set_check_type(HOST_CHECK_PASSIVE);
   grab_and_check(MACRO_HOSTCHECKTYPE);
 }

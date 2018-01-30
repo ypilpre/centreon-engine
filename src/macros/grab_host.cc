@@ -105,7 +105,7 @@ static void generate_host_total_services(
  *  @return Newly allocated string containing either "PASSIVE" or
  *          "ACTIVE".
  */
-static char* get_host_check_type(host& hst, nagios_macros* mac) {
+static char const* get_host_check_type(host& hst, nagios_macros* mac) {
   (void)mac;
   return (string::dup(
             (HOST_CHECK_PASSIVE == hst.get_check_type()
@@ -274,7 +274,7 @@ struct grab_host_redirection {
     routines[MACRO_LASTHOSTSTATEID].second = true;
     // Check type.
     routines[MACRO_HOSTCHECKTYPE].first =
-      new member_grabber<host, int>(&host::get_check_type);
+      new function_grabber<host>(&get_host_check_type);
     routines[MACRO_HOSTCHECKTYPE].second = true;
     // State type.
     routines[MACRO_HOSTSTATETYPE].first =
