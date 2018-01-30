@@ -295,7 +295,7 @@ struct grab_service_redirection {
     routines[MACRO_SERVICEACKCOMMENT].first =
       new function_grabber<service>(&get_macro_copy<service, MACRO_SERVICEACKCOMMENT>);
     routines[MACRO_SERVICEACKCOMMENT].second = true;
-    // Acknowledgement comment.
+    // Timezone.
     routines[MACRO_SERVICETIMEZONE].first =
       new member_grabber<service, std::string const&>(&service::get_timezone);
     routines[MACRO_SERVICETIMEZONE].second = true;
