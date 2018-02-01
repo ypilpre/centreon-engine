@@ -29,8 +29,6 @@
 
 using namespace com::centreon;
 using namespace com::centreon::engine;
-using namespace com::centreon::engine::configuration;
-using namespace com::centreon::engine::configuration::applier;
 using namespace com::centreon::engine::notifications;
 
 extern configuration::state* config;
@@ -109,9 +107,9 @@ TEST_F(CheckNotificationManagement, NoContactUser) {
   time_t now = last_notification + 20;
   set_time(now);
   // And
-  _notifier->get_contacts().clear();
+  _notifier->clear_contacts();
   // And
-  _notifier->enable_state_notification(1);
+  _notifier->set_notify_on(notifier::ON_WARNING, true);
   _notifier->notify(notifier::PROBLEM, "admin", "Test comment");
   // Then
   ASSERT_EQ(last_notification, _notifier->get_last_notification());
@@ -123,16 +121,15 @@ TEST_F(CheckNotificationManagement, NoContactUser) {
 // And the notifier is not in hard state
 // Then no notification is sent.
 TEST_F(CheckNotificationManagement, NoHardNoNotification) {
-
   _notifier->set_current_state(1);
+  _notifier->set_current_state_type(SOFT_STATE);
   _notifier->set_notifications_enabled(true);
-  time_t last_notification = _notifier->get_last_notification();
-  _notifier->enable_state_notification(1);
-  // When
-  time_t now = last_notification + 20;
+  _notifier->set_last_notification(1598741230);
+  _notifier->set_notify_on(notifier::ON_WARNING, true);
+  time_t now(_notifier->get_last_notification() + 20);
   set_time(now);
   _notifier->notify(notifier::PROBLEM, "admin", "Test comment");
-  ASSERT_FALSE(_notifier->get_last_notification() >= now);
+  ASSERT_LT(_notifier->get_last_notification(), now);
 }
 
 // Given a notifier with state 1.
@@ -141,19 +138,16 @@ TEST_F(CheckNotificationManagement, NoHardNoNotification) {
 // And the notifier is in hard state
 // Then a notification is sent.
 TEST_F(CheckNotificationManagement, CheckNotificationManagement) {
-
   _notifier->set_current_state(1);
-  _notifier->set_last_hard_state(1);
-  _notifier->set_last_state_change(time(NULL));
-  _notifier->set_last_hard_state_change(time(NULL));
+  _notifier->set_current_state_type(HARD_STATE);
   _notifier->set_notifications_enabled(true);
   time_t last_notification = _notifier->get_last_notification();
-  _notifier->enable_state_notification(1);
+  _notifier->set_notify_on(notifier::ON_WARNING, true);
   // When
   time_t now = last_notification + 20;
   set_time(now);
   _notifier->notify(notifier::PROBLEM, "admin", "Test comment");
-  ASSERT_TRUE(_notifier->get_last_notification() >= now);
+  ASSERT_GE(_notifier->get_last_notification(), now);
 }
 
 // Given a notifier with state 1.
@@ -170,7 +164,7 @@ TEST_F(CheckNotificationManagement, TooEarlyNewNotification) {
   _notifier->set_last_hard_state_change(time(NULL));
   _notifier->add_notification_flag(notifier::PROBLEM);
   _notifier->set_current_notification_number(1);
-  _notifier->enable_state_notification(1);
+  _notifier->set_notify_on(notifier::ON_WARNING, true);
   time_t last_notification = 20;
   _notifier->set_last_notification(last_notification);
   _notifier->set_notification_interval(60);

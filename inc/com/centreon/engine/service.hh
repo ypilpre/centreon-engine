@@ -89,14 +89,6 @@ class                service : public monitorable {
   bool               get_flap_detection_on_critical() const;
   void               set_flap_detection_on_critical(bool detection);
 
-  // Notification.
-  bool               get_notify_on_critical() const;
-  void               set_notify_on_critical(bool notify);
-  bool               get_notify_on_unknown() const;
-  void               set_notify_on_unknown(bool notify);
-  bool               get_notify_on_warning() const;
-  void               set_notify_on_warning(bool notify);
-
  protected:
   void               _checkable_macro_builder(nagios_macros& mac);
 
@@ -115,9 +107,6 @@ class                service : public monitorable {
   time_t             _last_time_ok;
   time_t             _last_time_unknown;
   time_t             _last_time_warning;
-  bool               _notify_on_critical;
-  bool               _notify_on_unknown;
-  bool               _notify_on_warning;
   bool               _stalk_on_critical;
   bool               _stalk_on_ok;
   bool               _stalk_on_unknown;

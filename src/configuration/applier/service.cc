@@ -114,12 +114,6 @@ void applier::service::add_object(
       obj.flap_detection_options() & configuration::service::warning);
     svc->set_flap_detection_on_unknown(
       obj.flap_detection_options() & configuration::service::unknown);
-    svc->set_notify_on_critical(
-      obj.notification_options() & configuration::service::critical);
-    svc->set_notify_on_unknown(
-      obj.notification_options() & configuration::service::unknown);
-    svc->set_notify_on_warning(
-      obj.notification_options() & configuration::service::warning);
     // Inherited from monitorable.
     svc->set_action_url(obj.action_url());
     svc->set_display_name(obj.display_name());
@@ -131,15 +125,33 @@ void applier::service::add_object(
     svc->set_notes_url(obj.notes_url());
     svc->set_retain_nonstate_info(obj.retain_nonstatus_information());
     svc->set_retain_state_info(obj.retain_status_information());
-    // XXX customvars
+    for (map_customvar::const_iterator
+           it(obj.customvariables().begin()),
+           end(obj.customvariables().end());
+         it != end;
+         ++it)
+      svc->set_customvar(customvar(it->first, it->second));
     // Inherited from notifier.
+    svc->set_acknowledgement_timeout(obj.get_acknowledgement_timeout());
     svc->set_notifications_enabled(obj.notifications_enabled());
-    svc->set_notify_on_downtime(
+    svc->set_notify_on(
+      ::service::ON_FLAPPING,
       obj.notification_options() & configuration::service::downtime);
-    svc->set_notify_on_flapping(
+    svc->set_notify_on(
+      ::service::ON_FLAPPING,
       obj.notification_options() & configuration::service::flapping);
-    svc->set_notify_on_recovery(
+    svc->set_notify_on(
+      ::service::ON_RECOVERY,
       obj.notification_options() & configuration::service::ok);
+    svc->set_notify_on(
+      ::service::ON_CRITICAL,
+      obj.notification_options() & configuration::service::critical);
+    svc->set_notify_on(
+      ::service::ON_UNKNOWN,
+      obj.notification_options() & configuration::service::unknown);
+    svc->set_notify_on(
+      ::service::ON_WARNING,
+      obj.notification_options() & configuration::service::warning);
     svc->set_notification_interval(obj.notification_interval());
     svc->set_first_notification_delay(obj.first_notification_delay());
     svc->set_recovery_notification_delay(obj.recovery_notification_delay());
@@ -330,36 +342,24 @@ void applier::service::modify_object(
     *s,
     first_notification_delay,
     obj.first_notification_delay());
-  modify_if_different(
-    *s,
-    notify_on_unknown,
-    static_cast<bool>(
-      obj.notification_options() & configuration::service::unknown));
-  modify_if_different(
-    *s,
-    notify_on_warning,
-    static_cast<bool>(
-      obj.notification_options() & configuration::service::warning));
-  modify_if_different(
-    *s,
-    notify_on_critical,
-    static_cast<bool>(
-      obj.notification_options() & configuration::service::critical));
-  modify_if_different(
-    *s,
-    notify_on_recovery,
-    static_cast<bool>(
-      obj.notification_options() & configuration::service::ok));
-  modify_if_different(
-    *s,
-    notify_on_flapping,
-    static_cast<bool>(
-      obj.notification_options() & configuration::service::flapping));
-  modify_if_different(
-    *s,
-    notify_on_downtime,
-    static_cast<bool>(
-      obj.notification_options() & configuration::service::downtime));
+  s->set_notify_on(
+    ::service::ON_FLAPPING,
+    obj.notification_options() & configuration::service::downtime);
+  s->set_notify_on(
+    ::service::ON_FLAPPING,
+    obj.notification_options() & configuration::service::flapping);
+  s->set_notify_on(
+    ::service::ON_RECOVERY,
+    obj.notification_options() & configuration::service::ok);
+  s->set_notify_on(
+    ::service::ON_CRITICAL,
+    obj.notification_options() & configuration::service::critical);
+  s->set_notify_on(
+    ::service::ON_UNKNOWN,
+    obj.notification_options() & configuration::service::unknown);
+  s->set_notify_on(
+    ::service::ON_WARNING,
+    obj.notification_options() & configuration::service::warning);
   modify_if_different(
     *s,
     stalk_on_ok,
@@ -453,11 +453,10 @@ void applier::service::modify_object(
   modify_if_different(*s, volatile, obj.is_volatile());
   modify_if_different(*s, timezone, obj.timezone());
   modify_if_different(*s, id, obj.service_id());
-  // XXX
-  // service_other_props[std::make_pair(
-  //                            *obj.hosts().begin(),
-  //                            obj.service_description())].acknowledgement_timeout
-  //   = obj.get_acknowledgement_timeout() * config->interval_length();
+  modify_if_different(
+    *s,
+    acknowledgement_timeout,
+    obj.get_acknowledgement_timeout());
   modify_if_different(
     *s,
     recovery_notification_delay,
@@ -643,9 +642,6 @@ void applier::service::resolve_object(
                                          *obj.hosts().begin()).get();
       svc.set_host(hst);
       hst->add_service(&svc);
-      // XXX
-      // hst->second->total_service_check_interval
-      //   += static_cast<unsigned long>(it->second->check_interval);
     }
     catch (not_found const& e) {
       (void)e;
@@ -774,10 +770,27 @@ void applier::service::resolve_object(
       }
 
     // Check for sane recovery options.
-    // XXX
+    if (svc.get_notifications_enabled()
+        && svc.get_notify_on(::service::ON_RECOVERY)
+        && !svc.get_notify_on(::service::ON_WARNING)
+        && !svc.get_notify_on(::service::ON_CRITICAL)) {
+      logger(logging::log_verification_error, logging::basic)
+        << "Warning: Recovery notification option in service '"
+        << svc.get_description() << "' for host '"
+        << svc.get_host_name() << "' doesn't make any sense - "
+           "specify warning and/or critical options as well";
+      ++config_warnings;
+    }
 
     // Check for illegal characters in service description.
-    // XXX
+    if (contains_illegal_object_chars(svc.get_description().c_str())) {
+      logger(logging::log_verification_error, logging::basic)
+        << "Error: The description string for service '"
+        << svc.get_description() << "' on host '" << svc.get_host_name()
+        << "' contains one or more illegal characters.";
+      ++config_errors;
+      failure = true;
+    }
 
     // Throw exception in case of failure.
     if (failure)
@@ -802,8 +815,8 @@ void applier::service::unresolve_objects() {
        it != end;
        ++it) {
     ::service& s(*it->second);
-    s.get_contacts().clear();
-    s.get_contactgroups().clear();
+    s.clear_contacts();
+    s.clear_contactgroups();
     s.clear_groups();
     s.set_check_command(NULL);
     s.set_check_command_args("");

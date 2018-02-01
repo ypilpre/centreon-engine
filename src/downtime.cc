@@ -25,6 +25,7 @@
 #include "com/centreon/engine/notifications/notifier.hh"
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/service.hh"
+#include "com/centreon/engine/statusdata.hh"
 
 using namespace com::centreon::engine;
 using namespace com::centreon::engine::logging;
@@ -384,8 +385,7 @@ int downtime::unschedule() {
 
     if (get_type() == HOST_DOWNTIME) {
       hst->dec_scheduled_downtime_depth();
-      //FIXME DBR
-      //update_host_status(hst, false);
+      update_host_status(hst, false);
 
       /* log a notice - this is parsed by the history CGI */
       if (hst->get_scheduled_downtime_depth() == 0) {
@@ -404,8 +404,7 @@ int downtime::unschedule() {
     }
     else {
       svc->dec_scheduled_downtime_depth();
-      // FIXME DBR
-      //update_service_status(svc, false);
+      update_service_status(svc, false);
 
       /* log a notice - this is parsed by the history CGI */
       if (svc->get_scheduled_downtime_depth()) {

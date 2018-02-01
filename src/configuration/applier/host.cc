@@ -119,16 +119,26 @@ void applier::host::add_object(
     h->set_notes_url(obj.notes_url());
     h->set_retain_nonstate_info(obj.retain_nonstatus_information());
     h->set_retain_state_info(obj.retain_status_information());
-    // XXX customvars
+    for (map_customvar::const_iterator
+           it(obj.customvariables().begin()),
+           end(obj.customvariables().end());
+         it != end;
+         ++it)
+      h->set_customvar(customvar(it->first, it->second));
     // Inherited from notifier.
+    h->set_acknowledgement_timeout(obj.get_acknowledgement_timeout());
     h->set_notifications_enabled(obj.notifications_enabled());
-    h->set_notify_on_downtime(
+    h->set_notify_on(
+      ::host::ON_DOWNTIME,
       obj.notification_options() & configuration::host::downtime);
-    h->set_notify_on_flapping(
+    h->set_notify_on(
+      ::host::ON_FLAPPING,
       obj.notification_options() & configuration::host::flapping);
-    h->set_notify_on_recovery(
+    h->set_notify_on(
+      ::host::ON_RECOVERY,
       obj.notification_options() & configuration::host::up);
-    h->set_notify_on_unreachable(
+    h->set_notify_on(
+      ::host::ON_UNREACHABLE,
       obj.notification_options() & configuration::host::unreachable);
     h->set_notification_interval(obj.notification_interval());
     h->set_first_notification_delay(obj.first_notification_delay());
@@ -270,31 +280,21 @@ void applier::host::modify_object(
   modify_if_different(*h, normal_check_interval, obj.check_interval());
   modify_if_different(*h, retry_check_interval, obj.retry_interval());
   modify_if_different(*h, max_attempts, obj.max_check_attempts());
-  modify_if_different(
-    *h,
-    notify_on_recovery,
-    static_cast<bool>(
-      obj.notification_options() & configuration::host::up));
-  modify_if_different(
-    *h,
-    notify_on_down,
-    static_cast<bool>(
-      obj.notification_options() & configuration::host::down));
-  modify_if_different(
-    *h,
-    notify_on_unreachable,
-    static_cast<bool>(
-      obj.notification_options() & configuration::host::unreachable));
-  modify_if_different(
-    *h,
-    notify_on_flapping,
-    static_cast<bool>(
-      obj.notification_options() & configuration::host::flapping));
-  modify_if_different(
-    *h,
-    notify_on_downtime,
-    static_cast<bool>(
-      obj.notification_options() & configuration::host::downtime));
+  h->set_notify_on(
+    ::host::ON_RECOVERY,
+    obj.notification_options() & configuration::host::up);
+  h->set_notify_on(
+    ::host::ON_DOWN,
+    obj.notification_options() & configuration::host::down);
+  h->set_notify_on(
+    ::host::ON_UNREACHABLE,
+    obj.notification_options() & configuration::host::unreachable);
+  h->set_notify_on(
+    ::host::ON_FLAPPING,
+    obj.notification_options() & configuration::host::flapping);
+  h->set_notify_on(
+    ::host::ON_DOWNTIME,
+    obj.notification_options() & configuration::host::downtime);
   modify_if_different(
     *h,
     notification_interval,
@@ -389,9 +389,10 @@ void applier::host::modify_object(
   modify_if_different(*h, ocp_enabled, obj.obsess_over_host());
   modify_if_different(*h, timezone, obj.timezone());
   modify_if_different(*h, id, obj.host_id());
-  // XXX
-  // host_other_props[obj.host_name()].acknowledgement_timeout
-  //   = obj.get_acknowledgement_timeout() * config->interval_length();
+  modify_if_different(
+    *h,
+    acknowledgement_timeout,
+    obj.get_acknowledgement_timeout());
   modify_if_different(
     *h,
     recovery_notification_delay,
@@ -715,10 +716,25 @@ void applier::host::resolve_object(
       }
 
     // Check for sane recovery options.
-    // XXX
+    if (hst.get_notifications_enabled()
+        && hst.get_notify_on(::host::ON_RECOVERY)
+        && !hst.get_notify_on(::host::ON_DOWN)
+        && !hst.get_notify_on(::host::ON_UNREACHABLE)) {
+      logger(logging::log_verification_error, logging::basic)
+        << "Warning: Recovery notification option in host '"
+        << hst.get_name() << "' definition doesn't make any sense - "
+           "specify down and/or unreachable options as well";
+      ++config_warnings;
+    }
 
     // Check for illegal characters in host name.
-    // XXX
+    if (contains_illegal_object_chars(hst.get_name().c_str())) {
+      logger(logging::log_verification_error, logging::basic)
+        << "Error: The name of host '" << hst.get_name()
+        << "' contains one or more illegal characters.";
+      ++config_errors;
+      failure = true;
+    }
 
     // Throw exception in case of failure.
     if (failure)
@@ -743,8 +759,8 @@ void applier::host::unresolve_objects() {
        ++it) {
     ::host& h(*it->second);
     h.clear_children();
-    h.get_contacts().clear();
-    h.get_contactgroups().clear();
+    h.clear_contacts();
+    h.clear_contactgroups();
     h.clear_groups();
     h.clear_parents();
     h.clear_services();

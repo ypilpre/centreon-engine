@@ -11,14 +11,6 @@ void test_notifier::add_notification_flag(notifier::notification_type type) {
   _current_notifications |= (1 << type);
 }
 
-void test_notifier::set_notification_interval(long interval) {
-  _notification_interval = interval;
-}
-
-void test_notifier::set_current_notification_number(int number) {
-  _current_notification_number = number;
-}
-
 bool test_notifier::_is_host() const {
   return __is_host;
 }

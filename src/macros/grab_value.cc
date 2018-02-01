@@ -650,7 +650,7 @@ static int handle_summary_macro(
       // Filter totals based on contact if necessary.
       bool authorized(
              mac->contact_ptr
-             ? temp_host->contains_contact(mac->contact_ptr)
+             ? temp_host->contains_contact(mac->contact_ptr->get_name())
              : true);
       if (authorized) {
         bool problem(true);
@@ -705,7 +705,7 @@ static int handle_summary_macro(
       // Filter totals based on contact if necessary.
       bool authorized(
              mac->contact_ptr
-             ? temp_service->contains_contact(mac->contact_ptr)
+             ? temp_service->contains_contact(mac->contact_ptr->get_name())
              : true);
       if (authorized) {
         bool problem(true);

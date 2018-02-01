@@ -1121,8 +1121,8 @@ int handle_host_state(host* hst) {
     if (hst->get_current_state() == HOST_UP
         && hst->get_recovery_been_sent()) {
       hst->set_current_notification_number(0);
-      hst->set_notify_on_down(false);
-      hst->set_notify_on_unreachable(false);
+      hst->set_notify_on(host::ON_DOWN, false);
+      hst->set_notify_on(host::ON_UNREACHABLE, false);
     }
   }
 
@@ -1144,8 +1144,8 @@ int handle_host_state(host* hst) {
         && hst->get_recovery_been_sent()
         && hst->get_current_state() == HOST_UP) {
       hst->set_current_notification_number(0);
-      hst->set_notify_on_down(false);
-      hst->set_notify_on_unreachable(false);
+      hst->set_notify_on(host::ON_DOWN, false);
+      hst->set_notify_on(host::ON_UNREACHABLE, false);
     }
 
     /* if we're in a soft state and we should log host retries, do so now... */

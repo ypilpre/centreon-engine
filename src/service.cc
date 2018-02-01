@@ -38,9 +38,6 @@ service::service()
     _last_time_ok(0),
     _last_time_unknown(0),
     _last_time_warning(0),
-    _notify_on_critical(false),
-    _notify_on_unknown(false),
-    _notify_on_warning(false),
     _stalk_on_critical(false),
     _stalk_on_ok(false),
     _stalk_on_unknown(false),
@@ -423,69 +420,6 @@ void service::set_flap_detection_on_critical(bool detection) {
 
 /**************************************
 *                                     *
-*             Notification            *
-*                                     *
-**************************************/
-
-/**
- *  Check if this service should notify on critical states.
- *
- *  @return True if this service should notify on critical states.
- */
-bool service::get_notify_on_critical() const {
-  return (_notify_on_critical);
-}
-
-/**
- *  Set whether this service should notify on critical states.
- *
- *  @param[in] notify  True to notify.
- */
-void service::set_notify_on_critical(bool notify) {
-  _notify_on_critical = notify;
-  return ;
-}
-
-/**
- *  Check if this service should notify on unknown states.
- *
- *  @return True if service should notify on unknown states.
- */
-bool service::get_notify_on_unknown() const {
-  return (_notify_on_unknown);
-}
-
-/**
- *  Set whether this service should notify on unknown states.
- *
- *  @param[in] notify  True to notify.
- */
-void service::set_notify_on_unknown(bool notify) {
-  _notify_on_unknown = notify;
-  return ;
-}
-
-/**
- *  Check if this service should notify on warning states.
- *
- *  @return True if service should notify on warning states.
- */
-bool service::get_notify_on_warning() const {
-  return (_notify_on_warning);
-}
-
-/**
- *  Set whether this service should notify on warning states.
- *
- *  @param[in] notify  True to notify.
- */
-void service::set_notify_on_warning(bool notify) {
-  _notify_on_warning = notify;
-  return ;
-}
-
-/**************************************
-*                                     *
 *           Private methods           *
 *                                     *
 **************************************/
@@ -506,9 +440,6 @@ void service::_internal_copy(service const& other) {
   _last_time_ok = other._last_time_ok;
   _last_time_unknown = other._last_time_unknown;
   _last_time_warning = other._last_time_warning;
-  _notify_on_critical = other._notify_on_critical;
-  _notify_on_unknown = other._notify_on_unknown;
-  _notify_on_warning = other._notify_on_warning;
   _stalk_on_critical = other._stalk_on_critical;
   _stalk_on_ok = other._stalk_on_ok;
   _stalk_on_unknown = other._stalk_on_unknown;

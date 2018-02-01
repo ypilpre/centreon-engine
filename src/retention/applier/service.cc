@@ -140,11 +140,11 @@ void applier::service::_update(
         && scheduling_info_is_ok)
       obj.set_check_options(*state.check_options());
     if (state.notified_on_unknown().is_set())
-      obj.set_notify_on_unknown(*state.notified_on_unknown());
+      obj.set_notify_on(engine::service::ON_UNKNOWN, *state.notified_on_unknown());
     if (state.notified_on_warning().is_set())
-      obj.set_notify_on_warning(*state.notified_on_warning());
+      obj.set_notify_on(engine::service::ON_WARNING, *state.notified_on_warning());
     if (state.notified_on_critical().is_set())
-      obj.set_notify_on_critical(*state.notified_on_critical());
+      obj.set_notify_on(engine::service::ON_CRITICAL, *state.notified_on_critical());
     if (state.current_notification_number().is_set())
       obj.set_current_notification_number(*state.current_notification_number());
     if (state.current_notification_id().is_set())

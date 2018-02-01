@@ -30,8 +30,6 @@
 
 using namespace com::centreon;
 using namespace com::centreon::engine;
-using namespace com::centreon::engine::configuration;
-using namespace com::centreon::engine::configuration::applier;
 using namespace com::centreon::engine::notifications;
 
 extern configuration::state* config;
@@ -71,25 +69,21 @@ class AcknowledgementNotification : public ::testing::Test {
 // When the service is set to OK,
 // Then a recovery notification is sent.
 TEST_F(AcknowledgementNotification, AcknowledgementNotification) {
-
   _notifier->set_current_state(0);
   _notifier->set_last_state_change(time(NULL));
   _notifier->set_notifications_enabled(true);
   time_t last_notification = _notifier->get_last_notification();
-  _notifier->enable_state_notification(0);
-  _notifier->enable_state_notification(1);
-  _notifier->enable_state_notification(2);
+  _notifier->set_notify_on(notifier::ON_RECOVERY, true);
+  _notifier->set_notify_on(notifier::ON_WARNING, true);
+  _notifier->set_notify_on(notifier::ON_CRITICAL, true);
   // When the service is set in hard WARNING
   time_t now = time(NULL) + 20;
   set_time(now);
   _notifier->set_current_state(1);
-  _notifier->set_last_hard_state(1);
-  _notifier->set_last_state_change(now);
-  _notifier->set_last_hard_state_change(now);
-  _notifier->set_last_check(now);
+  _notifier->set_current_state_type(HARD_STATE);
   _notifier->notify(notifier::PROBLEM, "admin", "Test comment");
   // Then a notification is sent
-  ASSERT_TRUE(_notifier->get_last_notification() >= now);
+  ASSERT_GE(_notifier->get_last_notification(), now);
 
   // When the service is acknowledged (normally)
   now += 20;
@@ -151,25 +145,21 @@ TEST_F(AcknowledgementNotification, AcknowledgementNotification) {
 // When the service is set to OK,
 // Then the acknowledgement is removed and a recovery notification is sent.
 TEST_F(AcknowledgementNotification, StickyAcknowledgementNotification) {
-
   _notifier->set_current_state(0);
   _notifier->set_last_state_change(time(NULL));
   _notifier->set_notifications_enabled(true);
   time_t last_notification = _notifier->get_last_notification();
-  _notifier->enable_state_notification(0);
-  _notifier->enable_state_notification(1);
-  _notifier->enable_state_notification(2);
+  _notifier->set_notify_on(notifier::ON_RECOVERY, true);
+  _notifier->set_notify_on(notifier::ON_WARNING, true);
+  _notifier->set_notify_on(notifier::ON_CRITICAL, true);
   // When the service is set in hard WARNING
   time_t now = time(NULL) + 20;
   set_time(now);
   _notifier->set_current_state(1);
-  _notifier->set_last_hard_state(1);
-  _notifier->set_last_state_change(now);
-  _notifier->set_last_hard_state_change(now);
-  _notifier->set_last_check(now);
+  _notifier->set_current_state_type(HARD_STATE);
   _notifier->notify(notifier::PROBLEM, "admin", "Test comment");
   // Then a notification is sent
-  ASSERT_TRUE(_notifier->get_last_notification() >= now);
+  ASSERT_GE(_notifier->get_last_notification(), now);
 
   // When the service is acknowledged (normally)
   now += 20;
