@@ -747,6 +747,7 @@ int notifier::schedule_downtime(
                        fixed,
                        triggered_by,
                        duration));
+  // XXX: ID computation is not good
   if (scheduled_downtime_list.empty())
     dt->set_id(1);
   else

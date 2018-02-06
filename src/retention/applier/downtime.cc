@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2013 Merethis
+** Copyright 2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -17,8 +17,12 @@
 ** <http://www.gnu.org/licenses/>.
 */
 
+#include <memory>
+#include "com/centreon/engine/configuration/applier/state.hh"
 #include "com/centreon/engine/globals.hh"
+#include "com/centreon/engine/host.hh"
 #include "com/centreon/engine/retention/applier/downtime.hh"
+#include "com/centreon/engine/service.hh"
 
 using namespace com::centreon::engine;
 using namespace com::centreon::engine::retention;
@@ -29,9 +33,6 @@ using namespace com::centreon::engine::retention;
  *  @param[in] lst The downtime list to add.
  */
 void applier::downtime::apply(list_downtime const& lst) {
-  // Big speedup when reading retention.dat in bulk.
-  defer_downtime_sorting = 1;
-
   for (list_downtime::const_iterator it(lst.begin()), end(lst.end());
        it != end;
        ++it) {
@@ -40,10 +41,6 @@ void applier::downtime::apply(list_downtime const& lst) {
     else
       _add_service_downtime(**it);
   }
-
-  // Sort all downtimes.
-  // FIXME DBR: no more defined...
-  //sort_downtime();
 }
 
 /**
@@ -52,20 +49,23 @@ void applier::downtime::apply(list_downtime const& lst) {
  *  @param[in] obj The downtime to add into the host.
  */
 void applier::downtime::_add_host_downtime(
-       retention::downtime const& obj) throw () {
-  // FIXME DBR: HOST_DOWNTIME is no more defined
-//  add_host_downtime(
-//    obj.host_name().c_str(),
-//    obj.entry_time(),
-//    obj.author().c_str(),
-//    obj.comment_data().c_str(),
-//    obj.start_time(),
-//    obj.end_time(),
-//    obj.fixed(),
-//    obj.triggered_by(),
-//    obj.duration(),
-//    obj.downtime_id());
-//  register_downtime(HOST_DOWNTIME, obj.downtime_id());
+       retention::downtime const& obj) {
+  std::auto_ptr<engine::downtime> dt(new engine::downtime(
+    engine::downtime::HOST_DOWNTIME,
+    configuration::applier::state::instance().hosts_find(obj.host_name()).get(),
+    obj.entry_time(),
+    obj.author(),
+    obj.comment_data(),
+    obj.start_time(),
+    obj.end_time(),
+    obj.fixed(),
+    obj.triggered_by(),
+    obj.duration()));
+  dt->set_id(obj.downtime_id());
+  dt->registration();
+  scheduled_downtime_list[dt->get_id()] = dt.get();
+  dt.release();
+  return ;
 }
 
 /**
@@ -74,19 +74,22 @@ void applier::downtime::_add_host_downtime(
  *  @param[in] obj The downtime to add into the service.
  */
 void applier::downtime::_add_service_downtime(
-       retention::downtime const& obj) throw () {
-  // FIXME DBR: SERVICE_DOWNTIME is no more defined
-//  add_service_downtime(
-//    obj.host_name().c_str(),
-//    obj.service_description().c_str(),
-//    obj.entry_time(),
-//    obj.author().c_str(),
-//    obj.comment_data().c_str(),
-//    obj.start_time(),
-//    obj.end_time(),
-//    obj.fixed(),
-//    obj.triggered_by(),
-//    obj.duration(),
-//    obj.downtime_id());
-//  register_downtime(SERVICE_DOWNTIME, obj.downtime_id());
+       retention::downtime const& obj) {
+  std::auto_ptr<engine::downtime> dt(new engine::downtime(
+    engine::downtime::SERVICE_DOWNTIME,
+    configuration::applier::state::instance().services_find(
+      std::make_pair(obj.host_name(), obj.service_description().c_str())).get(),
+    obj.entry_time(),
+    obj.author(),
+    obj.comment_data(),
+    obj.start_time(),
+    obj.end_time(),
+    obj.fixed(),
+    obj.triggered_by(),
+    obj.duration()));
+  dt->set_id(obj.downtime_id());
+  dt->registration();
+  scheduled_downtime_list[dt->get_id()] = dt.get();
+  dt.release();
+  return ;
 }

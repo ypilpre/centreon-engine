@@ -1,7 +1,7 @@
 /*
-** Copyright 1999-2009      Ethan Galstad
-** Copyright 2009-2010      Nagios Core Development Team and Community Contributors
-** Copyright 2011-2013,2017 Centreon
+** Copyright 1999-2009           Ethan Galstad
+** Copyright 2009-2010           Nagios Core Development Team and Community Contributors
+** Copyright 2011-2013,2017-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -145,15 +145,11 @@ extern sched_info                scheduling_info;
 extern std::map<unsigned long, com::centreon::engine::comment*>
                                  comment_list;
 
-extern int                       defer_comment_sorting;
-
 extern char*                     macro_x_names[];
 extern char*                     macro_user[];
 
 extern std::map<unsigned long, com::centreon::engine::downtime* >
                                  scheduled_downtime_list;
-
-extern int                       defer_downtime_sorting;
 
 extern FILE*                     debug_file_fp;
 

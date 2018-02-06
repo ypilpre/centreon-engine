@@ -1,7 +1,7 @@
 /*
 ** Copyright 1999-2009           Ethan Galstad
 ** Copyright 2009-2010           Nagios Core Development Team and Community Contributors
-** Copyright 2011-2013,2016-2017 Centreon
+** Copyright 2011-2013,2016-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -86,7 +86,6 @@ int                 caught_signal(false);
 int                 command_check_interval(-1);
 int                 config_errors(0);
 int                 config_warnings(0);
-int                 defer_downtime_sorting(0);
 int                 embedded_perl_initialized(false);
 int                 external_command_buffer_slots(4096);
 int                 log_host_retries(false);
