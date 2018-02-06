@@ -43,6 +43,7 @@ class Downtime : public ::testing::Test {
     if (config == NULL)
       config = new configuration::state;
     configuration::applier::state::load();
+    next_downtime_id = 0;
 
     // Create command.
     configuration::command cmd("cmd");

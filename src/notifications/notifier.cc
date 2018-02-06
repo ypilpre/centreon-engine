@@ -747,11 +747,11 @@ int notifier::schedule_downtime(
                        fixed,
                        triggered_by,
                        duration));
-  // XXX: ID computation is not good
-  if (scheduled_downtime_list.empty())
-    dt->set_id(1);
-  else
-    dt->set_id(scheduled_downtime_list.rbegin()->first + 1);
+  while ((scheduled_downtime_list.find(next_downtime_id)
+          != scheduled_downtime_list.end())
+         || !next_downtime_id)
+    ++next_downtime_id;
+  dt->set_id(next_downtime_id++);
   scheduled_downtime_list.insert(std::make_pair(dt->get_id(), dt));
 
   /* register the scheduled downtime */

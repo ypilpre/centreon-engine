@@ -50,21 +50,31 @@ void applier::downtime::apply(list_downtime const& lst) {
  */
 void applier::downtime::_add_host_downtime(
        retention::downtime const& obj) {
-  std::auto_ptr<engine::downtime> dt(new engine::downtime(
-    engine::downtime::HOST_DOWNTIME,
-    configuration::applier::state::instance().hosts_find(obj.host_name()).get(),
-    obj.entry_time(),
-    obj.author(),
-    obj.comment_data(),
-    obj.start_time(),
-    obj.end_time(),
-    obj.fixed(),
-    obj.triggered_by(),
-    obj.duration()));
-  dt->set_id(obj.downtime_id());
-  dt->registration();
-  scheduled_downtime_list[dt->get_id()] = dt.get();
-  dt.release();
+  // Check if downtime already exist.
+  if (scheduled_downtime_list.find(obj.downtime_id())
+      != scheduled_downtime_list.end()) {
+    logger(logging::log_runtime_error, logging::basic)
+      << "Error: attempting to create downtime " << obj.downtime_id()
+      << " from retention, which does already exist";
+  }
+  // Downtime does not exist, good to go.
+  else {
+    std::auto_ptr<engine::downtime> dt(new engine::downtime(
+      engine::downtime::HOST_DOWNTIME,
+      configuration::applier::state::instance().hosts_find(obj.host_name()).get(),
+      obj.entry_time(),
+      obj.author(),
+      obj.comment_data(),
+      obj.start_time(),
+      obj.end_time(),
+      obj.fixed(),
+      obj.triggered_by(),
+      obj.duration()));
+    dt->set_id(obj.downtime_id());
+    dt->registration();
+    scheduled_downtime_list[dt->get_id()] = dt.get();
+    dt.release();
+  }
   return ;
 }
 
