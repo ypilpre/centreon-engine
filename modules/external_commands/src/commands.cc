@@ -238,6 +238,7 @@ int cmd_add_comment(int cmd, time_t entry_time, char* args) {
   char* temp_ptr(NULL);
   shared_ptr<host> temp_host;
   shared_ptr<service> temp_service;
+  notifications::notifier* notif(NULL);
   char* host_name(NULL);
   char* svc_description(NULL);
   char* user(NULL);
@@ -260,11 +261,13 @@ int cmd_add_comment(int cmd, time_t entry_time, char* args) {
     /* verify that the service is valid */
     if ((temp_service = find_service(host_name, svc_description)) == NULL)
       return (ERROR);
+    notif = static_cast<notifications::notifier*>(temp_service.get());
   }
   else {
     /* else verify that the host is valid */
     try {
       temp_host = configuration::applier::state::instance().hosts_find(host_name);
+      notif = static_cast<notifications::notifier*>(temp_host.get());
     }
     catch (not_found const& e) {
       (void) e;
@@ -293,8 +296,7 @@ int cmd_add_comment(int cmd, time_t entry_time, char* args) {
   new_comment = comment::add_new_comment(
              (cmd == CMD_ADD_HOST_COMMENT) ? comment::HOST_COMMENT : comment::SERVICE_COMMENT,
              comment::USER_COMMENT,
-             host_name,
-             svc_description,
+             notif,
              entry_time,
              user,
              comment_data,
@@ -325,6 +327,7 @@ int cmd_delete_comment(int cmd, char* args) {
 int cmd_delete_all_comments(int cmd, char* args) {
   shared_ptr<service> temp_service;
   shared_ptr<host> temp_host;
+  notifications::notifier* notif(NULL);
   char* host_name(NULL);
   char* svc_description(NULL);
 
@@ -342,6 +345,7 @@ int cmd_delete_all_comments(int cmd, char* args) {
     /* verify that the service is valid */
     if ((temp_service = find_service(host_name, svc_description)) == NULL)
       return (ERROR);
+    notif = static_cast<notifications::notifier*>(temp_service.get());
   }
   else {
     /* else verify that the host is valid */
@@ -352,13 +356,11 @@ int cmd_delete_all_comments(int cmd, char* args) {
       (void)e;
       return (ERROR);
     }
+    notif = static_cast<notifications::notifier*>(temp_host.get());
   }
 
   /* delete comments */
-  comment::delete_all_comments(
-    (cmd == CMD_DEL_ALL_HOST_COMMENTS) ? comment::HOST_COMMENT : comment::SERVICE_COMMENT,
-    host_name,
-    svc_description);
+  notif->delete_all_comments();
   return (OK);
 }
 
@@ -2310,8 +2312,6 @@ int cmd_change_object_custom_var(int cmd, char* args) {
     varname[x] = toupper(varname[x]);
 
   /* find the proper variable */
-  //FIXME DBR: this can not change as before. We don't have a pointer to customvars
-  // So we cannot change one of its values like this...
   for (customvar_set::const_iterator
          it(temp_customvars.begin()),
          end(temp_customvars.end());
@@ -2814,8 +2814,7 @@ void acknowledge_host_problem(
   comment::add_new_comment(
     comment::HOST_COMMENT,
     comment::ACKNOWLEDGEMENT_COMMENT,
-    hst->get_name(),
-    "",
+    hst,
     current_time,
     ack_author,
     ack_data,
@@ -2880,8 +2879,7 @@ void acknowledge_service_problem(
   comment::add_new_comment(
     comment::SERVICE_COMMENT,
     comment::ACKNOWLEDGEMENT_COMMENT,
-    svc->get_host_name(),
-    svc->get_description(),
+    svc,
     current_time,
     ack_author,
     ack_data,

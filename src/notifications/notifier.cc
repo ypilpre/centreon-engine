@@ -819,6 +819,21 @@ bool notifier::should_be_escalated() const {
   return false;
 }
 
+void notifier::delete_all_comments() {
+  for (std::map<unsigned long, comment*>::iterator
+         it(comment_list.begin()),
+         next_it(comment_list.begin()),
+         end(comment_list.end());
+       it != end;
+       it = next_it) {
+    ++next_it;
+    if (it->second->get_parent() == this) {
+      delete it->second;
+      comment_list.erase(it);
+    }
+  }
+}
+
 /**
  *  Deletes all non-persistent acknowledgement comments for a particular
  *  notifier

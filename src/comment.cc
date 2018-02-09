@@ -29,8 +29,6 @@ using namespace com::centreon::engine::checks;
 // Chained hash limits.
 int const COMMENT_HASHSLOTS = 1024;
 
-static comment* comment_hashlist[COMMENT_HASHSLOTS];
-
 unsigned long comment::_next_id(1);
 
 /******************************************************************/
@@ -249,8 +247,14 @@ notifications::notifier* comment::get_parent() const {
 }
 
 std::string comment::get_host_name() const {
-  monitorable* mon(static_cast<monitorable*>(_parent));
-  return mon->get_host_name();
+  if (get_comment_type() == HOST_COMMENT) {
+    host* hst(static_cast<host*>(_parent));
+    return hst->get_name();
+  }
+  else {
+    service* svc(static_cast<service*>(_parent));
+    return svc->get_host_name();
+  }
 }
 
 std::string comment::get_service_description() const {
@@ -333,10 +337,10 @@ void comment::set_expire_time(time_t time) {
   _expire_time = time;
 }
 
-unsigned int comment::get_comment_type() const {
+comment::comment_type comment::get_comment_type() const {
   return _comment_type;
 }
 
-void comment::set_comment_type(unsigned int comment_type) {
+void comment::set_comment_type(comment::comment_type comment_type) {
   _comment_type = comment_type;
 }

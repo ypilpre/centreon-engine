@@ -112,8 +112,8 @@ class           comment {
   void          set_expires(bool expires);
   time_t        get_expire_time() const;
   void          set_expire_time(time_t time);
-  unsigned int  get_comment_type() const;
-  void          set_comment_type(unsigned int comment_type);
+  comment_type  get_comment_type() const;
+  void          set_comment_type(comment_type comment_type);
 
  private:
   static unsigned long
@@ -123,7 +123,7 @@ class           comment {
                 _parent;
   std::string   _author;
   std::string   _comment_data;
-  unsigned int  _comment_type;
+  comment_type  _comment_type;
   entry_type    _entry_type;
   int           _source;
   time_t        _entry_time;

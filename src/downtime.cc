@@ -265,8 +265,7 @@ int downtime::registration() {
     new_comment = comment::add_new_comment(
       comment::SERVICE_COMMENT,
       comment::DOWNTIME_COMMENT,
-      svc->get_host_name(),
-      svc->get_description(),
+      svc,
       time(NULL),
       "(Centreon Engine Process)",
       oss.str(),
@@ -278,8 +277,7 @@ int downtime::registration() {
     new_comment = comment::add_new_comment(
       comment::HOST_COMMENT,
       comment::DOWNTIME_COMMENT,
-      hst->get_name(),
-      "",
+      hst,
       time(NULL),
       "(Centreon Engine Process)",
       oss.str(),

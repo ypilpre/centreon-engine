@@ -168,6 +168,7 @@ namespace                  notifications {
 
     // XXX
     void                   delete_acknowledgement_comments();
+    void                   delete_all_comments();
     unsigned int           get_current_notifications_flag() const;
     bool                   get_no_more_notifications() const;
     void                   check_pending_flex_downtime();
