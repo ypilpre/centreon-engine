@@ -52,6 +52,7 @@ class                        host : public monitorable {
   void                       set_alias(std::string const& alias);
   int                        get_circular_path_checked() const;
   void                       set_circular_path_checked(int check_level);
+  virtual bool               is_host() const;
   std::string const&         get_name() const;
   void                       set_name(std::string const& name);
   bool                       get_stalk_on_down() const;

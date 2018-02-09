@@ -11,7 +11,7 @@ void test_notifier::add_notification_flag(notifier::notification_type type) {
   _current_notifications |= (1 << type);
 }
 
-bool test_notifier::_is_host() const {
+bool test_notifier::is_host() const {
   return __is_host;
 }
 

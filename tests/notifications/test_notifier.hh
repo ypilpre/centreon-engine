@@ -27,9 +27,9 @@ class test_notifier : public notifier {
   void set_in_downtime(bool downtime);
   void set_is_host(bool is_host);
   void add_notification_flag(notifier::notification_type type);
+  bool is_host() const;
 
  protected:
-  bool _is_host() const;
   void _checkable_macro_builder(nagios_macros& mac);
 
   bool __is_host;

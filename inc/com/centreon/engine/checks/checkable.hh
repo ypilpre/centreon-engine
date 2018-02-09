@@ -78,6 +78,7 @@ namespace              checks {
     void               set_executing(bool executing);
     double             get_execution_time() const;
     void               set_execution_time(double execution_time);
+    virtual bool       is_host() const = 0;
     time_t             get_last_check() const;
     void               set_last_check(time_t last_check);
     double             get_latency() const;

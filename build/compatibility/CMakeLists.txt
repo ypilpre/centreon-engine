@@ -47,7 +47,6 @@ set(
   "${INC_DIR}/comments.h"
   "${INC_DIR}/common.h"
   "${INC_DIR}/config.h"
-  "${INC_DIR}/downtime.h"
   "${INC_DIR}/embedded_perl.h"
   "${INC_DIR}/epn_nagios.h"
   "${INC_DIR}/events.h"
