@@ -2776,10 +2776,9 @@ void acknowledge_host_problem(
          ? notifier::ACKNOWLEDGEMENT_STICKY : notifier::ACKNOWLEDGEMENT_NORMAL);
 
   /* schedule acknowledgement expiration */
-  // FIXME DBR
   time_t current_time(time(NULL));
   hst->set_last_acknowledgement(current_time);
-//  schedule_acknowledgement_expiration(hst);
+  hst->schedule_acknowledgement_expiration();
 
   /* send data to event broker */
   broker_acknowledgement_data(
@@ -2844,8 +2843,7 @@ void acknowledge_service_problem(
   time_t current_time(time(NULL));
   svc->set_last_acknowledgement(current_time);
 
-  //FIXME DBR
-  //schedule_acknowledgement_expiration(svc);
+  svc->schedule_acknowledgement_expiration();
 
   /* send data to event broker */
   broker_acknowledgement_data(
@@ -2898,7 +2896,7 @@ void remove_host_acknowledgement(host* hst) {
   update_host_status(hst, false);
 
   /* remove any non-persistant comments associated with the ack */
-  comment::delete_host_acknowledgement_comments(hst);
+  hst->delete_acknowledgement_comments();
 }
 
 /* removes a service acknowledgement */
@@ -2910,7 +2908,7 @@ void remove_service_acknowledgement(service* svc) {
   update_service_status(svc, false);
 
   /* remove any non-persistant comments associated with the ack */
-  comment::delete_service_acknowledgement_comments(svc);
+  svc->delete_acknowledgement_comments();
 }
 
 /* starts executing service checks */

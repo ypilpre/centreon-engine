@@ -116,6 +116,7 @@ namespace                  notifications {
     time_t                 get_next_notification() const;
     void                   set_next_notification(
                              time_t next_notification);
+    void                   schedule_acknowledgement_expiration();
     void                   notify(
                              notification_type type,
                              std::string const& author = "",

@@ -20,6 +20,7 @@
 #include <memory>
 #include <sstream>
 #include "com/centreon/engine/downtime.hh"
+#include "com/centreon/engine/events/defines.hh"
 #include "com/centreon/engine/globals.hh"
 #include "com/centreon/engine/host.hh"
 #include "com/centreon/engine/logging/logger.hh"
@@ -1204,4 +1205,27 @@ void notifier::_internal_copy(notifier const& other) {
   _recovery_notification_delay = other._recovery_notification_delay;
   _scheduled_downtime_depth = other._scheduled_downtime_depth;
   return ;
+}
+
+void notifier::schedule_acknowledgement_expiration() {
+  int ack_timeout(get_acknowledgement_timeout());
+  int last_ack(get_last_acknowledgement());
+  if (ack_timeout > 0 && last_ack != (time_t)0) {
+    int event_type;
+    if (is_host())
+      event_type = EVENT_EXPIRE_HOST_ACK;
+    else
+      event_type = EVENT_EXPIRE_SERVICE_ACK;
+    schedule_new_event(
+      event_type,
+      false,
+      last_ack + ack_timeout,
+      false,
+      0,
+      NULL,
+      true,
+      this,
+      NULL,
+      0);
+  }
 }
