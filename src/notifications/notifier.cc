@@ -658,6 +658,15 @@ bool notifier::is_in_downtime() const {
 }
 
 /**
+ *  This method sets or not the notifier in downtime
+ *
+ *  @param downtime A boolean telling if the notifier is set or not in downtime.
+ */
+void notifier::set_in_downtime(bool downtime) {
+  _in_downtime = downtime;
+}
+
+/**
  *  Get the number of pending flexible downtimes targeting this object.
  *
  *  @return An integer.
@@ -1239,4 +1248,8 @@ void notifier::schedule_acknowledgement_expiration() {
       NULL,
       0);
   }
+}
+
+void notifier::add_notification_flag(notifier::notification_type type) {
+  _current_notifications |= (1 << type);
 }
