@@ -76,9 +76,14 @@ void applier::service::add_object(
                          configuration::service const& obj) {
   // Check service.
   if (obj.hosts().size() != 1)
-    throw (engine_error() << "Could not create service '"
-           << obj.service_description()
-           << "' with multiple hosts defined");
+    if (obj.hosts().size() == 0)
+      throw (engine_error() << "Could not create service '"
+             << obj.service_description()
+             << "' with no host defined");
+    else
+      throw (engine_error() << "Could not create service '"
+             << obj.service_description()
+             << "' with multiple hosts defined");
   else if (!obj.hostgroups().empty())
     throw (engine_error() << "Could not create service '"
            << obj.service_description()
