@@ -312,6 +312,21 @@ void notifier::set_next_notification(time_t next_notification) {
   return ;
 }
 
+void notifier::update_acknowledgement_on_state_changed() {
+  // Normal acknowledgement is lost when state changes. We must verify
+  // that the acknowledgement is older than the state change.
+  // Sticky acknowledgement is lost when state changes to OK. We must
+  // verify that the acknowledgement is older than the state change.
+  if (get_last_acknowledgement() < get_last_check()
+      && ((get_acknowledgement_type() == ACKNOWLEDGEMENT_NORMAL
+           && get_current_state() != get_last_state())
+          || (get_acknowledgement_type() == ACKNOWLEDGEMENT_STICKY
+              && get_current_state() == 0))) {
+    set_acknowledged(ACKNOWLEDGEMENT_NONE);
+    delete_acknowledgement_comments();
+  }
+}
+
 /**
  *  Attempt to send a notification.
  *
@@ -325,18 +340,6 @@ void notifier::notify(
                  std::string const& author,
                  std::string const& comment,
                  int options) {
-  // Normal acknowledgement is lost when state changes. We must verify
-  // that the acknowledgement is older than the state change.
-  // Sticky acknowledgement is lost when state changes to OK. We must
-  // verify that the acknowledgement is older than the state change.
-  if (get_last_acknowledgement() < get_last_check()
-      && ((get_acknowledgement_type() == ACKNOWLEDGEMENT_NORMAL
-           && get_current_state() != get_last_state())
-          || (get_acknowledgement_type() == ACKNOWLEDGEMENT_STICKY
-              && get_current_state() == 0))) {
-    set_acknowledged(ACKNOWLEDGEMENT_NONE);
-    delete_acknowledgement_comments();
-  }
 
   // Create list of users to notify.
   umap<std::string, engine::contact*> users_to_notify(_contacts);

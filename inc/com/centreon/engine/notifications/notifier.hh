@@ -117,6 +117,7 @@ namespace                  notifications {
     void                   set_next_notification(
                              time_t next_notification);
     void                   schedule_acknowledgement_expiration();
+    void                   update_acknowledgement_on_state_changed();
     void                   notify(
                              notification_type type,
                              std::string const& author = "",
@@ -165,7 +166,6 @@ namespace                  notifications {
                              unsigned long duration,
                              downtime_propagation propagate =
                                DOWNTIME_PROPAGATE_NONE);
-
 
     // XXX
     void                   delete_acknowledgement_comments();

@@ -118,6 +118,7 @@ TEST_F(AcknowledgementNotification, AcknowledgementNotification) {
   _notifier->set_last_state_change(now);
   _notifier->set_last_hard_state_change(now);
   _notifier->set_last_check(now);
+  _notifier->update_acknowledgement_on_state_changed();
   // Then the acknowledgement is removed and a notification is sent.
   _notifier->notify(notifier::PROBLEM, "admin", "Test comment");
   ASSERT_FALSE(_notifier->is_acknowledged());
@@ -199,6 +200,7 @@ TEST_F(AcknowledgementNotification, StickyAcknowledgementNotification) {
   _notifier->set_current_state(0);
   _notifier->set_last_state_change(now);
   _notifier->set_last_check(now);
+  _notifier->update_acknowledgement_on_state_changed();
   // Then the acknowledgement is removed and a recovery notification is sent.
   _notifier->notify(notifier::RECOVERY, "admin", "Test comment");
   ASSERT_FALSE(_notifier->is_acknowledged());
