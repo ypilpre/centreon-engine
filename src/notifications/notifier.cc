@@ -24,6 +24,8 @@
 #include "com/centreon/engine/globals.hh"
 #include "com/centreon/engine/host.hh"
 #include "com/centreon/engine/logging/logger.hh"
+#include "com/centreon/engine/macros/grab_host.hh"
+#include "com/centreon/engine/macros/grab_service.hh"
 #include "com/centreon/engine/notifications/notifier.hh"
 #include "com/centreon/engine/service.hh"
 
@@ -382,10 +384,15 @@ void notifier::notify(
       memset(&mac, 0, sizeof(mac));
 
       // grab the macro variables
-      // FIXME DBR: This code cannot work now. Could we improve macros ?
-//      grab_host_macros_r(&mac, get_host());
-//      if (!_is_host())
-//        grab_service_macros_r(&mac, get_service());
+      if (is_host()) {
+        host* hst = static_cast<host*>(this);
+        grab_host_macros_r(&mac, hst);
+      }
+      else {
+        service* svc = static_cast<service*>(this);
+        grab_host_macros_r(&mac, svc->get_host());
+        grab_service_macros_r(&mac, svc);
+      }
 
       /* The author is a string taken from an external command. It can be
          the contact name or the contact alias. And if the external command
@@ -847,22 +854,23 @@ void notifier::delete_acknowledgement_comments() {
   comment* next_comment = NULL;
 
   /* delete comments from memory */
-  //FIXME DBR: to rewrite
-//  for (temp_comment = comment_list;
-//       temp_comment != NULL;
-//       temp_comment = next_comment) {
-//    next_comment = temp_comment->next;
-//    if (temp_comment->comment_type == SERVICE_COMMENT
-//        && !strcmp(temp_comment->host_name, get_host_name().c_str())
-//        && !strcmp(temp_comment->service_description, get_description().c_str())
-//        && temp_comment->entry_type == ACKNOWLEDGEMENT_COMMENT
-//        && temp_comment->persistent == false)
-//      delete_comment(SERVICE_COMMENT, temp_comment->comment_id);
-//  }
+  for (std::map<unsigned long, comment*>::iterator
+         it(comment_list.begin()),
+         next_it(comment_list.begin()),
+         end(comment_list.end());
+       it != end;
+       it = next_it) {
+    ++next_it;
+    comment* temp_comment(it->second);
+    if (temp_comment->get_comment_type() == comment::SERVICE_COMMENT
+        && temp_comment->get_parent() == this
+        && temp_comment->get_entry_type() == comment::ACKNOWLEDGEMENT_COMMENT
+        && !temp_comment->get_persistent()) {
+      delete temp_comment;
+      comment_list.erase(it);
+    }
+  }
 }
-
-
-
 
 /**
  * Get the filter method associated to the given type.
