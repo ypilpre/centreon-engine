@@ -23,10 +23,7 @@
 #  include <ctime>
 #  include <list>
 #  include "com/centreon/engine/checks/checkable.hh"
-#  include "com/centreon/engine/downtime.hh"
 #  include "com/centreon/engine/globals.hh"
-#  include "com/centreon/engine/macros/defines.hh"
-#  include "com/centreon/engine/namespace.hh"
 
 CCE_BEGIN()
 

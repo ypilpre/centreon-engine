@@ -19,15 +19,11 @@
 
 #include <memory>
 #include <sstream>
-#include "com/centreon/engine/downtime.hh"
 #include "com/centreon/engine/events/defines.hh"
-#include "com/centreon/engine/globals.hh"
-#include "com/centreon/engine/host.hh"
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/macros/grab_host.hh"
 #include "com/centreon/engine/macros/grab_service.hh"
 #include "com/centreon/engine/notifications/notifier.hh"
-#include "com/centreon/engine/service.hh"
 
 using namespace com::centreon;
 using namespace com::centreon::engine;

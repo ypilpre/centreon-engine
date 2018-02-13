@@ -65,8 +65,6 @@ commands::command*  ochp_command_ptr(NULL);
 commands::command*  ocsp_command_ptr(NULL);
 
 std::map<unsigned long, comment*> comment_list;
-contact*            contact_list(NULL);
-contact*            contact_list_tail(NULL);
 dbuf                check_result_dbuf;
 float               high_host_flap_threshold(30.0);
 float               high_service_flap_threshold(30.0);

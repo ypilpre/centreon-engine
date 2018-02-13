@@ -23,7 +23,6 @@
 #  define CCE_GLOBALS_HH
 
 #  include <map>
-#  include <string>
 #  include <stdio.h>
 #  include "com/centreon/engine/checks.hh"
 #  include "com/centreon/engine/circular_buffer.hh"
