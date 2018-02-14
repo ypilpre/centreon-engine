@@ -734,9 +734,6 @@ int handle_async_service_check_result(
     }
     temp_service->set_acknowledged(notifier::ACKNOWLEDGEMENT_NONE);
 
-    // FIXME DBR: This should be managed by notifier.
-    //temp_service->set_no_more_notifications(false);
-
     if (reschedule_check == true)
       next_service_check
         = (time_t)(temp_service->get_last_check()

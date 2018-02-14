@@ -342,3 +342,56 @@ TEST_F(Downtime, SimpleHostFlexibleDowntime2) {
 
   ASSERT_TRUE(scheduled_downtime_list.empty());
 }
+
+// Given a service
+// When a downtime is scheduled on it,
+// Then a downtime is created with id=1 and no comment.
+// And host name and service description are available from the downtime.
+// When it is unscheduled, a new comment is added
+// And the downtime is removed.
+TEST_F(Downtime, TriggeredDowntime) {
+  shared_ptr<engine::service> svc(get_test_service());
+
+  // No comment for now.
+  ASSERT_TRUE(comment_list.empty());
+  set_time(20);
+  ASSERT_TRUE(svc->schedule_downtime(
+    downtime::SERVICE_DOWNTIME,
+    time(NULL),
+    "admin",
+    "test downtime",
+    40, 60,
+    false,
+    0, 120) == 0);
+
+  // Here we define a downtime triggered by the previous one.
+  ASSERT_TRUE(svc->schedule_downtime(
+    downtime::SERVICE_DOWNTIME,
+    time(NULL),
+    "admin",
+    "test downtime",
+    60, 70,
+    false,
+    1, 120) == 0);
+
+  std::map<unsigned long, downtime*>::iterator it(
+    scheduled_downtime_list.begin());
+  std::auto_ptr<downtime> dt1(it->second);
+  ++it;
+  std::auto_ptr<downtime> dt2(it->second);
+
+  // When it is time to start the downtime
+  set_time(41);
+  // And the handle method is called, the downtime is in effect
+  svc->set_current_state(2);
+  dt1->handle();
+  dt2->handle();
+  ASSERT_TRUE(dt1->get_in_effect());
+  ASSERT_TRUE(dt2->get_in_effect());
+
+  set_time(80);
+  //dt1->handle();
+  dt1->unschedule();
+  ASSERT_TRUE(scheduled_downtime_list.empty());
+}
+
