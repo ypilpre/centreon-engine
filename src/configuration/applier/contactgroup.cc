@@ -122,7 +122,6 @@ void applier::contactgroup::expand_objects(configuration::state& s) {
        ++it)
     s.contactgroups().insert(it->second);
 
-  return ;
 }
 
 /**

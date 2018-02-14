@@ -29,8 +29,6 @@ using namespace com::centreon::engine::checks;
 // Chained hash limits.
 int const COMMENT_HASHSLOTS = 1024;
 
-static comment* comment_hashlist[COMMENT_HASHSLOTS];
-
 unsigned long comment::_next_id(1);
 
 /******************************************************************/
@@ -60,209 +58,11 @@ void comment::delete_comment(unsigned long comment_id) {
   }
 }
 
-/******************************************************************/
-/***************** COMMENT DELETION FUNCTIONS *********************/
-/******************************************************************/
-
-/* deletes all comments for a particular host or service */
-int comment::delete_all_comments(
-      unsigned int type,
-      std::string const& host_name,
-      std::string const& svc_description) {
-  if (type == comment::HOST_COMMENT)
-    return (comment::delete_all_host_comments(host_name));
-  return (comment::delete_all_service_comments(host_name, svc_description));
-}
-
-/* deletes all comments for a particular host */
-int comment::delete_all_host_comments(std::string const& host_name) {
-  comment* temp_comment = NULL;
-  comment* next_comment = NULL;
-
-  if (host_name.empty())
-    return (ERROR);
-
-  /* delete host comments from memory */
-  for (std::map<unsigned long, comment*>::iterator
-         it(comment_list.begin()),
-         next_it(comment_list.begin()),
-         end(comment_list.end());
-       it != end;
-       it = next_it) {
-    ++next_it;
-    comment* my_comment(it->second);
-    if (my_comment->get_comment_type() == SERVICE_COMMENT
-        && my_comment->get_host_name() == host_name) {
-      delete my_comment;
-      comment_list.erase(it);
-      // FIXME DBR: should we also erase from the hash table ??
-      // FIXME DBR: There was an optimization with a hashtable only based on hostnames...
-    }
-  }
-
-  return (OK);
-}
-
-/**
- *  Deletes all non-persistent acknowledgement comments for a given host.
- *
- * @param hst The host.
- *
- * @return OK or ERROR when the host is NULL.
- */
-int comment::delete_host_acknowledgement_comments(host* hst) {
-
-  if (hst == NULL)
-    return (ERROR);
-
-  for (std::map<unsigned long, comment*>::iterator
-         it(comment_list.begin()),
-         end(comment_list.end());
-       it != end;
-       ++it) {
-    comment* my_comment(it->second);
-    if (my_comment->get_comment_type() == HOST_COMMENT
-        && my_comment->get_entry_type() == ACKNOWLEDGEMENT_COMMENT
-        && !my_comment->get_persistent()) {
-      comment_list.erase(it);
-      delete my_comment;
-    }
-  }
-  return (OK);
-}
-
-/**
- *  Deletes all non-persistent acknowledgement comments for a given service.
- *
- * @param svc The service.
- *
- * @return OK or ERROR when the service is NULL;
- */
-int comment::delete_service_acknowledgement_comments(service* svc) {
-
-  if (svc == NULL)
-    return (ERROR);
-
-  /* delete comments from memory */
-  for (std::map<unsigned long, comment*>::iterator
-         it(comment_list.begin()),
-         next_it(comment_list.begin()),
-         end(comment_list.end());
-       it != end;
-       it = next_it) {
-    ++next_it;
-    comment* my_comment(it->second);
-    if (my_comment->get_comment_type() == SERVICE_COMMENT
-        && my_comment->get_host_name() == svc->get_host_name()
-        && my_comment->get_service_description() == svc->get_description()
-        && my_comment->get_entry_type() == ACKNOWLEDGEMENT_COMMENT
-        && !my_comment->get_persistent()) {
-      delete my_comment;
-      comment_list.erase(it);
-    }
-  }
-  return (OK);
-}
-
-/* deletes all comments for a particular service */
-int comment::delete_all_service_comments(
-      std::string const& host_name,
-      std::string const& svc_description) {
-  comment* temp_comment = NULL;
-  comment* next_comment = NULL;
-
-  if (host_name.empty() || svc_description.empty())
-    return (ERROR);
-
-  /* delete service comments from memory */
-  for (std::map<unsigned long, comment*>::iterator
-         it(comment_list.begin()),
-         next_it(comment_list.begin()),
-         end(comment_list.end());
-       it != end;
-       it = next_it) {
-    ++next_it;
-    comment* my_comment(it->second);
-    if (my_comment->get_comment_type() == SERVICE_COMMENT
-        && my_comment->get_host_name() == host_name
-        && my_comment->get_service_description() == svc_description) {
-      delete my_comment;
-      comment_list.erase(it);
-      // FIXME DBR: should we also erase from the hash table ??
-    }
-  }
-  return (OK);
-}
-
-/* adds a comment to the list in memory */
-comment* comment::add_comment(
-      comment_type comment_type,
-      entry_type entry_type,
-      std::string const& host_name,
-      std::string const& svc_description,
-      time_t entry_time,
-      std::string const& author,
-      std::string const& comment_data,
-      int persistent,
-      bool expires,
-      time_t expire_time,
-      source_type source) {
-  /* make sure we have the data we need */
-//  if (host_name == NULL
-//      || author == NULL
-//      || comment_data == NULL
-//      || (comment_type == SERVICE_COMMENT
-//          && svc_description == NULL))
-//    return (ERROR);
-
-  comment* retval(new comment(
-                             comment_type,
-                             entry_type,
-                             host_name,
-                             (comment_type == comment::SERVICE_COMMENT)
-                               ? svc_description : "",
-                             entry_time,
-                             author,
-                             comment_data,
-                             persistent,
-                             expires,
-                             expire_time,
-                             source));
-
-  /* add comment to hash list */
-  //FIXME DBR:
-  //add_comment_to_hashlist(retval);
-
-  unsigned long comment_id(retval->get_id());
-  comment_list.insert(std::make_pair(comment_id, retval));
-
-  /* send data to event broker */
-  broker_comment_data(
-    NEBTYPE_COMMENT_LOAD,
-    NEBFLAG_NONE,
-    NEBATTR_NONE,
-    comment_type,
-    entry_type,
-    host_name,
-    svc_description,
-    entry_time,
-    author,
-    comment_data,
-    persistent,
-    source,
-    expires,
-    expire_time,
-    comment_id,
-    NULL);
-  return retval;
-}
-
 /* adds a new host or service comment */
 comment* comment::add_new_comment(
       comment::comment_type type,
       comment::entry_type ent_type,
-      std::string const& host_name,
-      std::string const& svc_description,
+      notifications::notifier* parent,
       time_t entry_time,
       std::string const& author_name,
       std::string const& comment_data,
@@ -270,20 +70,21 @@ comment* comment::add_new_comment(
       source_type source,
       bool expires,
       time_t expire_time) {
-  comment* retval(add_comment(
+  comment* retval(new comment(
                     type,
                     ent_type,
-                    host_name,
-                    svc_description,
+                    parent,
                     entry_time,
                     author_name,
                     comment_data,
                     persistent,
-                    source,
                     expires,
-                    expire_time));
+                    expire_time,
+                    source));
 
   unsigned long comment_id(retval->get_id());
+  comment_list.insert(std::make_pair(comment_id, retval));
+
   /* send data to event broker */
   broker_comment_data(
     NEBTYPE_COMMENT_ADD,
@@ -291,8 +92,8 @@ comment* comment::add_new_comment(
     NEBATTR_NONE,
     retval->get_comment_type(),
     ent_type,
-    host_name,
-    "",
+    retval->get_host_name(),
+    retval->get_service_description(),
     entry_time,
     author_name,
     comment_data,
@@ -338,27 +139,51 @@ void comment::check_for_expired_comment(unsigned long comment_id) {
 comment::comment(
            comment::comment_type cmt_type,
            comment::entry_type ent_type,
-           std::string const& host_name,
-           std::string const& service_description,
+           notifications::notifier* parent,
            time_t entry_time,
            std::string const& author,
            std::string const& comment_data,
            bool persistent,
            bool expires,
            time_t expire_time,
-           source_type source)
+           source_type source,
+           unsigned long comment_id)
   : _comment_type(cmt_type),
     _entry_type(ent_type),
-    _host_name(host_name),
-    _service_description(service_description),
+    _parent(parent),
     _entry_time(entry_time),
     _author(author),
     _comment_data(comment_data),
-    _comment_id(_next_id++),
+    _comment_id((comment_id == 0) ? _next_id++ : comment_id),
     _persistent(persistent),
     _expires(expires),
     _expire_time(expire_time),
-    _source(source) {}
+    _source(source) {
+  if (_comment_id > _next_id)
+    _next_id = comment_id + 1;
+
+//  unsigned long comment_id(get_id());
+//  comment_list.insert(std::make_pair(comment_id, retval));
+
+  /* send data to event broker */
+  broker_comment_data(
+    NEBTYPE_COMMENT_LOAD,
+    NEBFLAG_NONE,
+    NEBATTR_NONE,
+    get_comment_type(),
+    get_entry_type(),
+    get_host_name(),
+    get_service_description(),
+    get_entry_time(),
+    get_author(),
+    get_comment_data(),
+    get_persistent(),
+    get_source(),
+    get_expires(),
+    get_expire_time(),
+    get_id(),
+    NULL);
+}
 
 comment::comment(comment const& other)
   : _author(other._author),
@@ -417,21 +242,31 @@ void comment::set_entry_type(entry_type ent_type) {
   _entry_type = ent_type;
 }
 
-std::string comment::get_host_name() const {
-  return _host_name;
+notifications::notifier* comment::get_parent() const {
+  return _parent;
 }
 
-void comment::set_host_name(std::string const& host_name) {
-  _host_name = host_name;
+std::string comment::get_host_name() const {
+  if (get_comment_type() == HOST_COMMENT) {
+    host* hst(static_cast<host*>(_parent));
+    return hst->get_name();
+  }
+  else {
+    service* svc(static_cast<service*>(_parent));
+    return svc->get_host_name();
+  }
 }
 
 std::string comment::get_service_description() const {
-  return _service_description;
+  if (get_comment_type() == SERVICE_COMMENT) {
+    service* svc(static_cast<service*>(_parent));
+    return svc->get_description();
+  }
+  else {
+    return "";
+  }
 }
 
-void comment::set_service_description(std::string const& service_description) {
-  _service_description = service_description;
-}
 
 time_t comment::get_entry_time() const {
   return _entry_time;
@@ -502,10 +337,10 @@ void comment::set_expire_time(time_t time) {
   _expire_time = time;
 }
 
-unsigned int comment::get_comment_type() const {
+comment::comment_type comment::get_comment_type() const {
   return _comment_type;
 }
 
-void comment::set_comment_type(unsigned int comment_type) {
+void comment::set_comment_type(comment::comment_type comment_type) {
   _comment_type = comment_type;
 }

@@ -20,11 +20,12 @@
 #include <memory>
 #include <gtest/gtest.h>
 #include "../../timeperiod/utils.hh"
-#include "../test_notifier.hh"
+#include "com/centreon/engine/configuration/applier/command.hh"
+#include "com/centreon/engine/configuration/applier/host.hh"
+#include "com/centreon/engine/configuration/applier/service.hh"
 #include "com/centreon/engine/configuration/applier/state.hh"
 #include "com/centreon/engine/configuration/contact.hh"
 #include "com/centreon/engine/configuration/state.hh"
-#include "com/centreon/engine/notifications/notifier.hh"
 #include "com/centreon/engine/notifications/notifier.hh"
 #include "com/centreon/shared_ptr.hh"
 
@@ -39,15 +40,40 @@ extern configuration::state* config;
 class FlappingNotification : public ::testing::Test {
  public:
   void SetUp() {
-    set_time(20);
-    _notifier.reset(new test_notifier());
     if (config == NULL)
       config = new configuration::state;
     configuration::applier::state::load();
-    contact_map& cm = configuration::applier::state::instance().contacts();
+
+    configuration::applier::host hst_aply;
+    configuration::applier::service svc_aply;
+    configuration::service csvc;
+
+    csvc.parse("service_description", "check description");
+    csvc.parse("host_name", "test_host");
+
+    configuration::host hst;
+    hst.parse("host_name", "test_host");
+    hst_aply.add_object(hst);
+    svc_aply.add_object(csvc);
+    csvc.parse("hosts", "test_host");
+
+    configuration::applier::command cmd_aply;
+    configuration::command cmd("cmd");
+    cmd.parse("command_line", "echo 1");
+    csvc.parse("check_command", "cmd");
+    cmd_aply.add_object(cmd);
+
+    svc_aply.resolve_object(csvc);
+
+    _service = configuration::applier::state::instance()
+                 .services().begin()->second.get();
+
+    set_time(20);
+    contact_map& cm(configuration::applier::state::instance().contacts());
     configuration::contact ctct("test");
     cm["test"] = shared_ptr<engine::contact>(new engine::contact(ctct));
-    _notifier->add_contact(configuration::applier::state::instance().contacts_find("test").get());
+    _service->add_contact(
+      configuration::applier::state::instance().contacts_find("test").get());
   }
 
   void TearDown() {
@@ -57,7 +83,7 @@ class FlappingNotification : public ::testing::Test {
   }
 
  protected:
-  std::auto_ptr<test_notifier>       _notifier;
+  engine::service*  _service;
 };
 
 // Given a notifier not in downtime with notifications enabled
@@ -65,17 +91,17 @@ class FlappingNotification : public ::testing::Test {
 // When a STARTFLAPPING notification is already sent
 // Then the FLAPPINGSTOP notification can be sent when the flapping is finished.
 TEST_F(FlappingNotification, StartStopFlapping) {
-  time_t last_notification = _notifier->get_last_notification();
-  _notifier->set_notifications_enabled(true);
-  _notifier->set_flapping(true);
-  _notifier->notify(notifier::FLAPPINGSTART, "admin", "Test start flapping");
-  time_t current_notification = _notifier->get_last_notification();
+  time_t last_notification = _service->get_last_notification();
+  _service->set_notifications_enabled(true);
+  _service->set_flapping(true);
+  _service->notify(notifier::FLAPPINGSTART, "admin", "Test start flapping");
+  time_t current_notification = _service->get_last_notification();
   ASSERT_GT(current_notification, last_notification);
-  _notifier->set_flapping(false);
+  _service->set_flapping(false);
   time_t now = last_notification + 10;
   set_time(now);
-  _notifier->notify(notifier::FLAPPINGSTOP, "admin", "Test stop flapping");
-  last_notification = _notifier->get_last_notification();
+  _service->notify(notifier::FLAPPINGSTOP, "admin", "Test stop flapping");
+  last_notification = _service->get_last_notification();
   ASSERT_EQ(now, last_notification);
 }
 
@@ -84,17 +110,17 @@ TEST_F(FlappingNotification, StartStopFlapping) {
 // When a STARTFLAPPING notification is already sent
 // Then the FLAPPINGDISABLED notification can be sent when the flapping is finished.
 TEST_F(FlappingNotification, StartDisableFlapping) {
-  time_t last_notification = _notifier->get_last_notification();
-  _notifier->set_notifications_enabled(true);
-  _notifier->set_flapping(true);
-  _notifier->notify(notifier::FLAPPINGSTART, "admin", "Test start flapping");
-  time_t current_notification = _notifier->get_last_notification();
+  time_t last_notification = _service->get_last_notification();
+  _service->set_notifications_enabled(true);
+  _service->set_flapping(true);
+  _service->notify(notifier::FLAPPINGSTART, "admin", "Test start flapping");
+  time_t current_notification = _service->get_last_notification();
   ASSERT_GT(current_notification, last_notification);
-  _notifier->set_flapping(false);
+  _service->set_flapping(false);
   time_t now = last_notification + 10;
   set_time(now);
-  _notifier->notify(notifier::FLAPPINGDISABLED, "admin", "Test disable flapping");
-  last_notification = _notifier->get_last_notification();
+  _service->notify(notifier::FLAPPINGDISABLED, "admin", "Test disable flapping");
+  last_notification = _service->get_last_notification();
   ASSERT_EQ(now, last_notification);
 }
 
@@ -103,16 +129,16 @@ TEST_F(FlappingNotification, StartDisableFlapping) {
 // When a STARTFLAPPING notification is already sent
 // Then the STARTFLAPPING notification can not be resent.
 TEST_F(FlappingNotification, StartStartFlapping) {
-  time_t last_notification = _notifier->get_last_notification();
-  _notifier->set_notifications_enabled(true);
-  _notifier->set_flapping(true);
-  _notifier->notify(notifier::FLAPPINGSTART, "admin", "Test start flapping");
-  time_t current_notification = _notifier->get_last_notification();
+  time_t last_notification = _service->get_last_notification();
+  _service->set_notifications_enabled(true);
+  _service->set_flapping(true);
+  _service->notify(notifier::FLAPPINGSTART, "admin", "Test start flapping");
+  time_t current_notification = _service->get_last_notification();
   ASSERT_GT(current_notification, last_notification);
-  _notifier->set_flapping(false);
+  _service->set_flapping(false);
   time_t now = last_notification + 10;
   set_time(now);
-  _notifier->notify(notifier::FLAPPINGSTOP, "admin", "Test stop flapping");
-  last_notification = _notifier->get_last_notification();
+  _service->notify(notifier::FLAPPINGSTOP, "admin", "Test stop flapping");
+  last_notification = _service->get_last_notification();
   ASSERT_EQ(now, last_notification);
 }

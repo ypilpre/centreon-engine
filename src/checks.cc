@@ -534,25 +534,25 @@ int handle_async_service_check_result(
     temp_service->set_last_notification((time_t)0);
     temp_service->set_next_notification((time_t)0);
 
-    /* reset notification suppression option */
-    // FIXME DBR: why having this here ? This should be managed by notifier.
+    temp_service->update_acknowledgement_on_state_changed();
+//    /* reset notification suppression option */
 //    temp_service->set_no_more_notifications(false);
-
-    if (temp_service->get_acknowledgement_type() == notifier::ACKNOWLEDGEMENT_NORMAL
-        && state_change || !hard_state_change) {
-
-      temp_service->set_acknowledged(notifier::ACKNOWLEDGEMENT_NONE);
-
-      /* remove any non-persistant comments associated with the ack */
-      comment::delete_service_acknowledgement_comments(temp_service);
-    }
-    else if (temp_service->get_acknowledgement_type() == notifier::ACKNOWLEDGEMENT_STICKY
-             && temp_service->get_current_state() == STATE_OK) {
-      temp_service->set_acknowledged(notifier::ACKNOWLEDGEMENT_NONE);
-
-      /* remove any non-persistant comments associated with the ack */
-      comment::delete_service_acknowledgement_comments(temp_service);
-    }
+//
+//    if (temp_service->get_acknowledgement_type() == notifier::ACKNOWLEDGEMENT_NORMAL
+//        && state_change || !hard_state_change) {
+//
+//      temp_service->set_acknowledged(notifier::ACKNOWLEDGEMENT_NONE);
+//
+//      /* remove any non-persistant comments associated with the ack */
+//      temp_service->delete_acknowledgement_comments();
+//    }
+//    else if (temp_service->get_acknowledgement_type() == notifier::ACKNOWLEDGEMENT_STICKY
+//             && temp_service->get_current_state() == STATE_OK) {
+//      temp_service->set_acknowledged(notifier::ACKNOWLEDGEMENT_NONE);
+//
+//      /* remove any non-persistant comments associated with the ack */
+//      temp_service->delete_acknowledgement_comments();
+//    }
 
     /* do NOT reset current notification number!!! */
     /* hard changes between non-OK states should continue to be escalated, so don't reset current notification number */
@@ -1052,10 +1052,6 @@ int handle_async_service_check_result(
       flapping_check_done = true;
 
       /* (re)send notifications out about this service problem if the host is up (and was at last check also) and the dependencies were okay... */
-          ////////////////
-          // FIXME DBR  // Maybe the following test is not needed and we should
-          // work only with notifier::PROBLEM
-          ////////////////
       if (temp_service->get_current_state() == 0)
         temp_service->notify(
           notifier::RECOVERY,

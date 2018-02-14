@@ -51,9 +51,7 @@ class                           contact {
  public:
                                 contact(configuration::contact const& obj);
                                 contact();
-                                contact(contact const& other);
   virtual                       ~contact();
-  contact&                      operator=(contact const& other);
   bool                          operator<(contact const& other);
 
   // Base properties.
@@ -151,6 +149,8 @@ class                           contact {
   void                          set_modified_attributes(unsigned long attr);
 
  private:
+                                contact(contact const& other);
+  contact&                      operator=(contact const& other);
 
   std::string                   _name;
   std::string                   _alias;

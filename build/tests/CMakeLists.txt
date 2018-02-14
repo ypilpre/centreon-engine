@@ -54,7 +54,6 @@ if (WITH_TESTING)
     "${TESTS_DIR}/notifications/notifier/check_notification_management.cc"
     "${TESTS_DIR}/notifications/notifier/flapping_notification.cc"
     "${TESTS_DIR}/notifications/notifier/recovery_notification.cc"
-    "${TESTS_DIR}/notifications/test_notifier.cc"
     "${TESTS_DIR}/timeperiod/get_next_valid_time/between_two_years.cc"
     "${TESTS_DIR}/timeperiod/get_next_valid_time/calendar_date.cc"
     "${TESTS_DIR}/timeperiod/get_next_valid_time/dst_backward.cc"
@@ -70,7 +69,6 @@ if (WITH_TESTING)
     "${TESTS_DIR}/timeperiod/get_next_valid_time/specific_month_date.cc"
     "${TESTS_DIR}/timeperiod/utils.cc"
     # Headers.
-    "${TESTS_DIR}/notifications/test_notifier.hh"
     "${TESTS_DIR}/timeperiod/utils.hh"
   )
   target_link_libraries("ut" "gtest" "cce_core")

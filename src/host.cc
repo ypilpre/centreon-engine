@@ -728,3 +728,7 @@ void host::_checkable_macro_builder(nagios_macros& mac) {
   mac.host_ptr = this;
   mac.hostgroup_ptr = NULL;
 }
+
+bool host::is_host() const {
+  return true;
+}

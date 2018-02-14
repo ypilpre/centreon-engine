@@ -283,8 +283,6 @@ void applier::contact::modify_object(
     MODATTR_ALL,
     MODATTR_ALL,
     &tv);
-
-  return ;
 }
 
 /**
@@ -510,8 +508,6 @@ void applier::contact::resolve_object(
     throw (engine_error() << "Could not resolve contact '"
            << obj.contact_name() << "': " << e.what());
   }
-
-  return ;
 }
 
 /**

@@ -70,9 +70,12 @@ std::ostream& dump::comment(std::ostream& os, com::centreon::engine::comment con
  *  @return The output stream.
  */
 std::ostream& dump::comments(std::ostream& os) {
-  // FIXME DBR: to rewrite
-//  for (comment_struct* obj(comment_list); obj; obj = obj->next)
-//    dump::comment(os, *obj);
+  for (std::map<unsigned long, engine::comment*>::const_iterator
+         it(comment_list.begin()),
+         end(comment_list.end());
+       it != end;
+       ++it)
+    dump::comment(os, *it->second);
   return (os);
 }
 

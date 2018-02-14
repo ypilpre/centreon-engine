@@ -85,7 +85,9 @@ TEST_F(ApplierService, NewServiceFromConfig) {
   ASSERT_EQ(sm.size(), 1);
   ASSERT_EQ(sm.begin()->first.first, "test_host");
   ASSERT_EQ(sm.begin()->first.second, "test description");
-  ASSERT_EQ(sm.begin()->second->get_host_name(), "test_host");
+
+  // Service is not resolved, host is null now.
+  ASSERT_TRUE(sm.begin()->second->get_host() == NULL);
   ASSERT_EQ(sm.begin()->second->get_description(), "test description");
 }
 
@@ -103,11 +105,11 @@ TEST_F(ApplierService, ServicesEquality) {
   ASSERT_TRUE(hst.parse("host_name", "test_host"));
   hst_aply.add_object(hst);
   ASSERT_TRUE(csvc.parse("hosts", "test_host"));
-  ASSERT_TRUE(csvc.parse("service_description", "test description"));
+  ASSERT_TRUE(csvc.parse("service_description", "test description1"));
   ASSERT_TRUE(csvc.parse("service_id", "12345"));
   ASSERT_TRUE(csvc.parse("acknowledgement_timeout", "21"));
   svc_aply.add_object(csvc);
-  ASSERT_TRUE(csvc.parse("host_name", "test_host1"));
+  ASSERT_TRUE(csvc.parse("service_description", "test description2"));
   svc_aply.add_object(csvc);
   umap<std::pair<std::string, std::string>, com::centreon::shared_ptr<engine::service> > const&
     sm(configuration::applier::state::instance().services());
@@ -125,10 +127,12 @@ TEST_F(ApplierService, ServicesEquality) {
   ASSERT_TRUE(csvc1 < csvc);
 
   ASSERT_EQ(svc1, svc1);
-  if (svc1->get_host_name() == "test_host1")
+  if (svc1->get_description() == "test description1")
+    ASSERT_TRUE(svc1.get() < svc2.get());
+  else if (svc1->get_description() == "test description2")
     ASSERT_TRUE(svc2.get() < svc1.get());
   else
-    ASSERT_TRUE(svc1.get() < svc2.get());
+    FAIL();
 }
 
 // Given a service configuration applied to a service,
@@ -145,13 +149,15 @@ TEST_F(ApplierService, ServicesCheckValidity) {
   // No service description
   ASSERT_THROW(csvc.check_validity(), engine::error);
 
-  ASSERT_TRUE(csvc.parse("service_description", "test description"));
+  ASSERT_TRUE(csvc.parse("service_description", "check description"));
+  ASSERT_TRUE(csvc.parse("host_name", "test_host"));
   // No host attached to
   ASSERT_THROW(csvc.check_validity(), engine::error);
 
   configuration::host hst;
   ASSERT_TRUE(hst.parse("host_name", "test_host"));
   hst_aply.add_object(hst);
+  svc_aply.add_object(csvc);
   ASSERT_TRUE(csvc.parse("hosts", "test_host"));
 
   // No check command
@@ -161,9 +167,19 @@ TEST_F(ApplierService, ServicesCheckValidity) {
   configuration::command cmd("cmd");
   cmd.parse("command_line", "echo 1");
   csvc.parse("check_command", "cmd");
+  cmd_aply.add_object(cmd);
 
   // Check validity OK
   ASSERT_NO_THROW(csvc.check_validity());
+  svc_aply.resolve_object(csvc);
+
+  umap<std::pair<std::string, std::string>, com::centreon::shared_ptr<engine::service> > const&
+    sm(configuration::applier::state::instance().services());
+  ASSERT_EQ(sm.size(), 1);
+
+  umap<std::string, com::centreon::shared_ptr<engine::host> > const&
+    hm(configuration::applier::state::instance().hosts());
+  ASSERT_EQ(sm.begin()->second->get_host(), hm.begin()->second.get());
 }
 
 // Given a service configuration,

@@ -834,18 +834,24 @@ int xrddefault_read_state_information() {
       case XRDDEFAULT_HOSTCOMMENT_DATA:
       case XRDDEFAULT_SERVICECOMMENT_DATA:
         /* add the comment */
-        add_comment((data_type == XRDDEFAULT_HOSTCOMMENT_DATA) ? HOST_COMMENT : SERVICE_COMMENT,
-		    entry_type,
-		    host_name,
-		    service_description,
-		    entry_time,
-		    author,
-                    comment_data,
-		    comment_id,
-		    persistent,
-		    expires,
-		    expire_time,
-		    source);
+        {
+          comment* new_comment(
+                     new comment(
+                       (data_type == XRDDEFAULT_HOSTCOMMENT_DATA)
+                          ? HOST_COMMENT : SERVICE_COMMENT,
+                       entry_type,
+                       host_name,
+                       service_description,
+                       entry_time,
+                       author,
+                       comment_data,
+                       comment_id,
+                       persistent,
+                       expires,
+                       expire_time,
+                       source));
+          comment_list.insert(std::make_pair(new_comment->get_id(), new_comment));
+        }
 
         /* delete the comment if necessary */
         /* it seems a bit backwards to add and then immediately delete the comment, but its necessary to track comment deletions in the event broker */

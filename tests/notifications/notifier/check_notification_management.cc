@@ -20,7 +20,9 @@
 #include <memory>
 #include <gtest/gtest.h>
 #include "../../timeperiod/utils.hh"
-#include "../test_notifier.hh"
+#include "com/centreon/engine/configuration/applier/command.hh"
+#include "com/centreon/engine/configuration/applier/host.hh"
+#include "com/centreon/engine/configuration/applier/service.hh"
 #include "com/centreon/engine/configuration/applier/state.hh"
 #include "com/centreon/engine/configuration/contact.hh"
 #include "com/centreon/engine/configuration/state.hh"
@@ -36,16 +38,40 @@ extern configuration::state* config;
 class CheckNotificationManagement : public ::testing::Test {
  public:
   void SetUp() {
-    set_time(20);
-    _notifier.reset(new test_notifier());
     if (config == NULL)
       config = new configuration::state;
     configuration::applier::state::load();
-    contact_map& cm(
-      configuration::applier::state::instance().contacts());
+
+    configuration::applier::host hst_aply;
+    configuration::applier::service svc_aply;
+    configuration::service csvc;
+
+    csvc.parse("service_description", "check description");
+    csvc.parse("host_name", "test_host");
+
+    configuration::host hst;
+    hst.parse("host_name", "test_host");
+    hst_aply.add_object(hst);
+    svc_aply.add_object(csvc);
+    csvc.parse("hosts", "test_host");
+
+    configuration::applier::command cmd_aply;
+    configuration::command cmd("cmd");
+    cmd.parse("command_line", "echo 1");
+    csvc.parse("check_command", "cmd");
+    cmd_aply.add_object(cmd);
+
+    svc_aply.resolve_object(csvc);
+
+    _service = configuration::applier::state::instance()
+                 .services().begin()->second.get();
+
+    set_time(20);
+    contact_map& cm(configuration::applier::state::instance().contacts());
     configuration::contact ctct("test");
     cm["test"] = shared_ptr<engine::contact>(new engine::contact(ctct));
-    _notifier->add_contact(configuration::applier::state::instance().contacts_find("test").get());
+    _service->add_contact(
+      configuration::applier::state::instance().contacts_find("test").get());
   }
 
   void TearDown() {
@@ -55,7 +81,7 @@ class CheckNotificationManagement : public ::testing::Test {
   }
 
  protected:
-  std::auto_ptr<test_notifier>       _notifier;
+  service*  _service;
 };
 
 // Given a notifier in downtime
@@ -63,11 +89,11 @@ class CheckNotificationManagement : public ::testing::Test {
 // Then the filter method returns false and no notification is sent.
 TEST_F(CheckNotificationManagement, ProblemWithDowntime) {
 
-  _notifier->set_in_downtime(true);
-  time_t last_notification = _notifier->get_last_notification();
+  _service->set_in_downtime(true);
+  time_t last_notification = _service->get_last_notification();
   // When
-  _notifier->notify(notifier::PROBLEM, "admin", "Test comment");
-  ASSERT_EQ(last_notification, _notifier->get_last_notification());
+  _service->notify(notifier::PROBLEM, "admin", "Test comment");
+  ASSERT_EQ(last_notification, _service->get_last_notification());
 }
 
 // Given a flapping notifier
@@ -75,12 +101,12 @@ TEST_F(CheckNotificationManagement, ProblemWithDowntime) {
 // Then the filter method returns false and no notification is sent.
 TEST_F(CheckNotificationManagement, ProblemDuringFlapping) {
 
-  _notifier->set_flapping(true);
-  time_t last_notification = _notifier->get_last_notification();
+  _service->set_flapping(true);
+  time_t last_notification = _service->get_last_notification();
   // When the notify method is called with PROBLEM type
-  _notifier->notify(notifier::PROBLEM, "admin", "Test comment");
+  _service->notify(notifier::PROBLEM, "admin", "Test comment");
   // Then the filter method returns false and no notification is sent
-  ASSERT_EQ(last_notification, _notifier->get_last_notification());
+  ASSERT_EQ(last_notification, _service->get_last_notification());
 }
 
 // Given a notifier that notifies on any state.
@@ -88,11 +114,11 @@ TEST_F(CheckNotificationManagement, ProblemDuringFlapping) {
 // Then the filter method returns false and no notification is sent.
 TEST_F(CheckNotificationManagement, ProblemWithUnnotifiedState) {
 
-  _notifier->set_current_state(1);
-  time_t last_notification = _notifier->get_last_notification();
+  _service->set_current_state(1);
+  time_t last_notification = _service->get_last_notification();
   // When
-  _notifier->notify(notifier::PROBLEM, "admin", "Test comment");
-  ASSERT_EQ(last_notification, _notifier->get_last_notification());
+  _service->notify(notifier::PROBLEM, "admin", "Test comment");
+  ASSERT_EQ(last_notification, _service->get_last_notification());
 }
 
 // Given a notifier with state 1.
@@ -102,17 +128,17 @@ TEST_F(CheckNotificationManagement, ProblemWithUnnotifiedState) {
 // Then no notification is sent.
 TEST_F(CheckNotificationManagement, NoContactUser) {
   // When
-  _notifier->set_current_state(1);
-  time_t last_notification = _notifier->get_last_notification();
+  _service->set_current_state(1);
+  time_t last_notification = _service->get_last_notification();
   time_t now = last_notification + 20;
   set_time(now);
   // And
-  _notifier->clear_contacts();
+  _service->clear_contacts();
   // And
-  _notifier->set_notify_on(notifier::ON_WARNING, true);
-  _notifier->notify(notifier::PROBLEM, "admin", "Test comment");
+  _service->set_notify_on(notifier::ON_WARNING, true);
+  _service->notify(notifier::PROBLEM, "admin", "Test comment");
   // Then
-  ASSERT_EQ(last_notification, _notifier->get_last_notification());
+  ASSERT_EQ(last_notification, _service->get_last_notification());
 }
 
 // Given a notifier with state 1.
@@ -121,15 +147,15 @@ TEST_F(CheckNotificationManagement, NoContactUser) {
 // And the notifier is not in hard state
 // Then no notification is sent.
 TEST_F(CheckNotificationManagement, NoHardNoNotification) {
-  _notifier->set_current_state(1);
-  _notifier->set_current_state_type(SOFT_STATE);
-  _notifier->set_notifications_enabled(true);
-  _notifier->set_last_notification(1598741230);
-  _notifier->set_notify_on(notifier::ON_WARNING, true);
-  time_t now(_notifier->get_last_notification() + 20);
+  _service->set_current_state(1);
+  _service->set_current_state_type(SOFT_STATE);
+  _service->set_notifications_enabled(true);
+  _service->set_last_notification(1598741230);
+  _service->set_notify_on(notifier::ON_WARNING, true);
+  time_t now(_service->get_last_notification() + 20);
   set_time(now);
-  _notifier->notify(notifier::PROBLEM, "admin", "Test comment");
-  ASSERT_LT(_notifier->get_last_notification(), now);
+  _service->notify(notifier::PROBLEM, "admin", "Test comment");
+  ASSERT_LT(_service->get_last_notification(), now);
 }
 
 // Given a notifier with state 1.
@@ -138,16 +164,16 @@ TEST_F(CheckNotificationManagement, NoHardNoNotification) {
 // And the notifier is in hard state
 // Then a notification is sent.
 TEST_F(CheckNotificationManagement, CheckNotificationManagement) {
-  _notifier->set_current_state(1);
-  _notifier->set_current_state_type(HARD_STATE);
-  _notifier->set_notifications_enabled(true);
-  time_t last_notification = _notifier->get_last_notification();
-  _notifier->set_notify_on(notifier::ON_WARNING, true);
+  _service->set_current_state(1);
+  _service->set_current_state_type(HARD_STATE);
+  _service->set_notifications_enabled(true);
+  time_t last_notification = _service->get_last_notification();
+  _service->set_notify_on(notifier::ON_WARNING, true);
   // When
   time_t now = last_notification + 20;
   set_time(now);
-  _notifier->notify(notifier::PROBLEM, "admin", "Test comment");
-  ASSERT_GE(_notifier->get_last_notification(), now);
+  _service->notify(notifier::PROBLEM, "admin", "Test comment");
+  ASSERT_GE(_service->get_last_notification(), now);
 }
 
 // Given a notifier with state 1.
@@ -156,22 +182,22 @@ TEST_F(CheckNotificationManagement, CheckNotificationManagement) {
 // Then a notification is sent.
 TEST_F(CheckNotificationManagement, TooEarlyNewNotification) {
 
-  _notifier->set_notifications_enabled(true);
-  _notifier->set_current_state(1);
-  _notifier->set_last_state(1);
-  _notifier->set_last_hard_state(1);
-  _notifier->set_last_state_change(time(NULL));
-  _notifier->set_last_hard_state_change(time(NULL));
-  _notifier->add_notification_flag(notifier::PROBLEM);
-  _notifier->set_current_notification_number(1);
-  _notifier->set_notify_on(notifier::ON_WARNING, true);
+  _service->set_notifications_enabled(true);
+  _service->set_current_state(1);
+  _service->set_last_state(1);
+  _service->set_last_hard_state(1);
+  _service->set_last_state_change(time(NULL));
+  _service->set_last_hard_state_change(time(NULL));
+  _service->add_notification_flag(notifier::PROBLEM);
+  _service->set_current_notification_number(1);
+  _service->set_notify_on(notifier::ON_WARNING, true);
   time_t last_notification = 20;
-  _notifier->set_last_notification(last_notification);
-  _notifier->set_notification_interval(60);
+  _service->set_last_notification(last_notification);
+  _service->set_notification_interval(60);
   time_t now = last_notification + 10;
   set_time(now);
   // When
-  _notifier->set_current_state(1);
-  _notifier->notify(notifier::PROBLEM, "admin", "Test comment");
-  ASSERT_TRUE(_notifier->get_last_notification() < now);
+  _service->set_current_state(1);
+  _service->notify(notifier::PROBLEM, "admin", "Test comment");
+  ASSERT_TRUE(_service->get_last_notification() < now);
 }

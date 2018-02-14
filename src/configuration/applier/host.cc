@@ -529,9 +529,6 @@ void applier::host::remove_object(
   if (it != applier::state::instance().hosts().end()) {
     ::host* hst(it->second.get());
 
-    // Remove host comments.
-    engine::comment::delete_all_host_comments(obj.host_name());
-
     // Remove host downtimes.
     //FIXME DBR: this function does not exist anymore
 //    delete_downtime_by_hostname_service_description_start_time_comment(

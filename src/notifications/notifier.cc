@@ -19,12 +19,11 @@
 
 #include <memory>
 #include <sstream>
-#include "com/centreon/engine/downtime.hh"
-#include "com/centreon/engine/globals.hh"
-#include "com/centreon/engine/host.hh"
+#include "com/centreon/engine/events/defines.hh"
 #include "com/centreon/engine/logging/logger.hh"
+#include "com/centreon/engine/macros/grab_host.hh"
+#include "com/centreon/engine/macros/grab_service.hh"
 #include "com/centreon/engine/notifications/notifier.hh"
-#include "com/centreon/engine/service.hh"
 
 using namespace com::centreon;
 using namespace com::centreon::engine;
@@ -311,6 +310,21 @@ void notifier::set_next_notification(time_t next_notification) {
   return ;
 }
 
+void notifier::update_acknowledgement_on_state_changed() {
+  // Normal acknowledgement is lost when state changes. We must verify
+  // that the acknowledgement is older than the state change.
+  // Sticky acknowledgement is lost when state changes to OK. We must
+  // verify that the acknowledgement is older than the state change.
+  if (get_last_acknowledgement() < get_last_check()
+      && ((get_acknowledgement_type() == ACKNOWLEDGEMENT_NORMAL
+           && get_current_state() != get_last_state())
+          || (get_acknowledgement_type() == ACKNOWLEDGEMENT_STICKY
+              && get_current_state() == 0))) {
+    set_acknowledged(ACKNOWLEDGEMENT_NONE);
+    delete_acknowledgement_comments();
+  }
+}
+
 /**
  *  Attempt to send a notification.
  *
@@ -324,18 +338,6 @@ void notifier::notify(
                  std::string const& author,
                  std::string const& comment,
                  int options) {
-  // Normal acknowledgement is lost when state changes. We must verify
-  // that the acknowledgement is older than the state change.
-  // Sticky acknowledgement is lost when state changes to OK. We must
-  // verify that the acknowledgement is older than the state change.
-  if (get_last_acknowledgement() < get_last_check()
-      && ((get_acknowledgement_type() == ACKNOWLEDGEMENT_NORMAL
-           && get_current_state() != get_last_state())
-          || (get_acknowledgement_type() == ACKNOWLEDGEMENT_STICKY
-              && get_current_state() == 0))) {
-    set_acknowledged(ACKNOWLEDGEMENT_NONE);
-    delete_acknowledgement_comments();
-  }
 
   // Create list of users to notify.
   umap<std::string, engine::contact*> users_to_notify(_contacts);
@@ -378,10 +380,15 @@ void notifier::notify(
       memset(&mac, 0, sizeof(mac));
 
       // grab the macro variables
-      // FIXME DBR: This code cannot work now. Could we improve macros ?
-//      grab_host_macros_r(&mac, get_host());
-//      if (!_is_host())
-//        grab_service_macros_r(&mac, get_service());
+      if (is_host()) {
+        host* hst = static_cast<host*>(this);
+        grab_host_macros_r(&mac, hst);
+      }
+      else {
+        service* svc = static_cast<service*>(this);
+        grab_host_macros_r(&mac, svc->get_host());
+        grab_service_macros_r(&mac, svc);
+      }
 
       /* The author is a string taken from an external command. It can be
          the contact name or the contact alias. And if the external command
@@ -647,6 +654,15 @@ bool notifier::is_in_downtime() const {
 }
 
 /**
+ *  This method sets or not the notifier in downtime
+ *
+ *  @param downtime A boolean telling if the notifier is set or not in downtime.
+ */
+void notifier::set_in_downtime(bool downtime) {
+  _in_downtime = downtime;
+}
+
+/**
  *  Get the number of pending flexible downtimes targeting this object.
  *
  *  @return An integer.
@@ -819,6 +835,21 @@ bool notifier::should_be_escalated() const {
   return false;
 }
 
+void notifier::delete_all_comments() {
+  for (std::map<unsigned long, comment*>::iterator
+         it(comment_list.begin()),
+         next_it(comment_list.begin()),
+         end(comment_list.end());
+       it != end;
+       it = next_it) {
+    ++next_it;
+    if (it->second->get_parent() == this) {
+      delete it->second;
+      comment_list.erase(it);
+    }
+  }
+}
+
 /**
  *  Deletes all non-persistent acknowledgement comments for a particular
  *  notifier
@@ -828,22 +859,23 @@ void notifier::delete_acknowledgement_comments() {
   comment* next_comment = NULL;
 
   /* delete comments from memory */
-  //FIXME DBR: to rewrite
-//  for (temp_comment = comment_list;
-//       temp_comment != NULL;
-//       temp_comment = next_comment) {
-//    next_comment = temp_comment->next;
-//    if (temp_comment->comment_type == SERVICE_COMMENT
-//        && !strcmp(temp_comment->host_name, get_host_name().c_str())
-//        && !strcmp(temp_comment->service_description, get_description().c_str())
-//        && temp_comment->entry_type == ACKNOWLEDGEMENT_COMMENT
-//        && temp_comment->persistent == false)
-//      delete_comment(SERVICE_COMMENT, temp_comment->comment_id);
-//  }
+  for (std::map<unsigned long, comment*>::iterator
+         it(comment_list.begin()),
+         next_it(comment_list.begin()),
+         end(comment_list.end());
+       it != end;
+       it = next_it) {
+    ++next_it;
+    comment* temp_comment(it->second);
+    if (temp_comment->get_comment_type() == comment::SERVICE_COMMENT
+        && temp_comment->get_parent() == this
+        && temp_comment->get_entry_type() == comment::ACKNOWLEDGEMENT_COMMENT
+        && !temp_comment->get_persistent()) {
+      delete temp_comment;
+      comment_list.erase(it);
+    }
+  }
 }
-
-
-
 
 /**
  * Get the filter method associated to the given type.
@@ -1189,4 +1221,31 @@ void notifier::_internal_copy(notifier const& other) {
   _recovery_notification_delay = other._recovery_notification_delay;
   _scheduled_downtime_depth = other._scheduled_downtime_depth;
   return ;
+}
+
+void notifier::schedule_acknowledgement_expiration() {
+  int ack_timeout(get_acknowledgement_timeout());
+  int last_ack(get_last_acknowledgement());
+  if (ack_timeout > 0 && last_ack != (time_t)0) {
+    int event_type;
+    if (is_host())
+      event_type = EVENT_EXPIRE_HOST_ACK;
+    else
+      event_type = EVENT_EXPIRE_SERVICE_ACK;
+    schedule_new_event(
+      event_type,
+      false,
+      last_ack + ack_timeout,
+      false,
+      0,
+      NULL,
+      true,
+      this,
+      NULL,
+      0);
+  }
+}
+
+void notifier::add_notification_flag(notifier::notification_type type) {
+  _current_notifications |= (1 << type);
 }

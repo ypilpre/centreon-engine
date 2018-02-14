@@ -16,7 +16,6 @@
 ** along with Centreon Engine. If not, see
 ** <http://www.gnu.org/licenses/>.
 */
-
 #ifndef CCE_COMMENT_HH
 #  define CCE_COMMENT_HH
 
@@ -58,35 +57,13 @@ class           comment {
    };
 
     static void delete_comment(unsigned long comment_id);
-    static int  delete_all_comments(     
-                  unsigned int type,
-                  std::string const& host_name,
-                  std::string const& svc_description);
-    static int  delete_all_host_comments(std::string const& host_name);
-    static int  delete_all_service_comments(std::string const& host_name, std::string const& svc_description);
-    static int  delete_host_acknowledgement_comments(host* hst);
-    static int  delete_service_acknowledgement_comments(service* svc);
-
-    static comment*
-                add_comment(
-                  comment_type comment_type,
-                  entry_type entry_type,
-                  std::string const& host_name,
-                  std::string const& svc_description,
-                  time_t entry_time,
-                  std::string const& author,
-                  std::string const& comment_data,
-                  int persistent,
-                  bool expires,
-                  time_t expire_time,
-                  source_type source);
+    static void check_for_expired_comment(unsigned long comment_id);
 
     static comment*
                 add_new_comment(
                   comment_type type,
                   entry_type ent_type,
-                  std::string const& host_name,
-                  std::string const& svc_description,
+                  notifications::notifier* parent,
                   time_t entry_time,
                   std::string const& author_name,
                   std::string const& comment_data,
@@ -95,25 +72,26 @@ class           comment {
                   bool expires,
                   time_t expire_time);
 
-    static void check_for_expired_comment(unsigned long comment_id);
-
                 comment(
                   comment_type cmt_type,
                   entry_type ent_type,
-                  std::string const& host_name,
-                  std::string const& service_name,
+                  notifications::notifier* parent,
                   time_t entry_time,
                   std::string const& author,
                   std::string const& comment_data,
                   bool persistent,
                   bool expires,
                   time_t expire_time,
-                  source_type source);
+                  source_type source,
+                  unsigned long comment_id = 0);
                 comment(comment const& other);
-  comment&      operator=(comment const& other);                
+  comment&      operator=(comment const& other);
                 ~comment();
+
   entry_type    get_entry_type() const;
   void          set_entry_type(entry_type ent_type);
+  notifications::notifier*
+                get_parent() const;
   std::string   get_host_name() const;
   void          set_host_name(std::string const& host_name);
   std::string   get_service_description() const;
@@ -134,18 +112,18 @@ class           comment {
   void          set_expires(bool expires);
   time_t        get_expire_time() const;
   void          set_expire_time(time_t time);
-  unsigned int  get_comment_type() const;
-  void          set_comment_type(unsigned int comment_type);
+  comment_type  get_comment_type() const;
+  void          set_comment_type(comment_type comment_type);
 
  private:
   static unsigned long
                 _next_id;
 
-  std::string   _host_name;
-  std::string   _service_description;
+  notifications::notifier*
+                _parent;
   std::string   _author;
   std::string   _comment_data;
-  unsigned int  _comment_type;
+  comment_type  _comment_type;
   entry_type    _entry_type;
   int           _source;
   time_t        _entry_time;
@@ -153,8 +131,6 @@ class           comment {
   bool          _persistent;
   bool          _expires;
   time_t        _expire_time;
-  notifications::notifier*
-                _parent;
 };
 
 CCE_END()

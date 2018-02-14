@@ -238,6 +238,7 @@ int cmd_add_comment(int cmd, time_t entry_time, char* args) {
   char* temp_ptr(NULL);
   shared_ptr<host> temp_host;
   shared_ptr<service> temp_service;
+  notifications::notifier* notif(NULL);
   char* host_name(NULL);
   char* svc_description(NULL);
   char* user(NULL);
@@ -260,11 +261,13 @@ int cmd_add_comment(int cmd, time_t entry_time, char* args) {
     /* verify that the service is valid */
     if ((temp_service = find_service(host_name, svc_description)) == NULL)
       return (ERROR);
+    notif = static_cast<notifications::notifier*>(temp_service.get());
   }
   else {
     /* else verify that the host is valid */
     try {
       temp_host = configuration::applier::state::instance().hosts_find(host_name);
+      notif = static_cast<notifications::notifier*>(temp_host.get());
     }
     catch (not_found const& e) {
       (void) e;
@@ -293,8 +296,7 @@ int cmd_add_comment(int cmd, time_t entry_time, char* args) {
   new_comment = comment::add_new_comment(
              (cmd == CMD_ADD_HOST_COMMENT) ? comment::HOST_COMMENT : comment::SERVICE_COMMENT,
              comment::USER_COMMENT,
-             host_name,
-             svc_description,
+             notif,
              entry_time,
              user,
              comment_data,
@@ -325,6 +327,7 @@ int cmd_delete_comment(int cmd, char* args) {
 int cmd_delete_all_comments(int cmd, char* args) {
   shared_ptr<service> temp_service;
   shared_ptr<host> temp_host;
+  notifications::notifier* notif(NULL);
   char* host_name(NULL);
   char* svc_description(NULL);
 
@@ -342,6 +345,7 @@ int cmd_delete_all_comments(int cmd, char* args) {
     /* verify that the service is valid */
     if ((temp_service = find_service(host_name, svc_description)) == NULL)
       return (ERROR);
+    notif = static_cast<notifications::notifier*>(temp_service.get());
   }
   else {
     /* else verify that the host is valid */
@@ -352,13 +356,11 @@ int cmd_delete_all_comments(int cmd, char* args) {
       (void)e;
       return (ERROR);
     }
+    notif = static_cast<notifications::notifier*>(temp_host.get());
   }
 
   /* delete comments */
-  comment::delete_all_comments(
-    (cmd == CMD_DEL_ALL_HOST_COMMENTS) ? comment::HOST_COMMENT : comment::SERVICE_COMMENT,
-    host_name,
-    svc_description);
+  notif->delete_all_comments();
   return (OK);
 }
 
@@ -2309,8 +2311,6 @@ int cmd_change_object_custom_var(int cmd, char* args) {
     varname[x] = toupper(varname[x]);
 
   /* find the proper variable */
-  //FIXME DBR: this can not change as before. We don't have a pointer to customvars
-  // So we cannot change one of its values like this...
   for (customvar_set::const_iterator
          it(temp_customvars.begin()),
          end(temp_customvars.end());
@@ -2774,10 +2774,9 @@ void acknowledge_host_problem(
          ? notifier::ACKNOWLEDGEMENT_STICKY : notifier::ACKNOWLEDGEMENT_NORMAL);
 
   /* schedule acknowledgement expiration */
-  // FIXME DBR
   time_t current_time(time(NULL));
   hst->set_last_acknowledgement(current_time);
-//  schedule_acknowledgement_expiration(hst);
+  hst->schedule_acknowledgement_expiration();
 
   /* send data to event broker */
   broker_acknowledgement_data(
@@ -2812,8 +2811,7 @@ void acknowledge_host_problem(
   comment::add_new_comment(
     comment::HOST_COMMENT,
     comment::ACKNOWLEDGEMENT_COMMENT,
-    hst->get_name(),
-    "",
+    hst,
     current_time,
     ack_author,
     ack_data,
@@ -2843,8 +2841,7 @@ void acknowledge_service_problem(
   time_t current_time(time(NULL));
   svc->set_last_acknowledgement(current_time);
 
-  //FIXME DBR
-  //schedule_acknowledgement_expiration(svc);
+  svc->schedule_acknowledgement_expiration();
 
   /* send data to event broker */
   broker_acknowledgement_data(
@@ -2878,8 +2875,7 @@ void acknowledge_service_problem(
   comment::add_new_comment(
     comment::SERVICE_COMMENT,
     comment::ACKNOWLEDGEMENT_COMMENT,
-    svc->get_host_name(),
-    svc->get_description(),
+    svc,
     current_time,
     ack_author,
     ack_data,
@@ -2898,7 +2894,7 @@ void remove_host_acknowledgement(host* hst) {
   broker_host_status(hst);
 
   /* remove any non-persistant comments associated with the ack */
-  comment::delete_host_acknowledgement_comments(hst);
+  hst->delete_acknowledgement_comments();
 }
 
 /* removes a service acknowledgement */
@@ -2910,7 +2906,7 @@ void remove_service_acknowledgement(service* svc) {
   broker_service_status(svc);
 
   /* remove any non-persistant comments associated with the ack */
-  comment::delete_service_acknowledgement_comments(svc);
+  svc->delete_acknowledgement_comments();
 }
 
 /* starts executing service checks */

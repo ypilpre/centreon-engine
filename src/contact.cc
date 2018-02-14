@@ -115,24 +115,6 @@ contact::contact(configuration::contact const& obj)
 }
 
 /**
- * Copy constructor.
- *
- * @param[in] other Object to copy.
- */
-contact::contact(contact const& other) {}
-
-/**
- * Assignment operator.
- *
- * @param[in] other Object to copy.
- *
- * @return This object
- */
-contact& contact::operator=(contact const& other) {
-  return (*this);
-}
-
-/**
  * Destructor.
  */
 contact::~contact() {

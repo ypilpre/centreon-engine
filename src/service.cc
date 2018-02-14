@@ -456,3 +456,7 @@ void service::_checkable_macro_builder(nagios_macros& mac) {
   mac.service_ptr = this;
   mac.servicegroup_ptr = NULL;
 }
+
+bool service::is_host() const {
+  return false;
+}

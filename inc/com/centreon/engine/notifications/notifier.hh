@@ -23,10 +23,7 @@
 #  include <ctime>
 #  include <list>
 #  include "com/centreon/engine/checks/checkable.hh"
-#  include "com/centreon/engine/downtime.hh"
 #  include "com/centreon/engine/globals.hh"
-#  include "com/centreon/engine/macros/defines.hh"
-#  include "com/centreon/engine/namespace.hh"
 
 CCE_BEGIN()
 
@@ -116,6 +113,10 @@ namespace                  notifications {
     time_t                 get_next_notification() const;
     void                   set_next_notification(
                              time_t next_notification);
+    void                   schedule_acknowledgement_expiration();
+    void                   update_acknowledgement_on_state_changed();
+    void                   add_notification_flag(
+                             notifier::notification_type type);
     void                   notify(
                              notification_type type,
                              std::string const& author = "",
@@ -146,6 +147,7 @@ namespace                  notifications {
 
     // Downtime.
     bool                   is_in_downtime() const;
+    void                   set_in_downtime(bool downtime);
     int                    get_pending_flex_downtime() const;
     void                   inc_pending_flex_downtime();
     void                   dec_pending_flex_downtime();
@@ -165,9 +167,9 @@ namespace                  notifications {
                              downtime_propagation propagate =
                                DOWNTIME_PROPAGATE_NONE);
 
-
     // XXX
     void                   delete_acknowledgement_comments();
+    void                   delete_all_comments();
     unsigned int           get_current_notifications_flag() const;
     bool                   get_no_more_notifications() const;
     void                   check_pending_flex_downtime();
@@ -183,12 +185,9 @@ namespace                  notifications {
     virtual void           _checkable_macro_builder(
                              nagios_macros& mac) = 0;
 
-    // Protected for testing purposes. Can be private as soon as
-    // they can be manipulated from the public/protected interface.
+   private:
     unsigned int           _current_notifications;
     bool                   _in_downtime;
-
-   private:
     notifier_filter        _get_filter(notification_type type) const;
     macro_builder          _get_macro_builder(
                              notification_type type) const;

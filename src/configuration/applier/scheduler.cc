@@ -994,12 +994,11 @@ void applier::scheduler::_schedule_host_events(
   }
 
   // Schedule acknowledgement expirations.
-  // XXX
-  // logger(dbg_events, most)
-  //   << "Scheduling host acknowledgement expirations...";
-  // for (int i(0), end(hosts.size()); i < end; ++i)
-  //   if (hosts[i]->is_acknowledged())
-  //     schedule_acknowledgement_expiration(hosts[i]);
+  logger(dbg_events, most)
+    << "Scheduling host acknowledgement expirations...";
+  for (int i(0), end(hosts.size()); i < end; ++i)
+    if (hosts[i]->is_acknowledged())
+      hosts[i]->schedule_acknowledgement_expiration();
 
   return ;
 }

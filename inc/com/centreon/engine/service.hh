@@ -68,6 +68,7 @@ class                service : public monitorable {
   void               clear_groups();
   std::list<servicegroup_struct*> const&
                      get_groups() const;
+  virtual bool       is_host() const;
 
   // State runtime.
   time_t             get_last_time_critical() const;

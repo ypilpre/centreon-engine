@@ -131,11 +131,15 @@ TEST_F(ApplierContact, ModifyContactFromConfig) {
   ASSERT_TRUE(ctct.parse("host_notification_commands", "host_cmd1,host_cmd2"));
   ASSERT_TRUE(ctct.parse("service_notification_commands", "svc_cmd1,svc_cmd2"));
   ASSERT_TRUE(ctct.parse("_cust", "MyValue"));
+  ASSERT_TRUE(ctct.parse("email", "new_mail"));
+  ASSERT_TRUE(ctct.parse("pager", "new_pager"));
   aply.modify_object(ctct);
   contact_map::const_iterator
     it(configuration::applier::state::instance().contacts().find("test"));
   ASSERT_NE(it, configuration::applier::state::instance().contacts().end());
   ASSERT_TRUE(it->second->get_alias() == "test_alias");
+  ASSERT_TRUE(it->second->get_email() == "new_mail");
+  ASSERT_TRUE(it->second->get_pager() == "new_pager");
 }
 
 // Given contactgroup / contact appliers
