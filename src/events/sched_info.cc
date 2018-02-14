@@ -1,8 +1,8 @@
 /*
-** Copyright 2007-2008      Ethan Galstad
-** Copyright 2007,2010      Andreas Ericsson
-** Copyright 2010           Max Schubert
-** Copyright 2011-2013,2017 Centreon
+** Copyright 2007-2008           Ethan Galstad
+** Copyright 2007,2010           Andreas Ericsson
+** Copyright 2010                Max Schubert
+** Copyright 2011-2013,2017-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -21,11 +21,11 @@
 */
 
 #include <cmath>
+#include "com/centreon/engine/broker.hh"
 #include "com/centreon/engine/events/defines.hh"
 #include "com/centreon/engine/events/sched_info.hh"
 #include "com/centreon/engine/globals.hh"
 #include "com/centreon/engine/logging/logger.hh"
-#include "com/centreon/engine/statusdata.hh"
 #include "com/centreon/engine/string.hh"
 
 using namespace com::centreon::engine;
@@ -185,12 +185,12 @@ void adjust_check_scheduling() {
     if (tmp->event_type == EVENT_HOST_CHECK) {
       tmp->run_time = new_run_time;
       hst->set_next_check(new_run_time);
-      update_host_status(hst, false);
+      broker_host_status(hst);
     }
     else {
       tmp->run_time = new_run_time;
       svc->set_next_check(new_run_time);
-      update_service_status(svc, false);
+      broker_service_status(svc);
     }
 
     current_icd_offset += inter_check_delay;

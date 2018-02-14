@@ -1,6 +1,6 @@
 /*
-** Copyright 2002-2006      Ethan Galstad
-** Copyright 2011-2013,2017 Centreon
+** Copyright 2002-2006           Ethan Galstad
+** Copyright 2011-2013,2017-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -440,11 +440,7 @@ int            broker_contact_notification_method_data(
                  int escalated,
                  struct timeval const* timestamp);
 void           broker_contact_status(
-                 int type,
-                 int flags,
-                 int attr,
-                 com::centreon::engine::contact* cntct,
-                 struct timeval const* timestamp);
+                 com::centreon::engine::contact* cntct);
 void           broker_custom_variable(
                  int type,
                  int flags,
@@ -541,12 +537,7 @@ int            broker_host_check(
                  char const* long_output,
                  char const* perfdata,
                  struct timeval const* timestamp);
-void           broker_host_status(
-                 int type,
-                 int flags,
-                 int attr,
-                 host* hst,
-                 struct timeval const* timestamp);
+void           broker_host_status(host* hst);
 void           broker_log_data(
                  int type,
                  int flags,
@@ -616,12 +607,7 @@ int            broker_service_check(
                  int retcode,
                  char* cmdline,
                  struct timeval const* timestamp);
-void           broker_service_status(
-                 int type,
-                 int flags,
-                 int attr,
-                 service* svc,
-                 struct timeval const* timestamp);
+void           broker_service_status(service* svc);
 void           broker_statechange_data(
                  int type,
                  int flags,

@@ -149,7 +149,6 @@ class                           contact {
   void                          set_customvar(customvar const& var);
   unsigned long                 get_modified_attributes() const;
   void                          set_modified_attributes(unsigned long attr);
-  void                          update_status(int aggregated_dump);
 
  private:
 

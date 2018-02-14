@@ -19,7 +19,6 @@
 
 #include <cstring>
 #include "com/centreon/engine/checks/checkable.hh"
-#include "com/centreon/engine/broker.hh"
 #include "com/centreon/engine/commands/command.hh"
 
 using namespace com::centreon::engine::checks;
@@ -1118,30 +1117,4 @@ void checkable::_internal_copy(checkable const& other) {
   _should_be_scheduled = other._should_be_scheduled;
   _timezone = other._timezone;
   return ;
-}
-
-/**
- *  Updates checkable status info
- *
- *  @param[in] aggregated_dump data to send to event broker
- */
-void checkable::update_status(int aggregated_dump) {
-  bool is_service(dynamic_cast<service*>(this) != NULL);
-
-  /* send data to event broker (non-aggregated dumps only) */
-  if (!aggregated_dump)
-    if (is_service)
-      broker_service_status(
-        NEBTYPE_SERVICESTATUS_UPDATE,
-        NEBFLAG_NONE,
-        NEBATTR_NONE,
-        static_cast<service*>(this),
-        NULL);
-    else
-      broker_host_status(
-        NEBTYPE_HOSTSTATUS_UPDATE,
-        NEBFLAG_NONE,
-        NEBATTR_NONE,
-        static_cast<host*>(this),
-        NULL);
 }

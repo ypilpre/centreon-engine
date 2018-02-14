@@ -385,7 +385,7 @@ int downtime::unschedule() {
 
     if (get_type() == HOST_DOWNTIME) {
       hst->dec_scheduled_downtime_depth();
-      update_host_status(hst, false);
+      broker_host_status(hst);
 
       /* log a notice - this is parsed by the history CGI */
       if (hst->get_scheduled_downtime_depth() == 0) {
@@ -404,7 +404,7 @@ int downtime::unschedule() {
     }
     else {
       svc->dec_scheduled_downtime_depth();
-      update_service_status(svc, false);
+      broker_service_status(svc);
 
       /* log a notice - this is parsed by the history CGI */
       if (svc->get_scheduled_downtime_depth()) {
@@ -621,20 +621,13 @@ void downtime::handle() {
              get_author(),
              get_comment(),
              NOTIFICATION_OPTION_NONE);
-//      service_notification(
-//        svc,
-//        NOTIFICATION_DOWNTIMEEND,
-//        temp_downtime->author,
-//        temp_downtime->comment,
-//        NOTIFICATION_OPTION_NONE);
     }
 
     /* update the status data */
-    _parent->update_status(false);
-//    if (temp_downtime->type == HOST_DOWNTIME)
-//      update_host_status(hst, false);
-//    else
-//      update_service_status(svc, false);
+    if (get_type() == HOST_DOWNTIME)
+      broker_host_status(hst);
+    else
+      broker_service_status(svc);
 
     /* decrement pending flex downtime if necessary */
     if (!get_fixed()
@@ -715,7 +708,10 @@ void downtime::handle() {
     /* set the in effect flag */
     set_in_effect(true);
 
-    _parent->update_status(false);
+    if (get_type() == HOST_DOWNTIME)
+      broker_host_status(hst);
+    else
+      broker_service_status(svc);
 
     /* schedule an event */
     if (!get_fixed())

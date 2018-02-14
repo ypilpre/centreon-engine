@@ -736,8 +736,8 @@ void enable_host_flap_detection(host* hst) {
   check_for_host_flapping(hst, false, false);
 
   /* update host status */
-  update_host_status(hst, false);
-  return;
+  broker_host_status(hst);
+  return ;
 }
 
 /* disables flap detection for a specific host */
@@ -835,8 +835,8 @@ void handle_host_flap_detection_disabled(host* hst) {
   }
 
   /* update host status */
-  update_host_status(hst, false);
-  return;
+  broker_host_status(hst);
+  return ;
 }
 
 /* enables flap detection for a specific service */
@@ -878,7 +878,7 @@ void enable_service_flap_detection(service* svc) {
   check_for_service_flapping(svc, false);
 
   /* update service status */
-  update_service_status(svc, false);
+  broker_service_status(svc);
   return;
 }
 
@@ -976,6 +976,6 @@ void handle_service_flap_detection_disabled(service* svc) {
   }
 
   /* update service status */
-  update_service_status(svc, false);
-  return;
+  broker_service_status(svc);
+  return ;
 }

@@ -675,33 +675,24 @@ int broker_contact_notification_method_data(
 /**
  *  Sends contact status updates to broker.
  *
- *  @param[in] type      Type.
- *  @param[in] flags     Flags.
- *  @param[in] attr      Attributes.
- *  @param[in] cntct     Target contact.
- *  @param[in] timestamp Timestamp.
+ *  @param[in] cntct  Target contact.
  */
-void broker_contact_status(
-       int type,
-       int flags,
-       int attr,
-       contact* cntct,
-       struct timeval const* timestamp) {
+void broker_contact_status(contact* cntct) {
   // Config check.
   if (!(config->event_broker_options() & BROKER_STATUS_DATA))
-    return;
+    return ;
 
   // Fill struct with relevant data.
   nebstruct_service_status_data ds;
-  ds.type = type;
-  ds.flags = flags;
-  ds.attr = attr;
-  ds.timestamp = get_broker_timestamp(timestamp);
+  ds.type = NEBTYPE_CONTACTSTATUS_UPDATE;
+  ds.flags = NEBFLAG_NONE;
+  ds.attr = NEBATTR_NONE;
+  ds.timestamp = get_broker_timestamp(NULL);
   ds.object_ptr = cntct;
 
   // Make callbacks.
   neb_make_callbacks(NEBCALLBACK_CONTACT_STATUS_DATA, &ds);
-  return;
+  return ;
 }
 
 /**
@@ -1182,28 +1173,19 @@ int broker_host_check(
 /**
  *  Sends host status updates to broker.
  *
- *  @param[in] type      Type.
- *  @param[in] flags     Flags.
- *  @param[in] attr      Attributes.
- *  @param[in] hst       Host.
- *  @param[in] timestamp Timestamp.
+ *  @param[in] hst  Host.
  */
-void broker_host_status(
-       int type,
-       int flags,
-       int attr,
-       host* hst,
-       struct timeval const* timestamp) {
+void broker_host_status(host* hst) {
   // Config check.
   if (!(config->event_broker_options() & BROKER_STATUS_DATA))
     return;
 
   // Fill struct with relevant data.
   nebstruct_host_status_data ds;
-  ds.type = type;
-  ds.flags = flags;
-  ds.attr = attr;
-  ds.timestamp = get_broker_timestamp(timestamp);
+  ds.type = NEBTYPE_HOSTSTATUS_UPDATE;
+  ds.flags = NEBFLAG_NONE;
+  ds.attr = NEBATTR_NONE;
+  ds.timestamp = get_broker_timestamp(NULL);
   ds.object_ptr = hst;
 
   // Make callbacks.
@@ -1615,28 +1597,19 @@ int broker_service_check(
 /**
  *  Sends service status updates to broker.
  *
- *  @param[in] type      Type.
- *  @param[in] flags     Flags.
- *  @param[in] attr      Attributes.
- *  @param[in] svc       Target service.
- *  @param[in] timestamp Timestamp.
+ *  @param[in] svc  Target service.
  */
-void broker_service_status(
-       int type,
-       int flags,
-       int attr,
-       service* svc,
-       struct timeval const* timestamp) {
+void broker_service_status(service* svc) {
   // Config check.
   if (!(config->event_broker_options() & BROKER_STATUS_DATA))
-    return;
+    return ;
 
   // Fill struct with relevant data.
   nebstruct_service_status_data ds;
-  ds.type = type;
-  ds.flags = flags;
-  ds.attr = attr;
-  ds.timestamp = get_broker_timestamp(timestamp);
+  ds.type = NEBTYPE_SERVICESTATUS_UPDATE;
+  ds.flags = NEBFLAG_NONE;
+  ds.attr = NEBATTR_NONE;
+  ds.timestamp = get_broker_timestamp(NULL);
   ds.object_ptr = svc;
 
   // Make callbacks.

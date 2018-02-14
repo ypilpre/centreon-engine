@@ -1,7 +1,7 @@
 /*
-** Copyright 1999-2009      Ethan Galstad
-** Copyright 2009-2010      Nagios Core Development Team and Community Contributors
-** Copyright 2011-2013,2017 Centreon
+** Copyright 1999-2009           Ethan Galstad
+** Copyright 2009-2010           Nagios Core Development Team and Community Contributors
+** Copyright 2011-2013,2017-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -328,7 +328,7 @@ void loop::_dispatching() {
           }
           temp_event->run_time = temp_service->get_next_check();
           reschedule_event(temp_event, &event_list_low, &event_list_low_tail);
-          update_service_status(temp_service, false);
+          broker_service_status(temp_service);
           run_event = false;
         }
       }
@@ -377,7 +377,7 @@ void loop::_dispatching() {
                           * config->interval_length())));
           temp_event->run_time = temp_host->get_next_check();
           reschedule_event(temp_event, &event_list_low, &event_list_low_tail);
-          update_host_status(temp_host, false);
+          broker_host_status(temp_host);
           run_event = false;
         }
       }

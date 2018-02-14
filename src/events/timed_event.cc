@@ -640,7 +640,7 @@ void compensate_for_system_time_change(
     //     svc->get_last_notification()));
 
     // Update the status data.
-    update_service_status(svc, false);
+    broker_service_status(svc);
   }
 
   // Adjust host timestamps.
@@ -709,7 +709,7 @@ void compensate_for_system_time_change(
 //          hst->last_host_notification);
 
     // Update the status data.
-    update_host_status(hst, false);
+    broker_host_status(hst);
   }
 
   // Adjust program timestamps.

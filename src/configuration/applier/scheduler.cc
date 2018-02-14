@@ -20,6 +20,7 @@
 #include <cmath>
 #include <cstddef>
 #include <cstring>
+#include "com/centreon/engine/broker.hh"
 #include "com/centreon/engine/configuration/applier/difference.hh"
 #include "com/centreon/engine/configuration/applier/scheduler.hh"
 #include "com/centreon/engine/configuration/applier/state.hh"
@@ -30,7 +31,6 @@
 #include "com/centreon/engine/events/hash_timed_event.hh"
 #include "com/centreon/engine/globals.hh"
 #include "com/centreon/engine/logging/logger.hh"
-#include "com/centreon/engine/statusdata.hh"
 #include "com/centreon/engine/timeperiod.hh"
 #include "com/centreon/engine/timezone_locker.hh"
 #include "com/centreon/engine/xpddefault.hh"
@@ -957,7 +957,7 @@ void applier::scheduler::_schedule_host_events(
     ::host& hst(*hosts[i]);
 
     // update status of all hosts (scheduled or not).
-    update_host_status(&hst, false);
+    broker_host_status(&hst);
 
     // skip most hosts that shouldn't be scheduled.
     if (!hst.get_should_be_scheduled()) {
@@ -1083,7 +1083,7 @@ void applier::scheduler::_schedule_service_events(
     ::service& svc(*services[i]);
 
     // update status of all services (scheduled or not).
-    update_service_status(&svc, false);
+    broker_service_status(&svc);
 
     // skip most services that shouldn't be scheduled.
     if (!svc.get_should_be_scheduled()) {

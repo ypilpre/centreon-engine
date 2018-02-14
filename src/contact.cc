@@ -445,22 +445,6 @@ void contact::set_addresses(std::vector<std::string> const& addresses) {
   return ;
 }
 
-/**
- *  Update contact status info.
- *
- *  @param aggregated_dump
- */
-void contact::update_status(int aggregated_dump) {
-  /* send data to event broker (non-aggregated dumps only) */
-  if (!aggregated_dump)
-    broker_contact_status(
-      NEBTYPE_CONTACTSTATUS_UPDATE,
-      NEBFLAG_NONE,
-      NEBATTR_NONE,
-      this,
-      NULL);
-}
-
 unsigned long contact::get_modified_attributes() const {
   return _modified_attributes;
 }
@@ -621,7 +605,7 @@ void contact::enable_host_notifications() {
     NULL);
 
   /* update the status log to reflect the new contact state */
-  update_status(false);
+  broker_contact_status(this);
 }
 
 /* disables host notifications for a contact */
@@ -654,7 +638,7 @@ void contact::disable_host_notifications() {
     NULL);
 
   /* update the status log to reflect the new contact state */
-  update_status(false);
+  broker_contact_status(this);
 }
 
 /* enables service notifications for a contact */
@@ -687,7 +671,7 @@ void contact::enable_service_notifications() {
     NULL);
 
   /* update the status log to reflect the new contact state */
-  update_status(false);
+  broker_contact_status(this);
 }
 
 /* disables service notifications for a contact */
@@ -720,5 +704,5 @@ void contact::disable_service_notifications() {
     NULL);
 
   /* update the status log to reflect the new contact state */
-  update_status(false);
+  broker_contact_status(this);
 }

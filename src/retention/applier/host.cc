@@ -17,6 +17,7 @@
 ** <http://www.gnu.org/licenses/>.
 */
 
+#include "com/centreon/engine/broker.hh"
 #include "com/centreon/engine/configuration/applier/host.hh"
 #include "com/centreon/engine/configuration/applier/state.hh"
 #include "com/centreon/engine/flapping.hh"
@@ -25,7 +26,6 @@
 #include "com/centreon/engine/retention/applier/utils.hh"
 #include "com/centreon/engine/not_found.hh"
 #include "com/centreon/engine/notifications/notifier.hh"
-#include "com/centreon/engine/statusdata.hh"
 #include "com/centreon/engine/string.hh"
 
 using namespace com::centreon::engine;
@@ -327,6 +327,6 @@ void applier::host::_update(
   if (state.recovery_been_sent().is_set())
     obj.set_recovery_been_sent(*state.recovery_been_sent());
 
-  // update host status.
-  update_host_status(&obj, false);
+  // Update host status.
+  broker_host_status(&obj);
 }

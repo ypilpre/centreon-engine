@@ -17,6 +17,7 @@
 ** <http://www.gnu.org/licenses/>.
 */
 
+#include "com/centreon/engine/broker.hh"
 #include "com/centreon/engine/configuration/applier/state.hh"
 #include "com/centreon/engine/globals.hh"
 #include "com/centreon/engine/not_found.hh"
@@ -161,5 +162,5 @@ void applier::contact::_update(
   }
 
   // update contact status.
-  obj.update_status(false);
+  broker_contact_status(&obj);
 }

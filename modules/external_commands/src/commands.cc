@@ -1809,7 +1809,7 @@ int cmd_change_object_int_var(int cmd, char* args) {
       NULL);
 
     /* update the status log with the service info */
-    update_service_status(temp_service.get(), false);
+    broker_service_status(temp_service.get());
     break;
 
   case CMD_CHANGE_NORMAL_HOST_CHECK_INTERVAL:
@@ -1834,7 +1834,7 @@ int cmd_change_object_int_var(int cmd, char* args) {
       NULL);
 
     /* update the status log with the host info */
-    update_host_status(temp_host.get(), false);
+    broker_host_status(temp_host.get());
     break;
 
   case CMD_CHANGE_CONTACT_MODATTR:
@@ -1873,8 +1873,8 @@ int cmd_change_object_int_var(int cmd, char* args) {
       NULL);
 
     /* update the status log with the contact info */
-    update_contact_status(temp_contact, false);
-    break;
+    broker_contact_status(temp_contact);
+    break ;
 
   default:
     break;
@@ -2168,7 +2168,7 @@ int cmd_change_object_char_var(int cmd, char* args) {
       NULL);
 
     /* update the status log with the service info */
-    update_service_status(temp_service.get(), false);
+    broker_service_status(temp_service.get());
     break;
 
   case CMD_CHANGE_HOST_EVENT_HANDLER:
@@ -2190,7 +2190,7 @@ int cmd_change_object_char_var(int cmd, char* args) {
       NULL);
 
     /* update the status log with the host info */
-    update_host_status(temp_host.get(), false);
+    broker_host_status(temp_host.get());
     break;
 
   case CMD_CHANGE_CONTACT_HOST_NOTIFICATION_TIMEPERIOD:
@@ -2217,9 +2217,8 @@ int cmd_change_object_char_var(int cmd, char* args) {
       NULL);
 
     /* update the status log with the contact info */
-    temp_contact->update_status(false);
-    //update_contact_status(temp_contact, false);
-    break;
+    broker_contact_status(temp_contact);
+    break ;
 
   default:
     break;
@@ -2339,21 +2338,20 @@ int cmd_change_object_custom_var(int cmd, char* args) {
   case CMD_CHANGE_CUSTOM_HOST_VAR:
     temp_host->set_modified_attributes(
       temp_host->get_modified_attributes() | MODATTR_CUSTOM_VARIABLE);
-    update_host_status(temp_host.get(), false);
+    broker_host_status(temp_host.get());
     break;
 
   case CMD_CHANGE_CUSTOM_SVC_VAR:
     temp_service->set_modified_attributes(
       temp_service->get_modified_attributes() | MODATTR_CUSTOM_VARIABLE);
-    update_service_status(temp_service.get(), false);
+    broker_service_status(temp_service.get());
     break;
 
   case CMD_CHANGE_CUSTOM_CONTACT_VAR:
     temp_contact->set_modified_attributes(
       temp_contact->get_modified_attributes() | MODATTR_CUSTOM_VARIABLE);
-    temp_contact->update_status(false);
-    //update_contact_status(temp_contact, false);
-    break;
+    broker_contact_status(temp_contact);
+    break ;
 
   default:
     break;
@@ -2425,7 +2423,7 @@ void disable_service_checks(service* svc) {
     NULL);
 
   /* update the status log to reflect the new service state */
-  update_service_status(svc, false);
+  broker_service_status(svc);
 }
 
 /* enables a service check */
@@ -2479,7 +2477,7 @@ void enable_service_checks(service* svc) {
     NULL);
 
   /* update the status log to reflect the new service state */
-  update_service_status(svc, false);
+  broker_service_status(svc);
 }
 
 /* enable notifications on a program-wide basis */
@@ -2570,7 +2568,7 @@ void enable_service_notifications(service* svc) {
     NULL);
 
   /* update the status log to reflect the new service state */
-  update_service_status(svc, false);
+  broker_service_status(svc);
 }
 
 /* disables notifications for a service */
@@ -2599,7 +2597,7 @@ void disable_service_notifications(service* svc) {
     NULL);
 
   /* update the status log to reflect the new service state */
-  update_service_status(svc, false);
+  broker_service_status(svc);
 }
 
 /* enables notifications for a host */
@@ -2628,7 +2626,7 @@ void enable_host_notifications(host* hst) {
     NULL);
 
   /* update the status log to reflect the new host state */
-  update_host_status(hst, false);
+  broker_host_status(hst);
 }
 
 /* disables notifications for a host */
@@ -2657,7 +2655,7 @@ void disable_host_notifications(host* hst) {
     NULL);
 
   /* update the status log to reflect the new host state */
-  update_host_status(hst, false);
+  broker_host_status(hst);
 }
 
 /* enables notifications for all hosts and services "beyond" a given host */
@@ -2808,7 +2806,7 @@ void acknowledge_host_problem(
       NOTIFICATION_OPTION_NONE);
 
   /* update the status log with the host info */
-  update_host_status(hst, false);
+  broker_host_status(hst);
 
   /* add a comment for the acknowledgement */
   comment::add_new_comment(
@@ -2874,7 +2872,7 @@ void acknowledge_service_problem(
       NOTIFICATION_OPTION_NONE);
 
   /* update the status log with the service info */
-  update_service_status(svc, false);
+  broker_service_status(svc);
 
   /* add a comment for the acknowledgement */
   comment::add_new_comment(
@@ -2897,7 +2895,7 @@ void remove_host_acknowledgement(host* hst) {
   hst->set_acknowledged(notifier::ACKNOWLEDGEMENT_NONE);
 
   /* update the status log with the host info */
-  update_host_status(hst, false);
+  broker_host_status(hst);
 
   /* remove any non-persistant comments associated with the ack */
   comment::delete_host_acknowledgement_comments(hst);
@@ -2909,7 +2907,7 @@ void remove_service_acknowledgement(service* svc) {
   svc->set_acknowledged(notifier::ACKNOWLEDGEMENT_NONE);
 
   /* update the status log with the service info */
-  update_service_status(svc, false);
+  broker_service_status(svc);
 
   /* remove any non-persistant comments associated with the ack */
   comment::delete_service_acknowledgement_comments(svc);
@@ -3061,7 +3059,7 @@ void enable_passive_service_checks(service* svc) {
     NULL);
 
   /* update the status log with the service info */
-  update_service_status(svc, false);
+  broker_service_status(svc);
 }
 
 /* disables passive service checks for a particular service */
@@ -3090,7 +3088,7 @@ void disable_passive_service_checks(service* svc) {
     NULL);
 
   /* update the status log with the service info */
-  update_service_status(svc, false);
+  broker_service_status(svc);
 }
 
 /* starts executing host checks */
@@ -3238,7 +3236,7 @@ void enable_passive_host_checks(host* hst) {
     NULL);
 
   /* update the status log with the host info */
-  update_host_status(hst, false);
+  broker_host_status(hst);
 }
 
 /* disables passive host checks for a particular host */
@@ -3267,7 +3265,7 @@ void disable_passive_host_checks(host* hst) {
     NULL);
 
   /* update the status log with the host info */
-  update_host_status(hst, false);
+  broker_host_status(hst);
 }
 
 /* enables event handlers on a program-wide basis */
@@ -3358,7 +3356,7 @@ void enable_service_event_handler(service* svc) {
     NULL);
 
   /* update the status log with the service info */
-  update_service_status(svc, false);
+  broker_service_status(svc);
 }
 
 /* disables the event handler for a particular service */
@@ -3387,7 +3385,7 @@ void disable_service_event_handler(service* svc) {
     NULL);
 
   /* update the status log with the service info */
-  update_service_status(svc, false);
+  broker_service_status(svc);
 }
 
 /* enables the event handler for a particular host */
@@ -3416,7 +3414,7 @@ void enable_host_event_handler(host* hst) {
     NULL);
 
   /* update the status log with the host info */
-  update_host_status(hst, false);
+  broker_host_status(hst);
 }
 
 /* disables the event handler for a particular host */
@@ -3445,7 +3443,7 @@ void disable_host_event_handler(host* hst) {
     NULL);
 
   /* update the status log with the host info */
-  update_host_status(hst, false);
+  broker_host_status(hst);
 }
 
 /* disables checks of a particular host */
@@ -3475,7 +3473,7 @@ void disable_host_checks(host* hst) {
     NULL);
 
   /* update the status log with the host info */
-  update_host_status(hst, false);
+  broker_host_status(hst);
 }
 
 /* enables checks of a particular host */
@@ -3524,7 +3522,7 @@ void enable_host_checks(host* hst) {
     NULL);
 
   /* update the status log with the host info */
-  update_host_status(hst, false);
+  broker_host_status(hst);
 }
 
 /* start obsessing over service check results */
@@ -3852,7 +3850,7 @@ void start_obsessing_over_service(service* svc) {
     NULL);
 
   /* update the status log with the service info */
-  update_service_status(svc, false);
+  broker_service_status(svc);
 }
 
 /* stop obsessing over a particular service */
@@ -3881,7 +3879,7 @@ void stop_obsessing_over_service(service* svc) {
     NULL);
 
   /* update the status log with the service info */
-  update_service_status(svc, false);
+  broker_service_status(svc);
 }
 
 /* start obsessing over a particular host */
@@ -3910,7 +3908,7 @@ void start_obsessing_over_host(host* hst) {
     NULL);
 
   /* update the status log with the host info */
-  update_host_status(hst, false);
+  broker_host_status(hst);
 }
 
 /* stop obsessing over a particular host */
@@ -3939,7 +3937,7 @@ void stop_obsessing_over_host(host* hst) {
     NULL);
 
   /* update the status log with the host info */
-  update_host_status(hst, false);
+  broker_host_status(hst);
 }
 
 /* sets the current notification number for a specific host */
@@ -3948,7 +3946,7 @@ void set_host_notification_number(host* hst, int num) {
   hst->set_current_notification_number(num);
 
   /* update the status log with the host info */
-  update_host_status(hst, false);
+  broker_host_status(hst);
 }
 
 /* sets the current notification number for a specific service */
@@ -3957,7 +3955,7 @@ void set_service_notification_number(service* svc, int num) {
   svc->set_current_notification_number(num);
 
   /* update the status log with the service info */
-  update_service_status(svc, false);
+  broker_service_status(svc);
 }
 
 void enable_contact_host_notifications(contact* contact) {

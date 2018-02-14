@@ -123,9 +123,6 @@ namespace              checks {
     double             get_percent_state_change() const;
     void               set_percent_state_change(double change);
 
-    // Status info
-    void               update_status(int aggregated_dump);
-
     // Event handler.
     commands::command* get_event_handler() const;
     void               set_event_handler(commands::command* cmd);
