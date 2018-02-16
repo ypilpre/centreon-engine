@@ -581,9 +581,15 @@ std::list<contactgroup*> const& contact::get_contactgroups() const {
  *  Clear all custom variables.
  */
 void contact::clear_custom_variables() {
-  for (customvar_set::iterator it(_vars.begin()), end(_vars.end());
-       it != end;)
-    it = _vars.erase(it);
+  for (customvar_set::iterator
+         it(_vars.begin()),
+         next_it(_vars.begin()),
+         end(_vars.end());
+       it != end;
+       it = next_it) {
+    ++next_it;
+    _vars.erase(it);
+  }
   return ;
 }
 
