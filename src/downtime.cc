@@ -330,7 +330,6 @@ void downtime::set_comment_id(unsigned long comment_id) {
 
 /* unschedules a host or service downtime */
 int downtime::unschedule() {
-  unsigned long downtime_id(get_id());
   host* hst(NULL);
   service* svc(NULL);
   timed_event* temp_event(NULL);
@@ -428,13 +427,13 @@ int downtime::unschedule() {
        temp_event = temp_event->next) {
     if (temp_event->event_type != EVENT_SCHEDULED_DOWNTIME)
       continue;
-    if (((unsigned long)temp_event->event_data) == downtime_id)
+    if (((unsigned long)temp_event->event_data) == _downtime_id)
       break;
   }
   if (temp_event != NULL)
     remove_event(temp_event, &event_list_high, &event_list_high_tail);
 
-  scheduled_downtime_list.erase(downtime_id);
+  scheduled_downtime_list.erase(_downtime_id);
 
   /* unschedule all downtime entries that were triggered by this one */
   downtime* dt;
@@ -452,7 +451,7 @@ int downtime::unschedule() {
       ++next_it;
       dt = it->second;
 
-      if (dt->get_triggered_by() == downtime_id) {
+      if (dt->get_triggered_by() == _downtime_id) {
         dt->unschedule();
         break;
       }

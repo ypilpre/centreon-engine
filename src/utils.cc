@@ -955,12 +955,22 @@ void cleanup() {
  */
 void free_memory(nagios_macros* mac) {
   // Free memory allocated to comments.
-  //FIXME DBR: the goal here is to remove the global container comment_list...
-  //free_comment_data();
+  for (std::map<unsigned long, comment*>::iterator
+         it(comment_list.begin()),
+         end(comment_list.end());
+       it != end;
+       ++it)
+    delete it->second;
+  comment_list.clear();
 
   // Free memory allocated to downtimes.
-  // FIXME DBR: downtimes need to be rewritten
-//  free_downtime_data();
+  for (std::map<unsigned long, downtime* >::iterator
+         it(scheduled_downtime_list.begin()),
+         end(scheduled_downtime_list.end());
+       it != end;
+       ++it)
+    delete it->second;
+  scheduled_downtime_list.clear();
 
   // Free memory for the high priority event list.
   for (timed_event* this_event(event_list_high); this_event;) {
