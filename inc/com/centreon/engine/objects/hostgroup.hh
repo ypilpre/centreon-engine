@@ -40,16 +40,12 @@ typedef struct             hostgroup_struct {
   char*                    notes;
   char*                    notes_url;
   char*                    action_url;
+  unsigned int             id;
   struct hostgroup_struct* next;
   struct hostgroup_struct* nexthash;
 }                          hostgroup;
 
 typedef std::list<hostgroup*> hostgroup_set;
-
-/* Other HOSTGROUP structure. */
-struct                      hostgroup_other_properties {
-  unsigned int              hostgroup_id;
-};
 
 #  ifdef __cplusplus
 extern "C" {
@@ -84,9 +80,7 @@ CCE_BEGIN()
 host*         add_host_to_hostgroup(
                 hostgroup_struct* grp,
                 std::string const& host_name);
-
 bool          is_hostgroup_exist(std::string const& name) throw ();
-unsigned int  get_hostgroup_id(char const* name);
 
 CCE_END()
 

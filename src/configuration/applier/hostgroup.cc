@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2013,2015,2017 Centreon
+** Copyright 2011-2013,2015,2017-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -76,10 +76,6 @@ void applier::hostgroup::add_object(
   // Add host group to the global configuration state.
   config->hostgroups().insert(obj);
 
-  // Add hostgroup id to the other props.
-  hostgroup_other_props[obj.hostgroup_name()].hostgroup_id
-    = obj.hostgroup_id();
-
   // Create host group.
   hostgroup_struct* hg(add_hostgroup(
                          obj.hostgroup_name().c_str(),
@@ -90,6 +86,7 @@ void applier::hostgroup::add_object(
   if (!hg)
     throw (engine_error() << "Could not register host group '"
            << obj.hostgroup_name() << "'");
+  hg->id = obj.hostgroup_id();
 
   // Notify event broker.
   timeval tv(get_broker_timestamp(NULL));
@@ -186,7 +183,7 @@ void applier::hostgroup::modify_object(
   modify_cstr_if_different(
     hg->notes_url,
     NULL_IF_EMPTY(obj.notes_url()));
-  hostgroup_other_props[obj.hostgroup_name()].hostgroup_id = obj.hostgroup_id();
+  hg->id = obj.hostgroup_id();
 
   // Were members modified ?
   if (obj.members() != old_cfg.members()) {
@@ -279,7 +276,6 @@ void applier::hostgroup::remove_object(
       &tv);
 
     // Erase host group object (will effectively delete the object).
-    hostgroup_other_props.erase(obj.hostgroup_name());
     applier::state::instance().hostgroups().erase(it);
   }
 

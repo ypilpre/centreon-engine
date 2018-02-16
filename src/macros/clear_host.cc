@@ -1,6 +1,6 @@
 /*
 ** Copyright 1999-2010           Ethan Galstad
-** Copyright 2011-2013,2016-2017 Centreon
+** Copyright 2011-2013,2016-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -18,6 +18,7 @@
 ** <http://www.gnu.org/licenses/>.
 */
 
+#include "com/centreon/engine/common.hh"
 #include "com/centreon/engine/macros/clear_host.hh"
 #include "com/centreon/engine/macros/defines.hh"
 #include "com/centreon/engine/macros/misc.hh"

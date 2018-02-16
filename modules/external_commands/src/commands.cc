@@ -3954,18 +3954,102 @@ void set_service_notification_number(service* svc, int num) {
   broker_service_status(svc);
 }
 
-void enable_contact_host_notifications(contact* contact) {
-  contact->enable_host_notifications();
+void enable_contact_host_notifications(contact* cntct) {
+  // Modify property.
+  cntct->set_host_notifications_enabled(true);
+
+  // Notify event broker.
+  unsigned long attr(MODATTR_NOTIFICATIONS_ENABLED);
+  cntct->set_modified_host_attributes(
+    cntct->get_modified_host_attributes() | attr);
+  broker_adaptive_contact_data(
+    NEBTYPE_ADAPTIVECONTACT_UPDATE,
+    NEBFLAG_NONE,
+    NEBATTR_NONE,
+    cntct,
+    CMD_NONE,
+    MODATTR_NONE,
+    cntct->get_modified_attributes(),
+    attr,
+    cntct->get_modified_host_attributes(),
+    MODATTR_NONE,
+    cntct->get_modified_service_attributes(),
+    NULL);
+
+  return ;
 }
 
-void disable_contact_host_notifications(contact* contact) {
-  contact->disable_host_notifications();
+void disable_contact_host_notifications(contact* cntct) {
+  // Modify property.
+  cntct->set_host_notifications_enabled(false);
+
+  // Notify event broker.
+  unsigned long attr(MODATTR_NOTIFICATIONS_ENABLED);
+  cntct->set_modified_host_attributes(
+    cntct->get_modified_host_attributes() | attr);
+  broker_adaptive_contact_data(
+    NEBTYPE_ADAPTIVECONTACT_UPDATE,
+    NEBFLAG_NONE,
+    NEBATTR_NONE,
+    cntct,
+    CMD_NONE,
+    MODATTR_NONE,
+    cntct->get_modified_attributes(),
+    attr,
+    cntct->get_modified_host_attributes(),
+    MODATTR_NONE,
+    cntct->get_modified_service_attributes(),
+    NULL);
+
+  return ;
 }
 
-void enable_contact_service_notifications(contact* contact) {
-  contact->enable_service_notifications();
+void enable_contact_service_notifications(contact* cntct) {
+  // Modify property.
+  cntct->set_service_notifications_enabled(true);
+
+  // Notify event broker.
+  unsigned long attr(MODATTR_NOTIFICATIONS_ENABLED);
+  cntct->set_modified_service_attributes(
+    cntct->get_modified_service_attributes() | attr);
+  broker_adaptive_contact_data(
+    NEBTYPE_ADAPTIVECONTACT_UPDATE,
+    NEBFLAG_NONE,
+    NEBATTR_NONE,
+    cntct,
+    CMD_NONE,
+    MODATTR_NONE,
+    cntct->get_modified_attributes(),
+    MODATTR_NONE,
+    cntct->get_modified_host_attributes(),
+    attr,
+    cntct->get_modified_service_attributes(),
+    NULL);
+
+  return ;
 }
 
-void disable_contact_service_notifications(contact* contact) {
-  contact->disable_service_notifications();
+void disable_contact_service_notifications(contact* cntct) {
+  // Modify property.
+  cntct->set_service_notifications_enabled(false);
+
+  // Notify event broker.
+  unsigned long attr(MODATTR_NOTIFICATIONS_ENABLED);
+  cntct->set_modified_service_attributes(
+    cntct->get_modified_service_attributes() | attr);
+  broker_adaptive_contact_data(
+    NEBTYPE_ADAPTIVECONTACT_UPDATE,
+    NEBFLAG_NONE,
+    NEBATTR_NONE,
+    cntct,
+    CMD_NONE,
+    MODATTR_NONE,
+    cntct->get_modified_attributes(),
+    MODATTR_NONE,
+    cntct->get_modified_host_attributes(),
+    attr,
+    cntct->get_modified_service_attributes(),
+    NULL);
+
+  return ;
 }

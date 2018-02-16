@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2015,2017 Centreon
+** Copyright 2011-2015,2017-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -20,6 +20,7 @@
 #include "com/centreon/concurrency/locker.hh"
 #include "com/centreon/engine/commands/raw.hh"
 #include "com/centreon/engine/commands/environment.hh"
+#include "com/centreon/engine/contact.hh"
 #include "com/centreon/engine/error.hh"
 #include "com/centreon/engine/globals.hh"
 #include "com/centreon/engine/logging/logger.hh"

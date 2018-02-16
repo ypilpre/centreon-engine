@@ -23,11 +23,14 @@
 #include <iomanip>
 #include <sstream>
 #include "com/centreon/engine/configuration/applier/state.hh"
+#include "com/centreon/engine/contact.hh"
 #include "com/centreon/engine/globals.hh"
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/macros.hh"
 #include "com/centreon/engine/not_found.hh"
+#include "com/centreon/engine/objects/hostgroup.hh"
 #include "com/centreon/engine/objects/objectlist.hh"
+#include "com/centreon/engine/objects/servicegroup.hh"
 #include "com/centreon/engine/shared.hh"
 #include "com/centreon/engine/string.hh"
 #include "com/centreon/engine/timeperiod.hh"
@@ -90,7 +93,7 @@ int grab_contact_macros_r(nagios_macros* mac, contact* cntct) {
 
   /* save pointer to first/primary contactgroup for later */
   if (!cntct->get_contactgroups().empty()) {
-    mac->contactgroup_ptr = cntct->get_contactgroups().begin()->get();
+    mac->contactgroup_ptr = *cntct->get_contactgroups().begin();
   }
   return (OK);
 }
@@ -774,13 +777,13 @@ int grab_standard_contact_macro_r(
     std::string buf;
     /* get the contactgroup names */
     /* find all contactgroups this contact is a member of */
-    for (std::list<shared_ptr<contactgroup> >::const_iterator
+    for (std::list<contactgroup*>::const_iterator
            it(temp_contact->get_contactgroups().begin()),
            end(temp_contact->get_contactgroups().end());
          it != end;
          ++it) {
-      if ((temp_contactgroup = it->get()) == NULL)
-        continue;
+      if ((temp_contactgroup = *it) == NULL)
+        continue ;
 
       if (!buf.empty())
         buf.append(",");

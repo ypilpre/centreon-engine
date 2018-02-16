@@ -21,6 +21,7 @@
 #include "com/centreon/engine/macros/grab_service.hh"
 #include "com/centreon/engine/macros/clear_service.hh"
 #include "com/centreon/engine/macros/clear_servicegroup.hh"
+#include "com/centreon/engine/objects/servicegroup.hh"
 #include "com/centreon/engine/service.hh"
 
 using namespace com::centreon::engine;

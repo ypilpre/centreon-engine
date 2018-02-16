@@ -21,6 +21,7 @@
 #include <list>
 #include "com/centreon/engine/host.hh"
 #include "com/centreon/engine/macros/grab_host.hh"
+#include "com/centreon/engine/objects/hostgroup.hh"
 #include "com/centreon/engine/service.hh"
 #include "../timeperiod/utils.hh"
 

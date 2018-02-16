@@ -28,6 +28,7 @@
 #include "com/centreon/engine/macros/grab_service.hh"
 #include "com/centreon/engine/macros/misc.hh"
 #include "com/centreon/engine/objects/objectlist.hh"
+#include "com/centreon/engine/objects/servicegroup.hh"
 #include "com/centreon/engine/service.hh"
 #include "com/centreon/engine/string.hh"
 #include "com/centreon/shared_ptr.hh"

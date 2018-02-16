@@ -39,16 +39,12 @@ typedef struct                servicegroup_struct {
   char*                       notes;
   char*                       notes_url;
   char*                       action_url;
+  unsigned int                id;
   struct servicegroup_struct* next;
   struct servicegroup_struct* nexthash;
 }                             servicegroup;
 
 typedef std::list<servicegroup*> servicegroup_set;
-
-/* Other HOSTGROUP structure. */
-struct                        servicegroup_other_properties {
-  unsigned int                servicegroup_id;
-};
 
 #  ifdef __cplusplus
 extern "C" {
@@ -88,9 +84,7 @@ bool          add_service_to_servicegroup(
                 servicegroup_struct* grp,
                 std::string const& host_name,
                 std::string const& description);
-
 bool          is_servicegroup_exist(std::string const& name) throw ();
-unsigned int  get_servicegroup_id(char const* name);
 
 CCE_END()
 

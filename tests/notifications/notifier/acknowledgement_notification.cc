@@ -26,6 +26,7 @@
 #include "com/centreon/engine/configuration/applier/state.hh"
 #include "com/centreon/engine/configuration/contact.hh"
 #include "com/centreon/engine/configuration/state.hh"
+#include "com/centreon/engine/contact.hh"
 #include "com/centreon/engine/notifications/notifier.hh"
 #include "com/centreon/shared_ptr.hh"
 
@@ -68,8 +69,8 @@ class AcknowledgementNotification : public ::testing::Test {
 
     set_time(20);
     contact_map& cm = configuration::applier::state::instance().contacts();
-    configuration::contact ctct("test");
-    cm["test"] = shared_ptr<engine::contact>(new engine::contact(ctct));
+    cm["test"] = shared_ptr<engine::contact>(new engine::contact());
+    cm["test"]->set_name("test");
     _service->add_contact(
       configuration::applier::state::instance().contacts_find("test").get());
   }

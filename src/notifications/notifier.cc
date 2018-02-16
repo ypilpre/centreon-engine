@@ -19,6 +19,8 @@
 
 #include <memory>
 #include <sstream>
+#include "com/centreon/engine/contact.hh"
+#include "com/centreon/engine/contactgroup.hh"
 #include "com/centreon/engine/events/defines.hh"
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/macros/grab_host.hh"

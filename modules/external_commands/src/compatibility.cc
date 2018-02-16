@@ -27,6 +27,8 @@
 #include "com/centreon/engine/modules/external_commands/commands.hh"
 #include "com/centreon/engine/modules/external_commands/compatibility.hh"
 #include "com/centreon/engine/not_found.hh"
+#include "com/centreon/engine/objects/hostgroup.hh"
+#include "com/centreon/engine/objects/servicegroup.hh"
 #include "com/centreon/engine/retention/applier/state.hh"
 #include "com/centreon/engine/retention/dump.hh"
 #include "com/centreon/engine/retention/parser.hh"
@@ -1527,25 +1529,20 @@ int process_contact_command(int cmd,
   }
 
   switch (cmd) {
-
-  case CMD_ENABLE_CONTACT_HOST_NOTIFICATIONS:
-    temp_contact->enable_host_notifications();
+   case CMD_ENABLE_CONTACT_HOST_NOTIFICATIONS:
+    enable_contact_host_notifications(temp_contact);
+    break ;
+   case CMD_DISABLE_CONTACT_HOST_NOTIFICATIONS:
+    disable_contact_host_notifications(temp_contact);
+    break ;
+   case CMD_ENABLE_CONTACT_SVC_NOTIFICATIONS:
+    enable_contact_service_notifications(temp_contact);
     break;
-
-  case CMD_DISABLE_CONTACT_HOST_NOTIFICATIONS:
-    temp_contact->disable_host_notifications();
-    break;
-
-  case CMD_ENABLE_CONTACT_SVC_NOTIFICATIONS:
-    temp_contact->enable_service_notifications();
-    break;
-
-  case CMD_DISABLE_CONTACT_SVC_NOTIFICATIONS:
-    temp_contact->disable_service_notifications();
-    break;
-
-  default:
-    break;
+   case CMD_DISABLE_CONTACT_SVC_NOTIFICATIONS:
+    disable_contact_service_notifications(temp_contact);
+    break ;
+   default:
+    break ;
   }
   return (OK);
 }
@@ -1574,13 +1571,11 @@ int process_contactgroup_command(int cmd,
   }
 
   switch (cmd) {
-
-  case CMD_ENABLE_CONTACTGROUP_HOST_NOTIFICATIONS:
-  case CMD_DISABLE_CONTACTGROUP_HOST_NOTIFICATIONS:
-  case CMD_ENABLE_CONTACTGROUP_SVC_NOTIFICATIONS:
-  case CMD_DISABLE_CONTACTGROUP_SVC_NOTIFICATIONS:
-
-    /* loop through all contactgroup members */
+   case CMD_ENABLE_CONTACTGROUP_HOST_NOTIFICATIONS:
+   case CMD_DISABLE_CONTACTGROUP_HOST_NOTIFICATIONS:
+   case CMD_ENABLE_CONTACTGROUP_SVC_NOTIFICATIONS:
+   case CMD_DISABLE_CONTACTGROUP_SVC_NOTIFICATIONS:
+    // Loop through all contactgroup members.
     for (umap<std::string, engine::contact*>::const_iterator
            it(temp_contactgroup->get_members().begin()),
            end(temp_contactgroup->get_members().end());
@@ -1589,33 +1584,26 @@ int process_contactgroup_command(int cmd,
       if (!it->second)
         continue ;
       engine::contact* temp_member(it->second);
-
       switch (cmd) {
-
-      case CMD_ENABLE_CONTACTGROUP_HOST_NOTIFICATIONS:
-        temp_contact->enable_host_notifications();
-        break;
-
-      case CMD_DISABLE_CONTACTGROUP_HOST_NOTIFICATIONS:
-        temp_contact->disable_host_notifications();
-        break;
-
-      case CMD_ENABLE_CONTACTGROUP_SVC_NOTIFICATIONS:
-        temp_contact->enable_service_notifications();
-        break;
-
-      case CMD_DISABLE_CONTACTGROUP_SVC_NOTIFICATIONS:
-        temp_contact->disable_service_notifications();
-        break;
-
-      default:
-        break;
+       case CMD_ENABLE_CONTACTGROUP_HOST_NOTIFICATIONS:
+        enable_contact_host_notifications(temp_contact);
+        break ;
+       case CMD_DISABLE_CONTACTGROUP_HOST_NOTIFICATIONS:
+        disable_contact_host_notifications(temp_contact);
+        break ;
+       case CMD_ENABLE_CONTACTGROUP_SVC_NOTIFICATIONS:
+        enable_contact_service_notifications(temp_contact);
+        break ;
+       case CMD_DISABLE_CONTACTGROUP_SVC_NOTIFICATIONS:
+        disable_contact_service_notifications(temp_contact);
+        break ;
+       default:
+        break ;
       }
     }
-    break;
-
+    break ;
   default:
-    break;
+    break ;
   }
   return (OK);
 }

@@ -19,11 +19,7 @@
 
 #include <memory>
 #include <sstream>
-#include "com/centreon/engine/broker.hh"
 #include "com/centreon/engine/commands/command.hh"
-#include "com/centreon/engine/configuration/applier/object.hh"
-#include "com/centreon/engine/configuration/applier/state.hh"
-#include "com/centreon/engine/configuration/contact.hh"
 #include "com/centreon/engine/contact.hh"
 #include "com/centreon/engine/error.hh"
 #include "com/centreon/engine/logging/logger.hh"
@@ -37,7 +33,6 @@ using namespace com::centreon::engine::commands;
 using namespace com::centreon::engine::logging;
 using namespace com::centreon::engine::notifications;
 
-
 /**************************************
 *                                     *
 *           Public Methods            *
@@ -50,75 +45,9 @@ using namespace com::centreon::engine::notifications;
 contact::contact() {}
 
 /**
- *  Constructor from a configuration contact
- *
- * @param obj Configuration contact
- */
-contact::contact(configuration::contact const& obj)
-  : _name(obj.contact_name()),
-    _alias((obj.alias().empty()) ? obj.contact_name() : obj.alias()),
-    _email(obj.email()),
-    _pager(obj.pager()),
-    _addresses(obj.address()),
-    _service_notified_states(
-        ((obj.service_notification_options() & configuration::service::ok)
-         ? notifier::ON_RECOVERY : 0)
-      | ((obj.service_notification_options() & configuration::service::critical)
-         ? notifier::ON_CRITICAL : 0)
-      | ((obj.service_notification_options() & configuration::service::warning)
-         ? notifier::ON_WARNING : 0)
-      | ((obj.service_notification_options() & configuration::service::unknown)
-         ? notifier::ON_UNKNOWN : 0)
-      | ((obj.service_notification_options() & configuration::service::flapping)
-         ? notifier::ON_FLAPPING : 0)
-      | ((obj.service_notification_options() & configuration::service::downtime)
-         ? notifier::ON_DOWNTIME : 0)),
-    _host_notified_states(
-        ((obj.host_notification_options() & configuration::host::up)
-          ? notifier::ON_RECOVERY : 0)
-      | ((obj.host_notification_options() & configuration::host::down)
-          ? notifier::ON_DOWN : 0)
-      | ((obj.host_notification_options() & configuration::host::unreachable)
-          ? notifier::ON_UNREACHABLE : 0)
-      | ((obj.host_notification_options() & configuration::host::flapping)
-          ? notifier::ON_FLAPPING : 0)
-      | ((obj.host_notification_options() & configuration::host::downtime)
-          ? notifier::ON_DOWNTIME : 0)),
-    _host_notifications_enabled(obj.host_notifications_enabled()),
-    _modified_attributes(MODATTR_NONE),
-    _modified_host_attributes(MODATTR_NONE),
-    _modified_service_attributes(MODATTR_NONE),
-    _retain_nonstatus_information(obj.retain_nonstatus_information()),
-    _retain_status_information(obj.retain_status_information()),
-    _service_notifications_enabled(obj.service_notifications_enabled()),
-    _timezone(obj.timezone()) {
-
-  // Make sure we have the data we need.
-  if (_name.empty())
-    throw (engine_error() << "contact: Contact name is empty");
-
-  // Notify event broker.
-  timeval tv(get_broker_timestamp(NULL));
-  broker_adaptive_contact_data(
-      NEBTYPE_CONTACT_ADD,
-      NEBFLAG_NONE,
-      NEBATTR_NONE,
-      this,
-      CMD_NONE,
-      MODATTR_ALL,
-      MODATTR_ALL,
-      MODATTR_ALL,
-      MODATTR_ALL,
-      MODATTR_ALL,
-      MODATTR_ALL,
-      &tv);
-}
-
-/**
  * Destructor.
  */
-contact::~contact() {
-}
+contact::~contact() {}
 
 /**************************************
 *                                     *
@@ -127,12 +56,33 @@ contact::~contact() {
 **************************************/
 
 /**
- *  Return the contact name
+ *  Get a single address.
  *
- *  @return a reference to the name
+ *  @param[in] index  Address index (starting from 0).
+ *
+ *  @return The requested address.
  */
-std::string const& contact::get_name() const {
-  return (_name);
+std::string const& contact::get_address(int index) const {
+  return (_addresses[index]);
+}
+
+/**
+ *  Get all addresses.
+ *
+ *  @return Array of addresses.
+ */
+std::vector<std::string> const& contact::get_addresses() const {
+  return (_addresses);
+}
+
+/**
+ *  Set addresses.
+ *
+ *  @param[in] addresses  New addresses.
+ */
+void contact::set_addresses(std::vector<std::string> const& addresses) {
+  _addresses = addresses;
+  return ;
 }
 
 /**
@@ -189,6 +139,44 @@ std::string const& contact::get_email() const {
  */
 void contact::set_email(std::string const& email) {
   _email = email;
+  return ;
+}
+
+/**
+ *  Get the contact's modified attributes.
+ *
+ *  @return A bitmask, representing modified attributes.
+ */
+unsigned long contact::get_modified_attributes() const {
+  return (_modified_attributes);
+}
+
+/**
+ *  Set the contact's modified attributes.
+ *
+ *  @param[in] attr  Modified attributes.
+ */
+void contact::set_modified_attributes(unsigned long attr) {
+  _modified_attributes = attr;
+  return ;
+}
+
+/**
+ *  Return the contact name.
+ *
+ *  @return A reference to the name.
+ */
+std::string const& contact::get_name() const {
+  return (_name);
+}
+
+/**
+ *  Set the contact name.
+ *
+ *  @param[in] name  New name.
+ */
+void contact::set_name(std::string const& name) {
+  _name = name;
   return ;
 }
 
@@ -275,46 +263,24 @@ void contact::set_timezone(std::string const& timezone) {
 **************************************/
 
 /**
- *  Get host notified states.
+ *  Add new host notification command to contact.
  *
- *  @return Host notified states.
+ *  @param[in,out] cmd   Command that will be used by contact for
+ *                       host notification.
+ *  @param[in]     args  Optional command arguments.
  */
-unsigned int contact::get_host_notified_states() const {
-  return (_host_notified_states);
-}
-
-/**
- *  Set host notified states.
- *
- *  @param[in] notified_states  New host notified states.
- */
-void contact::set_host_notified_states(unsigned int notified_states) {
-  _host_notified_states = notified_states;
+void contact::add_host_notification_command(
+                commands::command* cmd,
+                std::string const& args) {
+  _host_notification_commands.push_back(std::make_pair(cmd, args));
   return ;
 }
 
-/**************************************
-*                                     *
-*   Service notification properties   *
-*                                     *
-**************************************/
-
 /**
- *  Get service notified states.
- *
- *  @return Service notified states.
+ *  Clear host notification commands.
  */
-unsigned int contact::get_service_notified_states() const {
-  return (_service_notified_states);
-}
-
-/**
- *  Set service notified states.
- *
- *  @param[in] notified_states  New service notified states.
- */
-void contact::set_service_notified_states(unsigned int notified_states) {
-  _service_notified_states = notified_states;
+void contact::clear_host_notification_commands() {
+  _host_notification_commands.clear();
   return ;
 }
 
@@ -328,182 +294,114 @@ std::list<std::pair<commands::command*, std::string> > const& contact::get_host_
 }
 
 /**
- *  Get service notification commands list.
+ *  Check if host notifications are enabled for this contact.
  *
- *  @return A list of commands.
+ *  @return True if notifications are enabled.
  */
-std::list<std::pair<commands::command*, std::string> > const& contact::get_service_notification_commands() const {
-  return (_service_notification_commands);
+bool contact::get_host_notifications_enabled() const {
+  return (_host_notifications_enabled);
 }
 
+/**
+ *  Enable or disable host notifications for this contact.
+ *
+ *  @param[in] enable  True to enable.
+ */
+void contact::set_host_notifications_enabled(bool enable) {
+  _host_notifications_enabled = enable;
+  return ;
+}
+
+/**
+ *  Check if notification is enabled for a specific state.
+ *
+ *  @param[in] state  State to check.
+ *
+ *  @return True if notification is enabled for state.
+ */
+bool contact::get_host_notify_on(
+                notifications::notifier::action_on state) const {
+  return (_host_notified_states & state);
+}
+
+/**
+ *  Enable or disable notification on a host state.
+ *
+ *  @param[in] state   Target state.
+ *  @param[in] enable  True to enable.
+ */
+void contact::set_host_notify_on(
+                notifications::notifier::action_on state,
+                bool enable) {
+  if (enable)
+    _host_notified_states |= state;
+  else
+    _host_notified_states &= ~state;
+  return ;
+}
+
+/**
+ *  Get the host notification period.
+ *
+ *  @return A pointer to the host notification period.
+ */
+timeperiod_struct* contact::get_host_notification_period() const {
+  return (_host_notification_period);
+}
+
+/**
+ *  Set the host notification period.
+ *
+ *  @param[in] tp  Pointer to the new host notification period.
+ */
 void contact::set_host_notification_period(timeperiod* tp) {
   _host_notification_period = tp;
-}
-
-void contact::set_service_notification_period(timeperiod* tp) {
-  _service_notification_period = tp;
-}
-
-bool contact::notify_on_service_critical() const {
-  return (_service_notified_states & notifier::ON_CRITICAL);
-}
-
-bool contact::notify_on_service_recovery() const {
-  return (_service_notified_states & notifier::ON_RECOVERY);
-}
-
-bool contact::notify_on_service_warning() const {
-  return (_service_notified_states & notifier::ON_WARNING);
-}
-
-bool contact::notify_on_host_recovery() const {
-  return (_host_notified_states & notifier::ON_RECOVERY);
-}
-
-bool contact::notify_on_host_down() const {
-  return (_host_notified_states & notifier::ON_DOWN);
-}
-
-bool contact::notify_on_host_unreachable() const {
-  return (_host_notified_states & notifier::ON_UNREACHABLE);
-}
-
-void contact::clear_contactgroups() {
-  _contact_groups.clear();
   return ;
 }
 
-std::list<shared_ptr<contactgroup> > const& contact::get_contactgroups() const {
-  return (_contact_groups);
-}
-
-customvar_set const& contact::get_customvars() const {
-  return _vars;
-}
-
-void contact::set_customvar(customvar const& var) {
-  bool add(false);
-
-  if (_vars.find(var.get_name()) == _vars.end())
-    add = true;
-
-  _vars[var.get_name()] = var;
-
-  if (add) {
-    // Notify event broker.
-    timeval tv(get_broker_timestamp(NULL));
-
-    broker_custom_variable(
-        NEBTYPE_CONTACTCUSTOMVARIABLE_ADD,
-        NEBFLAG_NONE,
-        NEBATTR_NONE,
-        this,
-        var.get_name().c_str(),
-        var.get_value().c_str(),
-        &tv);
-  }
-}
-
-std::string const& contact::get_address(int index) const {
-  return (_addresses[index]);
-}
-
 /**
- *  Get all addresses.
+ *  Get the last time a host notification was sent for this contact.
  *
- *  @return Array of addresses.
+ *  @return A timestamp.
  */
-std::vector<std::string> const& contact::get_addresses() const {
-  return (_addresses);
-}
-
-/**
- *  Set addresses.
- *
- *  @param[in] addresses  New addresses.
- */
-void contact::set_addresses(std::vector<std::string> const& addresses) {
-  _addresses = addresses;
-  return ;
-}
-
-unsigned long contact::get_modified_attributes() const {
-  return _modified_attributes;
-}
-
-void contact::set_modified_attributes(unsigned long attr) {
-  _modified_attributes = attr;
-}
-
-unsigned long contact::get_modified_host_attributes() const {
-  return _modified_host_attributes;
-}
-
-void contact::set_modified_host_attributes(unsigned long attr) {
-  _modified_host_attributes = attr;
-}
-
-unsigned long contact::get_modified_service_attributes() const {
-  return _modified_service_attributes;
-}
-
-void contact::set_modified_service_attributes(unsigned long attr) {
-  _modified_service_attributes = attr;
-}
-
 time_t contact::get_last_host_notification() const {
-  return _last_host_notification;
+  return (_last_host_notification);
 }
 
+/**
+ *  Set the last time a host notification was sent.
+ *
+ *  @param[in] t  Timestamp.
+ */
 void contact::set_last_host_notification(time_t t) {
   _last_host_notification = t;
-}
-
-time_t contact::get_last_service_notification() const {
-  return _last_service_notification;
-}
-
-void contact::set_last_service_notification(time_t t) {
-  _last_service_notification = t;
-}
-
-timeperiod_struct* contact::get_host_notification_period() const {
-  return _host_notification_period;
-}
-
-timeperiod_struct* contact::get_service_notification_period() const {
-  return _service_notification_period;
-}
-
-bool contact::get_host_notifications_enabled() const {
-  return _host_notifications_enabled;
-}
-
-void contact::set_host_notifications_enabled(bool enabled) {
-  _host_notifications_enabled = enabled;
-}
-
-bool contact::get_service_notifications_enabled() const {
-  return _service_notifications_enabled;
-}
-
-void contact::set_service_notifications_enabled(bool enabled) {
-  _service_notifications_enabled = enabled;
+  return ;
 }
 
 /**
- *  Add new host notification command to contact.
+ *  Get the modified host attributes.
  *
- *  @param[in,out] cmd   Command that will be used by contact for
- *                       host notification.
- *  @param[in]     args  Optional command arguments.
+ *  @return A bitmask.
  */
-void contact::add_host_notification_command(
-                commands::command* cmd,
-                std::string const& args) {
-  _host_notification_commands.push_back(std::make_pair(cmd, args));
+unsigned long contact::get_modified_host_attributes() const {
+  return (_modified_host_attributes);
+}
+
+/**
+ *  Set the modified host attributes.
+ *
+ *  @param[in] attr  Modified host attributes.
+ */
+void contact::set_modified_host_attributes(unsigned long attr) {
+  _modified_host_attributes = attr;
   return ;
 }
+
+/**************************************
+*                                     *
+*   Service notification properties   *
+*                                     *
+**************************************/
 
 /**
  *  Add new service notification command to contact.
@@ -519,172 +417,191 @@ void contact::add_service_notification_command(
   return ;
 }
 
-void contact::clear_host_notification_commands() {
-  _host_notification_commands.clear();
-}
-
+/**
+ *  Clear service notification commands.
+ */
 void contact::clear_service_notification_commands() {
   _service_notification_commands.clear();
+  return ;
 }
 
+/**
+ *  Get service notification commands list.
+ *
+ *  @return A list of commands.
+ */
+std::list<std::pair<commands::command*, std::string> > const& contact::get_service_notification_commands() const {
+  return (_service_notification_commands);
+}
+
+/**
+ *  Check if service notifications are enabled for this service.
+ *
+ *  @return True if notifications are enabled.
+ */
+bool contact::get_service_notifications_enabled() const {
+  return (_service_notifications_enabled);
+}
+
+/**
+ *  Enable or disable service notifications for this contact.
+ *
+ *  @param[in] enable  True to enable.
+ */
+void contact::set_service_notifications_enabled(bool enable) {
+  _service_notifications_enabled = enable;
+  return ;
+}
+
+/**
+ *  Check if notification is enabled for a specific state.
+ *
+ *  @param[in] state  State to check.
+ *
+ *  @return True if notification is enabled for state.
+ */
+bool contact::get_service_notify_on(
+                notifications::notifier::action_on state) const {
+  return (_service_notified_states & state);
+}
+
+/**
+ *  Enable or disable notification on a service state.
+ *
+ *  @param[in] state   Target state.
+ *  @param[in] enable  True to enable.
+ */
+void contact::set_service_notify_on(
+                notifications::notifier::action_on state,
+                bool enable) {
+  if (enable)
+    _service_notified_states |= state;
+  else
+    _service_notified_states &= ~state;
+  return ;
+}
+
+/**
+ *  Get the service notification period.
+ *
+ *  @return Pointer to the notification period.
+ */
+timeperiod_struct* contact::get_service_notification_period() const {
+  return _service_notification_period;
+}
+
+/**
+ *  Set service notification period.
+ *
+ *  @param[in] tp  Pointer to the new service notification period.
+ */
+void contact::set_service_notification_period(timeperiod* tp) {
+  _service_notification_period = tp;
+  return ;
+}
+
+/**
+ *  Get the last time a service notification was sent.
+ *
+ *  @return Timestamp.
+ */
+time_t contact::get_last_service_notification() const {
+  return (_last_service_notification);
+}
+
+/**
+ *  Set the last time a service notification was sent.
+ *
+ *  @param[in] t  Timestamp.
+ */
+void contact::set_last_service_notification(time_t t) {
+  _last_service_notification = t;
+  return ;
+}
+
+/**
+ *  Get modified service attributes.
+ *
+ *  @return A bitmask.
+ */
+unsigned long contact::get_modified_service_attributes() const {
+  return (_modified_service_attributes);
+}
+
+/**
+ *  Set the service modified attributes.
+ *
+ *  @param[in] attr  Service modified attributes.
+ */
+void contact::set_modified_service_attributes(unsigned long attr) {
+  _modified_service_attributes = attr;
+  return ;
+}
+
+/**************************************
+*                                     *
+*           Contact groups            *
+*                                     *
+**************************************/
+
+/**
+ *  Add a contact group to this contact.
+ *
+ *  @param[in] cg  Pointer to contact group.
+ */
+void contact::add_contactgroup(contactgroup* cg) {
+  _contact_groups.push_back(cg);
+  return ;
+}
+
+/**
+ *  Clear contact group list.
+ */
+void contact::clear_contactgroups() {
+  _contact_groups.clear();
+  return ;
+}
+
+/**
+ *  Get the contact group list.
+ *
+ *  @return List of pointers to contact groups.
+ */
+std::list<contactgroup*> const& contact::get_contactgroups() const {
+  return (_contact_groups);
+}
+
+/**************************************
+*                                     *
+*          Custom variables           *
+*                                     *
+**************************************/
+
+/**
+ *  Clear all custom variables.
+ */
 void contact::clear_custom_variables() {
-  // Browse all custom vars.
-  for (customvar_set::iterator
-         it(_vars.begin()),
-         end(_vars.end());
-       it != end;) {
-
-    // Notify event broker.
-    timeval tv(get_broker_timestamp(NULL));
-    broker_custom_variable(
-      NEBTYPE_CONTACTCUSTOMVARIABLE_DELETE,
-      NEBFLAG_NONE,
-      NEBATTR_NONE,
-      this,
-      it->second.get_name().c_str(),
-      it->second.get_value().c_str(),
-      &tv);
-
+  for (customvar_set::iterator it(_vars.begin()), end(_vars.end());
+       it != end;)
     it = _vars.erase(it);
-  }
+  return ;
 }
 
-bool contact::operator<(contact const& other) {
-  if (_name.compare(other._name) < 0)
-    return true;
-  if (_alias.compare(other._alias) < 0)
-    return true;
-  return false;
+/**
+ *  Get custom variables.
+ *
+ *  @return Custom variables.
+ */
+customvar_set const& contact::get_customvars() const {
+  return (_vars);
 }
 
-/* enables host notifications for a contact */
-void contact::enable_host_notifications() {
-  unsigned long attr(MODATTR_NOTIFICATIONS_ENABLED);
-
-  /* no change */
-  if (get_host_notifications_enabled())
-    return ;
-
-  /* set the attribute modified flag */
-  _modified_host_attributes |= attr;
-
-  /* enable the host notifications... */
-  set_host_notifications_enabled(true);
-
-  /* send data to event broker */
-  broker_adaptive_contact_data(
-    NEBTYPE_ADAPTIVECONTACT_UPDATE,
-    NEBFLAG_NONE,
-    NEBATTR_NONE,
-    this,
-    CMD_NONE,
-    MODATTR_NONE,
-    get_modified_attributes(),
-    attr,
-    get_modified_host_attributes(),
-    MODATTR_NONE,
-    get_modified_service_attributes(),
-    NULL);
-
-  /* update the status log to reflect the new contact state */
-  broker_contact_status(this);
-}
-
-/* disables host notifications for a contact */
-void contact::disable_host_notifications() {
-  unsigned long attr(MODATTR_NOTIFICATIONS_ENABLED);
-
-  /* no change */
-  if (!get_host_notifications_enabled())
-    return ;
-
-  /* set the attribute modified flag */
-  _modified_host_attributes |= attr;
-
-  /* enable the host notifications... */
-  set_host_notifications_enabled(false);
-
-  /* send data to event broker */
-  broker_adaptive_contact_data(
-    NEBTYPE_ADAPTIVECONTACT_UPDATE,
-    NEBFLAG_NONE,
-    NEBATTR_NONE,
-    this,
-    CMD_NONE,
-    MODATTR_NONE,
-    get_modified_attributes(),
-    attr,
-    get_modified_host_attributes(),
-    MODATTR_NONE,
-    get_modified_service_attributes(),
-    NULL);
-
-  /* update the status log to reflect the new contact state */
-  broker_contact_status(this);
-}
-
-/* enables service notifications for a contact */
-void contact::enable_service_notifications() {
-  unsigned long attr(MODATTR_NOTIFICATIONS_ENABLED);
-
-  /* no change */
-  if (get_service_notifications_enabled())
-    return ;
-
-  /* set the attribute modified flag */
-  _modified_service_attributes |= attr;
-
-  /* enable the host notifications... */
-  set_service_notifications_enabled(true);
-
-  /* send data to event broker */
-  broker_adaptive_contact_data(
-    NEBTYPE_ADAPTIVECONTACT_UPDATE,
-    NEBFLAG_NONE,
-    NEBATTR_NONE,
-    this,
-    CMD_NONE,
-    MODATTR_NONE,
-    get_modified_attributes(),
-    MODATTR_NONE,
-    get_modified_host_attributes(),
-    attr,
-    get_modified_service_attributes(),
-    NULL);
-
-  /* update the status log to reflect the new contact state */
-  broker_contact_status(this);
-}
-
-/* disables service notifications for a contact */
-void contact::disable_service_notifications() {
-  unsigned long attr(MODATTR_NOTIFICATIONS_ENABLED);
-
-  /* no change */
-  if (!get_service_notifications_enabled())
-    return ;
-
-  /* set the attribute modified flag */
-  _modified_service_attributes |= attr;
-
-  /* enable the host notifications... */
-  set_service_notifications_enabled(false);
-
-  /* send data to event broker */
-  broker_adaptive_contact_data(
-    NEBTYPE_ADAPTIVECONTACT_UPDATE,
-    NEBFLAG_NONE,
-    NEBATTR_NONE,
-    this,
-    CMD_NONE,
-    MODATTR_NONE,
-    get_modified_attributes(),
-    MODATTR_NONE,
-    get_modified_host_attributes(),
-    attr,
-    get_modified_service_attributes(),
-    NULL);
-
-  /* update the status log to reflect the new contact state */
-  broker_contact_status(this);
+/**
+ *  Set a custom variable.
+ *
+ *  @param[in] var  Custom variable.
+ */
+void contact::set_customvar(customvar const& var) {
+  _vars[var.get_name()] = var;
+  return ;
 }

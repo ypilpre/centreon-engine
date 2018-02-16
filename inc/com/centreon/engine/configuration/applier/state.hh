@@ -95,7 +95,7 @@ namespace           configuration {
       contact_map const&
                     contacts() const throw ();
       contact_map&  contacts() throw ();
-      shared_ptr< ::contact>
+      shared_ptr<engine::contact>
                     contacts_find(configuration::contact::key_type const& k) const;
       contactgroup_map const&
                     contactgroups() const throw ();

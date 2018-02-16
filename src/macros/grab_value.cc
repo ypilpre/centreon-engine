@@ -19,11 +19,14 @@
 */
 
 #include <cstdlib>
+#include "com/centreon/engine/contact.hh"
 #include "com/centreon/engine/globals.hh"
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/macros/grab_value.hh"
 #include "com/centreon/engine/macros.hh"
 #include "com/centreon/engine/not_found.hh"
+#include "com/centreon/engine/objects/hostgroup.hh"
+#include "com/centreon/engine/objects/servicegroup.hh"
 #include "com/centreon/engine/string.hh"
 #include "com/centreon/unordered_hash.hh"
 #include "com/centreon/engine/configuration/applier/state.hh"

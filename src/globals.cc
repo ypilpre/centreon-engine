@@ -28,8 +28,6 @@ using namespace com::centreon::engine;
 
 configuration::state* config(NULL);
 events::hash_timed_event quick_timed_event;
-std::map<std::string, hostgroup_other_properties> hostgroup_other_props;
-std::map<std::string, servicegroup_other_properties> servicegroup_other_props;
 
 char const*         sigs[] = {
   "EXIT", "HUP", "INT", "QUIT", "ILL",

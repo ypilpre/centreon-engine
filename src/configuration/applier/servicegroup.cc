@@ -77,10 +77,6 @@ void applier::servicegroup::add_object(
   // Add service group to the global configuration set.
   config->servicegroups().insert(obj);
 
-  // Add servicegroup id to the other props.
-  servicegroup_other_props[obj.servicegroup_name()].servicegroup_id
-    = obj.servicegroup_id();
-
   // Create servicegroup.
   servicegroup_struct* sg(add_servicegroup(
                             obj.servicegroup_name().c_str(),
@@ -91,6 +87,7 @@ void applier::servicegroup::add_object(
   if (!sg)
     throw (engine_error() << "Could not register service group '"
            << obj.servicegroup_name() << "'");
+  sg->id = obj.servicegroup_id();
 
   // Notify event broker.
   timeval tv(get_broker_timestamp(NULL));
@@ -178,7 +175,6 @@ void applier::servicegroup::modify_object(
   configuration::servicegroup old_cfg(*it_cfg);
   config->servicegroups().erase(it_cfg);
   config->servicegroups().insert(obj);
-  servicegroup_other_props[obj.servicegroup_name()].servicegroup_id = obj.servicegroup_id();
 
   // Modify properties.
   modify_cstr_if_different(
@@ -193,6 +189,7 @@ void applier::servicegroup::modify_object(
   modify_cstr_if_different(
     sg->notes_url,
     NULL_IF_EMPTY(obj.notes_url()));
+  sg->id = obj.servicegroup_id();
 
   // Were members modified ?
   if (obj.members() != old_cfg.members()) {
@@ -272,7 +269,6 @@ void applier::servicegroup::remove_object(
       &tv);
 
     // Erase service group object (will effectively delete the object).
-    servicegroup_other_props.erase(obj.servicegroup_name());
     applier::state::instance().servicegroups().erase(it);
   }
 

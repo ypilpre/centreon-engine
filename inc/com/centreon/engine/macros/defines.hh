@@ -21,14 +21,16 @@
 #ifndef CCE_MACROS_DEFINES_HH_
 # define CCE_MACROS_DEFINES_HH_
 
-# include "com/centreon/engine/contact.hh"
-# include "com/centreon/engine/contactgroup.hh"
 # include "com/centreon/engine/customvar.hh"
-# include "com/centreon/engine/objects/hostgroup.hh"
-# include "com/centreon/engine/objects/servicegroup.hh"
 
 // Forward declarations
+struct hostgroup_struct;
+typedef hostgroup_struct hostgroup;
+struct servicegroup_struct;
+typedef servicegroup_struct servicegroup;
 CCE_BEGIN()
+  class contact;
+  class contactgroup;
   class host;
   class service;
 CCE_END()
@@ -211,20 +213,20 @@ CCE_END()
 #  define MAX_CONTACT_ADDRESSES 6
 
 // NAGIOS_MACROS structure
-struct                   nagios_macros {
-  char*                  x[MACRO_X_COUNT];
-  char*                  argv[MAX_COMMAND_ARGUMENTS];
-  char*                  contactaddress[MAX_CONTACT_ADDRESSES];
-  char*                  ondemand;
-  com::centreon::engine::host*                  host_ptr;
-  hostgroup*             hostgroup_ptr;
-  com::centreon::engine::service*               service_ptr;
-  servicegroup*          servicegroup_ptr;
-  com::centreon::engine::contact*               contact_ptr;
-  com::centreon::engine::contactgroup*          contactgroup_ptr;
-  com::centreon::engine::customvar_set         custom_host_vars;
-  com::centreon::engine::customvar_set         custom_service_vars;
-  com::centreon::engine::customvar_set         custom_contact_vars;
+struct                                 nagios_macros {
+  char*                                x[MACRO_X_COUNT];
+  char*                                argv[MAX_COMMAND_ARGUMENTS];
+  char*                                contactaddress[MAX_CONTACT_ADDRESSES];
+  char*                                ondemand;
+  com::centreon::engine::host*         host_ptr;
+  hostgroup*                           hostgroup_ptr;
+  com::centreon::engine::service*      service_ptr;
+  servicegroup*                        servicegroup_ptr;
+  com::centreon::engine::contact*      contact_ptr;
+  com::centreon::engine::contactgroup* contactgroup_ptr;
+  com::centreon::engine::customvar_set custom_host_vars;
+  com::centreon::engine::customvar_set custom_service_vars;
+  com::centreon::engine::customvar_set custom_contact_vars;
 };
 
 typedef struct nagios_macros nagios_macros;

@@ -19,6 +19,7 @@
 
 #include <gtest/gtest.h>
 #include "com/centreon/engine/macros/grab_service.hh"
+#include "com/centreon/engine/objects/servicegroup.hh"
 #include "com/centreon/engine/service.hh"
 #include "../timeperiod/utils.hh"
 

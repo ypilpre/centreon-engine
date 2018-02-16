@@ -43,7 +43,6 @@ if (WITH_TESTING)
     "${TESTS_DIR}/configuration/host.cc"
     "${TESTS_DIR}/configuration/object.cc"
     "${TESTS_DIR}/configuration/service.cc"
-    "${TESTS_DIR}/contacts/contact-config.cc"
     "${TESTS_DIR}/contacts/contactgroup-config.cc"
     "${TESTS_DIR}/downtimes/downtime.cc"
     "${TESTS_DIR}/downtime_finder.cc"

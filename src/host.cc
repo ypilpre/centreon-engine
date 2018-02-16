@@ -18,6 +18,7 @@
 */
 
 #include "com/centreon/engine/host.hh"
+#include "com/centreon/engine/objects/hostgroup.hh"
 #include "com/centreon/engine/service.hh"
 
 using namespace com::centreon::engine;
