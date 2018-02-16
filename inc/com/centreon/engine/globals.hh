@@ -145,7 +145,7 @@ extern std::map<unsigned long, com::centreon::engine::comment*>
 extern char*                     macro_x_names[];
 extern char*                     macro_user[];
 
-extern std::map<unsigned long, com::centreon::engine::downtime* >
+extern std::map<unsigned long, com::centreon::engine::downtime*>
                                  scheduled_downtime_list;
 
 extern FILE*                     debug_file_fp;

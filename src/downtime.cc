@@ -58,7 +58,9 @@ downtime::downtime(
     _triggered_by(triggered_by),
     _comment_id(0),
     _duration(duration),
-    _in_effect(false) {}
+    _in_effect(false) {
+  _downtime_id = next_downtime_id++;
+}
 
 /**
  *  Copy constructor.
