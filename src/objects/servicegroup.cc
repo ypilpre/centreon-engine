@@ -233,7 +233,7 @@ bool com::centreon::engine::add_service_to_servicegroup(
       || svc_description.empty()) {
     logger(log_config_error, basic)
       << "Error: Servicegroup is NULL or host name / description are empty";
-    return (NULL);
+    return (false);
   }
 
   grp->members[make_pair(host_name, svc_description)] = NULL;

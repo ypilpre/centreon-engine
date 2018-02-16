@@ -952,8 +952,8 @@ std::string clean_macro_chars(std::string const& macro, int options) {
     /* illegal user-specified characters */
     if (config->illegal_output_chars().find(ch) == std::string::npos)
       retval += macro[i];
-    return retval;
   }
+  return retval;
 }
 
 /* encodes a string in proper URL format */

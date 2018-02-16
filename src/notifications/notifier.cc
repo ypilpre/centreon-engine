@@ -1072,6 +1072,7 @@ bool notifier::_custom_filter() {
 
 time_t notifier::get_initial_notif_time() const {
   // FIXME DBR: to implement...
+  return 0;
 }
 
 void notifier::set_initial_notif_time(time_t initial) {
