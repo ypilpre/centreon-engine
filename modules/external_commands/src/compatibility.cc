@@ -23,11 +23,11 @@
 #include "com/centreon/engine/configuration/applier/state.hh"
 #include "com/centreon/engine/flapping.hh"
 #include "com/centreon/engine/globals.hh"
+#include "com/centreon/engine/hostgroup.hh"
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/modules/external_commands/commands.hh"
 #include "com/centreon/engine/modules/external_commands/compatibility.hh"
 #include "com/centreon/engine/not_found.hh"
-#include "com/centreon/engine/objects/hostgroup.hh"
 #include "com/centreon/engine/objects/servicegroup.hh"
 #include "com/centreon/engine/retention/applier/state.hh"
 #include "com/centreon/engine/retention/dump.hh"
@@ -1002,7 +1002,7 @@ int process_hostgroup_command(int cmd,
                               time_t entry_time,
                               char* args) {
   char* hostgroup_name = NULL;
-  hostgroup_struct* temp_hostgroup = NULL;
+  hostgroup* temp_hostgroup = NULL;
   host* temp_host = NULL;
   service* temp_service = NULL;
 
@@ -1023,8 +1023,8 @@ int process_hostgroup_command(int cmd,
 
   /* loop through all hosts in the hostgroup */
   for (umap<std::string, shared_ptr<host> >::const_iterator
-         it(temp_hostgroup->members.begin()),
-         end(temp_hostgroup->members.end());
+         it(temp_hostgroup->get_members().begin()),
+         end(temp_hostgroup->get_members().end());
        it != end;
        ++it) {
     if ((temp_host = it->second.get()) == NULL)

@@ -35,9 +35,10 @@
 CCE_BEGIN()
   class contact;
   class contactgroup;
+  class hostgroup;
 CCE_END()
 
-int grab_hostgroup_macros(hostgroup* hg);
+int grab_hostgroup_macros(com::centreon::engine::hostgroup* hg);
 int grab_servicegroup_macros(servicegroup* sg);
 int grab_contact_macros(com::centreon::engine::contact* cntct);
 
@@ -53,7 +54,7 @@ int grab_datetime_macro(
       char** output);
 int grab_standard_hostgroup_macro(
       int macro_type,
-      hostgroup* temp_hostgroup,
+      com::centreon::engine::hostgroup* temp_hostgroup,
       char** output);
 int grab_standard_service_macro(
       int macro_type,
@@ -84,7 +85,7 @@ int grab_custom_object_macro(
 // Thread-safe version of the above.
 int grab_hostgroup_macros_r(
       nagios_macros* mac,
-      hostgroup* hg);
+      com::centreon::engine::hostgroup* hg);
 int grab_servicegroup_macros_r(
       nagios_macros* mac,
       servicegroup* sg);
@@ -107,7 +108,7 @@ int grab_datetime_macro_r(
 int grab_standard_hostgroup_macro_r(
       nagios_macros* mac,
       int macro_type,
-      hostgroup* temp_hostgroup,
+      com::centreon::engine::hostgroup* temp_hostgroup,
       char** output);
 int grab_standard_servicegroup_macro_r(
       nagios_macros* mac,

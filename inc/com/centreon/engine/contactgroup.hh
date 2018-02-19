@@ -70,6 +70,5 @@ CCE_END()
 using com::centreon::engine::contactgroup;
 
 typedef umap<std::string, com::centreon::shared_ptr<contactgroup> > contactgroup_map;
-typedef std::list<contactgroup*> contactgroup_list;
 
 #endif // !CCE_CONTACTGROUP_HH

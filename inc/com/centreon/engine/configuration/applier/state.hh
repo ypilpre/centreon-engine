@@ -28,13 +28,13 @@
 #  include "com/centreon/engine/configuration/state.hh"
 #  include "com/centreon/engine/contactgroup.hh"
 #  include "com/centreon/engine/host.hh"
+#  include "com/centreon/engine/hostgroup.hh"
 #  include "com/centreon/engine/namespace.hh"
 #  include "com/centreon/shared_ptr.hh"
 
 // Forward declaration.
 struct hostdependency_struct;
 struct hostescalation_struct;
-struct hostgroup_struct;
 struct servicedependency_struct;
 struct serviceescalation_struct;
 struct servicegroup_struct;
@@ -53,6 +53,7 @@ namespace retention {
 
 class contact;
 class contactgroup;
+class hostgroup;
 class service;
 
 namespace           configuration {
@@ -125,14 +126,12 @@ namespace           configuration {
                     hostescalations_find(configuration::hostescalation::key_type const& k) const;
       umultimap<std::string, shared_ptr<hostescalation_struct> >::iterator
                     hostescalations_find(configuration::hostescalation::key_type const& k);
-      umap<std::string, shared_ptr<hostgroup_struct> > const&
+      umap<std::string, shared_ptr< ::hostgroup> > const&
                     hostgroups() const throw ();
-      umap<std::string, shared_ptr<hostgroup_struct> >&
+      umap<std::string, shared_ptr< ::hostgroup> >&
                     hostgroups() throw ();
-      umap<std::string, shared_ptr<hostgroup_struct> >::const_iterator
+      shared_ptr<engine::hostgroup>
                     hostgroups_find(configuration::hostgroup::key_type const& k) const;
-      umap<std::string, shared_ptr<hostgroup_struct> >::iterator
-                    hostgroups_find(configuration::hostgroup::key_type const& k);
       umap<std::pair<std::string, std::string>, shared_ptr<engine::service> > const&
                     services() const throw ();
       umap<std::pair<std::string, std::string>, shared_ptr<engine::service> >&
@@ -225,7 +224,7 @@ namespace           configuration {
                     _hostdependencies;
       umultimap<std::string, shared_ptr<hostescalation_struct> >
                     _hostescalations;
-      umap<std::string, shared_ptr<hostgroup_struct> >
+      umap<std::string, shared_ptr<engine::hostgroup> >
                     _hostgroups;
       concurrency::mutex
                     _lock;

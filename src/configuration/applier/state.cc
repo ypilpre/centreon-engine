@@ -564,7 +564,7 @@ umultimap<std::string, shared_ptr<hostescalation_struct> >::iterator applier::st
  *
  *  @return The current hostgroups.
  */
-umap<std::string, shared_ptr<hostgroup_struct> > const& applier::state::hostgroups() const throw () {
+umap<std::string, shared_ptr< ::hostgroup> > const& applier::state::hostgroups() const throw () {
   return (_hostgroups);
 }
 
@@ -573,7 +573,7 @@ umap<std::string, shared_ptr<hostgroup_struct> > const& applier::state::hostgrou
  *
  *  @return The current hostgroups.
  */
-umap<std::string, shared_ptr<hostgroup_struct> >& applier::state::hostgroups() throw () {
+umap<std::string, shared_ptr< ::hostgroup> >& applier::state::hostgroups() throw () {
   return (_hostgroups);
 }
 
@@ -585,10 +585,20 @@ umap<std::string, shared_ptr<hostgroup_struct> >& applier::state::hostgroups() t
  *  @return Iterator to the element if found, hostgroups().end()
  *          otherwise.
  */
-umap<std::string, shared_ptr<hostgroup_struct> >::const_iterator applier::state::hostgroups_find(configuration::hostgroup::key_type const& k) const {
-  return (_hostgroups.find(k));
-}
 
+/**
+ *  Find a host group from its key.
+ *
+ *  @param[in] k Host group key.
+ *
+ *  @return Host group pointer if found. Will throw not_found if not found.
+ */
+shared_ptr< ::hostgroup> applier::state::hostgroups_find(configuration::hostgroup::key_type const& k) const {
+  hostgroup_map::const_iterator it(_hostgroups.find(k));
+  if (it == _hostgroups.end())
+    throw (not_found_error() << "Could not find host group '" << k << "'");
+  return (it->second);
+}
 /**
  *  Find a host group from its key.
  *
@@ -597,9 +607,6 @@ umap<std::string, shared_ptr<hostgroup_struct> >::const_iterator applier::state:
  *  @return Iterator to the element if found, hostgroups().end()
  *          otherwise.
  */
-umap<std::string, shared_ptr<hostgroup_struct> >::iterator applier::state::hostgroups_find(configuration::hostgroup::key_type const& k) {
-  return (_hostgroups.find(k));
-}
 
 /**
  *  Get the current services.

@@ -25,10 +25,10 @@
 #include "com/centreon/engine/configuration/applier/state.hh"
 #include "com/centreon/engine/contact.hh"
 #include "com/centreon/engine/globals.hh"
+#include "com/centreon/engine/hostgroup.hh"
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/macros.hh"
 #include "com/centreon/engine/not_found.hh"
-#include "com/centreon/engine/objects/hostgroup.hh"
 #include "com/centreon/engine/objects/objectlist.hh"
 #include "com/centreon/engine/objects/servicegroup.hh"
 #include "com/centreon/engine/shared.hh"
@@ -113,7 +113,7 @@ int grab_custom_macro_value_r(
       char const* arg1,
       char const* arg2,
       char** output) {
-  hostgroup* temp_hostgroup = NULL;
+  hostgroup* temp_hostgroup(NULL);
   servicegroup* temp_servicegroup = NULL;
   contactgroup* temp_contactgroup = NULL;
   int delimiter_len = 0;
@@ -158,8 +158,8 @@ int grab_custom_macro_value_r(
 
       /* concatenate macro values for all hostgroup members */
       for (umap<std::string, shared_ptr<host> >::iterator
-             it(temp_hostgroup->members.begin()),
-             end(temp_hostgroup->members.end());
+             it(temp_hostgroup->get_members().begin()),
+             end(temp_hostgroup->get_members().end());
            it != end;
            ++it) {
         if ((temp_host = it->second.get()) == NULL)
@@ -509,19 +509,19 @@ int grab_standard_hostgroup_macro_r(
   /* get the macro value */
   switch (macro_type) {
   case MACRO_HOSTGROUPNAME:
-    *output = string::dup(temp_hostgroup->group_name);
+    *output = string::dup(temp_hostgroup->get_name());
     break;
 
   case MACRO_HOSTGROUPALIAS:
-    if (temp_hostgroup->alias)
-      *output = string::dup(temp_hostgroup->alias);
+    if (!temp_hostgroup->get_alias().empty())
+      *output = string::dup(temp_hostgroup->get_alias().c_str());
     break;
 
   case MACRO_HOSTGROUPMEMBERS:
     /* make the calculations for total string length */
     for (umap<std::string, shared_ptr<host> >::const_iterator
-           it(temp_hostgroup->members.begin()),
-           end(temp_hostgroup->members.end());
+           it(temp_hostgroup->get_members().begin()),
+           end(temp_hostgroup->get_members().end());
          it != end;
          ++it) {
       host* temp_host = it->second.get();
@@ -540,8 +540,8 @@ int grab_standard_hostgroup_macro_r(
     }
     /* now fill in the string with the member names */
     for (umap<std::string, shared_ptr<host> >::const_iterator
-           it(temp_hostgroup->members.begin()),
-           end(temp_hostgroup->members.end());
+           it(temp_hostgroup->get_members().begin()),
+           end(temp_hostgroup->get_members().end());
          it != end;
          ++it) {
       host* temp_host = it->second.get();
@@ -554,18 +554,18 @@ int grab_standard_hostgroup_macro_r(
     break;
 
   case MACRO_HOSTGROUPACTIONURL:
-    if (temp_hostgroup->action_url)
-      *output = string::dup(temp_hostgroup->action_url);
+    if (!temp_hostgroup->get_action_url().empty())
+      *output = string::dup(temp_hostgroup->get_action_url().c_str());
     break;
 
   case MACRO_HOSTGROUPNOTESURL:
-    if (temp_hostgroup->notes_url)
-      *output = string::dup(temp_hostgroup->notes_url);
+    if (!temp_hostgroup->get_notes_url().empty())
+      *output = string::dup(temp_hostgroup->get_notes_url().c_str());
     break;
 
   case MACRO_HOSTGROUPNOTES:
-    if (temp_hostgroup->notes)
-      *output = string::dup(temp_hostgroup->notes);
+    if (!temp_hostgroup->get_notes().empty())
+      *output = string::dup(temp_hostgroup->get_notes().c_str());
     break;
 
   default:

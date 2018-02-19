@@ -27,9 +27,9 @@
 #  include "com/centreon/engine/configuration/applier/state.hh"
 #  include "com/centreon/engine/contactgroup.hh"
 #  include "com/centreon/engine/host.hh"
+#  include "com/centreon/engine/hostgroup.hh"
 #  include "com/centreon/engine/namespace.hh"
 #  include "com/centreon/engine/not_found.hh"
-#  include "com/centreon/engine/objects/hostgroup.hh"
 #  include "com/centreon/engine/objects/servicegroup.hh"
 #  include "com/centreon/engine/service.hh"
 #  include "com/centreon/engine/shared.hh"
@@ -200,8 +200,8 @@ namespace         modules {
         }
 
         for (umap<std::string, shared_ptr<host> >::const_iterator
-               it(group->members.begin()),
-               end(group->members.end());
+               it(group->get_members().begin()),
+               end(group->get_members().end());
              it != end;
              ++it) {
           if (it->second.get())

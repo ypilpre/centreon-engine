@@ -24,14 +24,13 @@
 # include "com/centreon/engine/customvar.hh"
 
 // Forward declarations
-struct hostgroup_struct;
-typedef hostgroup_struct hostgroup;
 struct servicegroup_struct;
 typedef servicegroup_struct servicegroup;
 CCE_BEGIN()
   class contact;
   class contactgroup;
   class host;
+  class hostgroup;
   class service;
 CCE_END()
 
@@ -219,7 +218,7 @@ struct                                 nagios_macros {
   char*                                contactaddress[MAX_CONTACT_ADDRESSES];
   char*                                ondemand;
   com::centreon::engine::host*         host_ptr;
-  hostgroup*                           hostgroup_ptr;
+  com::centreon::engine::hostgroup*    hostgroup_ptr;
   com::centreon::engine::service*      service_ptr;
   servicegroup*                        servicegroup_ptr;
   com::centreon::engine::contact*      contact_ptr;

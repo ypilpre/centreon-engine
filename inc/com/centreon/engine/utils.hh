@@ -21,17 +21,15 @@
 #ifndef CCE_UTILS_HH
 #  define CCE_UTILS_HH
 
-#  include <sys/time.h>
 #  include "com/centreon/engine/checks.hh"
-#  include "com/centreon/engine/common.hh"
 #  include "com/centreon/engine/macros/defines.hh"
 #  include "com/centreon/engine/objects/daterange.hh"
 #  include "com/centreon/engine/objects/timeperiod.hh"
-#  include "com/centreon/shared_ptr.hh"
 
 // Forward declarations
 CCE_BEGIN()
   class contact;
+  class hostgroup;
   namespace checks {
     class checkable;
   }
@@ -136,7 +134,7 @@ int parse_check_output(
 com::centreon::shared_ptr<com::centreon::engine::commands::command>& find_command(std::string const& name);
 com::centreon::shared_ptr<com::centreon::engine::commands::connector>& find_connector(std::string const& name);
 timeperiod& find_timeperiod(std::string const& name);
-hostgroup_struct& find_hostgroup(std::string const& name);
+com::centreon::engine::hostgroup& find_hostgroup(std::string const& name);
 servicegroup_struct& find_servicegroup(std::string const& name);
 
 #endif // !CCE_UTILS_HH

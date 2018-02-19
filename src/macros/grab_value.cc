@@ -25,7 +25,7 @@
 #include "com/centreon/engine/macros/grab_value.hh"
 #include "com/centreon/engine/macros.hh"
 #include "com/centreon/engine/not_found.hh"
-#include "com/centreon/engine/objects/hostgroup.hh"
+#include "com/centreon/engine/hostgroup.hh"
 #include "com/centreon/engine/objects/servicegroup.hh"
 #include "com/centreon/engine/string.hh"
 #include "com/centreon/unordered_hash.hh"
@@ -98,8 +98,8 @@ static int handle_host_macro(
 
       // Concatenate macro values for all hostgroup members.
       for (umap<std::string, shared_ptr<host> >::iterator
-             it(hg->members.begin()),
-             end(hg->members.end());
+             it(hg->get_members().begin()),
+             end(hg->get_members().end());
            it != end;
            ++it) {
         host* hst(it->second.get());

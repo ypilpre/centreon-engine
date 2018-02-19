@@ -23,7 +23,6 @@
 
 #  include "com/centreon/engine/objects/hostdependency.hh"
 #  include "com/centreon/engine/objects/hostescalation.hh"
-#  include "com/centreon/engine/objects/hostgroup.hh"
 #  include "com/centreon/engine/objects/servicedependency.hh"
 #  include "com/centreon/engine/objects/serviceescalation.hh"
 #  include "com/centreon/engine/objects/servicegroup.hh"
@@ -32,6 +31,7 @@
 // Forward declarations
 CCE_BEGIN()
   class host;
+  class hostgroup;
   class service;
 CCE_END()
 
@@ -47,9 +47,7 @@ int pre_flight_object_check(int* w, int* e);
 int pre_flight_circular_check(int* w, int* e);
 
 int check_service(com::centreon::engine::service* svc, int* w, int* e);
-int check_host(com::centreon::engine::host* hst, int* w, int* e);
 int check_servicegroup(servicegroup* sg, int* w, int* e);
-int check_hostgroup(hostgroup* hg, int* w, int* e);
 int check_servicedependency(servicedependency* sd, int* w, int* e);
 int check_hostdependency(hostdependency* hd, int* w, int* e);
 int check_serviceescalation(serviceescalation* se, int* w, int* e);

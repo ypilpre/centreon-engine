@@ -42,6 +42,7 @@
 #include "com/centreon/engine/events/defines.hh"
 #include "com/centreon/engine/events/loop.hh"
 #include "com/centreon/engine/globals.hh"
+#include "com/centreon/engine/hostgroup.hh"
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/macros.hh"
 #include "com/centreon/engine/nebmods.hh"
@@ -1082,12 +1083,12 @@ timeperiod& find_timeperiod(std::string const& name) {
  *  @return The struct hostgroup or throw exception if the
  *          hostgroup is not found.
  */
-hostgroup_struct& find_hostgroup(std::string const& name) {
+hostgroup& find_hostgroup(std::string const& name) {
   if (name.empty())
     throw (not_found_error()
       << "Could not find a hostgroup with an empty name");
 
-  umap<std::string, shared_ptr<hostgroup_struct> >::const_iterator
+  umap<std::string, shared_ptr<hostgroup> >::const_iterator
     it(configuration::applier::state::instance().hostgroups().find(name));
   if (it == configuration::applier::state::instance().hostgroups().end())
     throw (not_found_error()
