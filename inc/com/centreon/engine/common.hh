@@ -22,6 +22,7 @@
 #ifndef CCE_COMMON_HH
 #  define CCE_COMMON_HH
 
+#  include <string>
 #  include "com/centreon/engine/checks/stats.hh"
 #  include "com/centreon/engine/shared.hh"
 #  include "com/centreon/unordered_hash.hh"

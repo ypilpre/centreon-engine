@@ -45,10 +45,6 @@ typedef struct  dbuf_struct {
   unsigned long chunk_size;
 }               dbuf;
 
-#  ifdef __cplusplus
-extern "C" {
-#  endif // C++
-
 // Monitoring/Event Handler Functions
 
 // thread-safe version of the above
@@ -142,9 +138,5 @@ com::centreon::shared_ptr<com::centreon::engine::commands::connector>& find_conn
 timeperiod& find_timeperiod(std::string const& name);
 hostgroup_struct& find_hostgroup(std::string const& name);
 servicegroup_struct& find_servicegroup(std::string const& name);
-
-#  ifdef __cplusplus
-}
-#  endif // C++
 
 #endif // !CCE_UTILS_HH

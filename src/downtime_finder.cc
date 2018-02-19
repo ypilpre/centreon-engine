@@ -70,7 +70,7 @@ downtime_finder::result_set downtime_finder::find_matching_all(
   downtime_finder::criteria_set const& criterias) {
   result_set result;
   // Process all downtimes.
-  for (std::map<unsigned long, downtime* >::const_iterator
+  for (std::map<unsigned long, downtime*>::const_iterator
          dit(scheduled_downtime_list.begin()),
          dend(scheduled_downtime_list.end());
        dit != dend;
@@ -103,16 +103,26 @@ downtime_finder::result_set downtime_finder::find_matching_all(
  *  @return True if downtime matches the criteria.
  */
 bool downtime_finder::_match_criteria(
-                        shared_ptr<downtime> const& dt,
+                        downtime const* dt,
                         downtime_finder::criteria const& crit) {
   bool retval;
+  host* hst(NULL);
+  service* svc(NULL);
+
+  if (dt->get_parent()->is_host()) {
+    hst = static_cast<host*>(dt->get_parent());
+  }
+  else {
+    svc = static_cast<service*>(dt->get_parent());
+    hst = svc->get_host();
+  }
+
   if (crit.first == "host") {
-    host* hst(static_cast<host*>(dt->get_parent()));
-    retval = (crit.second == hst->get_name());
+    retval = (hst && crit.second == hst->get_name());
   }
   else if (crit.first == "service") {
-    service* svc(static_cast<service*>(dt->get_parent()));
-    retval = (crit.second == svc->get_description());
+    retval = ((svc && crit.second == svc->get_description())
+                 || (!svc && crit.second == ""));
   }
   else if (crit.first == "start") {
     time_t expected(strtoll(crit.second.c_str(), NULL, 0));

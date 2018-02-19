@@ -23,7 +23,6 @@
 #  include <list>
 #  include <string>
 #  include <vector>
-#  include "com/centreon/shared_ptr.hh"
 #  include "com/centreon/engine/namespace.hh"
 
 CCE_BEGIN()
@@ -41,7 +40,7 @@ class                 downtime_finder {
 public:
   typedef std::pair<std::string, std::string>  criteria;
   typedef std::vector<criteria>                criteria_set;
-  typedef std::vector<shared_ptr<downtime> >   result_set;
+  typedef std::vector<downtime*>               result_set;
 
                       downtime_finder();
                       downtime_finder(downtime_finder const& other);
@@ -52,7 +51,7 @@ public:
 
 private:
   bool                _match_criteria(
-                        shared_ptr<downtime> const& dt,
+                        downtime const* dt,
                         criteria const& crit);
 };
 
