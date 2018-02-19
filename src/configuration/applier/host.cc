@@ -530,12 +530,17 @@ void applier::host::remove_object(
     ::host* hst(it->second.get());
 
     // Remove host downtimes.
-    //FIXME DBR: this function does not exist anymore
-//    delete_downtime_by_hostname_service_description_start_time_comment(
-//      obj.host_name().c_str(),
-//      NULL,
-//      (time_t)0,
-//      NULL);
+    for (std::map<unsigned long, downtime*>::iterator
+           it_dt(scheduled_downtime_list.begin()),
+           end_dt(scheduled_downtime_list.end());
+         it_dt != end_dt;) {
+      downtime* dt(it_dt->second);
+      ++it_dt; // Iterator would be invalid right after unschedule().
+      if ((dt->get_type() == downtime::HOST_DOWNTIME)
+          && (static_cast< ::host*>(dt->get_parent())->get_name()
+              == obj.host_name()))
+        dt->unschedule();
+    }
 
     // Remove events related to this host.
     applier::scheduler::instance().remove_host(obj);
@@ -582,7 +587,12 @@ void applier::host::resolve_object(
               *applier::state::instance().hosts_find(obj.key()).get());
 
     // Make sure host has at least one service associated with it.
-    // XXX
+    if (hst.get_services().empty()) {
+      logger(logging::log_verification_error, logging::basic)
+        << "Warning: Host '" << hst.get_name()
+        << "' has no services associated with it!";
+      ++config_warnings;
+    }
 
     // Resolve check command.
     try {

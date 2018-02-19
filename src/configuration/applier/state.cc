@@ -1613,14 +1613,14 @@ void applier::state::_processing(
       diff_servicegroups);
 
     // Resolve hosts, services, host groups and service groups.
-    _resolve<configuration::host, applier::host>(
-      config->hosts());
-    _resolve<configuration::hostgroup, applier::hostgroup>(
-      config->hostgroups());
     _resolve<configuration::service, applier::service>(
       config->services());
     _resolve<configuration::servicegroup, applier::servicegroup>(
       config->servicegroups());
+    _resolve<configuration::host, applier::host>(
+      config->hosts());
+    _resolve<configuration::hostgroup, applier::hostgroup>(
+      config->hostgroups());
 
     // Apply host dependencies.
     _apply<configuration::hostdependency, applier::hostdependency>(

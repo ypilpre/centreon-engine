@@ -585,12 +585,19 @@ void applier::service::remove_object(
     ::service* svc(it->second.get());
 
     // Remove service downtimes.
-    //FIXME DBR: does not exist anymore
-//    delete_downtime_by_hostname_service_description_start_time_comment(
-//      host_name.c_str(),
-//      service_description.c_str(),
-//      (time_t)0,
-//      NULL);
+    for (std::map<unsigned long, downtime*>::iterator
+           it_dt(scheduled_downtime_list.begin()),
+           end_dt(scheduled_downtime_list.end());
+         it_dt != end_dt;) {
+      downtime* dt(it_dt->second);
+      ++it_dt; // Iterator would be invalid right after unschedule().
+      if ((dt->get_type() == downtime::SERVICE_DOWNTIME)
+          && (static_cast< ::service*>(dt->get_parent())->get_host_name()
+              == host_name)
+          && (static_cast< ::service*>(dt->get_parent())->get_description()
+              == service_description))
+        dt->unschedule();
+    }
 
     // Remove events related to this service.
     applier::scheduler::instance().remove_service(obj);
