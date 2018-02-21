@@ -999,8 +999,7 @@ int cmd_remove_acknowledgement(int cmd, char* args) {
 int cmd_schedule_downtime(int cmd, time_t entry_time, char* args) {
   shared_ptr<service> temp_service;
   shared_ptr<host> temp_host;
-  host* last_host(NULL);
-  hostgroup_struct* temp_hostgroup(NULL);
+  hostgroup* temp_hostgroup(NULL);
   host* temp_hg;
   servicegroup_struct* temp_servicegroup(NULL);
   char* host_name(NULL);
@@ -1165,8 +1164,8 @@ int cmd_schedule_downtime(int cmd, time_t entry_time, char* args) {
 
   case CMD_SCHEDULE_HOSTGROUP_HOST_DOWNTIME:
     for (umap<std::string, shared_ptr<host> >::const_iterator
-           it(temp_hostgroup->members.begin()),
-           end(temp_hostgroup->members.end());
+           it(temp_hostgroup->get_members().begin()),
+           end(temp_hostgroup->get_members().end());
          it != end;
          ++it) {
       temp_hg = it->second.get();
@@ -1185,8 +1184,8 @@ int cmd_schedule_downtime(int cmd, time_t entry_time, char* args) {
 
   case CMD_SCHEDULE_HOSTGROUP_SVC_DOWNTIME:
     for (umap<std::string, shared_ptr<host> >::const_iterator
-           it(temp_hostgroup->members.begin()),
-           end(temp_hostgroup->members.end());
+           it(temp_hostgroup->get_members().begin()),
+           end(temp_hostgroup->get_members().end());
          it != end;
          ++it) {
       if ((temp_hg = it->second.get()) == NULL)
@@ -1518,8 +1517,8 @@ int cmd_delete_downtime_by_hostgroup_name(int cmd, char* args) {
   }
 
   for (umap<std::string, shared_ptr<host> >::const_iterator
-         it(temp_hostgroup->members.begin()),
-         end(temp_hostgroup->members.end());
+         it(temp_hostgroup->get_members().begin()),
+         end(temp_hostgroup->get_members().end());
        it != end;
        ++it) {
     temp_host = it->second.get();

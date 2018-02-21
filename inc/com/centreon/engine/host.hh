@@ -24,13 +24,11 @@
 #  include "com/centreon/engine/monitorable.hh"
 #  include "com/centreon/engine/namespace.hh"
 
-// Forward declaration.
-struct hostgroup_struct;
-
 CCE_BEGIN()
 
 // Forward declarations.
 class service;
+class hostgroup;
 
 /**
  *  @class host host.hh "com/centreon/engine/host.hh"
@@ -86,9 +84,9 @@ class                        host : public monitorable {
   void                       add_child(host* hst);
   void                       clear_children();
   std::list<host*> const&    get_children() const;
-  void                       add_group(hostgroup_struct* hg);
+  void                       add_group(hostgroup* hg);
   void                       clear_groups();
-  std::list<hostgroup_struct*> const&
+  std::list<hostgroup*> const&
                              get_groups() const;
   void                       add_parent(host* hst);
   void                       clear_parents();
@@ -133,7 +131,7 @@ class                        host : public monitorable {
   bool                       _flap_detection_on_down;
   bool                       _flap_detection_on_unreachable;
   bool                       _flap_detection_on_up;
-  std::list<hostgroup_struct*>
+  std::list<hostgroup*>
                              _groups;
   bool                       _have_2d_coords;
   bool                       _have_3d_coords;

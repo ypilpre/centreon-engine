@@ -27,6 +27,7 @@
 #include "com/centreon/engine/configuration/parser.hh"
 #include "com/centreon/engine/contact.hh"
 #include "com/centreon/engine/globals.hh"
+#include "com/centreon/engine/hostgroup.hh"
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/not_found.hh"
 #include "com/centreon/engine/objects/objectlist.hh"
@@ -325,59 +326,6 @@ int check_servicegroup(servicegroup* sg, int* w, int* e) {
   if (contains_illegal_object_chars(sg->group_name)) {
     logger(log_verification_error, basic)
       << "Error: The name of servicegroup '" << sg->group_name
-      << "' contains one or more illegal characters.";
-    ++errors;
-  }
-
-  // Add errors.
-  if (e)
-    *e += errors;
-
-  return (errors == 0);
-}
-
-/**
- *  Check and resolve host groups.
- *
- *  @param[in,out] hg Host group object.
- *  @param[out]    w  Warnings.
- *  @param[out]    e  Errors.
- *
- *  @return Non-zero on success.
- */
-int check_hostgroup(hostgroup* hg, int* w, int* e) {
-  (void)w;
-  int errors(0);
-  host* temp_host;
-
-  // Check all group members.
-  for (umap<std::string, shared_ptr<host> >::iterator
-         it(hg->members.begin()),
-         end(hg->members.end());
-       it != end;
-       ++it) {
-    try {
-      shared_ptr<host> temp_host
-        = configuration::applier::state::instance().hosts_find(it->first);
-    }
-    catch (not_found const& e) {
-      (void)e;
-      logger(log_verification_error, basic)
-        << "Error: Host '" << temp_host->get_name()
-        << "' specified in host group '" << hg->group_name
-        << "' is not defined anywhere!";
-      ++errors;
-    }
-
-    // Add host to group and group to service links.
-    temp_host->add_group(hg);
-    it->second = temp_host;
-  }
-
-  // Check for illegal characters in hostgroup name.
-  if (contains_illegal_object_chars(hg->group_name) == true) {
-    logger(log_verification_error, basic)
-      << "Error: The name of hostgroup '" << hg->group_name
       << "' contains one or more illegal characters.";
     ++errors;
   }

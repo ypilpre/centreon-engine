@@ -18,7 +18,7 @@
 */
 
 #include "com/centreon/engine/host.hh"
-#include "com/centreon/engine/objects/hostgroup.hh"
+#include "com/centreon/engine/hostgroup.hh"
 #include "com/centreon/engine/service.hh"
 
 using namespace com::centreon::engine;
@@ -430,7 +430,7 @@ std::list<host*> const& host::get_children() const {
  *
  *  @param[in] hg  Host group.
  */
-void host::add_group(hostgroup_struct* hg) {
+void host::add_group(hostgroup* hg) {
   _groups.push_back(hg);
   return ;
 }
@@ -448,7 +448,7 @@ void host::clear_groups() {
  *
  *  @return Groups of this host.
  */
-hostgroup_set const& host::get_groups() const {
+std::list<com::centreon::engine::hostgroup*> const& host::get_groups() const {
   return (_groups);
 }
 

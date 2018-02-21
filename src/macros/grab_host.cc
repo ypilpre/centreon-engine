@@ -27,7 +27,7 @@
 #include "com/centreon/engine/macros/grab.hh"
 #include "com/centreon/engine/macros/grab_host.hh"
 #include "com/centreon/engine/macros/misc.hh"
-#include "com/centreon/engine/objects/hostgroup.hh"
+#include "com/centreon/engine/hostgroup.hh"
 #include "com/centreon/engine/objects/objectlist.hh"
 #include "com/centreon/engine/service.hh"
 #include "com/centreon/engine/string.hh"
@@ -135,7 +135,7 @@ static char* get_host_group_names(host& hst, nagios_macros* mac) {
     hostgroup* temp_hostgroup(*it);
     if (!buf.empty())
       buf.append(",");
-    buf.append(temp_hostgroup->group_name);
+    buf.append(temp_hostgroup->get_name());
   }
   return (string::dup(buf));
 }

@@ -152,7 +152,6 @@ void applier::contactgroup::modify_object(
   engine::contactgroup* cg(it_obj->second.get());
 
   // Update the global configuration set.
-  configuration::contactgroup old_cfg(*it_cfg);
   config->contactgroups().erase(it_cfg);
   config->contactgroups().insert(obj);
 

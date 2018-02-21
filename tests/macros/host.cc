@@ -20,8 +20,8 @@
 #include <gtest/gtest.h>
 #include <list>
 #include "com/centreon/engine/host.hh"
+#include "com/centreon/engine/hostgroup.hh"
 #include "com/centreon/engine/macros/grab_host.hh"
-#include "com/centreon/engine/objects/hostgroup.hh"
 #include "com/centreon/engine/service.hh"
 #include "../timeperiod/utils.hh"
 
@@ -326,20 +326,13 @@ TEST_F(MacrosHost, GrabNotes) {
 TEST_F(MacrosHost, GrabGroupNames) {
   _expected = "Group1,Group2,Group3";
   hostgroup hg[3];
-  for (int i(0); i < sizeof(hg) / sizeof(*hg); ++i)
-    memset(hg + i, 0, sizeof(*hg));
-  hg[0].group_name = new char[7];
-  strcpy(hg[0].group_name, "Group1");
+  hg[0].set_name("Group1");
   _host.add_group(hg + 0);
-  hg[1].group_name = new char[7];
-  strcpy(hg[1].group_name, "Group2");
+  hg[1].set_name("Group2");
   _host.add_group(hg + 1);
-  hg[2].group_name = new char[7];
-  strcpy(hg[2].group_name, "Group3");
+  hg[2].set_name("Group3");
   _host.add_group(hg + 2);
   grab_and_check(MACRO_HOSTGROUPNAMES);
-  for (int i(0); i < sizeof(hg) / sizeof(*hg); ++i)
-    delete[] hg[i].group_name;
 }
 
 TEST_F(MacrosHost, GrabTotalServices) {
