@@ -145,7 +145,7 @@ TEST_F(AcknowledgementNotification, AcknowledgementNotification) {
   _service->set_last_state_change(now);
   _service->set_last_hard_state_change(now);
   _service->set_last_check(now);
-  _service->update_acknowledgement_on_state_changed();
+  _service->update_acknowledgement_on_state_change();
   // Then the acknowledgement is removed and a notification is sent.
   _service->notify(notifier::PROBLEM, "admin", "Test comment");
   ASSERT_FALSE(_service->is_acknowledged());
@@ -227,7 +227,7 @@ TEST_F(AcknowledgementNotification, StickyAcknowledgementNotification) {
   _service->set_current_state(0);
   _service->set_last_state_change(now);
   _service->set_last_check(now);
-  _service->update_acknowledgement_on_state_changed();
+  _service->update_acknowledgement_on_state_change();
   // Then the acknowledgement is removed and a recovery notification is sent.
   _service->notify(notifier::RECOVERY, "admin", "Test comment");
   ASSERT_FALSE(_service->is_acknowledged());

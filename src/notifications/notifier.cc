@@ -312,21 +312,6 @@ void notifier::set_next_notification(time_t next_notification) {
   return ;
 }
 
-void notifier::update_acknowledgement_on_state_changed() {
-  // Normal acknowledgement is lost when state changes. We must verify
-  // that the acknowledgement is older than the state change.
-  // Sticky acknowledgement is lost when state changes to OK. We must
-  // verify that the acknowledgement is older than the state change.
-  if (get_last_acknowledgement() < get_last_check()
-      && ((get_acknowledgement_type() == ACKNOWLEDGEMENT_NORMAL
-           && get_current_state() != get_last_state())
-          || (get_acknowledgement_type() == ACKNOWLEDGEMENT_STICKY
-              && get_current_state() == 0))) {
-    set_acknowledged(ACKNOWLEDGEMENT_NONE);
-    delete_acknowledgement_comments();
-  }
-}
-
 /**
  *  Attempt to send a notification.
  *
@@ -640,6 +625,48 @@ void notifier::set_last_acknowledgement(time_t last_acknowledgement) {
   return ;
 }
 
+/**
+ *  Schedule acknowledgement expiration.
+ */
+void notifier::schedule_acknowledgement_expiration() {
+  int ack_timeout(get_acknowledgement_timeout());
+  int last_ack(get_last_acknowledgement());
+  if (ack_timeout > 0 && last_ack != (time_t)0) {
+    int event_type;
+    if (is_host())
+      event_type = EVENT_EXPIRE_HOST_ACK;
+    else
+      event_type = EVENT_EXPIRE_SERVICE_ACK;
+    schedule_new_event(
+      event_type,
+      false,
+      last_ack + ack_timeout,
+      false,
+      0,
+      NULL,
+      true,
+      this,
+      NULL,
+      0);
+  }
+}
+
+/**
+ *  Update acknowledgement on state change.
+ */
+void notifier::update_acknowledgement_on_state_change() {
+  // Normal acknowledgements will be removed on any state change.
+  if (((get_acknowledgement_type() == ACKNOWLEDGEMENT_NORMAL)
+       && (get_current_state() != get_last_state()))
+  // Sticky acknowledgements will be removed when back to normal state.
+      || ((get_acknowledgement_type() == ACKNOWLEDGEMENT_STICKY)
+          && (get_current_state() == 0))) {
+    set_acknowledged(ACKNOWLEDGEMENT_NONE);
+    delete_acknowledgement_comments();
+  }
+  return ;
+}
+
 /**************************************
 *                                     *
 *              Downtime               *
@@ -652,7 +679,7 @@ void notifier::set_last_acknowledgement(time_t last_acknowledgement) {
  *  @return True if this object is in downtime.
  */
 bool notifier::is_in_downtime() const {
-  return _in_downtime;
+  return (_in_downtime);
 }
 
 /**
@@ -1224,29 +1251,6 @@ void notifier::_internal_copy(notifier const& other) {
   _recovery_notification_delay = other._recovery_notification_delay;
   _scheduled_downtime_depth = other._scheduled_downtime_depth;
   return ;
-}
-
-void notifier::schedule_acknowledgement_expiration() {
-  int ack_timeout(get_acknowledgement_timeout());
-  int last_ack(get_last_acknowledgement());
-  if (ack_timeout > 0 && last_ack != (time_t)0) {
-    int event_type;
-    if (is_host())
-      event_type = EVENT_EXPIRE_HOST_ACK;
-    else
-      event_type = EVENT_EXPIRE_SERVICE_ACK;
-    schedule_new_event(
-      event_type,
-      false,
-      last_ack + ack_timeout,
-      false,
-      0,
-      NULL,
-      true,
-      this,
-      NULL,
-      0);
-  }
 }
 
 void notifier::add_notification_flag(notifier::notification_type type) {

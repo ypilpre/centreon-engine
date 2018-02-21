@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2017 Centreon
+** Copyright 2011-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -42,7 +42,7 @@ namespace                 configuration {
      *  Simple configuration applier for scheduler class.
      */
     class                 scheduler {
-    public:
+     public:
       void                apply(
                             state& config,
                             difference<set_host> const& diff_hosts,
@@ -53,7 +53,7 @@ namespace                 configuration {
       void                remove_service(configuration::service const& s);
       static void         unload();
 
-    private:
+     private:
                           scheduler();
                           scheduler(scheduler const&);
                           ~scheduler() throw ();

@@ -1119,12 +1119,11 @@ void applier::scheduler::_schedule_service_events(
   }
 
   // Schedule acknowledgement expirations.
-  // XXX
-  // logger(dbg_events, most)
-  //   << "Scheduling service acknowledgement expirations...";
-  // for (int i(0), end(services.size()); i < end; ++i)
-  //   if (services[i]->is_acknowledged())
-  //     schedule_acknowledgement_expiration(services[i]);
+  logger(dbg_events, most)
+    << "Scheduling service acknowledgement expirations...";
+  for (int i(0), end(services.size()); i < end; ++i)
+    if (services[i]->is_acknowledged())
+      services[i]->schedule_acknowledgement_expiration();
 
   return ;
 }

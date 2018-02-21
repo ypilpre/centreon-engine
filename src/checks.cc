@@ -534,25 +534,7 @@ int handle_async_service_check_result(
     temp_service->set_last_notification((time_t)0);
     temp_service->set_next_notification((time_t)0);
 
-    temp_service->update_acknowledgement_on_state_changed();
-//    /* reset notification suppression option */
-//    temp_service->set_no_more_notifications(false);
-//
-//    if (temp_service->get_acknowledgement_type() == notifier::ACKNOWLEDGEMENT_NORMAL
-//        && state_change || !hard_state_change) {
-//
-//      temp_service->set_acknowledged(notifier::ACKNOWLEDGEMENT_NONE);
-//
-//      /* remove any non-persistant comments associated with the ack */
-//      temp_service->delete_acknowledgement_comments();
-//    }
-//    else if (temp_service->get_acknowledgement_type() == notifier::ACKNOWLEDGEMENT_STICKY
-//             && temp_service->get_current_state() == STATE_OK) {
-//      temp_service->set_acknowledged(notifier::ACKNOWLEDGEMENT_NONE);
-//
-//      /* remove any non-persistant comments associated with the ack */
-//      temp_service->delete_acknowledgement_comments();
-//    }
+    temp_service->update_acknowledgement_on_state_change();
 
     /* do NOT reset current notification number!!! */
     /* hard changes between non-OK states should continue to be escalated, so don't reset current notification number */

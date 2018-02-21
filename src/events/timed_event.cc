@@ -316,26 +316,20 @@ static void _exec_event_expire_comment(timed_event* event) {
  *
  *  @param[in] event  Event to execute.
  */
-static void _exec_event_expire_host_ack(timed_event* event) {
+static void _exec_event_expire_ack(timed_event* event) {
   logger(dbg_events, basic)
-    << "** Expire Host Acknowledgement Event";
-  // XXX
-  // check_for_expired_acknowledgement(
-  //   static_cast<host*>(event->event_data));
-  return ;
-}
-
-/**
- *  Check for expired service acknowledgement.
- *
- *  @param[in] event  Event to execute.
- */
-static void _exec_event_expire_service_ack(timed_event* event) {
-  logger(dbg_events, basic)
-    << "** Expire Service Acknowledgement Event";
-  // XXX
-  // check_for_expired_acknowledgement(
-  //   static_cast<service*>(event->event_data));
+    << "** Expire Acknowledgement Event";
+  notifications::notifier*
+    ntfr(static_cast<notifications::notifier*>(event->event_data));
+  time_t last_ack(ntfr->get_last_acknowledgement());
+  int ack_timeout(ntfr->get_acknowledgement_timeout());
+  time_t now(time(NULL));
+  if ((ntfr->get_acknowledgement_type()
+       != notifications::notifier::ACKNOWLEDGEMENT_NONE)
+      && (ack_timeout > 0)
+      && ((last_ack + ack_timeout) <= now))
+    ntfr->set_acknowledged(
+            notifications::notifier::ACKNOWLEDGEMENT_NONE);
   return ;
 }
 
@@ -761,8 +755,8 @@ int handle_timed_event(timed_event* event) {
     &_exec_event_hfreshness_check,
     &_exec_event_reschedule_checks,
     &_exec_event_expire_comment,
-    &_exec_event_expire_host_ack,
-    &_exec_event_expire_service_ack,
+    &_exec_event_expire_ack,
+    &_exec_event_expire_ack,
     NULL
   };
 

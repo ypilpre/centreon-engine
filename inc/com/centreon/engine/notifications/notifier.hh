@@ -113,8 +113,6 @@ namespace                  notifications {
     time_t                 get_next_notification() const;
     void                   set_next_notification(
                              time_t next_notification);
-    void                   schedule_acknowledgement_expiration();
-    void                   update_acknowledgement_on_state_changed();
     void                   add_notification_flag(
                              notifier::notification_type type);
     void                   notify(
@@ -144,6 +142,8 @@ namespace                  notifications {
     time_t                 get_last_acknowledgement() const;
     void                   set_last_acknowledgement(
                              time_t last_acknowledgement);
+    void                   schedule_acknowledgement_expiration();
+    void                   update_acknowledgement_on_state_change();
 
     // Downtime.
     bool                   is_in_downtime() const;
