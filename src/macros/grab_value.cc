@@ -97,12 +97,12 @@ static int handle_host_macro(
       size_t delimiter_len(strlen(arg2));
 
       // Concatenate macro values for all hostgroup members.
-      for (umap<std::string, shared_ptr<host> >::iterator
+      for (umap<std::string, host*>::iterator
              it(hg->get_members().begin()),
              end(hg->get_members().end());
            it != end;
            ++it) {
-        host* hst(it->second.get());
+        host* hst(it->second);
         if (hst) {
           // Get the macro value for this host.
           char* buffer(NULL);

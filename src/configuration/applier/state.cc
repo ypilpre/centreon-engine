@@ -43,6 +43,7 @@
 #include "com/centreon/engine/configuration/command.hh"
 #include "com/centreon/engine/error.hh"
 #include "com/centreon/engine/globals.hh"
+#include "com/centreon/engine/hostgroup.hh"
 #include "com/centreon/engine/logging.hh"
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/not_found.hh"
@@ -565,7 +566,7 @@ umultimap<std::string, shared_ptr<hostescalation_struct> >::iterator applier::st
  *
  *  @return The current hostgroups.
  */
-umap<std::string, shared_ptr< ::hostgroup> > const& applier::state::hostgroups() const throw () {
+umap<std::string, shared_ptr<engine::hostgroup> > const& applier::state::hostgroups() const throw () {
   return (_hostgroups);
 }
 
@@ -574,7 +575,7 @@ umap<std::string, shared_ptr< ::hostgroup> > const& applier::state::hostgroups()
  *
  *  @return The current hostgroups.
  */
-umap<std::string, shared_ptr< ::hostgroup> >& applier::state::hostgroups() throw () {
+umap<std::string, shared_ptr<engine::hostgroup> >& applier::state::hostgroups() throw () {
   return (_hostgroups);
 }
 
@@ -594,7 +595,7 @@ umap<std::string, shared_ptr< ::hostgroup> >& applier::state::hostgroups() throw
  *
  *  @return Host group pointer if found. Will throw not_found if not found.
  */
-shared_ptr< ::hostgroup> applier::state::hostgroups_find(configuration::hostgroup::key_type const& k) const {
+shared_ptr<engine::hostgroup> applier::state::hostgroups_find(configuration::hostgroup::key_type const& k) const {
   hostgroup_map::const_iterator it(_hostgroups.find(k));
   if (it == _hostgroups.end())
     throw (not_found_error() << "Could not find host group '" << k << "'");

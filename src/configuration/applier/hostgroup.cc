@@ -24,6 +24,7 @@
 #include "com/centreon/engine/configuration/applier/state.hh"
 #include "com/centreon/engine/deleter/listmember.hh"
 #include "com/centreon/engine/globals.hh"
+#include "com/centreon/engine/hostgroup.hh"
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/not_found.hh"
 
@@ -94,7 +95,7 @@ void applier::hostgroup::add_object(
   if (!obj.alias().empty())
     hg->set_alias(obj.alias());
   else
-    hg->set_alias(obj.hostgroup_name());
+    hg->set_alias(name);
 
   hg->set_notes(obj.notes());
   hg->set_notes_url(obj.notes_url());
@@ -259,7 +260,7 @@ void applier::hostgroup::resolve_object(
     }
 
     // Remove old links.
-    for (umap<std::string, shared_ptr<engine::host> >::iterator
+    for (umap<std::string, engine::host*>::iterator
            it(hg.get_members().begin()),
            end(hg.get_members().end());
          it != end;
@@ -269,7 +270,7 @@ void applier::hostgroup::resolve_object(
         NEBTYPE_HOSTGROUPMEMBER_DELETE,
         NEBFLAG_NONE,
         NEBATTR_NONE,
-        it->second.get(),
+        it->second,
         &hg,
         &tv);
     }
@@ -282,8 +283,7 @@ void applier::hostgroup::resolve_object(
          it != end;
          ++it) {
       try {
-        hg.add_member(
-          configuration::applier::state::instance().hosts_find(*it));
+        hg.add_member(applier::state::instance().hosts_find(*it).get());
       }
       catch (not_found const& e) {
         (void)e;

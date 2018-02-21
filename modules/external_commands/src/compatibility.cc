@@ -1022,12 +1022,12 @@ int process_hostgroup_command(int cmd,
   }
 
   /* loop through all hosts in the hostgroup */
-  for (umap<std::string, shared_ptr<host> >::const_iterator
+  for (umap<std::string, host*>::const_iterator
          it(temp_hostgroup->get_members().begin()),
          end(temp_hostgroup->get_members().end());
        it != end;
        ++it) {
-    if ((temp_host = it->second.get()) == NULL)
+    if ((temp_host = it->second) == NULL)
       continue;
 
     switch (cmd) {

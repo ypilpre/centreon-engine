@@ -157,12 +157,12 @@ int grab_custom_macro_value_r(
       delimiter_len = strlen(arg2);
 
       /* concatenate macro values for all hostgroup members */
-      for (umap<std::string, shared_ptr<host> >::iterator
+      for (umap<std::string, host*>::iterator
              it(temp_hostgroup->get_members().begin()),
              end(temp_hostgroup->get_members().end());
            it != end;
            ++it) {
-        if ((temp_host = it->second.get()) == NULL)
+        if ((temp_host = it->second) == NULL)
           continue;
 
         /* get the macro value for this host */
@@ -525,12 +525,12 @@ int grab_standard_hostgroup_macro_r(
 
   case MACRO_HOSTGROUPMEMBERS:
     /* make the calculations for total string length */
-    for (umap<std::string, shared_ptr<host> >::const_iterator
+    for (umap<std::string, host*>::const_iterator
            it(temp_hostgroup->get_members().begin()),
            end(temp_hostgroup->get_members().end());
          it != end;
          ++it) {
-      host* temp_host = it->second.get();
+      host* temp_host = it->second;
       if (temp_len == 0)
         temp_len += temp_host->get_name().length() + 1;
       else
@@ -545,12 +545,12 @@ int grab_standard_hostgroup_macro_r(
       *output = resize_string(*output, temp_len);
     }
     /* now fill in the string with the member names */
-    for (umap<std::string, shared_ptr<host> >::const_iterator
+    for (umap<std::string, host*>::const_iterator
            it(temp_hostgroup->get_members().begin()),
            end(temp_hostgroup->get_members().end());
          it != end;
          ++it) {
-      host* temp_host = it->second.get();
+      host* temp_host = it->second;
       temp_buffer = *output + init_len;
       if (init_len == 0)      /* If our buffer didn't contain anything, we just need to write "%s,%s" */
         init_len += sprintf(temp_buffer, "%s", temp_host->get_name().c_str());

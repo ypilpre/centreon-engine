@@ -38,12 +38,9 @@ class                       hostgroup {
                             hostgroup(hostgroup const& other);
                             ~hostgroup();
   hostgroup&                operator=(hostgroup const& other);
-  umap<std::string,
-       com::centreon::shared_ptr<com::centreon::engine::host> > const&
+  umap<std::string, host*> const&
                             get_members() const;
-  umap<std::string,
-       com::centreon::shared_ptr<com::centreon::engine::host> >&
-                            get_members();
+  umap<std::string, host*>& get_members();
   std::string const&        get_alias() const;
   void                      set_alias(std::string const& alias);
   std::string const&        get_name() const;
@@ -56,8 +53,7 @@ class                       hostgroup {
   void                      set_notes(std::string const& notes);
   unsigned int              get_id() const;
   void                      set_id(unsigned int id);
-  void                      add_member(
-                              com::centreon::shared_ptr<engine::host> host);
+  void                      add_member(host* hst);
   void                      clear_members();
 
  private:
@@ -65,8 +61,7 @@ class                       hostgroup {
 
   std::string               _action_url;
   std::string               _alias;
-  umap<std::string, com::centreon::shared_ptr<com::centreon::engine::host> >
-                            _members;
+  umap<std::string, host*>  _members;
   std::string               _name;
   std::string               _notes;
   std::string               _notes_url;

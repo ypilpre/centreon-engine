@@ -1163,12 +1163,12 @@ int cmd_schedule_downtime(int cmd, time_t entry_time, char* args) {
     break;
 
   case CMD_SCHEDULE_HOSTGROUP_HOST_DOWNTIME:
-    for (umap<std::string, shared_ptr<host> >::const_iterator
+    for (umap<std::string, host*>::const_iterator
            it(temp_hostgroup->get_members().begin()),
            end(temp_hostgroup->get_members().end());
          it != end;
          ++it) {
-      temp_hg = it->second.get();
+      temp_hg = it->second;
       temp_hg->schedule_downtime(
         downtime::HOST_DOWNTIME,
         entry_time,
@@ -1183,12 +1183,12 @@ int cmd_schedule_downtime(int cmd, time_t entry_time, char* args) {
     break;
 
   case CMD_SCHEDULE_HOSTGROUP_SVC_DOWNTIME:
-    for (umap<std::string, shared_ptr<host> >::const_iterator
+    for (umap<std::string, host*>::const_iterator
            it(temp_hostgroup->get_members().begin()),
            end(temp_hostgroup->get_members().end());
          it != end;
          ++it) {
-      if ((temp_hg = it->second.get()) == NULL)
+      if ((temp_hg = it->second) == NULL)
         continue;
       for (service_set::const_iterator
              it(temp_host->get_services().begin()),
@@ -1516,12 +1516,12 @@ int cmd_delete_downtime_by_hostgroup_name(int cmd, char* args) {
     }
   }
 
-  for (umap<std::string, shared_ptr<host> >::const_iterator
+  for (umap<std::string, host*>::const_iterator
          it(temp_hostgroup->get_members().begin()),
          end(temp_hostgroup->get_members().end());
        it != end;
        ++it) {
-    temp_host = it->second.get();
+    temp_host = it->second;
     if (temp_host == NULL)
       continue ;
     if (host_name != NULL && temp_host->get_name() != host_name)

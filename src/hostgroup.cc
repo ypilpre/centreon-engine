@@ -101,7 +101,7 @@ void hostgroup::set_id(unsigned int id) {
   _id = id;
 }
 
-void hostgroup::add_member(shared_ptr<host> hst) {
+void hostgroup::add_member(host* hst) {
   _members[hst->get_name()] = hst;
 }
 
@@ -109,11 +109,11 @@ void hostgroup::clear_members() {
   _members.clear();
 }
 
-umap<std::string, shared_ptr<host> >& hostgroup::get_members() {
+umap<std::string, host*>& hostgroup::get_members() {
   return _members;
 }
 
-umap<std::string, shared_ptr<host> > const& hostgroup::get_members() const {
+umap<std::string, host*> const& hostgroup::get_members() const {
   return _members;
 }
 

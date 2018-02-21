@@ -199,13 +199,13 @@ namespace         modules {
           return ;
         }
 
-        for (umap<std::string, shared_ptr<host> >::const_iterator
+        for (umap<std::string, host*>::const_iterator
                it(group->get_members().begin()),
                end(group->get_members().end());
              it != end;
              ++it) {
-          if (it->second.get())
-            (*fptr)(it->second.get());
+          if (it->second)
+            (*fptr)(it->second);
         }
       }
 

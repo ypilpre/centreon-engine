@@ -27,8 +27,6 @@
 #  include "com/centreon/engine/configuration/applier/difference.hh"
 #  include "com/centreon/engine/configuration/state.hh"
 #  include "com/centreon/engine/contactgroup.hh"
-#  include "com/centreon/engine/host.hh"
-#  include "com/centreon/engine/hostgroup.hh"
 #  include "com/centreon/engine/namespace.hh"
 #  include "com/centreon/shared_ptr.hh"
 
@@ -52,6 +50,7 @@ namespace retention {
 
 class contact;
 class contactgroup;
+class host;
 class hostgroup;
 class service;
 class servicegroup;
@@ -104,11 +103,11 @@ namespace           configuration {
                     contactgroups() throw ();
       shared_ptr< ::contactgroup>
                     contactgroups_find(configuration::contactgroup::key_type const& k) const;
-      umap<std::string, shared_ptr< ::host> > const&
+      umap<std::string, shared_ptr<engine::host> > const&
                     hosts() const throw ();
-      umap<std::string, shared_ptr< ::host> >&
+      umap<std::string, shared_ptr<engine::host> >&
                     hosts() throw ();
-      shared_ptr< ::host>
+      shared_ptr<engine::host>
                     hosts_find(configuration::host::key_type const& k) const;
       umultimap<std::string, shared_ptr<hostdependency_struct> > const&
                     hostdependencies() const throw ();
@@ -126,9 +125,9 @@ namespace           configuration {
                     hostescalations_find(configuration::hostescalation::key_type const& k) const;
       umultimap<std::string, shared_ptr<hostescalation_struct> >::iterator
                     hostescalations_find(configuration::hostescalation::key_type const& k);
-      umap<std::string, shared_ptr< ::hostgroup> > const&
+      umap<std::string, shared_ptr<engine::hostgroup> > const&
                     hostgroups() const throw ();
-      umap<std::string, shared_ptr< ::hostgroup> >&
+      umap<std::string, shared_ptr<engine::hostgroup> >&
                     hostgroups() throw ();
       shared_ptr<engine::hostgroup>
                     hostgroups_find(configuration::hostgroup::key_type const& k) const;
@@ -216,7 +215,7 @@ namespace           configuration {
                     _contactgroups;
       concurrency::condvar
                     _cv_lock;
-      umap<std::string, shared_ptr< ::host> >
+      umap<std::string, shared_ptr<engine::host> >
                     _hosts;
       umultimap<std::string, shared_ptr<hostdependency_struct> >
                     _hostdependencies;
