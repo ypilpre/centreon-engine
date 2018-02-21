@@ -135,6 +135,6 @@ com::centreon::shared_ptr<com::centreon::engine::commands::command>& find_comman
 com::centreon::shared_ptr<com::centreon::engine::commands::connector>& find_connector(std::string const& name);
 timeperiod& find_timeperiod(std::string const& name);
 com::centreon::engine::hostgroup& find_hostgroup(std::string const& name);
-servicegroup_struct& find_servicegroup(std::string const& name);
+com::centreon::engine::servicegroup& find_servicegroup(std::string const& name);
 
 #endif // !CCE_UTILS_HH

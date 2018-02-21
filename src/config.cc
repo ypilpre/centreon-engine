@@ -27,12 +27,14 @@
 #include "com/centreon/engine/configuration/parser.hh"
 #include "com/centreon/engine/contact.hh"
 #include "com/centreon/engine/globals.hh"
+#include "com/centreon/engine/host.hh"
 #include "com/centreon/engine/hostgroup.hh"
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/not_found.hh"
 #include "com/centreon/engine/objects/objectlist.hh"
 #include "com/centreon/engine/objects/timeperiodexclusion.hh"
 #include "com/centreon/engine/service.hh"
+#include "com/centreon/engine/servicegroup.hh"
 #include "com/centreon/engine/string.hh"
 
 using namespace com::centreon;
@@ -281,71 +283,6 @@ int pre_flight_circular_check(int* w, int* e) {
 
   return ((errors > 0) ? ERROR : OK);
 }
-
-/**
- *  Check and resolve service groups.
- *
- *  @param[in,out] sg Service group object.
- *  @param[out]    w  Warnings.
- *  @param[out]    e  Errors.
- *
- *  @return Non-zero on success.
- */
-int check_servicegroup(servicegroup* sg, int* w, int* e) {
-  (void)w;
-  int errors(0);
-
-  // Check all group members.
-  for (service_map::iterator
-         it(sg->members.begin()),
-         end(sg->members.end());
-       it != end;
-       ++it) {
-    service* temp_service(NULL);
-    try {
-      temp_service = configuration::applier::state::instance().services_find(
-        it->first).get();
-    }
-    catch (not_found const& e) {
-      (void)e;
-      logger(log_verification_error, basic)
-        << "Error: Service '"
-        << it->first.second
-        << "' on host '" << it->first.first
-        << "' specified in service group '" << sg->group_name
-        << "' is not defined anywhere!";
-      ++errors;
-    }
-
-    // Add service to group and group to service links.
-    temp_service->add_group(sg);
-    it->second = temp_service;
-  }
-
-  // Check for illegal characters in servicegroup name.
-  if (contains_illegal_object_chars(sg->group_name)) {
-    logger(log_verification_error, basic)
-      << "Error: The name of servicegroup '" << sg->group_name
-      << "' contains one or more illegal characters.";
-    ++errors;
-  }
-
-  // Add errors.
-  if (e)
-    *e += errors;
-
-  return (errors == 0);
-}
-
-/**
- *  Check and resolve a contact group.
- *
- *  @param[in,out] cg Contact group object.
- *  @param[out]    w  Warnings.
- *  @param[out]    e  Errors.
- *
- *  @return Non-zero on success.
- */
 
 /**
  *  Check and resolve a service dependency.

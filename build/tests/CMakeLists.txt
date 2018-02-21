@@ -37,6 +37,7 @@ if (WITH_TESTING)
     "${TESTS_DIR}/configuration/applier/applier-contactgroup.cc"
     "${TESTS_DIR}/configuration/applier/applier-hostgroup.cc"
     "${TESTS_DIR}/configuration/applier/applier-service.cc"
+    "${TESTS_DIR}/configuration/applier/applier-servicegroup.cc"
     "${TESTS_DIR}/configuration/command.cc"
     "${TESTS_DIR}/configuration/connector.cc"
     "${TESTS_DIR}/configuration/contact.cc"

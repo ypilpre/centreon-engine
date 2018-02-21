@@ -26,7 +26,7 @@
 #include "com/centreon/engine/macros.hh"
 #include "com/centreon/engine/not_found.hh"
 #include "com/centreon/engine/hostgroup.hh"
-#include "com/centreon/engine/objects/servicegroup.hh"
+#include "com/centreon/engine/servicegroup.hh"
 #include "com/centreon/engine/string.hh"
 #include "com/centreon/unordered_hash.hh"
 #include "com/centreon/engine/configuration/applier/state.hh"
@@ -268,9 +268,9 @@ static int handle_service_macro(
           size_t delimiter_len(strlen(arg2));
 
           // Concatenate macro values for all servicegroup members.
-          for (service_map::iterator
-                 it(sg->members.begin()),
-                 end(sg->members.end());
+          for (umap<std::pair<std::string, std::string>, service*>::iterator
+                 it(sg->get_members().begin()),
+                 end(sg->get_members().end());
                it != end;
                ++it) {
             service* svc(it->second);

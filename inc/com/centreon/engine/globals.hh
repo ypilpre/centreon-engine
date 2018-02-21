@@ -105,8 +105,6 @@ extern time_t                    event_start;
 
 extern int                       embedded_perl_initialized;
 
-extern servicegroup*             servicegroup_list;
-extern servicegroup*             servicegroup_list_tail;
 extern timeperiod*               timeperiod_list;
 extern timeperiod*               timeperiod_list_tail;
 extern serviceescalation*        serviceescalation_list;

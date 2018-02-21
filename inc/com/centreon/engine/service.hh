@@ -64,9 +64,9 @@ class                service : public monitorable {
   host*              get_host() const;
   std::string        get_host_name() const;
   void               set_host(host* hst);
-  void               add_group(servicegroup_struct* sg);
+  void               add_group(servicegroup* sg);
   void               clear_groups();
-  std::list<servicegroup_struct*> const&
+  std::list<servicegroup*> const&
                      get_groups() const;
   virtual bool       is_host() const;
 
@@ -102,7 +102,7 @@ class                service : public monitorable {
   bool               _flap_detection_on_ok;
   bool               _flap_detection_on_unknown;
   bool               _flap_detection_on_warning;
-  std::list<servicegroup_struct*>
+  std::list<servicegroup*>
                      _groups;
   time_t             _last_time_critical;
   time_t             _last_time_ok;

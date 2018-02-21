@@ -1001,7 +1001,7 @@ int cmd_schedule_downtime(int cmd, time_t entry_time, char* args) {
   shared_ptr<host> temp_host;
   hostgroup* temp_hostgroup(NULL);
   host* temp_hg;
-  servicegroup_struct* temp_servicegroup(NULL);
+  servicegroup* temp_servicegroup(NULL);
   char* host_name(NULL);
   char* hostgroup_name(NULL);
   char* servicegroup_name(NULL);
@@ -1215,8 +1215,8 @@ int cmd_schedule_downtime(int cmd, time_t entry_time, char* args) {
     {
       std::set<host*> hst_set;
       for (service_map::const_iterator
-             it(temp_servicegroup->members.begin()),
-             end(temp_servicegroup->members.end());
+             it(temp_servicegroup->get_members().begin()),
+             end(temp_servicegroup->get_members().end());
            it != end;
            ++it) {
         temp_host = it->second->get_host();
@@ -1241,8 +1241,8 @@ int cmd_schedule_downtime(int cmd, time_t entry_time, char* args) {
 
   case CMD_SCHEDULE_SERVICEGROUP_SVC_DOWNTIME:
     for (service_map::iterator
-           it(temp_servicegroup->members.begin()),
-           end(temp_servicegroup->members.end());
+           it(temp_servicegroup->get_members().begin()),
+           end(temp_servicegroup->get_members().end());
          it != end;
          ++it) {
       it->second->schedule_downtime(

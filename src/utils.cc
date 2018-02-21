@@ -1105,12 +1105,12 @@ hostgroup& find_hostgroup(std::string const& name) {
  *  @return The struct servicegroup or throw exception if the
  *          servicegroup is not found.
  */
-servicegroup_struct& find_servicegroup(std::string const& name) {
+servicegroup& find_servicegroup(std::string const& name) {
   if (name.empty())
     throw (not_found_error()
       << "Could not find a servicegroup with an empty name");
 
-  umap<std::string, shared_ptr<servicegroup_struct> >::const_iterator
+  umap<std::string, shared_ptr<servicegroup> >::const_iterator
     it(configuration::applier::state::instance().servicegroups().find(name));
   if (it == configuration::applier::state::instance().servicegroups().end())
     throw (not_found_error()

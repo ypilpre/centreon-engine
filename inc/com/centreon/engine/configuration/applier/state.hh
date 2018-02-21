@@ -37,7 +37,6 @@ struct hostdependency_struct;
 struct hostescalation_struct;
 struct servicedependency_struct;
 struct serviceescalation_struct;
-struct servicegroup_struct;
 struct timeperiod_struct;
 
 CCE_BEGIN()
@@ -55,6 +54,7 @@ class contact;
 class contactgroup;
 class hostgroup;
 class service;
+class servicegroup;
 
 namespace           configuration {
   namespace         applier {
@@ -154,14 +154,12 @@ namespace           configuration {
                     serviceescalations_find(configuration::serviceescalation::key_type const& k) const;
       umultimap<std::pair<std::string, std::string>, shared_ptr<serviceescalation_struct> >::iterator
                     serviceescalations_find(configuration::serviceescalation::key_type const& k);
-      umap<std::string, shared_ptr<servicegroup_struct> > const&
+      umap<std::string, shared_ptr<engine::servicegroup> > const&
                     servicegroups() const throw ();
-      umap<std::string, shared_ptr<servicegroup_struct> >&
+      umap<std::string, shared_ptr<engine::servicegroup> >&
                     servicegroups() throw ();
-      umap<std::string, shared_ptr<servicegroup_struct> >::const_iterator
+      shared_ptr<engine::servicegroup>
                     servicegroups_find(configuration::servicegroup::key_type const& k) const;
-      umap<std::string, shared_ptr<servicegroup_struct> >::iterator
-                    servicegroups_find(configuration::servicegroup::key_type const& k);
       umap<std::string, shared_ptr<timeperiod_struct> > const&
                     timeperiods() const throw ();
       umap<std::string, shared_ptr<timeperiod_struct> >&
@@ -236,7 +234,7 @@ namespace           configuration {
                     _servicedependencies;
       umultimap<std::pair<std::string, std::string>, shared_ptr<serviceescalation_struct> >
                     _serviceescalations;
-      umap<std::string, shared_ptr<servicegroup_struct> >
+      umap<std::string, shared_ptr<engine::servicegroup> >
                     _servicegroups;
       umap<std::string, shared_ptr<timeperiod_struct> >
                     _timeperiods;

@@ -30,7 +30,7 @@
 #include "com/centreon/engine/macros.hh"
 #include "com/centreon/engine/not_found.hh"
 #include "com/centreon/engine/objects/objectlist.hh"
-#include "com/centreon/engine/objects/servicegroup.hh"
+#include "com/centreon/engine/servicegroup.hh"
 #include "com/centreon/engine/shared.hh"
 #include "com/centreon/engine/string.hh"
 #include "com/centreon/engine/timeperiod.hh"
@@ -232,15 +232,21 @@ int grab_custom_macro_value_r(
       }
       /* else we have a service macro with a servicegroup name and a delimiter... */
       else {
-        if ((temp_servicegroup = &find_servicegroup(arg1)) == NULL)
+        try {
+          temp_servicegroup = configuration::applier::state::instance().servicegroups_find(
+                                arg1).get();
+        }
+        catch (not_found const& e) {
+          (void)e;
           return (ERROR);
+        }
 
         delimiter_len = strlen(arg2);
 
         /* concatenate macro values for all servicegroup members */
-        for (service_map::const_iterator
-               it(temp_servicegroup->members.begin()),
-               end(temp_servicegroup->members.end());
+        for (umap<std::pair<std::string, std::string>, service*>::const_iterator
+               it(temp_servicegroup->get_members().begin()),
+               end(temp_servicegroup->get_members().end());
              it != end;
              ++it) {
 
@@ -629,19 +635,19 @@ int grab_standard_servicegroup_macro_r(
   /* get the macro value */
   switch (macro_type) {
   case MACRO_SERVICEGROUPNAME:
-    *output = string::dup(temp_servicegroup->group_name);
+    *output = string::dup(temp_servicegroup->get_name());
     break;
 
   case MACRO_SERVICEGROUPALIAS:
-    if (temp_servicegroup->alias)
-      *output = string::dup(temp_servicegroup->alias);
+    if (!temp_servicegroup->get_alias().empty())
+      *output = string::dup(temp_servicegroup->get_alias());
     break;
 
   case MACRO_SERVICEGROUPMEMBERS:
     /* make the calculations for total string length */
-    for (service_map::const_iterator
-           it(temp_servicegroup->members.begin()),
-           end(temp_servicegroup->members.end());
+    for (umap<std::pair<std::string, std::string>, service*>::const_iterator
+           it(temp_servicegroup->get_members().begin()),
+           end(temp_servicegroup->get_members().end());
          it != end;
          ++it) {
       temp_service = it->second;
@@ -659,9 +665,9 @@ int grab_standard_servicegroup_macro_r(
       *output = resize_string(*output, temp_len);
     }
     /* now fill in the string with the group members */
-    for (service_map::const_iterator
-           it(temp_servicegroup->members.begin()),
-           end(temp_servicegroup->members.end());
+    for (umap<std::pair<std::string, std::string>, service*>::const_iterator
+           it(temp_servicegroup->get_members().begin()),
+           end(temp_servicegroup->get_members().end());
          it != end;
          ++it) {
       temp_service = it->second;
@@ -681,18 +687,18 @@ int grab_standard_servicegroup_macro_r(
     }
     break;
   case MACRO_SERVICEGROUPACTIONURL:
-    if (temp_servicegroup->action_url)
-      *output = string::dup(temp_servicegroup->action_url);
+    if (!temp_servicegroup->get_action_url().empty())
+      *output = string::dup(temp_servicegroup->get_action_url());
     break;
 
   case MACRO_SERVICEGROUPNOTESURL:
-    if (temp_servicegroup->notes_url)
-      *output = string::dup(temp_servicegroup->notes_url);
+    if (!temp_servicegroup->get_notes_url().empty())
+      *output = string::dup(temp_servicegroup->get_notes_url());
     break;
 
   case MACRO_SERVICEGROUPNOTES:
-    if (temp_servicegroup->notes)
-      *output = string::dup(temp_servicegroup->notes);
+    if (!temp_servicegroup->get_notes().empty())
+      *output = string::dup(temp_servicegroup->get_notes());
     break;
 
   default:

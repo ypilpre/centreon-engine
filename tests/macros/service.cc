@@ -19,8 +19,8 @@
 
 #include <gtest/gtest.h>
 #include "com/centreon/engine/macros/grab_service.hh"
-#include "com/centreon/engine/objects/servicegroup.hh"
 #include "com/centreon/engine/service.hh"
+#include "com/centreon/engine/servicegroup.hh"
 #include "../timeperiod/utils.hh"
 
 class MacrosService : public ::testing::Test {
@@ -292,18 +292,13 @@ TEST_F(MacrosService, GrabGroupNames) {
   servicegroup sg[3];
   for (int i(0); i < sizeof(sg) / sizeof(*sg); ++i)
     memset(sg + i, 0, sizeof(*sg));
-  sg[0].group_name = new char[7];
-  strcpy(sg[0].group_name, "Group1");
+  sg[0].set_name("Group1");
   _service.add_group(sg + 0);
-  sg[1].group_name = new char[7];
-  strcpy(sg[1].group_name, "Group2");
+  sg[1].set_name("Group2");
   _service.add_group(sg + 1);
-  sg[2].group_name = new char[7];
-  strcpy(sg[2].group_name, "Group3");
+  sg[2].set_name("Group3");
   _service.add_group(sg + 2);
   grab_and_check(MACRO_SERVICEGROUPNAMES);
-  for (int i(0); i < sizeof(sg) / sizeof(*sg); ++i)
-    delete[] sg[i].group_name;
 }
 
 TEST_F(MacrosService, GrabAckAuthor) {

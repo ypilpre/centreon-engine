@@ -28,8 +28,8 @@
 #include "com/centreon/engine/macros/grab_service.hh"
 #include "com/centreon/engine/macros/misc.hh"
 #include "com/centreon/engine/objects/objectlist.hh"
-#include "com/centreon/engine/objects/servicegroup.hh"
 #include "com/centreon/engine/service.hh"
+#include "com/centreon/engine/servicegroup.hh"
 #include "com/centreon/engine/string.hh"
 #include "com/centreon/shared_ptr.hh"
 #include "com/centreon/unordered_hash.hh"
@@ -82,7 +82,7 @@ static char* get_service_group_names(service& svc, nagios_macros* mac) {
     servicegroup* temp_servicegroup(*it);
     if (!buf.empty())
       buf.append(",");
-    buf.append(temp_servicegroup->group_name);
+    buf.append(temp_servicegroup->get_name());
   }
   return (string::dup(buf));
 }

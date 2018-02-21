@@ -24,14 +24,13 @@
 # include "com/centreon/engine/customvar.hh"
 
 // Forward declarations
-struct servicegroup_struct;
-typedef servicegroup_struct servicegroup;
 CCE_BEGIN()
   class contact;
   class contactgroup;
   class host;
   class hostgroup;
   class service;
+  class servicegroup;
 CCE_END()
 
 // Length Limitations
@@ -220,7 +219,7 @@ struct                                 nagios_macros {
   com::centreon::engine::host*         host_ptr;
   com::centreon::engine::hostgroup*    hostgroup_ptr;
   com::centreon::engine::service*      service_ptr;
-  servicegroup*                        servicegroup_ptr;
+  com::centreon::engine::servicegroup* servicegroup_ptr;
   com::centreon::engine::contact*      contact_ptr;
   com::centreon::engine::contactgroup* contactgroup_ptr;
   com::centreon::engine::customvar_set custom_host_vars;

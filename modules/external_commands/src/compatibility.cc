@@ -28,11 +28,11 @@
 #include "com/centreon/engine/modules/external_commands/commands.hh"
 #include "com/centreon/engine/modules/external_commands/compatibility.hh"
 #include "com/centreon/engine/not_found.hh"
-#include "com/centreon/engine/objects/servicegroup.hh"
 #include "com/centreon/engine/retention/applier/state.hh"
 #include "com/centreon/engine/retention/dump.hh"
 #include "com/centreon/engine/retention/parser.hh"
 #include "com/centreon/engine/retention/state.hh"
+#include "com/centreon/engine/servicegroup.hh"
 #include "com/centreon/engine/string.hh"
 #include "com/centreon/unordered_hash.hh"
 
@@ -1363,7 +1363,7 @@ int process_servicegroup_command(int cmd,
                                  time_t entry_time,
                                  char* args) {
   char* servicegroup_name = NULL;
-  servicegroup_struct* temp_servicegroup = NULL;
+  servicegroup* temp_servicegroup = NULL;
   shared_ptr<host> temp_host;
   host* last_host = NULL;
   shared_ptr<service> temp_service;
@@ -1379,6 +1379,7 @@ int process_servicegroup_command(int cmd,
     temp_servicegroup = &find_servicegroup(servicegroup_name);
   }
   catch (not_found const& e) {
+    (void)e;
     return (ERROR);
   }
 
@@ -1393,8 +1394,8 @@ int process_servicegroup_command(int cmd,
 
     /* loop through all servicegroup members */
     for (service_map::const_iterator
-           it(temp_servicegroup->members.begin()),
-           end(temp_servicegroup->members.end());
+           it(temp_servicegroup->get_members().begin()),
+           end(temp_servicegroup->get_members().end());
          it != end;
          ++it) {
       try {
@@ -1448,8 +1449,8 @@ int process_servicegroup_command(int cmd,
     {
       std::set<host*> hst_set;
       for (service_map::const_iterator
-             it(temp_servicegroup->members.begin()),
-             end(temp_servicegroup->members.end());
+             it(temp_servicegroup->get_members().begin()),
+             end(temp_servicegroup->get_members().end());
            it != end;
            ++it) {
 

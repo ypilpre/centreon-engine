@@ -21,8 +21,8 @@
 #include "com/centreon/engine/macros/grab_service.hh"
 #include "com/centreon/engine/macros/clear_service.hh"
 #include "com/centreon/engine/macros/clear_servicegroup.hh"
-#include "com/centreon/engine/objects/servicegroup.hh"
 #include "com/centreon/engine/service.hh"
+#include "com/centreon/engine/servicegroup.hh"
 
 using namespace com::centreon::engine;
 
@@ -233,7 +233,7 @@ void service::set_host(host* hst) {
  *
  *  @param[in] sg  Service group.
  */
-void service::add_group(servicegroup_struct* sg) {
+void service::add_group(servicegroup* sg) {
   _groups.push_back(sg);
   return ;
 }

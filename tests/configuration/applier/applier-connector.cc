@@ -25,6 +25,7 @@
 #include "com/centreon/engine/configuration/command.hh"
 #include "com/centreon/engine/configuration/connector.hh"
 #include "com/centreon/engine/configuration/state.hh"
+#include "com/centreon/engine/utils.hh"
 #include "com/centreon/shared_ptr.hh"
 
 using namespace com::centreon;

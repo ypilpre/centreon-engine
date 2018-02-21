@@ -48,6 +48,7 @@
 #include "com/centreon/engine/not_found.hh"
 #include "com/centreon/engine/retention/applier/state.hh"
 #include "com/centreon/engine/retention/state.hh"
+#include "com/centreon/engine/servicegroup.hh"
 #include "com/centreon/engine/version.hh"
 #include "com/centreon/engine/xpddefault.hh"
 #include "com/centreon/engine/xsddefault.hh"
@@ -842,7 +843,7 @@ umultimap<std::pair<std::string, std::string>, shared_ptr<serviceescalation_stru
  *
  *  @return The current servicegroups.
  */
-umap<std::string, shared_ptr<servicegroup_struct> > const& applier::state::servicegroups() const throw () {
+umap<std::string, shared_ptr<engine::servicegroup> > const& applier::state::servicegroups() const throw () {
   return (_servicegroups);
 }
 
@@ -851,7 +852,7 @@ umap<std::string, shared_ptr<servicegroup_struct> > const& applier::state::servi
  *
  *  @return The current servicegroups.
  */
-umap<std::string, shared_ptr<servicegroup_struct> >& applier::state::servicegroups() throw () {
+umap<std::string, shared_ptr<engine::servicegroup> >& applier::state::servicegroups() throw () {
   return (_servicegroups);
 }
 
@@ -860,23 +861,13 @@ umap<std::string, shared_ptr<servicegroup_struct> >& applier::state::servicegrou
  *
  *  @param[in] k Service group name.
  *
- *  @return Iterator to the element if found, servicegroups().end()
- *          otherwise.
+ *  @return Service group pointer if found. Will throw not_found if not found.
  */
-umap<std::string, shared_ptr<servicegroup_struct> >::const_iterator applier::state::servicegroups_find(configuration::servicegroup::key_type const& k) const {
-  return (_servicegroups.find(k));
-}
-
-/**
- *  Find a service group from its key.
- *
- *  @param[in] k Service group name.
- *
- *  @return Iterator to the element if found, servicegroups().end()
- *          otherwise.
- */
-umap<std::string, shared_ptr<servicegroup_struct> >::iterator applier::state::servicegroups_find(configuration::servicegroup::key_type const& k) {
-  return (_servicegroups.find(k));
+shared_ptr<engine::servicegroup> applier::state::servicegroups_find(configuration::servicegroup::key_type const& k) const {
+  servicegroup_map::const_iterator it(_servicegroups.find(k));
+  if (it == _servicegroups.end())
+    throw (not_found_error() << "Could not find service group '" << k << "'");
+  return (it->second);
 }
 
 /**

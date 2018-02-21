@@ -25,7 +25,6 @@
 #  include "com/centreon/engine/objects/hostescalation.hh"
 #  include "com/centreon/engine/objects/servicedependency.hh"
 #  include "com/centreon/engine/objects/serviceescalation.hh"
-#  include "com/centreon/engine/objects/servicegroup.hh"
 #  include "com/centreon/engine/objects/timeperiod.hh"
 
 // Forward declarations
@@ -33,6 +32,7 @@ CCE_BEGIN()
   class host;
   class hostgroup;
   class service;
+  class servicegroup;
 CCE_END()
 
 #  ifdef __cplusplus
@@ -47,7 +47,6 @@ int pre_flight_object_check(int* w, int* e);
 int pre_flight_circular_check(int* w, int* e);
 
 int check_service(com::centreon::engine::service* svc, int* w, int* e);
-int check_servicegroup(servicegroup* sg, int* w, int* e);
 int check_servicedependency(servicedependency* sd, int* w, int* e);
 int check_hostdependency(hostdependency* hd, int* w, int* e);
 int check_serviceescalation(serviceescalation* se, int* w, int* e);

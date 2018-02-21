@@ -30,8 +30,8 @@
 #  include "com/centreon/engine/hostgroup.hh"
 #  include "com/centreon/engine/namespace.hh"
 #  include "com/centreon/engine/not_found.hh"
-#  include "com/centreon/engine/objects/servicegroup.hh"
 #  include "com/centreon/engine/service.hh"
+#  include "com/centreon/engine/servicegroup.hh"
 #  include "com/centreon/engine/shared.hh"
 #  include "com/centreon/engine/utils.hh"
 #  include "com/centreon/unordered_hash.hh"
@@ -271,8 +271,8 @@ namespace         modules {
         }
 
         for (service_map::const_iterator
-               it(group->members.begin()),
-               end(group->members.end());
+               it(group->get_members().begin()),
+               end(group->get_members().end());
              it != end;
              ++it)
           if (it->second)
@@ -299,8 +299,8 @@ namespace         modules {
 
         std::set<host*> hst_set;
         for (service_map::const_iterator
-               it(group->members.begin()),
-               end(group->members.end());
+               it(group->get_members().begin()),
+               end(group->get_members().end());
              it != end;
              ++it) {
           host* hst(it->second->get_host());
