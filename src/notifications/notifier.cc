@@ -966,17 +966,20 @@ bool notifier::_problem_filter() {
   time_t now;
   time(&now);
   /* No notification sent if:
+   *  * notifier is acknowledged
    *  * notifier in downtime
    *  * notifier is flapping
    *  * notifier is not configured to send notification on the current state
-   *  * state is not hard.
+   *  * state is not hard
+   *  * first notification delay is not elapsed
    */
-  if (is_in_downtime()
+  if (is_acknowledged()
+      || is_in_downtime()
       || get_flapping()
       || !is_state_notification_enabled(get_current_state())
       || get_current_state_type() == SOFT_STATE
-      || is_acknowledged())
-    return false;
+      || (get_last_hard_state_change() + _first_notification_delay) > now)
+    return (false);
 
   int notif_number = get_current_notification_number();
 
