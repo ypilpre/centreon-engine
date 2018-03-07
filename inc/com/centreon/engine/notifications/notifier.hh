@@ -203,6 +203,8 @@ namespace                  notifications {
 
     void                   _problem_macro_builder(nagios_macros& mac);
     void                   _recovery_macro_builder(nagios_macros& mac);
+    bool                   _notification_is_active(
+                             notification_type type) const;
 
     static notifier_filter const
                            _filter[];

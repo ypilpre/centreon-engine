@@ -386,14 +386,6 @@ void set_service_flap(
     low_threshold,
     NULL);
 
-  /* see if we should check to send a recovery notification out when flapping stops */
-  // XXX
-//  if (svc->current_state != STATE_OK
-//      && svc->current_notification_number > 0)
-//    svc->check_flapping_recovery_notification = true;
-//  else
-//    svc->check_flapping_recovery_notification = false;
-
   /* send a notification */
   svc->notify(notifier::FLAPPINGSTART, "", "", NOTIFICATION_OPTION_NONE);
 }
@@ -448,15 +440,10 @@ void clear_service_flap(
   /* send a notification */
   svc->notify(notifier::FLAPPINGSTOP, "", "", NOTIFICATION_OPTION_NONE);
 
-  /* should we send a recovery notification? */
-  // XXX
-//  if (svc->check_flapping_recovery_notification == true
-//      && svc->current_state == STATE_OK)
-    svc->notify(notifier::RECOVERY, "", "", NOTIFICATION_OPTION_NONE);
+  /* should we send a recovery notification? the notification filter
+   * does the job. */
+  svc->notify(notifier::RECOVERY, "", "", NOTIFICATION_OPTION_NONE);
 
-  /* clear the recovery notification flag */
-  // XXX
-//  svc->check_flapping_recovery_notification = false;
   return;
 }
 

@@ -326,7 +326,7 @@ void notifier::notify(
                  std::string const& comment,
                  int options) {
 
-  // Create list of users to notify.
+  // Create users list to notify.
   umap<std::string, engine::contact*> users_to_notify(_contacts);
   for (umap<std::string, engine::contactgroup*>::const_iterator
          grp_it(_contact_groups.begin()),
@@ -404,7 +404,8 @@ void notifier::notify(
       /* Old Nagios comment: these macros are deprecated and will likely
          disappear in next major release. if this is an acknowledgement,
          get author and comment macros: FIXME: Is it useful for us ??? */
-      if (_current_notifications == ACKNOWLEDGEMENT) {
+      if (_notification_is_active(ACKNOWLEDGEMENT)) {
+      //if (_current_notifications == ACKNOWLEDGEMENT) {
         string::setstr(mac.x[MACRO_SERVICEACKAUTHOR], author);
         string::setstr(mac.x[MACRO_SERVICEACKCOMMENT], comment);
         // FIXME DBR: Same as previous comment
@@ -421,7 +422,7 @@ void notifier::notify(
       // Set the notification type macro
       string::setstr(
                 mac.x[MACRO_NOTIFICATIONTYPE],
-                _notification_string[_current_notifications]);
+                _notification_string[type]);
 
       // Set the notification number
       string::setstr(
@@ -442,6 +443,7 @@ void notifier::notify(
                 mac.x[MACRO_NOTIFICATIONRECIPIENTS],
                 oss.str());
 
+      // Post treatment
       _current_notifications |= (1 << type);
       switch (type) {
         case PROBLEM:
@@ -996,6 +998,11 @@ bool notifier::_problem_filter() {
   return true;
 }
 
+/**
+ *  Returns current notifications in a bits field.
+ *
+ *  @return an unsigned integer.
+ */
 unsigned int notifier::get_current_notifications_flag() const {
   return _current_notifications;
 }
@@ -1009,7 +1016,8 @@ bool notifier::_recovery_filter() {
 
   if (is_in_downtime()
       || (get_current_notifications_flag() & (1 << PROBLEM)) == 0
-      || get_current_state() != 0)
+      || get_current_state() != 0
+      || get_flapping())
     return false;
 
   return true;
@@ -1258,4 +1266,8 @@ void notifier::_internal_copy(notifier const& other) {
 
 void notifier::add_notification_flag(notifier::notification_type type) {
   _current_notifications |= (1 << type);
+}
+
+bool notifier::_notification_is_active(notification_type type) const {
+  return (_current_notifications & (1 << type));
 }
