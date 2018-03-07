@@ -405,7 +405,6 @@ void notifier::notify(
          disappear in next major release. if this is an acknowledgement,
          get author and comment macros: FIXME: Is it useful for us ??? */
       if (_notification_is_active(ACKNOWLEDGEMENT)) {
-      //if (_current_notifications == ACKNOWLEDGEMENT) {
         string::setstr(mac.x[MACRO_SERVICEACKAUTHOR], author);
         string::setstr(mac.x[MACRO_SERVICEACKCOMMENT], comment);
         // FIXME DBR: Same as previous comment
@@ -1264,10 +1263,42 @@ void notifier::_internal_copy(notifier const& other) {
   return ;
 }
 
+/**
+ *  Adds a notification flag to the notifications bit field
+ *
+ *  @param type The notification type to add.
+ */
 void notifier::add_notification_flag(notifier::notification_type type) {
   _current_notifications |= (1 << type);
 }
 
+/**
+ *  Tells if the notification type is active
+ *
+ *  @param type The notification type to check
+ *
+ *  @return a boolean.
+ */
 bool notifier::_notification_is_active(notification_type type) const {
   return (_current_notifications & (1 << type));
 }
+
+/**
+ *  Stores the id of the flapping comment associated to the notifier.
+ *
+ *  @param id The flapping comment id.
+ */
+void notifier::set_flapping_comment_id(unsigned int id) {
+  _flapping_comment_id = id;
+}
+
+/**
+ *  Gets the id of the flapping comment associated to the notifier or 0 if
+ *  there is no comment.
+ *
+ *  @return an unsigned integer.
+ */
+unsigned int notifier::get_flapping_comment_id() const {
+  return _flapping_comment_id;
+}
+

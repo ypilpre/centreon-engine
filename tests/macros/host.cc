@@ -19,11 +19,11 @@
 
 #include <gtest/gtest.h>
 #include <list>
+#include "../timeperiod/utils.hh"
 #include "com/centreon/engine/host.hh"
 #include "com/centreon/engine/hostgroup.hh"
 #include "com/centreon/engine/macros/grab_host.hh"
 #include "com/centreon/engine/service.hh"
-#include "../timeperiod/utils.hh"
 
 class MacrosHost : public ::testing::Test {
  public:

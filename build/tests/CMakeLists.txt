@@ -31,6 +31,7 @@ if (WITH_TESTING)
   add_executable("ut"
     # Sources.
     "${TESTS_DIR}/commands/simple-command.cc"
+    "${TESTS_DIR}/comments/comment.cc"
     "${TESTS_DIR}/configuration/applier/applier-command.cc"
     "${TESTS_DIR}/configuration/applier/applier-connector.cc"
     "${TESTS_DIR}/configuration/applier/applier-contact.cc"

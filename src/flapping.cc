@@ -357,19 +357,18 @@ void set_service_flap(
       << "% threshold).  When the service state stabilizes and the "
     "flapping " << "stops, notifications will be re-enabled.";
 
-  // XXX
-  // add_new_service_comment(
-  //   FLAPPING_COMMENT,
-  //   svc->get_host_name().c_str(),
-  //   svc->get_description().c_str(),
-  //   time(NULL),
-  //   "(Centreon Engine Process)",
-  //   oss.str().c_str(),
-  //   0,
-  //   COMMENTSOURCE_INTERNAL,
-  //   false,
-  //   (time_t)0,
-  //   &(svc->flapping_comment_id));
+  comment* cmt(comment::add_new_comment(
+    comment::SERVICE_COMMENT,
+    comment::FLAPPING_COMMENT,
+    svc,
+    time(NULL),
+    "(Centreon Engine Process)",
+    oss.str(),
+    0,
+    comment::COMMENTSOURCE_INTERNAL,
+    false,
+    static_cast<time_t>(0)));
+  svc->set_flapping_comment_id(cmt->get_id());
 
   /* set the flapping indicator */
   svc->set_flapping(true);
@@ -417,10 +416,10 @@ void clear_service_flap(
     << "% threshold)";
 
   /* delete the comment we added earlier */
-  // XXX
-  // if (svc->flapping_comment_id != 0)
-  //   delete_service_comment(svc->flapping_comment_id);
-  // svc->flapping_comment_id = 0;
+  if (svc->get_flapping_comment_id()) {
+    comment::delete_comment(svc->get_flapping_comment_id());
+    svc->set_flapping_comment_id(0);
+  }
 
   /* clear the flapping indicator */
   svc->set_flapping(false);
@@ -479,18 +478,18 @@ void set_host_flap(
       << "% threshold).  When the host state stabilizes and the "
       << "flapping stops, notifications will be re-enabled.";
 
-  // XXX
-  // add_new_host_comment(
-  //   FLAPPING_COMMENT,
-  //   hst->name,
-  //   time(NULL),
-  //   "(Centreon Engine Process)",
-  //   oss.str().c_str(),
-  //   0,
-  //   COMMENTSOURCE_INTERNAL,
-  //   false,
-  //   (time_t)0,
-  //   &(hst->flapping_comment_id));
+  comment* cmt(comment::add_new_comment(
+    comment::HOST_COMMENT,
+    comment::FLAPPING_COMMENT,
+    hst,
+    time(NULL),
+    "(Centreon Engine Process)",
+    oss.str(),
+    0,
+    comment::COMMENTSOURCE_INTERNAL,
+    false,
+    static_cast<time_t>(0)));
+  hst->set_flapping_comment_id(cmt->get_id());
 
   /* set the flapping indicator */
   hst->set_flapping(true);
@@ -506,14 +505,6 @@ void set_host_flap(
     high_threshold,
     low_threshold,
     NULL);
-
-  /* see if we should check to send a recovery notification out when flapping stops */
-  // XXX
-  // if (hst->current_state != HOST_UP
-  //     && hst->current_notification_number > 0)
-  //   hst->check_flapping_recovery_notification = true;
-  // else
-  //   hst->check_flapping_recovery_notification = false;
 
   /* send a notification */
   hst->notify(notifier::FLAPPINGSTART, "", "", NOTIFICATION_OPTION_NONE);
@@ -544,10 +535,10 @@ void clear_host_flap(
     << low_threshold << "% threshold)";
 
   /* delete the comment we added earlier */
-  // XXX
-  // if (hst->flapping_comment_id != 0)
-  //   delete_host_comment(hst->flapping_comment_id);
-  // hst->flapping_comment_id = 0;
+  if (hst->get_flapping_comment_id()) {
+    comment::delete_comment(hst->get_flapping_comment_id());
+    hst->set_flapping_comment_id(0);
+  }
 
   /* clear the flapping indicator */
   hst->set_flapping(false);
@@ -567,16 +558,9 @@ void clear_host_flap(
   /* send a notification */
   hst->notify(notifier::FLAPPINGSTOP, "", "", NOTIFICATION_OPTION_NONE);
 
-  /* should we send a recovery notification? */
-  // XXX
-  // if (hst->check_flapping_recovery_notification
-  //     && hst->current_state == HOST_UP) {
-    hst->notify(notifier::RECOVERY, "", "", NOTIFICATION_OPTION_NONE);
-  // }
-
-  /* clear the recovery notification flag */
-  // hst->check_flapping_recovery_notification = false;
-  return;
+  /* should we send a recovery notification? : The check is done directly
+   * by the notify method. */
+  hst->notify(notifier::RECOVERY, "", "", NOTIFICATION_OPTION_NONE);
 }
 
 /******************************************************************/
@@ -909,11 +893,11 @@ void handle_service_flap_detection_disabled(service* svc) {
   if (svc->get_flapping()) {
     svc->set_flapping(false);
 
-    // XXX
-    // /* delete the original comment we added earlier */
-    // if (svc->flapping_comment_id != 0)
-    //   delete_service_comment(svc->flapping_comment_id);
-    // svc->flapping_comment_id = 0;
+    /* delete the original comment we added earlier */
+    if (svc->get_flapping_comment_id()) {
+      comment::delete_comment(svc->get_flapping_comment_id());
+      svc->set_flapping_comment_id(0);
+    }
 
     /* log a notice - this one is parsed by the history CGI */
     logger(log_info_message, basic)

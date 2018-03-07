@@ -180,6 +180,8 @@ namespace                  notifications {
 //    void                   set_no_more_notifications(bool no_more);
     void                   set_recovery_been_sent(bool sent);
     std::string            get_info();
+    void                   set_flapping_comment_id(unsigned int id);
+    unsigned int           get_flapping_comment_id() const;
 
    protected:
     virtual void           _checkable_macro_builder(
@@ -232,6 +234,7 @@ namespace                  notifications {
     int                    _pending_flex_downtime;
     int                    _recovery_notification_delay;
     int                    _scheduled_downtime_depth;
+    unsigned int           _flapping_comment_id;
   };
 }
 
