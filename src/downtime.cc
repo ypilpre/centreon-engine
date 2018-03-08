@@ -719,8 +719,7 @@ void downtime::handle() {
     else
       event_time = get_end_time();
 
-    /* FIXME DBR: not beautiful :-( */
-    unsigned long* new_downtime_id = new unsigned long(get_id());
+    unsigned long downtime_id(get_id());
     schedule_new_event(
       EVENT_SCHEDULED_DOWNTIME,
       true,
@@ -729,7 +728,7 @@ void downtime::handle() {
       0,
       NULL,
       false,
-      (void*)new_downtime_id,
+      (void*)downtime_id,
       NULL,
       0);
 
