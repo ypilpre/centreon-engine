@@ -232,6 +232,7 @@ namespace                  notifications {
     bool                   _notifications_enabled;
     int                    _notified_states;
     int                    _pending_flex_downtime;
+    bool                   _recovery_been_sent;
     int                    _recovery_notification_delay;
     int                    _scheduled_downtime_depth;
     unsigned int           _flapping_comment_id;

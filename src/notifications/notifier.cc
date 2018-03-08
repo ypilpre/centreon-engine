@@ -19,6 +19,7 @@
 
 #include <memory>
 #include <sstream>
+#include "com/centreon/engine/configuration/applier/state.hh"
 #include "com/centreon/engine/contact.hh"
 #include "com/centreon/engine/contactgroup.hh"
 #include "com/centreon/engine/events/defines.hh"
@@ -358,8 +359,10 @@ void notifier::notify(
            ++it) {
         logger(dbg_notifications, most)
           << "** Notifying contact '" << it->second->get_name() << "'";
-        if (first_time)
+        if (first_time) {
           oss << it->second->get_name();
+          first_time = false;
+        }
         else
           oss << ',' << it->second->get_name();
       }
@@ -380,26 +383,26 @@ void notifier::notify(
       /* The author is a string taken from an external command. It can be
          the contact name or the contact alias. And if the external command
          is badly configured, maybe no contact is associated to this author */
-      configuration::contact const* author_contact;
+      engine::contact* author_contact(NULL);
       if (!author.empty()) {
-        configuration::set_contact::const_iterator it = config->contacts_find(author);
-        if (it != config->contacts().end())
-          author_contact = &(*it);
+        contact_map::iterator it(
+          configuration::applier::state::instance().contacts().find(author));
+        if (it != configuration::applier::state::instance().contacts().end())
+          author_contact = it->second.get();
         else
           author_contact = NULL;
       }
 
       string::setstr(mac.x[MACRO_NOTIFICATIONAUTHOR], author);
       string::setstr(mac.x[MACRO_NOTIFICATIONCOMMENT], comment);
-      // FIXME DBR: temp_contact is not defined, see previous lines...
-//      if (temp_contact) {
-//        string::setstr(mac.x[MACRO_NOTIFICATIONAUTHORNAME], temp_contact->get_name());
-//        string::setstr(mac.x[MACRO_NOTIFICATIONAUTHORALIAS], temp_contact->get_alias());
-//      }
-//      else {
-//        string::setstr(mac.x[MACRO_NOTIFICATIONAUTHORNAME]);
-//        string::setstr(mac.x[MACRO_NOTIFICATIONAUTHORALIAS]);
-//      }
+      if (author_contact) {
+        string::setstr(mac.x[MACRO_NOTIFICATIONAUTHORNAME], author_contact->get_name());
+        string::setstr(mac.x[MACRO_NOTIFICATIONAUTHORALIAS], author_contact->get_alias());
+      }
+      else {
+        string::setstr(mac.x[MACRO_NOTIFICATIONAUTHORNAME]);
+        string::setstr(mac.x[MACRO_NOTIFICATIONAUTHORALIAS]);
+      }
 
       /* Old Nagios comment: these macros are deprecated and will likely
          disappear in next major release. if this is an acknowledgement,
@@ -407,15 +410,14 @@ void notifier::notify(
       if (_notification_is_active(ACKNOWLEDGEMENT)) {
         string::setstr(mac.x[MACRO_SERVICEACKAUTHOR], author);
         string::setstr(mac.x[MACRO_SERVICEACKCOMMENT], comment);
-        // FIXME DBR: Same as previous comment
-//        if (temp_contact) {
-//          string::setstr(mac.x[MACRO_SERVICEACKAUTHORNAME], temp_contact->get_name());
-//          string::setstr(mac.x[MACRO_SERVICEACKAUTHORALIAS], temp_contact->get_alias());
-//        }
-//        else {
-//          string::setstr(mac.x[MACRO_SERVICEACKAUTHORNAME]);
-//          string::setstr(mac.x[MACRO_SERVICEACKAUTHORALIAS]);
-//        }
+        if (author_contact) {
+          string::setstr(mac.x[MACRO_SERVICEACKAUTHORNAME], author_contact->get_name());
+          string::setstr(mac.x[MACRO_SERVICEACKAUTHORALIAS], author_contact->get_alias());
+        }
+        else {
+          string::setstr(mac.x[MACRO_SERVICEACKAUTHORNAME]);
+          string::setstr(mac.x[MACRO_SERVICEACKAUTHORALIAS]);
+        }
       }
 
       // Set the notification type macro
@@ -1117,12 +1119,11 @@ void notifier::set_initial_notif_time(time_t initial) {
 }
 
 void notifier::set_recovery_been_sent(bool sent) {
-  // FIXME DBR: to implement...
+  _recovery_been_sent = sent;
 }
 
 bool notifier::get_recovery_been_sent() const {
-  // FIXME DBR: to implement...
-  return false;
+  return _recovery_been_sent;
 }
 
 /////////////////////////////////////////////////////////
@@ -1301,4 +1302,3 @@ void notifier::set_flapping_comment_id(unsigned int id) {
 unsigned int notifier::get_flapping_comment_id() const {
   return _flapping_comment_id;
 }
-

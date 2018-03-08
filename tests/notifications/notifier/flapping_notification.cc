@@ -21,12 +21,14 @@
 #include <gtest/gtest.h>
 #include "../../timeperiod/utils.hh"
 #include "com/centreon/engine/configuration/applier/command.hh"
+#include "com/centreon/engine/configuration/applier/contact.hh"
 #include "com/centreon/engine/configuration/applier/host.hh"
 #include "com/centreon/engine/configuration/applier/service.hh"
 #include "com/centreon/engine/configuration/applier/state.hh"
 #include "com/centreon/engine/configuration/contact.hh"
 #include "com/centreon/engine/configuration/state.hh"
 #include "com/centreon/engine/contact.hh"
+#include "com/centreon/engine/flapping.hh"
 #include "com/centreon/engine/notifications/notifier.hh"
 #include "com/centreon/shared_ptr.hh"
 
@@ -73,6 +75,8 @@ class FlappingNotification : public ::testing::Test {
     contact_map& cm(configuration::applier::state::instance().contacts());
     cm["test"] = shared_ptr<engine::contact>(new engine::contact());
     cm["test"]->set_name("test");
+    cm["test"]->set_alias("test");
+
     _service->add_contact(
       configuration::applier::state::instance().contacts_find("test").get());
     _service->set_notify_on(notifier::ON_RECOVERY, true);
@@ -206,4 +210,24 @@ TEST_F(FlappingNotification, StartStopFlappingWithoutRecovery) {
   _service->notify(notifier::RECOVERY, "admin", "Test recovery");
   last_notification = _service->get_last_notification();
   ASSERT_NE(now, last_notification);
+}
+
+// Given a notifier not in downtime with notifications enabled
+// And the filter on FLAPPINGSTART notification is OK to send notification
+// When set_service_flap is called
+// Then a FLAPPINGSTART notification is sent and a comment is added.
+TEST_F(FlappingNotification, StartStopFlappingAndComment) {
+  time_t last_notification = _service->get_last_notification();
+  _service->set_notifications_enabled(true);
+  _service->set_current_state(0);
+  _service->set_current_state_type(HARD_STATE);
+  set_service_flap(_service, 10, 80, 10);
+  ASSERT_TRUE(_service->get_flapping());
+  time_t current_notification = _service->get_last_notification();
+  ASSERT_GT(current_notification, last_notification);
+  ASSERT_EQ(comment_list.size(), 1);
+  time_t now = last_notification + 10;
+  set_time(now);
+  clear_service_flap(_service, 10, 80, 10);
+  ASSERT_TRUE(comment_list.empty());
 }

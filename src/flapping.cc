@@ -757,10 +757,10 @@ void handle_host_flap_detection_disabled(host* hst) {
     hst->set_flapping(false);
 
     /* delete the original comment we added earlier */
-    // XXX
-    // if (hst->flapping_comment_id != 0)
-    //   delete_host_comment(hst->flapping_comment_id);
-    // hst->flapping_comment_id = 0;
+    if (hst->get_flapping_comment_id()) {
+      comment::delete_comment(hst->get_flapping_comment_id());
+      hst->set_flapping_comment_id(0);
+    }
 
     /* log a notice - this one is parsed by the history CGI */
     logger(log_info_message, basic)
@@ -782,15 +782,9 @@ void handle_host_flap_detection_disabled(host* hst) {
     /* send a notification */
     hst->notify(notifier::FLAPPINGDISABLED, "", "", NOTIFICATION_OPTION_NONE);
 
-    /* should we send a recovery notification? */
-    // XXX
-    // if (hst->check_flapping_recovery_notification == true
-    //     && hst->current_state == HOST_UP) {
-      hst->notify(notifier::RECOVERY, "", "", NOTIFICATION_OPTION_NONE);
-    // }
-
-    /* clear the recovery notification flag */
-    // hst->check_flapping_recovery_notification = false;
+    /* should we send a recovery notification? The notification filter tells
+     * the answer. */
+    hst->notify(notifier::RECOVERY, "", "", NOTIFICATION_OPTION_NONE);
   }
 
   /* update host status */
@@ -920,15 +914,9 @@ void handle_service_flap_detection_disabled(service* svc) {
     /* send a notification */
     svc->notify(notifier::FLAPPINGDISABLED, "", "", NOTIFICATION_OPTION_NONE);
 
-    /* should we send a recovery notification? */
-    // XXX
-    // if (svc->check_flapping_recovery_notification
-    //     && svc->current_state == STATE_OK) {
-      svc->notify(notifier::RECOVERY, "", "", NOTIFICATION_OPTION_NONE);
-    // }
-
-    /* clear the recovery notification flag */
-    // svc->check_flapping_recovery_notification = false;
+    /* should we send a recovery notification? The notification filter
+     * tells the answer. */
+    svc->notify(notifier::RECOVERY, "", "", NOTIFICATION_OPTION_NONE);
   }
 
   /* update service status */
