@@ -33,21 +33,20 @@ using namespace com::centreon::engine::notifications;
 
 /**
  *  Constructor.
- *
- *  @param[in] cfg  Base configuration.
  */
 downtime::downtime(
-            downtime_type type,
+            unsigned long id,
             notifications::notifier* parent,
             time_t entry_time,
             std::string const& author,
             std::string const& comment_data,
+            unsigned long comment_id,
             time_t start_time,
             time_t end_time,
-            int fixed,
-            unsigned long triggered_by,
-            unsigned long duration)
-  : _type(type),
+            bool fixed,
+            unsigned long duration,
+            unsigned long triggered_by)
+  : _downtime_id(id),
     _parent(parent),
     _entry_time(entry_time),
     _author(author),
@@ -56,7 +55,7 @@ downtime::downtime(
     _end_time(end_time),
     _fixed(fixed),
     _triggered_by(triggered_by),
-    _comment_id(0),
+    _comment_id(comment_id),
     _duration(duration),
     _in_effect(false) {
   _downtime_id = next_downtime_id++;
@@ -145,7 +144,7 @@ void downtime::_internal_copy(downtime const& other) {
 }
 
 downtime::downtime_type downtime::get_type() const {
-  return _type;
+  return (_parent->is_host() ? HOST_DOWNTIME : SERVICE_DOWNTIME);
 }
 
 unsigned long downtime::get_id() const {
@@ -168,8 +167,8 @@ time_t downtime::get_end_time() const {
   return _end_time;
 }
 
-int downtime::get_fixed() const {
-  return _fixed;
+bool downtime::get_fixed() const {
+  return (_fixed);
 }
 
 unsigned long downtime::get_triggered_by() const {
@@ -193,133 +192,6 @@ unsigned long downtime::get_downtime_id() const {
 }
 
 int downtime::registration() {
-  char start_time_string[MAX_DATETIME_LENGTH] = "";
-  char end_time_string[MAX_DATETIME_LENGTH] = "";
-  host* hst;
-  service* svc;
-  int hours(0);
-  int minutes(0);
-  int seconds(0);
-
-  logger(dbg_functions, basic)
-    << "downtime registration";
-
-  /* find the host or service associated with this downtime */
-  if (_type == HOST_DOWNTIME)
-    hst = static_cast<host*>(_parent);
-  else
-    svc = static_cast<service*>(_parent);
-
-  /* create the comment */
-  get_datetime_string(
-    &_start_time,
-    start_time_string,
-    MAX_DATETIME_LENGTH,
-    SHORT_DATE_TIME);
-  get_datetime_string(
-    &_end_time,
-    end_time_string,
-    MAX_DATETIME_LENGTH,
-    SHORT_DATE_TIME);
-  hours = seconds / 3600;
-  minutes = (_duration - hours * 3600) / 60;
-  seconds = _duration - hours * 3600 - minutes * 60;
-
-  std::string type_string(_type == HOST_DOWNTIME ? "host" : "service");
-  std::ostringstream oss;
-  if (_fixed)
-    oss << "This " << type_string
-        << " has been scheduled for fixed downtime from "
-        << start_time_string << " to " << end_time_string << "."
-        << " Notifications for the " << type_string
-        << " will not be sent out during that time period.";
-  else
-    oss << "This " << type_string
-        << " has been scheduled for flexible downtime starting between "
-        << start_time_string << " and " << end_time_string
-        << " and lasting for a period of " << hours << " hours and "
-        << minutes << " minutes. Notifications for the " << type_string
-        << " will not be sent out during that time period.";
-
-  logger(dbg_downtime, basic) << "Scheduled Downtime Details:";
-  if (_type == HOST_DOWNTIME) {
-    logger(dbg_downtime, basic)
-      << " Type:        Host Downtime\n"
-         " Host:        " << hst->get_name();
-  }
-  else {
-    logger(dbg_downtime, basic)
-      << " Type:        Service Downtime\n"
-         " Host:        " << svc->get_host_name() << "\n"
-         " Service:     " << svc->get_description();
-  }
-  logger(dbg_downtime, basic)
-    << " Fixed/Flex:  " << (_fixed == true ? "Fixed\n" : "Flexible\n")
-    << " Start:       " << start_time_string << "\n"
-       " End:         " << end_time_string << "\n"
-       " Duration:    " << hours << "h " << minutes << "m " << seconds << "s\n"
-       " Downtime ID: " << _downtime_id << "\n"
-       " Trigger ID:  " << _triggered_by;
-
-  /* add a non-persistent comment to the host or service regarding the scheduled outage */
-  comment* new_comment;
-  if (_type == SERVICE_DOWNTIME)
-    new_comment = comment::add_new_comment(
-      comment::SERVICE_COMMENT,
-      comment::DOWNTIME_COMMENT,
-      svc,
-      time(NULL),
-      "(Centreon Engine Process)",
-      oss.str(),
-      0,
-      comment::COMMENTSOURCE_INTERNAL,
-      false,
-      (time_t)0);
-  else
-    new_comment = comment::add_new_comment(
-      comment::HOST_COMMENT,
-      comment::DOWNTIME_COMMENT,
-      hst,
-      time(NULL),
-      "(Centreon Engine Process)",
-      oss.str(),
-      0,
-      comment::COMMENTSOURCE_INTERNAL,
-      false,
-      (time_t)0);
-
-  set_comment_id(new_comment->get_id());
-
-  /*** SCHEDULE DOWNTIME - FLEXIBLE (NON-FIXED) DOWNTIME IS HANDLED AT A LATER POINT ***/
-
-  /* only non-triggered downtime is scheduled... */
-  if (_triggered_by == 0) {
-//    new_downtime_id = new unsigned long;
-//    *new_downtime_id = downtime_id;
-    unsigned long* id = new unsigned long;
-    *id = get_id();
-    schedule_new_event(
-      EVENT_SCHEDULED_DOWNTIME,
-      true,
-      _start_time,
-      false,
-      0,
-      NULL,
-      false,
-      (void*)id,
-      NULL,
-      0);
-  }
-
-#ifdef PROBABLY_NOT_NEEDED
-  /*** FLEXIBLE DOWNTIME SANITY CHECK - ADDED 02/17/2008 ****/
-
-  /* if host/service is in a non-OK/UP state right now, see if we should start flexible time immediately */
-  /* this is new logic added in 3.0rc3 */
-  if (!_fixed)
-      _parent->check_pending_flex_downtime();
-#endif
-  return (OK);
 }
 
 unsigned long downtime::get_comment_id() const {

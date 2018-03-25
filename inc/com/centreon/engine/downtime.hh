@@ -46,16 +46,17 @@ class                downtime {
   };
 
                      downtime(
-                       downtime_type type,
-                       notifications::notifier* parent,
-                       time_t entry_time,
-                       std::string const& author,
-                       std::string const& comment_data,
-                       time_t start_time,
-                       time_t end_time,
-                       int fixed,
-                       unsigned long triggered_by,
-                       unsigned long duration);
+                       unsigned long id = 0,
+                       notifications::notifier* parent = NULL,
+                       time_t entry_time = (time_t)0,
+                       std::string const& author = "",
+                       std::string const& comment_data = "",
+                       unsigned long comment_id = 0,
+                       time_t start_time = (time_t)0,
+                       time_t end_time = (time_t)0,
+                       bool fixed = true,
+                       unsigned long duration = 0,
+                       unsigned long triggered_by = 0);
                      downtime(downtime const& other);
                      ~downtime();
   downtime&          operator=(downtime const& other);
@@ -73,7 +74,7 @@ class                downtime {
   time_t             get_entry_time() const;
   time_t             get_start_time() const;
   time_t             get_end_time() const;
-  int                get_fixed() const;
+  bool               get_fixed() const;
   unsigned long      get_triggered_by() const;
   unsigned long      get_duration() const;
   unsigned long      get_downtime_id() const;
@@ -103,7 +104,6 @@ class                downtime {
   unsigned long      _triggered_by;
   unsigned long      _duration;
   unsigned long      _downtime_id;
-  downtime_type      _type;
   bool               _start_flex_downtime;
 };
 
