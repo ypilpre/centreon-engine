@@ -1,5 +1,5 @@
 /*
-** Copyright 2016 Centreon
+** Copyright 2016,2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -37,21 +37,20 @@ class downtime;
  *  This class can find active downtimes according to some criterias.
  */
 class                 downtime_finder {
-public:
+ public:
   typedef std::pair<std::string, std::string>  criteria;
   typedef std::vector<criteria>                criteria_set;
-  typedef std::vector<downtime*>               result_set;
+  typedef std::vector<unsigned long>           result_set;
 
                       downtime_finder();
                       downtime_finder(downtime_finder const& other);
                       ~downtime_finder();
   downtime_finder&    operator=(downtime_finder const& other);
   result_set          find_matching_all(criteria_set const& criterias);
-  // result_set          find_matching_any(criteria_set const& criterias);
 
-private:
+ private:
   bool                _match_criteria(
-                        downtime const* dt,
+                        downtime const& dt,
                         criteria const& crit);
 };
 

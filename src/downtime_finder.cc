@@ -20,6 +20,7 @@
 #include <cstdlib>
 #include "com/centreon/engine/downtime.hh"
 #include "com/centreon/engine/downtime_finder.hh"
+#include "com/centreon/engine/downtime_manager.hh"
 #include "com/centreon/engine/globals.hh"
 #include "com/centreon/engine/host.hh"
 #include "com/centreon/engine/service.hh"
@@ -70,9 +71,9 @@ downtime_finder::result_set downtime_finder::find_matching_all(
   downtime_finder::criteria_set const& criterias) {
   result_set result;
   // Process all downtimes.
-  for (std::map<unsigned long, downtime*>::const_iterator
-         dit(scheduled_downtime_list.begin()),
-         dend(scheduled_downtime_list.end());
+  for (umap<unsigned long, downtime>::const_iterator
+         dit(downtime_manager::instance().get_downtimes().begin()),
+         dend(downtime_manager::instance().get_downtimes().end());
        dit != dend;
        ++dit) {
     // Process all criterias.
@@ -89,7 +90,7 @@ downtime_finder::result_set downtime_finder::find_matching_all(
 
     // If downtime matched all criterias, add it to the result set.
     if (matched_all)
-      result.push_back(dit->second);
+      result.push_back(dit->second.get_id());
   }
   return (result);
 }
@@ -103,17 +104,17 @@ downtime_finder::result_set downtime_finder::find_matching_all(
  *  @return True if downtime matches the criteria.
  */
 bool downtime_finder::_match_criteria(
-                        downtime const* dt,
+                        downtime const& dt,
                         downtime_finder::criteria const& crit) {
   bool retval;
   host* hst(NULL);
   service* svc(NULL);
 
-  if (dt->get_parent()->is_host()) {
-    hst = static_cast<host*>(dt->get_parent());
+  if (dt.get_parent()->is_host()) {
+    hst = static_cast<host*>(dt.get_parent());
   }
   else {
-    svc = static_cast<service*>(dt->get_parent());
+    svc = static_cast<service*>(dt.get_parent());
     hst = svc->get_host();
   }
 
@@ -126,29 +127,29 @@ bool downtime_finder::_match_criteria(
   }
   else if (crit.first == "start") {
     time_t expected(strtoll(crit.second.c_str(), NULL, 0));
-    retval = (expected == dt->get_start_time());
+    retval = (expected == dt.get_start_time());
   }
   else if (crit.first == "end") {
     time_t expected(strtoll(crit.second.c_str(), NULL, 0));
-    retval = (expected == dt->get_end_time());
+    retval = (expected == dt.get_end_time());
   }
   else if (crit.first == "fixed") {
     bool expected(strtol(crit.second.c_str(), NULL, 0));
-    retval = (expected == static_cast<bool>(dt->get_fixed()));
+    retval = (expected == static_cast<bool>(dt.get_fixed()));
   }
   else if (crit.first == "triggered_by") {
     unsigned long expected(strtoul(crit.second.c_str(), NULL, 0));
-    retval = (expected == dt->get_triggered_by());
+    retval = (expected == dt.get_triggered_by());
   }
   else if (crit.first == "duration") {
     unsigned long expected(strtoul(crit.second.c_str(), NULL, 0));
-    retval = (expected == dt->get_duration());
+    retval = (expected == dt.get_duration());
   }
   else if (crit.first == "author") {
-    retval = (crit.second == dt->get_author());
+    retval = (crit.second == dt.get_author());
   }
   else if (crit.first == "comment") {
-    retval = (crit.second == dt->get_comment());
+    retval = (crit.second == dt.get_comment());
   }
   else {
     retval = false;

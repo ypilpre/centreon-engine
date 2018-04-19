@@ -19,6 +19,7 @@
 
 #include <memory>
 #include "com/centreon/engine/configuration/applier/state.hh"
+#include "com/centreon/engine/downtime_manager.hh"
 #include "com/centreon/engine/globals.hh"
 #include "com/centreon/engine/host.hh"
 #include "com/centreon/engine/retention/applier/downtime.hh"
@@ -51,16 +52,16 @@ void applier::downtime::apply(list_downtime const& lst) {
 void applier::downtime::_add_host_downtime(
        retention::downtime const& obj) {
   // Check if downtime already exist.
-  if (scheduled_downtime_list.find(obj.downtime_id())
-      != scheduled_downtime_list.end()) {
+  if (downtime_manager::instance().get_downtimes().find(obj.downtime_id())
+      != downtime_manager::instance().get_downtimes().end()) {
     logger(logging::log_runtime_error, logging::basic)
-      << "Error: attempting to create downtime " << obj.downtime_id()
+      << "Error: attempting to create host downtime "
+      << obj.downtime_id()
       << " from retention, which does already exist";
   }
   // Downtime does not exist, good to go.
   else {
-    std::auto_ptr<engine::downtime> dt(new engine::downtime(
-      engine::downtime::HOST_DOWNTIME,
+    downtime_manager::instance().schedule(
       configuration::applier::state::instance().hosts_find(obj.host_name()).get(),
       obj.entry_time(),
       obj.author(),
@@ -68,38 +69,44 @@ void applier::downtime::_add_host_downtime(
       obj.start_time(),
       obj.end_time(),
       obj.fixed(),
+      obj.duration(),
       obj.triggered_by(),
-      obj.duration()));
-    dt->set_id(obj.downtime_id());
-    dt->registration();
-    scheduled_downtime_list[dt->get_id()] = dt.get();
-    dt.release();
+      downtime_manager::DOWNTIME_PROPAGATE_NONE,
+      obj.downtime_id());
   }
   return ;
 }
 
 /**
- *  Add serivce downtime.
+ *  Add service downtime.
  *
  *  @param[in] obj The downtime to add into the service.
  */
 void applier::downtime::_add_service_downtime(
        retention::downtime const& obj) {
-  std::auto_ptr<engine::downtime> dt(new engine::downtime(
-    engine::downtime::SERVICE_DOWNTIME,
-    configuration::applier::state::instance().services_find(
-      std::make_pair(obj.host_name(), obj.service_description().c_str())).get(),
-    obj.entry_time(),
-    obj.author(),
-    obj.comment_data(),
-    obj.start_time(),
-    obj.end_time(),
-    obj.fixed(),
-    obj.triggered_by(),
-    obj.duration()));
-  dt->set_id(obj.downtime_id());
-  dt->registration();
-  scheduled_downtime_list[dt->get_id()] = dt.get();
-  dt.release();
+  // Check if downtime already exist.
+  if (downtime_manager::instance().get_downtimes().find(obj.downtime_id())
+      != downtime_manager::instance().get_downtimes().end()) {
+    logger(logging::log_runtime_error, logging::basic)
+      << "Error: attempting to create service downtime "
+      << obj.downtime_id()
+      << " from retention, which does already exist";
+  }
+  // Downtime does not exist, good to go.
+  else {
+    downtime_manager::instance().schedule(
+      configuration::applier::state::instance().services_find(
+        std::make_pair(obj.host_name(), obj.service_description().c_str())).get(),
+      obj.entry_time(),
+      obj.author(),
+      obj.comment_data(),
+      obj.start_time(),
+      obj.end_time(),
+      obj.fixed(),
+      obj.duration(),
+      obj.triggered_by(),
+      downtime_manager::DOWNTIME_PROPAGATE_NONE,
+      obj.downtime_id());
+  }
   return ;
 }

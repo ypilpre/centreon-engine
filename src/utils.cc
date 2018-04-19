@@ -964,15 +964,6 @@ void free_memory(nagios_macros* mac) {
     delete it->second;
   comment_list.clear();
 
-  // Free memory allocated to downtimes.
-  for (std::map<unsigned long, downtime* >::iterator
-         it(scheduled_downtime_list.begin()),
-         end(scheduled_downtime_list.end());
-       it != end;
-       ++it)
-    delete it->second;
-  scheduled_downtime_list.clear();
-
   // Free memory for the high priority event list.
   for (timed_event* this_event(event_list_high); this_event;) {
     timed_event* next_event(this_event->next);

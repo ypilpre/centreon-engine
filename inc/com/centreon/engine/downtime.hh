@@ -1,5 +1,5 @@
 /*
-** Copyright 2017 Centreon
+** Copyright 2017-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -77,15 +77,12 @@ class                downtime {
   bool               get_fixed() const;
   unsigned long      get_triggered_by() const;
   unsigned long      get_duration() const;
-  unsigned long      get_downtime_id() const;
   std::string const& get_author() const;
   std::string const& get_comment() const;
-  int                unschedule();
-  int                registration();
   notifications::notifier* const
                      get_parent() const;
-  void               handle();
-  bool               get_start_flex_downtime() const;
+  void               start();
+  void               stop();
 
  private:
   void               _internal_copy(downtime const& other);
@@ -103,8 +100,7 @@ class                downtime {
                      _parent;
   unsigned long      _triggered_by;
   unsigned long      _duration;
-  unsigned long      _downtime_id;
-  bool               _start_flex_downtime;
+  unsigned long      _id;
 };
 
 CCE_END()

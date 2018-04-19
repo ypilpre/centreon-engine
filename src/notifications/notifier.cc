@@ -22,6 +22,7 @@
 #include "com/centreon/engine/configuration/applier/state.hh"
 #include "com/centreon/engine/contact.hh"
 #include "com/centreon/engine/contactgroup.hh"
+#include "com/centreon/engine/downtime_manager.hh"
 #include "com/centreon/engine/events/defines.hh"
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/macros/grab_host.hh"
@@ -747,113 +748,6 @@ void notifier::dec_scheduled_downtime_depth() {
 }
 
 /**
- *  Schedule a downtime on this object.
- *
- *  @param[in] type          Type of downtime.
- *  @param[in] entry_time    Downtime entry time.
- *  @param[in] author        Author.
- *  @param[in] comment_data  Comment.
- *  @param[in] start_time    Downtime start time.
- *  @param[in] end_time      Downtime end time.
- *  @param[in] fixed         True for a fixed downtime, false for
- *                           flexible.
- *  @param[in] triggered_by  ID of the downtime that triggered this one.
- *                           0 if downtime was not triggered.
- *  @param[in] duration      Downtime duration. Only for flexible
- *                           downtimes.
- *  @param[in] propagate     Downtime propagation parameters.
- *
- *  @return OK on success.
- */
-int notifier::schedule_downtime(
-      downtime::downtime_type type,
-      time_t entry_time,
-      std::string const& author,
-      std::string const& comment_data,
-      time_t start_time,
-      time_t end_time,
-      bool fixed,
-      unsigned long triggered_by,
-      unsigned long duration,
-      downtime_propagation propagate) {
-  logger(dbg_functions, basic)
-    << "schedule_downtime()";
-
-  /* don't add old or invalid downtimes */
-  if (start_time >= end_time || end_time <= time(NULL))
-    return (ERROR);
-
-  /* add a new downtime entry */
-  downtime* dt(new downtime(
-                       type,
-                       this,
-                       entry_time,
-                       author,
-                       comment_data,
-                       start_time,
-                       end_time,
-                       fixed,
-                       triggered_by,
-                       duration));
-  while ((scheduled_downtime_list.find(next_downtime_id)
-          != scheduled_downtime_list.end())
-         || !next_downtime_id)
-    ++next_downtime_id;
-  dt->set_id(next_downtime_id++);
-  scheduled_downtime_list.insert(std::make_pair(dt->get_id(), dt));
-
-  /* register the scheduled downtime */
-  dt->registration();
-
-  if (type == downtime::HOST_DOWNTIME) {
-    host* temp_host = static_cast<host*>(this);
-
-    int trig;
-    downtime_propagation propagate;
-
-    switch (propagate) {
-      case DOWNTIME_PROPAGATE_NONE:
-        trig = 0UL;
-        propagate = DOWNTIME_PROPAGATE_NONE;
-        break;
-      case DOWNTIME_PROPAGATE_SIMPLE:
-        trig = dt->get_triggered_by();
-        propagate = DOWNTIME_PROPAGATE_NONE;
-        break;
-      case DOWNTIME_PROPAGATE_TRIGGERED:
-        trig = dt->get_triggered_by();
-        propagate = DOWNTIME_PROPAGATE_TRIGGERED;
-        break;
-    }
-    /* check all child hosts... */
-    for (host_set::const_iterator
-           it(temp_host->get_children().begin()),
-           end(temp_host->get_children().end());
-         it != end;
-         ++it) {
-      host* child_host(*it);
-
-      /* recurse... */
-      child_host->schedule_downtime(
-        downtime::HOST_DOWNTIME,
-        entry_time,
-        author,
-        comment_data,
-        start_time,
-        end_time,
-        fixed,
-        trig,
-        duration,
-        propagate);
-    }
-  }
-  return (OK);
-}
-
-
-
-
-/**
  *  Tell if the current notification is escalated
  *
  *  @return a boolean
@@ -1178,41 +1072,37 @@ bool notifier::get_recovery_been_sent() const {
  *  Checks for flexible (non-fixed) notifier downtime that should start now.
  */
 void notifier::check_pending_flex_downtime() {
-  time_t current_time(0L);
-
   logger(dbg_functions, basic)
     << "check_pending_flex_downtime()";
 
-  time(&current_time);
-
-  /* if notifier is currently ok, nothing to do */
+  // If notifier is currently ok, nothing to do.
   if (get_current_state() == STATE_OK)
     return ;
 
-  /* Check all downtime entries */
-  for (std::map<unsigned long, downtime*>::const_iterator
-         it(scheduled_downtime_list.begin()),
-         end(scheduled_downtime_list.begin());
+  // Check all downtime entries.
+  for (umap<unsigned long, downtime>::const_iterator
+         it(downtime_manager::instance().get_downtimes().begin()),
+         end(downtime_manager::instance().get_downtimes().end());
        it != end;
        ++it) {
-    downtime* temp_downtime = it->second;
+    downtime const& temp_downtime(it->second);
+    if (temp_downtime.get_parent()->is_host()
+        || temp_downtime.get_fixed()
+        || temp_downtime.get_in_effect()
+        || temp_downtime.get_triggered_by() != 0)
+      continue ;
 
-    if (temp_downtime->get_type() != downtime::SERVICE_DOWNTIME
-        || temp_downtime->get_fixed()
-        || temp_downtime->get_in_effect()
-        || temp_downtime->get_triggered_by() != 0)
-      continue;
-
-    /* This entry matches our notifier */
-    /* and the time boundaries are ok, start this scheduled downtime */
-    if (temp_downtime->get_parent() == this
-        && temp_downtime->get_start_time() <= current_time
-        && current_time <= temp_downtime->get_end_time()) {
+    // This entry matches our notifier and the time boundaries
+    // are ok, start this scheduled downtime.
+    time_t current_time(0L);
+    time(&current_time);
+    if ((temp_downtime.get_parent() == this)
+        && (temp_downtime.get_start_time() <= current_time)
+        && (current_time <= temp_downtime.get_end_time())) {
       logger(dbg_downtime, basic)
-        << "Flexible downtime (id=" << temp_downtime->get_id()
+        << "Flexible downtime (id=" << temp_downtime.get_id()
         << ") for notifier '" << get_info() << "' starting now...";
-
-      temp_downtime->handle();
+      downtime_manager::instance().start(temp_downtime.get_id());
     }
   }
 }

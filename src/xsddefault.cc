@@ -31,6 +31,7 @@
 #include "com/centreon/engine/common.hh"
 #include "com/centreon/engine/configuration/applier/state.hh"
 #include "com/centreon/engine/contact.hh"
+#include "com/centreon/engine/downtime_manager.hh"
 #include "com/centreon/engine/globals.hh"
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/macros.hh"
@@ -155,7 +156,7 @@ int xsddefault_save_status_data() {
        "\tglobal_host_event_handler=" << config->global_host_event_handler().c_str() << "\n"
        "\tglobal_service_event_handler=" << config->global_service_event_handler().c_str() << "\n"
        "\tnext_comment_id=" << next_comment_id << "\n"
-       "\tnext_downtime_id=" << next_downtime_id << "\n"
+       "\tnext_downtime_id=" << downtime_manager::instance().get_next_downtime_id() << "\n"
        "\tnext_event_id=" << next_event_id << "\n"
        "\tnext_problem_id=" << next_problem_id << "\n"
        "\tnext_notification_id=" << next_notification_id << "\n"
@@ -418,33 +419,33 @@ int xsddefault_save_status_data() {
   }
 
   // save all downtime
-  for (std::map<unsigned long, downtime*>::const_iterator
-         it(scheduled_downtime_list.begin()),
-         end(scheduled_downtime_list.end());
+  for (umap<unsigned long, downtime>::const_iterator
+         it(downtime_manager::instance().get_downtimes().begin()),
+         end(downtime_manager::instance().get_downtimes().end());
        it != end;
        ++it) {
-    downtime* dt(it->second);
-    if (dt->get_type() == downtime::HOST_DOWNTIME) {
-      host* hst(static_cast<host*>(dt->get_parent()));
+    downtime const& dt(it->second);
+    if (dt.get_type() == downtime::HOST_DOWNTIME) {
+      host* hst(static_cast<host*>(dt.get_parent()));
       stream << "hostdowntime {\n";
       stream << "\thost_name=" << hst->get_name() << "\n";
     }
     else {
-      service* svc(static_cast<service*>(dt->get_parent()));
+      service* svc(static_cast<service*>(dt.get_parent()));
       stream << "servicedowntime {\n";
       stream << "\thost_name=" << svc->get_host_name() << "\n"
              << "\tservice_description=" << svc->get_description() << "\n";
     }
     stream
-      << "\tdowntime_id=" << dt->get_id() << "\n"
-         "\tentry_time=" << static_cast<unsigned long>(dt->get_entry_time()) << "\n"
-         "\tstart_time=" << static_cast<unsigned long>(dt->get_start_time()) << "\n"
-         "\tend_time=" << static_cast<unsigned long>(dt->get_end_time()) << "\n"
-         "\ttriggered_by=" << dt->get_triggered_by() << "\n"
-         "\tfixed=" << dt->get_fixed() << "\n"
-         "\tduration=" << dt->get_duration() << "\n"
-         "\tauthor=" << dt->get_author() << "\n"
-         "\tcomment=" << dt->get_comment() << "\n"
+      << "\tdowntime_id=" << dt.get_id() << "\n"
+         "\tentry_time=" << static_cast<unsigned long>(dt.get_entry_time()) << "\n"
+         "\tstart_time=" << static_cast<unsigned long>(dt.get_start_time()) << "\n"
+         "\tend_time=" << static_cast<unsigned long>(dt.get_end_time()) << "\n"
+         "\ttriggered_by=" << dt.get_triggered_by() << "\n"
+         "\tfixed=" << dt.get_fixed() << "\n"
+         "\tduration=" << dt.get_duration() << "\n"
+         "\tauthor=" << dt.get_author() << "\n"
+         "\tcomment=" << dt.get_comment() << "\n"
          "\t}\n\n";
   }
 

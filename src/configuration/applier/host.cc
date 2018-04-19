@@ -28,6 +28,7 @@
 #include "com/centreon/engine/configuration/applier/state.hh"
 #include "com/centreon/engine/deleter/listmember.hh"
 #include "com/centreon/engine/deleter/objectlist.hh"
+#include "com/centreon/engine/downtime_manager.hh"
 #include "com/centreon/engine/error.hh"
 #include "com/centreon/engine/globals.hh"
 #include "com/centreon/engine/not_found.hh"
@@ -530,17 +531,24 @@ void applier::host::remove_object(
     ::host* hst(it->second.get());
 
     // Remove host downtimes.
-    for (std::map<unsigned long, downtime*>::iterator
-           it_dt(scheduled_downtime_list.begin()),
-           end_dt(scheduled_downtime_list.end());
-         it_dt != end_dt;) {
-      downtime* dt(it_dt->second);
-      ++it_dt; // Iterator would be invalid right after unschedule().
-      if ((dt->get_type() == downtime::HOST_DOWNTIME)
-          && (static_cast< ::host*>(dt->get_parent())->get_name()
+    std::set<unsigned long> to_remove;
+    for (umap<unsigned long, downtime>::const_iterator
+           it_dt(downtime_manager::instance().get_downtimes().begin()),
+           end_dt(downtime_manager::instance().get_downtimes().end());
+         it_dt != end_dt;
+         ++it_dt) {
+      downtime const& dt(it_dt->second);
+      if (dt.get_parent()->is_host()
+          && (static_cast< ::host*>(dt.get_parent())->get_name()
               == obj.host_name()))
-        dt->unschedule();
+        to_remove.insert(dt.get_id());
     }
+    for (std::set<unsigned long>::const_iterator
+           it_dt(to_remove.begin()),
+           end_dt(to_remove.end());
+         it_dt != end_dt;
+         ++it_dt)
+      downtime_manager::instance().unschedule(*it_dt);
 
     // Remove events related to this host.
     applier::scheduler::instance().remove_host(obj);

@@ -22,6 +22,7 @@
 #include "com/centreon/engine/broker.hh"
 #include "com/centreon/engine/configuration/applier/state.hh"
 #include "com/centreon/engine/downtime.hh"
+#include "com/centreon/engine/downtime_manager.hh"
 #include "com/centreon/engine/error.hh"
 #include "com/centreon/engine/globals.hh"
 #include "com/centreon/engine/logging/logger.hh"
@@ -183,13 +184,12 @@ std::ostream& dump::downtime(std::ostream& os, engine::downtime const& obj) {
  *  @return The output stream.
  */
 std::ostream& dump::downtimes(std::ostream& os) {
-  for (std::map<unsigned long, engine::downtime* >::const_iterator
-         it(scheduled_downtime_list.begin()),
-         end(scheduled_downtime_list.begin());
+  for (umap<unsigned long, engine::downtime>::const_iterator
+         it(downtime_manager::instance().get_downtimes().begin()),
+         end(downtime_manager::instance().get_downtimes().end());
        it != end;
-       ++it) {
-    dump::downtime(os, *it->second);
-  }
+       ++it)
+    dump::downtime(os, it->second);
   return (os);
 }
 
@@ -336,7 +336,7 @@ std::ostream& dump::program(std::ostream& os) {
     "modified_host_attributes=" << (modified_host_process_attributes & ~config->retained_process_host_attribute_mask()) << "\n"
     "modified_service_attributes=" << (modified_service_process_attributes & ~config->retained_process_host_attribute_mask()) << "\n"
     "next_comment_id=" << next_comment_id << "\n"
-    "next_downtime_id=" << next_downtime_id << "\n"
+    "next_downtime_id=" << downtime_manager::instance().get_next_downtime_id() << "\n"
     "next_event_id=" << next_event_id << "\n"
     "next_notification_id=" << next_notification_id << "\n"
     "next_problem_id=" << next_problem_id << "\n"

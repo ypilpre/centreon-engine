@@ -59,11 +59,6 @@ namespace                  notifications {
       ON_FLAPPING = (1 << 4),
       ON_DOWNTIME = (1 << 5),
     };
-    enum                   downtime_propagation {
-      DOWNTIME_PROPAGATE_NONE,
-      DOWNTIME_PROPAGATE_SIMPLE,
-      DOWNTIME_PROPAGATE_TRIGGERED
-    };
     enum                   notification_type {
       PROBLEM              = 0,
       RECOVERY             = 1,
@@ -154,18 +149,6 @@ namespace                  notifications {
     int                    get_scheduled_downtime_depth() const;
     void                   inc_scheduled_downtime_depth();
     void                   dec_scheduled_downtime_depth();
-    int                    schedule_downtime(
-                             downtime::downtime_type type,
-                             time_t entry_time,
-                             std::string const& author,
-                             std::string const& comment_data,
-                             time_t start_time,
-                             time_t end_time,
-                             bool fixed,
-                             unsigned long triggered_by,
-                             unsigned long duration,
-                             downtime_propagation propagate =
-                               DOWNTIME_PROPAGATE_NONE);
 
     // XXX
     void                   delete_acknowledgement_comments();
