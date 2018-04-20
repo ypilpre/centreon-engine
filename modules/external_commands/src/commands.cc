@@ -30,6 +30,7 @@
 #include "com/centreon/engine/configuration/applier/state.hh"
 #include "com/centreon/engine/contact.hh"
 #include "com/centreon/engine/downtime_finder.hh"
+#include "com/centreon/engine/downtime_manager.hh"
 #include "com/centreon/engine/events/defines.hh"
 #include "com/centreon/engine/flapping.hh"
 #include "com/centreon/engine/globals.hh"
@@ -87,27 +88,30 @@ static int delete_downtime_by_hostname_service_description_start_time_comment(
   if (service_description != NULL && *service_description != 0)
     svc = find_service(hostname, service_description);
 
-  for (std::map<unsigned long, downtime* >::iterator
-         it(scheduled_downtime_list.begin()),
-         next_it(scheduled_downtime_list.begin()),
-         end(scheduled_downtime_list.end());
+  std::set<unsigned long> to_unschedule;
+  for (umap<unsigned long, downtime>::const_iterator
+         it(downtime_manager::instance().get_downtimes().begin()),
+         end(downtime_manager::instance().get_downtimes().end());
        it != end;
-       it = next_it) {
-    downtime* temp_downtime(it->second);
-    ++next_it;
-    if (start_time != 0 && start_time != temp_downtime->get_start_time())
-      continue;
-    if (comment != NULL && temp_downtime->get_comment() != comment)
-      continue;
-    if (svc.is_null() && temp_downtime->get_parent() != hst.get())
-      continue;
-    if (!svc.is_null() && temp_downtime->get_parent() != svc.get())
-      continue;
-
-    temp_downtime->unschedule();
-    ++deleted;
+       ++it) {
+    downtime const& temp_downtime(it->second);
+    if (start_time != 0 && start_time != temp_downtime.get_start_time())
+      continue ;
+    if (comment != NULL && temp_downtime.get_comment() != comment)
+      continue ;
+    if (svc.is_null() && temp_downtime.get_parent() != hst.get())
+      continue ;
+    if (!svc.is_null() && temp_downtime.get_parent() != svc.get())
+      continue ;
+    to_unschedule.insert(it->first);
   }
-  return deleted;
+  for (std::set<unsigned long>::const_iterator
+         it(to_unschedule.begin()),
+         end(to_unschedule.end());
+       it != end;
+       ++it)
+    downtime_manager::instance().unschedule(*it);
+  return (to_unschedule.size());
 }
 
 /******************************************************************/
@@ -1116,102 +1120,87 @@ int cmd_schedule_downtime(int cmd, time_t entry_time, char* args) {
 
   /* schedule downtime */
   switch (cmd) {
-
-  case CMD_SCHEDULE_HOST_DOWNTIME:
-    temp_host->schedule_downtime(
-      downtime::HOST_DOWNTIME,
+   case CMD_SCHEDULE_HOST_DOWNTIME:
+    downtime_manager::instance().schedule(
+      temp_host.get(),
       entry_time,
       author,
       comment_data,
       start_time,
       end_time,
       fixed,
-      triggered_by,
-      duration);
-    break;
-
-  case CMD_SCHEDULE_SVC_DOWNTIME:
-    temp_service->schedule_downtime(
-      downtime::SERVICE_DOWNTIME,
+      duration,
+      triggered_by);
+    break ;
+   case CMD_SCHEDULE_SVC_DOWNTIME:
+    downtime_manager::instance().schedule(
+      temp_service.get(),
       entry_time,
       author,
       comment_data,
       start_time,
       end_time,
       fixed,
-      triggered_by,
-      duration);
-    break;
-
-  case CMD_SCHEDULE_HOST_SVC_DOWNTIME:
+      duration,
+      triggered_by);
+    break ;
+   case CMD_SCHEDULE_HOST_SVC_DOWNTIME:
     for (service_set::const_iterator
            it(temp_host->get_services().begin()),
            end(temp_host->get_services().end());
          it != end;
-         ++it) {
-      (*it)->schedule_downtime(
-        downtime::SERVICE_DOWNTIME,
+         ++it)
+      downtime_manager::instance().schedule(
+        *it,
         entry_time,
         author,
         comment_data,
         start_time,
         end_time,
         fixed,
-        triggered_by,
-        duration);
-    }
-    break;
-
-  case CMD_SCHEDULE_HOSTGROUP_HOST_DOWNTIME:
+        duration,
+        triggered_by);
+    break ;
+   case CMD_SCHEDULE_HOSTGROUP_HOST_DOWNTIME:
     for (umap<std::string, host*>::const_iterator
            it(temp_hostgroup->get_members().begin()),
            end(temp_hostgroup->get_members().end());
          it != end;
-         ++it) {
-      temp_hg = it->second;
-      temp_hg->schedule_downtime(
-        downtime::HOST_DOWNTIME,
+         ++it)
+      downtime_manager::instance().schedule(
+        it->second,
         entry_time,
         author,
         comment_data,
         start_time,
         end_time,
         fixed,
-        triggered_by,
-        duration);
-    }
-    break;
-
-  case CMD_SCHEDULE_HOSTGROUP_SVC_DOWNTIME:
+        duration,
+        triggered_by);
+    break ;
+   case CMD_SCHEDULE_HOSTGROUP_SVC_DOWNTIME:
     for (umap<std::string, host*>::const_iterator
            it(temp_hostgroup->get_members().begin()),
            end(temp_hostgroup->get_members().end());
          it != end;
-         ++it) {
-      if ((temp_hg = it->second) == NULL)
-        continue;
+         ++it)
       for (service_set::const_iterator
-             it(temp_host->get_services().begin()),
-             end(temp_host->get_services().end());
-           it != end;
-           ++it) {
-        if ((temp_service = *it) == NULL)
-          continue;
-        temp_service->schedule_downtime(
-          downtime::SERVICE_DOWNTIME,
+             it_svc(it->second->get_services().begin()),
+             end_svc(it->second->get_services().end());
+           it_svc != end_svc;
+           ++it_svc)
+        downtime_manager::instance().schedule(
+          *it_svc,
           entry_time,
           author,
           comment_data,
           start_time,
           end_time,
           fixed,
-          triggered_by,
-          duration);
-      }
-    }
-    break;
-
-  case CMD_SCHEDULE_SERVICEGROUP_HOST_DOWNTIME:
+          duration,
+          triggered_by);
+    break ;
+   case CMD_SCHEDULE_SERVICEGROUP_HOST_DOWNTIME:
     {
       std::set<host*> hst_set;
       for (service_map::const_iterator
@@ -1222,73 +1211,68 @@ int cmd_schedule_downtime(int cmd, time_t entry_time, char* args) {
         temp_host = it->second->get_host();
         if (temp_host == NULL)
           continue;
-        if (hst_set.find(temp_host.get()) == hst_set.end()) {
-          temp_host->schedule_downtime(
-            downtime::HOST_DOWNTIME,
+        if (hst_set.find(temp_host.get()) == hst_set.end())
+          downtime_manager::instance().schedule(
+            temp_host.get(),
             entry_time,
             author,
             comment_data,
             start_time,
             end_time,
             fixed,
-            triggered_by,
-            duration);
+            duration,
+            triggered_by);
           hst_set.insert(temp_host.get());
-        }
       }
     }
-    break;
-
-  case CMD_SCHEDULE_SERVICEGROUP_SVC_DOWNTIME:
+    break ;
+   case CMD_SCHEDULE_SERVICEGROUP_SVC_DOWNTIME:
     for (service_map::iterator
            it(temp_servicegroup->get_members().begin()),
            end(temp_servicegroup->get_members().end());
          it != end;
-         ++it) {
-      it->second->schedule_downtime(
-        downtime::SERVICE_DOWNTIME,
-        entry_time, author,
+         ++it)
+      downtime_manager::instance().schedule(
+        it->second,
+        entry_time,
+        author,
         comment_data,
         start_time,
         end_time,
         fixed,
-        triggered_by,
-        duration);
-    }
-    break;
-
-  case CMD_SCHEDULE_AND_PROPAGATE_HOST_DOWNTIME:
+        duration,
+        triggered_by);
+    break ;
+   case CMD_SCHEDULE_AND_PROPAGATE_HOST_DOWNTIME:
     /* schedule downtime for "parent" host */
-    temp_host->schedule_downtime(
-      downtime::HOST_DOWNTIME,
+    downtime_manager::instance().schedule(
+      temp_host.get(),
       entry_time,
       author,
       comment_data,
       start_time,
       end_time,
       fixed,
-      triggered_by,
       duration,
-      notifier::DOWNTIME_PROPAGATE_SIMPLE);
-    break;
-
-  case CMD_SCHEDULE_AND_PROPAGATE_TRIGGERED_HOST_DOWNTIME:
+      triggered_by,
+      downtime_manager::DOWNTIME_PROPAGATE_SIMPLE);
+    break ;
+   case CMD_SCHEDULE_AND_PROPAGATE_TRIGGERED_HOST_DOWNTIME:
     /* schedule downtime for "parent" host */
-    temp_host->schedule_downtime(
-      downtime::HOST_DOWNTIME,
+    downtime_manager::instance().schedule(
+      temp_host.get(),
       entry_time,
       author,
       comment_data,
       start_time,
       end_time,
       fixed,
-      triggered_by,
       duration,
-      notifier::DOWNTIME_PROPAGATE_TRIGGERED);
-    break;
-
-  default:
-    break;
+      triggered_by,
+      downtime_manager::DOWNTIME_PROPAGATE_TRIGGERED);
+    break ;
+   default:
+    break ;
   }
   return (OK);
 }
@@ -1303,14 +1287,7 @@ int cmd_delete_downtime(int cmd, char* args) {
     return (ERROR);
 
   downtime_id = strtoul(temp_ptr, NULL, 10);
-
-  std::map<unsigned long, downtime* >::iterator
-    it(scheduled_downtime_list.find(downtime_id));
-  if (it == scheduled_downtime_list.end())
-    return (ERROR);
-  else
-    it->second->unschedule();
-
+  downtime_manager::instance().unschedule(downtime_id);
   return (OK);
 }
 
@@ -1378,15 +1355,15 @@ int cmd_delete_downtime_full(int cmd, char* args) {
   if (*temp_ptr)
     criterias.push_back(downtime_finder::criteria("comment", temp_ptr));
 
-  // Find downtimes.
+  // Unschedule downtimes.
   downtime_finder dtf;
   downtime_finder::result_set result(dtf.find_matching_all(criterias));
   for (downtime_finder::result_set::const_iterator
-         it(result.begin()), end(result.end());
+         it(result.begin()),
+         end(result.end());
        it != end;
-       ++it) {
-    (*it)->unschedule();
-  }
+       ++it)
+    downtime_manager::instance().unschedule(*it);
 
   return (OK);
 }

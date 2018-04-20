@@ -1,7 +1,7 @@
 /*
 ** Copyright 1999-2009 Ethan Galstad
 ** Copyright 2009-2010 Nagios Core Development Team and Community Contributors
-** Copyright 2011-2017 Centreon
+** Copyright 2011-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -44,6 +44,7 @@
 #include "com/centreon/engine/configuration/parser.hh"
 #include "com/centreon/engine/configuration/state.hh"
 #include "com/centreon/engine/diagnostic.hh"
+#include "com/centreon/engine/downtime_manager.hh"
 #include "com/centreon/engine/error.hh"
 #include "com/centreon/engine/events/loop.hh"
 #include "com/centreon/engine/globals.hh"
@@ -109,6 +110,7 @@ int main(int argc, char* argv[]) {
   com::centreon::logging::engine::load();
   config = new configuration::state;
   com::centreon::engine::timezone_manager::load();
+  com::centreon::engine::downtime_manager::load();
   com::centreon::engine::configuration::applier::state::load();
   com::centreon::engine::checks::checker::load();
   com::centreon::engine::events::loop::load();
@@ -194,7 +196,7 @@ int main(int argc, char* argv[]) {
         << "\n"
         << "Copyright 1999-2009 Ethan Galstad\n"
         << "Copyright 2009-2010 Nagios Core Development Team and Community Contributors\n"
-        << "Copyright 2011-2016 Centreon\n"
+        << "Copyright 2011-2018 Centreon\n"
         << "\n"
         << "This program is free software: you can redistribute it and/or\n"
         << "modify it under the terms of the GNU General Public License version 2\n"
@@ -466,6 +468,7 @@ int main(int argc, char* argv[]) {
   com::centreon::engine::broker::compatibility::unload();
   com::centreon::engine::broker::loader::unload();
   com::centreon::engine::configuration::applier::state::unload();
+  com::centreon::engine::downtime_manager::unload();
   com::centreon::engine::checks::checker::unload();
   delete config;
   config = NULL;
