@@ -57,7 +57,7 @@ namespace                  notifications {
       ON_UNREACHABLE = (1 << 2),
       ON_UNKNOWN = (1 << 3),
       ON_FLAPPING = (1 << 4),
-      ON_DOWNTIME = (1 << 5),
+      ON_DOWNTIME = (1 << 5)
     };
     enum                   notification_type {
       PROBLEM              = 0,
@@ -69,7 +69,7 @@ namespace                  notifications {
       DOWNTIMESTART        = 6,
       DOWNTIMESTOP         = 7,
       DOWNTIMECANCELLED    = 8,
-      CUSTOM               = 9,
+      CUSTOM               = 9
     };
     enum                   notifier_type {
       HOST_NOTIFICATION,

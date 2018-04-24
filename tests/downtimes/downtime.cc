@@ -394,4 +394,3 @@ TEST_F(Downtime, TriggeredDowntime) {
   dt1->unschedule();
   ASSERT_TRUE(scheduled_downtime_list.empty());
 }
-

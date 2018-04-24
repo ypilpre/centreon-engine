@@ -352,13 +352,6 @@ void downtime_manager::stop(unsigned long id) {
  *  @param[in] id  Downtime ID.
  */
 void downtime_manager::unschedule(unsigned long id) {
-  host* hst(NULL);
-  service* svc(NULL);
-  timed_event* temp_event(NULL);
-  int attr(0);
-  std::string hst_name;
-  std::string svc_desc;
-
   // Debug.
   logger(logging::dbg_functions, logging::basic)
     << "downtime_manager::unschedule()";
@@ -369,6 +362,14 @@ void downtime_manager::unschedule(unsigned long id) {
   if (dt_it != _downtimes.end()) {
     downtime& dt(dt_it->second);
     notifications::notifier* parent(dt.get_parent());
+    union {
+      host* hst;
+      service* svc;
+    } target;
+    if (parent->is_host())
+      target.hst = static_cast<host*>(parent);
+    else
+      target.svc = static_cast<service*>(parent);
 
     // Decrement pending flex downtime if necessary...
     if (!dt.get_fixed() && dt.get_incremented_pending_downtime())
@@ -378,25 +379,42 @@ void downtime_manager::unschedule(unsigned long id) {
     // and update status data if necessary.
     if (dt.get_in_effect()) {
       // Send data to event broker.
-      broker_downtime_data(
-        NEBTYPE_DOWNTIME_STOP,
-        NEBFLAG_NONE,
-        NEBATTR_DOWNTIME_STOP_CANCELLED,
-        parent->is_host()
-        ? downtime::HOST_DOWNTIME
-        : downtime::SERVICE_DOWNTIME,
-        hst_name,
-        svc_desc,
-        dt.get_entry_time(),
-        dt.get_author(),
-        dt.get_comment(),
-        dt.get_start_time(),
-        dt.get_end_time(),
-        dt.get_fixed(),
-        dt.get_triggered_by(),
-        dt.get_duration(),
-        dt.get_id(),
-        NULL);
+      if (parent->is_host())
+        broker_downtime_data(
+          NEBTYPE_DOWNTIME_STOP,
+          NEBFLAG_NONE,
+          NEBATTR_DOWNTIME_STOP_CANCELLED,
+          downtime::HOST_DOWNTIME,
+          target.hst->get_name(),
+          "",
+          dt.get_entry_time(),
+          dt.get_author(),
+          dt.get_comment(),
+          dt.get_start_time(),
+          dt.get_end_time(),
+          dt.get_fixed(),
+          dt.get_triggered_by(),
+          dt.get_duration(),
+          dt.get_id(),
+          NULL);
+      else
+        broker_downtime_data(
+          NEBTYPE_DOWNTIME_STOP,
+          NEBFLAG_NONE,
+          NEBATTR_DOWNTIME_STOP_CANCELLED,
+          downtime::SERVICE_DOWNTIME,
+          target.svc->get_host_name(),
+          target.svc->get_description(),
+          dt.get_entry_time(),
+          dt.get_author(),
+          dt.get_comment(),
+          dt.get_start_time(),
+          dt.get_end_time(),
+          dt.get_fixed(),
+          dt.get_triggered_by(),
+          dt.get_duration(),
+          dt.get_id(),
+          NULL);
 
       // Decrement downtime depth and update status.
       parent->dec_scheduled_downtime_depth();
@@ -437,6 +455,7 @@ void downtime_manager::unschedule(unsigned long id) {
     }
 
     // Remove scheduled entry from event queue.
+    timed_event* temp_event(NULL);
     for (temp_event = event_list_high;
          temp_event != NULL;
          temp_event = temp_event->next) {
@@ -447,6 +466,47 @@ void downtime_manager::unschedule(unsigned long id) {
     }
     if (temp_event != NULL)
       remove_event(temp_event, &event_list_high, &event_list_high_tail);
+
+    // Notify event broker.
+    if (parent->is_host())
+      broker_downtime_data(
+        NEBTYPE_DOWNTIME_DELETE,
+        NEBFLAG_NONE,
+        NEBATTR_NONE,
+        downtime::HOST_DOWNTIME,
+        target.hst->get_name(),
+        "",
+        dt.get_entry_time(),
+        dt.get_author(),
+        dt.get_comment(),
+        dt.get_start_time(),
+        dt.get_end_time(),
+        dt.get_fixed(),
+        dt.get_triggered_by(),
+        dt.get_duration(),
+        dt.get_id(),
+        NULL);
+    else
+      broker_downtime_data(
+        NEBTYPE_DOWNTIME_DELETE,
+        NEBFLAG_NONE,
+        NEBATTR_NONE,
+        downtime::SERVICE_DOWNTIME,
+        target.svc->get_host_name(),
+        target.svc->get_description(),
+        dt.get_entry_time(),
+        dt.get_author(),
+        dt.get_comment(),
+        dt.get_start_time(),
+        dt.get_end_time(),
+        dt.get_fixed(),
+        dt.get_triggered_by(),
+        dt.get_duration(),
+        dt.get_id(),
+        NULL);
+
+    // Remove downtime and its comment.
+    comment::delete_comment(dt.get_comment_id());
     _downtimes.erase(dt_it);
 
     // Unschedule all downtime entries that were triggered by this one.
@@ -484,6 +544,8 @@ downtime_manager::~downtime_manager() {}
  *  @return Next available downtime ID.
  */
 unsigned long downtime_manager::_use_next_downtime_id() {
-  // XXX : handle existing downtime ID and 0
+  while ((_downtimes.find(_next_downtime_id) != _downtimes.end())
+         || !_next_downtime_id)
+    ++_next_downtime_id;
   return (_next_downtime_id++);
 }

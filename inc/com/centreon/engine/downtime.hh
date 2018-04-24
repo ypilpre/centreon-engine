@@ -79,7 +79,7 @@ class                downtime {
   unsigned long      get_duration() const;
   std::string const& get_author() const;
   std::string const& get_comment() const;
-  notifications::notifier* const
+  notifications::notifier*
                      get_parent() const;
   void               start();
   void               stop();
@@ -87,20 +87,20 @@ class                downtime {
  private:
   void               _internal_copy(downtime const& other);
 
-  time_t             _entry_time;
   std::string        _author;
   std::string        _comment_data;
   unsigned long      _comment_id;
-  bool               _incremented_pending_downtime;
-  bool               _in_effect;
-  time_t             _start_time;
-  time_t             _end_time;
-  bool               _fixed;
-  notifications::notifier* const
-                     _parent;
-  unsigned long      _triggered_by;
   unsigned long      _duration;
+  time_t             _end_time;
+  time_t             _entry_time;
+  bool               _fixed;
   unsigned long      _id;
+  bool               _in_effect;
+  bool               _incremented_pending_downtime;
+  notifications::notifier*
+                     _parent;
+  time_t             _start_time;
+  unsigned long      _triggered_by;
 };
 
 CCE_END()

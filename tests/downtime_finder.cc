@@ -1,5 +1,5 @@
 /*
-** Copyright 2016 Centreon
+** Copyright 2016,2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -26,6 +26,7 @@
 #include "com/centreon/engine/configuration/applier/state.hh"
 #include "com/centreon/engine/configuration/state.hh"
 #include "com/centreon/engine/downtime_finder.hh"
+#include "com/centreon/engine/downtime_manager.hh"
 #include "com/centreon/engine/globals.hh"
 #include "com/centreon/engine/host.hh"
 #include "com/centreon/engine/service.hh"
@@ -39,11 +40,9 @@ extern configuration::state* config;
 class DowntimeFinderFindMatchingAllTest : public ::testing::Test {
  public:
   void SetUp() {
-    downtime* dtp;
-
-    next_downtime_id = 1;
     if (config == NULL)
       config = new configuration::state;
+    downtime_manager::load();
     configuration::applier::state::load();
 
     configuration::applier::host hst_aply;
@@ -96,77 +95,72 @@ class DowntimeFinderFindMatchingAllTest : public ::testing::Test {
     ++hit;
     engine::host* host2 = hit->second.get();
 
-    dtp = new_scheduled_downtime(
-             service1,
-             123456789,
-             134567892,
-             1,
-             6,
-             42,
-             "test_author",
-             "other_comment");
-    scheduled_downtime_list[dtp->get_id()] = dtp;
-    dtp = new_scheduled_downtime(
-             host1,
-             234567891,
-             134567892,
-             1,
-             0,
-             84,
-             "other_author",
-             "test_comment");
-    scheduled_downtime_list[dtp->get_id()] = dtp;
-    dtp = new_scheduled_downtime(
-             service2,
-             123456789,
-             345678921,
-             0,
-             6,
-             42,
-             "",
-             "test_comment");
-    scheduled_downtime_list[dtp->get_id()] = dtp;
-    dtp = new_scheduled_downtime(
-             service1,
-             234567891,
-             345678921,
-             0,
-             6,
-             84,
-             "test_author",
-             "");
-    scheduled_downtime_list[dtp->get_id()] = dtp;
+    new_scheduled_downtime(
+      service1,
+      123456789,
+      134567892,
+      1,
+      6,
+      42,
+      "test_author",
+      "other_comment");
+    new_scheduled_downtime(
+      host1,
+      134567892,
+      234567891,
+      1,
+      0,
+      84,
+      "other_author",
+      "test_comment");
+    new_scheduled_downtime(
+      service2,
+      123456789,
+      345678921,
+      0,
+      6,
+      42,
+      "",
+      "test_comment");
+    new_scheduled_downtime(
+      service1,
+      234567891,
+      345678921,
+      0,
+      6,
+      84,
+      "test_author",
+      "");
     _dtf = new downtime_finder();
   }
 
   void TearDown() {
     delete _dtf;
-    scheduled_downtime_list.clear();
     configuration::applier::state::unload();
+    downtime_manager::unload();
     delete config;
     config = NULL;
   }
 
-  downtime* new_scheduled_downtime(
-                        monitorable* parent,
-                        time_t start,
-                        time_t end,
-                        int fixed,
-                        unsigned long triggered_by,
-                        unsigned long duration,
-                        std::string const& author,
-                        std::string const& comment) {
-    return new downtime(
-                 downtime::ANY_DOWNTIME,
-                 parent,
-                 0,
-                 author,
-                 comment,
-                 start,
-                 end,
-                 fixed,
-                 triggered_by,
-                 duration);
+  unsigned long new_scheduled_downtime(
+                  notifications::notifier* parent,
+                  time_t start,
+                  time_t end,
+                  int fixed,
+                  unsigned long triggered_by,
+                  unsigned long duration,
+                  std::string const& author,
+                  std::string const& comment) {
+    return (downtime_manager::instance().schedule(
+              parent,
+              0,
+              author,
+              comment,
+              start,
+              end,
+              fixed,
+              duration,
+              triggered_by));
   }
 
  protected:
@@ -209,8 +203,8 @@ TEST_F(DowntimeFinderFindMatchingAllTest, NullServiceNotFound) {
 TEST_F(DowntimeFinderFindMatchingAllTest, NullServiceFound) {
   criterias.push_back(downtime_finder::criteria("service", ""));
   result = _dtf->find_matching_all(criterias);
-  ASSERT_TRUE(!result.empty());
-  ASSERT_EQ(result[0]->get_id(), 2);
+  ASSERT_FALSE(result.empty());
+  ASSERT_EQ(result[0], 2);
 }
 
 // Given a downtime_finder object with the test downtime list
@@ -231,7 +225,7 @@ TEST_F(DowntimeFinderFindMatchingAllTest, EmptyAuthorFound) {
   criterias.push_back(downtime_finder::criteria("author", ""));
   result = _dtf->find_matching_all(criterias);
   ASSERT_TRUE(!result.empty());
-  ASSERT_EQ(result[0]->get_id(), 3);
+  ASSERT_EQ(result[0], 3);
 }
 
 // Given a downtime_finder object with the test downtime list
@@ -252,7 +246,7 @@ TEST_F(DowntimeFinderFindMatchingAllTest, NullCommentFound) {
   criterias.push_back(downtime_finder::criteria("comment", ""));
   result = _dtf->find_matching_all(criterias);
   ASSERT_TRUE(!result.empty());
-  ASSERT_EQ(result[0]->get_id(), 4);
+  ASSERT_EQ(result[0], 4);
 }
 
 // Given a downtime_finder object with the test downtime list
@@ -262,9 +256,9 @@ TEST_F(DowntimeFinderFindMatchingAllTest, MultipleHosts) {
   criterias.push_back(downtime_finder::criteria("host", "test_host"));
   result = _dtf->find_matching_all(criterias);
   ASSERT_EQ(result.size(), 3);
-  ASSERT_EQ(result[0]->get_id(), 1);
-  ASSERT_EQ(result[1]->get_id(), 2);
-  ASSERT_EQ(result[2]->get_id(), 4);
+  ASSERT_EQ(result[0], 1);
+  ASSERT_EQ(result[1], 2);
+  ASSERT_EQ(result[2], 4);
 }
 
 // Given a downtime_finder object with the test downtime list
@@ -274,8 +268,8 @@ TEST_F(DowntimeFinderFindMatchingAllTest, MultipleServices) {
   criterias.push_back(downtime_finder::criteria("service", "test_service"));
   result = _dtf->find_matching_all(criterias);
   ASSERT_EQ(result.size(), 2);
-  ASSERT_EQ(result[0]->get_id(), 1);
-  ASSERT_EQ(result[1]->get_id(), 4);
+  ASSERT_EQ(result[0], 1);
+  ASSERT_EQ(result[1], 4);
 }
 
 // Given a downtime_finder object with the test downtime list
@@ -285,19 +279,19 @@ TEST_F(DowntimeFinderFindMatchingAllTest, MultipleStart) {
   criterias.push_back(downtime_finder::criteria("start", "123456789"));
   result = _dtf->find_matching_all(criterias);
   ASSERT_EQ(result.size(), 2);
-  ASSERT_EQ(result[0]->get_id(), 1);
-  ASSERT_EQ(result[1]->get_id(), 3);
+  ASSERT_EQ(result[0], 1);
+  ASSERT_EQ(result[1], 3);
 }
 
 // Given a downtime_finder object with the test downtime list
 // When find_matching_all() is called with the criteria ("end", "134567892")
 // Then all downtimes with 134567892 as end time are returned
 TEST_F(DowntimeFinderFindMatchingAllTest, MultipleEnd) {
-  criterias.push_back(downtime_finder::criteria("end", "134567892"));
+  criterias.push_back(downtime_finder::criteria("end", "345678921"));
   result = _dtf->find_matching_all(criterias);
   ASSERT_EQ(result.size(), 2);
-  ASSERT_EQ(result[0]->get_id(), 1);
-  ASSERT_EQ(result[1]->get_id(), 2);
+  ASSERT_EQ(result[0], 3);
+  ASSERT_EQ(result[1], 4);
 }
 
 // Given a downtime_finder object with the test downtime list
@@ -307,8 +301,8 @@ TEST_F(DowntimeFinderFindMatchingAllTest, MultipleFixed) {
   criterias.push_back(downtime_finder::criteria("fixed", "0"));
   result = _dtf->find_matching_all(criterias);
   ASSERT_EQ(result.size(), 2);
-  ASSERT_EQ(result[0]->get_id(), 3);
-  ASSERT_EQ(result[1]->get_id(), 4);
+  ASSERT_EQ(result[0], 3);
+  ASSERT_EQ(result[1], 4);
 }
 
 // Given a downtime_finder object with the test downtime list
@@ -318,7 +312,7 @@ TEST_F(DowntimeFinderFindMatchingAllTest, MultipleTriggeredBy) {
   criterias.push_back(downtime_finder::criteria("triggered_by", "0"));
   result = _dtf->find_matching_all(criterias);
   ASSERT_EQ(result.size(), 1);
-  ASSERT_EQ(result[0]->get_id(), 2);
+  ASSERT_EQ(result[0], 2);
 }
 
 // Given a downtime_finder object with the test downtime list
@@ -328,8 +322,8 @@ TEST_F(DowntimeFinderFindMatchingAllTest, MultipleDuration) {
   criterias.push_back(downtime_finder::criteria("duration", "42"));
   result = _dtf->find_matching_all(criterias);
   ASSERT_EQ(result.size(), 2);
-  ASSERT_EQ(result[0]->get_id(), 1);
-  ASSERT_EQ(result[1]->get_id(), 3);
+  ASSERT_EQ(result[0], 1);
+  ASSERT_EQ(result[1], 3);
 }
 
 // Given a downtime_finder object with the test downtime list
@@ -339,8 +333,8 @@ TEST_F(DowntimeFinderFindMatchingAllTest, MultipleAuthor) {
   criterias.push_back(downtime_finder::criteria("author", "test_author"));
   result = _dtf->find_matching_all(criterias);
   ASSERT_EQ(result.size(), 2);
-  ASSERT_EQ(result[0]->get_id(), 1);
-  ASSERT_EQ(result[1]->get_id(), 4);
+  ASSERT_EQ(result[0], 1);
+  ASSERT_EQ(result[1], 4);
 }
 
 // Given a downtime_finder object with the test downtime list
@@ -350,8 +344,8 @@ TEST_F(DowntimeFinderFindMatchingAllTest, MultipleComment) {
   criterias.push_back(downtime_finder::criteria("comment", "test_comment"));
   result = _dtf->find_matching_all(criterias);
   ASSERT_EQ(result.size(), 2);
-  ASSERT_EQ(result[0]->get_id(), 2);
-  ASSERT_EQ(result[1]->get_id(), 3);
+  ASSERT_EQ(result[0], 2);
+  ASSERT_EQ(result[1], 3);
 }
 
 // Given a downtime_finder object with the test downtime list
@@ -362,5 +356,5 @@ TEST_F(DowntimeFinderFindMatchingAllTest, MultipleCriterias) {
   criterias.push_back(downtime_finder::criteria("comment", "test_comment"));
   result = _dtf->find_matching_all(criterias);
   ASSERT_EQ(result.size(), 1);
-  ASSERT_EQ(result[0]->get_id(), 3);
+  ASSERT_EQ(result[0], 3);
 }

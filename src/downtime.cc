@@ -65,50 +65,14 @@ downtime::downtime(
  *
  *  @param[in] other  Object to copy.
  */
-downtime::downtime(downtime const& other)
-  : _parent(other._parent) {
+downtime::downtime(downtime const& other) {
   _internal_copy(other);
 }
 
 /**
  *  Destructor.
  */
-downtime::~downtime() {
-  std::string hst_name;
-  std::string svc_descr;
-
-  /* remove the downtime from the list in memory */
-  /* first remove the comment associated with this downtime */
-  if (get_type() == HOST_DOWNTIME) {
-    hst_name = static_cast<host*>(get_parent())->get_name();
-    svc_descr = "";
-  }
-  else {
-    service* svc(static_cast<service*>(get_parent()));
-    hst_name = svc->get_host_name();
-    svc_descr = svc->get_description();
-  }
-  comment::delete_comment(get_comment_id());
-
-  /* send data to event broker */
-  broker_downtime_data(
-    NEBTYPE_DOWNTIME_DELETE,
-    NEBFLAG_NONE,
-    NEBATTR_NONE,
-    get_type(),
-    hst_name,
-    svc_descr,
-    get_entry_time(),
-    get_author(),
-    get_comment(),
-    get_start_time(),
-    get_end_time(),
-    get_fixed(),
-    get_triggered_by(),
-    get_duration(),
-    get_id(),
-    NULL);
-}
+downtime::~downtime() {}
 
 /**
  *  Assignment operator.
@@ -129,17 +93,20 @@ downtime& downtime::operator=(downtime const& other) {
  *  @param[in] other  Object to copy.
  */
 void downtime::_internal_copy(downtime const& other) {
-  _entry_time = other._entry_time;
   _author = other._author;
   _comment_data = other._comment_data;
   _comment_id = other._comment_id;
-  _start_time = other._start_time;
-  _end_time = other._end_time;
-  _fixed = other._fixed;
-  _triggered_by = other._triggered_by;
   _duration = other._duration;
+  _end_time = other._end_time;
+  _entry_time = other._entry_time;
+  _fixed = other._fixed;
   _id = other._id;
   _in_effect = other._in_effect;
+  _incremented_pending_downtime = other._incremented_pending_downtime;
+  _parent = other._parent;
+  _start_time = other._start_time;
+  _triggered_by = other._triggered_by;
+  return ;
 }
 
 downtime::downtime_type downtime::get_type() const {
@@ -214,8 +181,8 @@ void downtime::set_in_effect(bool in_effect) {
   _in_effect = in_effect;
 }
 
-notifications::notifier* const downtime::get_parent() const {
-  return _parent;
+notifications::notifier* downtime::get_parent() const {
+  return (_parent);
 }
 
 /**
