@@ -89,8 +89,7 @@ class CheckNotificationManagement : public ::testing::Test {
 // When the notify method is called with PROBLEM type
 // Then the filter method returns false and no notification is sent.
 TEST_F(CheckNotificationManagement, ProblemWithDowntime) {
-
-  _service->set_in_downtime(true);
+  _service->inc_scheduled_downtime_depth();
   time_t last_notification = _service->get_last_notification();
   // When
   _service->notify(notifier::PROBLEM, "admin", "Test comment");

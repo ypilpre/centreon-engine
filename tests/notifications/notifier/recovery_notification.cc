@@ -120,7 +120,7 @@ TEST_F(RecoveryNotification, RecoveryDuringDowntime) {
   _service->add_notification_flag(notifier::PROBLEM);
   _service->set_last_notification(10);
 
-  _service->set_in_downtime(true);
+  _service->inc_scheduled_downtime_depth();
   long last_notification = _service->get_last_notification();
   // When
   _service->set_current_state(0);
@@ -139,7 +139,7 @@ TEST_F(RecoveryNotification, RecoveryWithNonOkState) {
   _service->add_notification_flag(notifier::PROBLEM);
   _service->set_last_notification(10);
 
-  _service->set_in_downtime(true);
+  _service->inc_scheduled_downtime_depth();
   long last_notification = _service->get_last_notification();
   // When
   _service->set_current_state(1);

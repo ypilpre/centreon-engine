@@ -30,6 +30,7 @@
 #include "com/centreon/engine/globals.hh"
 #include "com/centreon/engine/host.hh"
 #include "com/centreon/engine/service.hh"
+#include "timeperiod/utils.hh"
 
 using namespace com::centreon;
 using namespace com::centreon::engine;
@@ -93,8 +94,7 @@ class DowntimeFinderFindMatchingAllTest : public ::testing::Test {
       configuration::applier::state::instance().hosts().begin());
     engine::host* host1 = hit->second.get();
     ++hit;
-    engine::host* host2 = hit->second.get();
-
+    set_time(123456789);
     new_scheduled_downtime(
       service1,
       123456789,
@@ -204,7 +204,7 @@ TEST_F(DowntimeFinderFindMatchingAllTest, NullServiceFound) {
   criterias.push_back(downtime_finder::criteria("service", ""));
   result = _dtf->find_matching_all(criterias);
   ASSERT_FALSE(result.empty());
-  ASSERT_EQ(result[0], 2);
+  ASSERT_EQ(result[0], 2ul);
 }
 
 // Given a downtime_finder object with the test downtime list
@@ -225,7 +225,7 @@ TEST_F(DowntimeFinderFindMatchingAllTest, EmptyAuthorFound) {
   criterias.push_back(downtime_finder::criteria("author", ""));
   result = _dtf->find_matching_all(criterias);
   ASSERT_TRUE(!result.empty());
-  ASSERT_EQ(result[0], 3);
+  ASSERT_EQ(result[0], 3ul);
 }
 
 // Given a downtime_finder object with the test downtime list
@@ -246,7 +246,7 @@ TEST_F(DowntimeFinderFindMatchingAllTest, NullCommentFound) {
   criterias.push_back(downtime_finder::criteria("comment", ""));
   result = _dtf->find_matching_all(criterias);
   ASSERT_TRUE(!result.empty());
-  ASSERT_EQ(result[0], 4);
+  ASSERT_EQ(result[0], 4ul);
 }
 
 // Given a downtime_finder object with the test downtime list
@@ -255,10 +255,10 @@ TEST_F(DowntimeFinderFindMatchingAllTest, NullCommentFound) {
 TEST_F(DowntimeFinderFindMatchingAllTest, MultipleHosts) {
   criterias.push_back(downtime_finder::criteria("host", "test_host"));
   result = _dtf->find_matching_all(criterias);
-  ASSERT_EQ(result.size(), 3);
-  ASSERT_EQ(result[0], 1);
-  ASSERT_EQ(result[1], 2);
-  ASSERT_EQ(result[2], 4);
+  ASSERT_EQ(result.size(), 3ul);
+  ASSERT_EQ(result[0], 1ul);
+  ASSERT_EQ(result[1], 2ul);
+  ASSERT_EQ(result[2], 4ul);
 }
 
 // Given a downtime_finder object with the test downtime list
@@ -267,9 +267,9 @@ TEST_F(DowntimeFinderFindMatchingAllTest, MultipleHosts) {
 TEST_F(DowntimeFinderFindMatchingAllTest, MultipleServices) {
   criterias.push_back(downtime_finder::criteria("service", "test_service"));
   result = _dtf->find_matching_all(criterias);
-  ASSERT_EQ(result.size(), 2);
-  ASSERT_EQ(result[0], 1);
-  ASSERT_EQ(result[1], 4);
+  ASSERT_EQ(result.size(), 2ul);
+  ASSERT_EQ(result[0], 1ul);
+  ASSERT_EQ(result[1], 4ul);
 }
 
 // Given a downtime_finder object with the test downtime list
@@ -278,9 +278,9 @@ TEST_F(DowntimeFinderFindMatchingAllTest, MultipleServices) {
 TEST_F(DowntimeFinderFindMatchingAllTest, MultipleStart) {
   criterias.push_back(downtime_finder::criteria("start", "123456789"));
   result = _dtf->find_matching_all(criterias);
-  ASSERT_EQ(result.size(), 2);
-  ASSERT_EQ(result[0], 1);
-  ASSERT_EQ(result[1], 3);
+  ASSERT_EQ(result.size(), 2ul);
+  ASSERT_EQ(result[0], 1ul);
+  ASSERT_EQ(result[1], 3ul);
 }
 
 // Given a downtime_finder object with the test downtime list
@@ -289,9 +289,9 @@ TEST_F(DowntimeFinderFindMatchingAllTest, MultipleStart) {
 TEST_F(DowntimeFinderFindMatchingAllTest, MultipleEnd) {
   criterias.push_back(downtime_finder::criteria("end", "345678921"));
   result = _dtf->find_matching_all(criterias);
-  ASSERT_EQ(result.size(), 2);
-  ASSERT_EQ(result[0], 3);
-  ASSERT_EQ(result[1], 4);
+  ASSERT_EQ(result.size(), 2ul);
+  ASSERT_EQ(result[0], 3ul);
+  ASSERT_EQ(result[1], 4ul);
 }
 
 // Given a downtime_finder object with the test downtime list
@@ -300,9 +300,9 @@ TEST_F(DowntimeFinderFindMatchingAllTest, MultipleEnd) {
 TEST_F(DowntimeFinderFindMatchingAllTest, MultipleFixed) {
   criterias.push_back(downtime_finder::criteria("fixed", "0"));
   result = _dtf->find_matching_all(criterias);
-  ASSERT_EQ(result.size(), 2);
-  ASSERT_EQ(result[0], 3);
-  ASSERT_EQ(result[1], 4);
+  ASSERT_EQ(result.size(), 2ul);
+  ASSERT_EQ(result[0], 3ul);
+  ASSERT_EQ(result[1], 4ul);
 }
 
 // Given a downtime_finder object with the test downtime list
@@ -311,8 +311,8 @@ TEST_F(DowntimeFinderFindMatchingAllTest, MultipleFixed) {
 TEST_F(DowntimeFinderFindMatchingAllTest, MultipleTriggeredBy) {
   criterias.push_back(downtime_finder::criteria("triggered_by", "0"));
   result = _dtf->find_matching_all(criterias);
-  ASSERT_EQ(result.size(), 1);
-  ASSERT_EQ(result[0], 2);
+  ASSERT_EQ(result.size(), 1ul);
+  ASSERT_EQ(result[0], 2ul);
 }
 
 // Given a downtime_finder object with the test downtime list
@@ -321,9 +321,9 @@ TEST_F(DowntimeFinderFindMatchingAllTest, MultipleTriggeredBy) {
 TEST_F(DowntimeFinderFindMatchingAllTest, MultipleDuration) {
   criterias.push_back(downtime_finder::criteria("duration", "42"));
   result = _dtf->find_matching_all(criterias);
-  ASSERT_EQ(result.size(), 2);
-  ASSERT_EQ(result[0], 1);
-  ASSERT_EQ(result[1], 3);
+  ASSERT_EQ(result.size(), 2ul);
+  ASSERT_EQ(result[0], 1ul);
+  ASSERT_EQ(result[1], 3ul);
 }
 
 // Given a downtime_finder object with the test downtime list
@@ -332,9 +332,9 @@ TEST_F(DowntimeFinderFindMatchingAllTest, MultipleDuration) {
 TEST_F(DowntimeFinderFindMatchingAllTest, MultipleAuthor) {
   criterias.push_back(downtime_finder::criteria("author", "test_author"));
   result = _dtf->find_matching_all(criterias);
-  ASSERT_EQ(result.size(), 2);
-  ASSERT_EQ(result[0], 1);
-  ASSERT_EQ(result[1], 4);
+  ASSERT_EQ(result.size(), 2ul);
+  ASSERT_EQ(result[0], 1ul);
+  ASSERT_EQ(result[1], 4ul);
 }
 
 // Given a downtime_finder object with the test downtime list
@@ -343,9 +343,9 @@ TEST_F(DowntimeFinderFindMatchingAllTest, MultipleAuthor) {
 TEST_F(DowntimeFinderFindMatchingAllTest, MultipleComment) {
   criterias.push_back(downtime_finder::criteria("comment", "test_comment"));
   result = _dtf->find_matching_all(criterias);
-  ASSERT_EQ(result.size(), 2);
-  ASSERT_EQ(result[0], 2);
-  ASSERT_EQ(result[1], 3);
+  ASSERT_EQ(result.size(), 2ul);
+  ASSERT_EQ(result[0], 2ul);
+  ASSERT_EQ(result[1], 3ul);
 }
 
 // Given a downtime_finder object with the test downtime list
@@ -355,6 +355,6 @@ TEST_F(DowntimeFinderFindMatchingAllTest, MultipleCriterias) {
   criterias.push_back(downtime_finder::criteria("duration", "42"));
   criterias.push_back(downtime_finder::criteria("comment", "test_comment"));
   result = _dtf->find_matching_all(criterias);
-  ASSERT_EQ(result.size(), 1);
-  ASSERT_EQ(result[0], 3);
+  ASSERT_EQ(result.size(), 1ul);
+  ASSERT_EQ(result[0], 3ul);
 }

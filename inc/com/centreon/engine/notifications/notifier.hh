@@ -141,8 +141,6 @@ namespace                  notifications {
     void                   update_acknowledgement_on_state_change();
 
     // Downtime.
-    bool                   is_in_downtime() const;
-    void                   set_in_downtime(bool downtime);
     int                    get_pending_flex_downtime() const;
     void                   inc_pending_flex_downtime();
     void                   dec_pending_flex_downtime();
@@ -172,7 +170,6 @@ namespace                  notifications {
 
    private:
     unsigned int           _current_notifications;
-    bool                   _in_downtime;
     notifier_filter        _get_filter(notification_type type) const;
     macro_builder          _get_macro_builder(
                              notification_type type) const;

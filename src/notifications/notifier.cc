@@ -46,7 +46,6 @@ using namespace com::centreon::engine::notifications;
 notifier::notifier()
   : _acknowledgement_timeout(0),
     _current_notifications(0),
-    _in_downtime(false),
     _current_acknowledgement(ACKNOWLEDGEMENT_NONE),
     _current_notification_id(0),
     _current_notification_number(0),
@@ -678,24 +677,6 @@ void notifier::update_acknowledgement_on_state_change() {
 **************************************/
 
 /**
- *  This method tells if this object is in downtime.
- *
- *  @return True if this object is in downtime.
- */
-bool notifier::is_in_downtime() const {
-  return (_in_downtime);
-}
-
-/**
- *  This method sets or not the notifier in downtime
- *
- *  @param downtime A boolean telling if the notifier is set or not in downtime.
- */
-void notifier::set_in_downtime(bool downtime) {
-  _in_downtime = downtime;
-}
-
-/**
  *  Get the number of pending flexible downtimes targeting this object.
  *
  *  @return An integer.
@@ -871,7 +852,7 @@ bool notifier::_problem_filter() {
    *  * first notification delay is not elapsed
    */
   if (is_acknowledged()
-      || is_in_downtime()
+      || get_scheduled_downtime_depth()
       || get_flapping()
       || !is_state_notification_enabled(get_current_state())
       || get_current_state_type() == SOFT_STATE
@@ -908,13 +889,11 @@ unsigned int notifier::get_current_notifications_flag() const {
  * @return a boolean
  */
 bool notifier::_recovery_filter() {
-
-  if (is_in_downtime()
+  if (get_scheduled_downtime_depth()
       || (get_current_notifications_flag() & (1 << PROBLEM)) == 0
       || get_current_state() != 0
       || get_flapping())
     return false;
-
   return true;
 }
 
@@ -924,12 +903,10 @@ bool notifier::_recovery_filter() {
  * @return a boolean
  */
 bool notifier::_acknowledgement_filter() {
-
-  if (is_in_downtime()
+  if (get_scheduled_downtime_depth()
       || (get_current_notifications_flag() & (1 << PROBLEM)) == 0
       || get_current_state() == 0)
     return false;
-
   return true;
 }
 
@@ -939,11 +916,9 @@ bool notifier::_acknowledgement_filter() {
  * @return a boolean
  */
 bool notifier::_flappingstart_filter() {
-
-  if (is_in_downtime()
+  if (get_scheduled_downtime_depth()
       || (get_current_notifications_flag() & (1 << FLAPPINGSTART)))
     return false;
-
   return true;
 }
 
@@ -953,11 +928,9 @@ bool notifier::_flappingstart_filter() {
  * @return a boolean
  */
 bool notifier::_flappingstopdisabled_filter() {
-
-  if (is_in_downtime()
+  if (get_scheduled_downtime_depth()
       || (get_current_notifications_flag() & (1 << FLAPPINGSTART)) == 0)
     return false;
-
   return true;
 }
 
@@ -967,10 +940,8 @@ bool notifier::_flappingstopdisabled_filter() {
  * @return a boolean
  */
 bool notifier::_downtimestart_filter() {
-
-  if (is_in_downtime())
+  if (get_scheduled_downtime_depth())
     return false;
-
   return true;
 }
 
@@ -980,10 +951,8 @@ bool notifier::_downtimestart_filter() {
  * @return a boolean
  */
 bool notifier::_downtimestopcancelled_filter() {
-
-  if (!is_in_downtime())
+  if (!get_scheduled_downtime_depth())
     return false;
-
   return true;
 }
 
@@ -993,10 +962,8 @@ bool notifier::_downtimestopcancelled_filter() {
  * @return a boolean
  */
 bool notifier::_custom_filter() {
-
-  if (is_in_downtime())
+  if (get_scheduled_downtime_depth())
     return false;
-
   return true;
 }
 
@@ -1140,7 +1107,6 @@ void notifier::_internal_copy(notifier const& other) {
   _current_notifications = other._current_notifications;
   _escalate_notification = other._escalate_notification;
   _first_notification_delay = other._first_notification_delay;
-  _in_downtime = other._in_downtime;
   _last_acknowledgement = other._last_acknowledgement;
   _last_notification = other._last_notification;
   _next_notification = other._next_notification;
