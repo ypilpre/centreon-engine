@@ -273,6 +273,8 @@ unsigned long downtime_manager::schedule(
      case DOWNTIME_PROPAGATE_SIMPLE:
       propagate = DOWNTIME_PROPAGATE_NONE;
       break ;
+     default:
+      break ;
     }
     // Check all child hosts...
     for (host_set::const_iterator

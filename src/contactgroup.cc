@@ -52,9 +52,8 @@ contactgroup::contactgroup() {}
  * @param obj Configuration contactgroup
  */
 contactgroup::contactgroup(configuration::contactgroup const& obj)
-  : _name(obj.contactgroup_name()),
-    _alias((obj.alias().empty()) ? obj.contactgroup_name() : obj.alias()) {
-
+  : _alias(obj.alias().empty() ? obj.contactgroup_name() : obj.alias()),
+    _name(obj.contactgroup_name()) {
   // Make sure we have the data we need.
   if (_name.empty())
     throw (engine_error() << "contactgroup: Contact group name is empty");
@@ -77,6 +76,9 @@ contactgroup::contactgroup(configuration::contactgroup const& obj)
  * @return This object
  */
 contactgroup& contactgroup::operator=(contactgroup const& other) {
+  _alias = other._alias;
+  _members = other._members;
+  _name = other._name;
   return (*this);
 }
 

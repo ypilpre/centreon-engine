@@ -751,10 +751,9 @@ int grab_standard_contact_macro_r(
       int macro_type,
       contact* temp_contact,
       char** output) {
-  contactgroup* temp_contactgroup = NULL;
-  objectlist* temp_objectlist = NULL;
-
   (void)mac;
+
+  contactgroup* temp_contactgroup = NULL;
 
   if (temp_contact == NULL || output == NULL)
     return (ERROR);
@@ -947,6 +946,8 @@ int grab_custom_object_macro(
 
 /* cleans illegal characters in macros before output */
 std::string clean_macro_chars(std::string const& macro, int options) {
+  (void)options;
+
   std::string retval;
   retval.reserve(macro.size());
   for (size_t i = 0; i < macro.size(); ++i) {

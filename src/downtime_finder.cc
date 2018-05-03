@@ -45,7 +45,9 @@ downtime_finder::downtime_finder() {}
  *
  *  @param[in] other  Object to copy.
  */
-downtime_finder::downtime_finder(downtime_finder const& other) {}
+downtime_finder::downtime_finder(downtime_finder const& other) {
+  (void)other;
+}
 
 /**
  *  Destructor.

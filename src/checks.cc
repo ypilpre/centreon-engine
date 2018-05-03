@@ -2743,7 +2743,6 @@ int process_host_check_result_3x(
   host* master_host = NULL;
   host* temp_host = NULL;
   std::list<shared_ptr<host> > check_hostlist;
-  objectlist* hostlist_item = NULL;
   int parent_state = HOST_UP;
   time_t current_time = 0L;
   time_t next_check = 0L;

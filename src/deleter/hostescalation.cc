@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2013 Merethis
+** Copyright 2011-2013,2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -17,6 +17,8 @@
 ** <http://www.gnu.org/licenses/>.
 */
 
+#include "com/centreon/engine/contact.hh"
+#include "com/centreon/engine/contactgroup.hh"
 #include "com/centreon/engine/deleter/hostescalation.hh"
 #include "com/centreon/engine/deleter/listmember.hh"
 #include "com/centreon/engine/objects/hostescalation.hh"

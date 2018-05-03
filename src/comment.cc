@@ -1,5 +1,5 @@
 /*
-** Copyright 2017 Centreon
+** Copyright 2017-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -92,8 +92,7 @@ comment* comment::add_new_comment(
     NEBATTR_NONE,
     retval->get_comment_type(),
     ent_type,
-    retval->get_host_name(),
-    retval->get_service_description(),
+    parent,
     entry_time,
     author_name,
     comment_data,
@@ -123,8 +122,6 @@ comment* comment::add_new_comment(
 
 /* checks for an expired comment (and removes it) */
 void comment::check_for_expired_comment(unsigned long comment_id) {
-  comment* temp_comment = NULL;
-
   /* check all comments */
   std::map<unsigned long, comment*>::iterator it(comment_list.find(comment_id));
   if (it != comment_list.end()) {
@@ -148,16 +145,16 @@ comment::comment(
            time_t expire_time,
            source_type source,
            unsigned long comment_id)
-  : _comment_type(cmt_type),
-    _entry_type(ent_type),
-    _parent(parent),
-    _entry_time(entry_time),
-    _author(author),
+  : _author(author),
     _comment_data(comment_data),
     _comment_id((comment_id == 0) ? _next_id++ : comment_id),
-    _persistent(persistent),
+    _comment_type(cmt_type),
+    _entry_time(entry_time),
+    _entry_type(ent_type),
     _expires(expires),
     _expire_time(expire_time),
+    _parent(parent),
+    _persistent(persistent),
     _source(source) {
   if (_comment_id > _next_id)
     _next_id = comment_id + 1;
@@ -172,8 +169,7 @@ comment::comment(
     NEBATTR_NONE,
     get_comment_type(),
     get_entry_type(),
-    get_host_name(),
-    get_service_description(),
+    parent,
     get_entry_time(),
     get_author(),
     get_comment_data(),
@@ -185,32 +181,25 @@ comment::comment(
     NULL);
 }
 
-comment::comment(comment const& other)
-  : _author(other._author),
-    _comment_data(other._comment_data),
-    _comment_type(other._comment_type),
-    _entry_type(other._entry_type),
-    _source(other._source),
-    _entry_time(other._entry_time),
-    _comment_id(other._comment_id),
-    _persistent(other._persistent),
-    _expires(other._expires),
-    _expire_time(other._expire_time) {}
+comment::comment(comment const& other) {
+  *this = other;
+}
 
 comment& comment::operator=(comment const& other) {
   if (this != &other) {
     _author = other._author;
     _comment_data = other._comment_data;
-    _comment_type = other._comment_type;
-    _entry_type = other._entry_type;
-    _source = other._source;
-    _entry_time = other._entry_time;
     _comment_id = other._comment_id;
-    _persistent = other._persistent;
+    _comment_type = other._comment_type;
+    _entry_time = other._entry_time;
+    _entry_type = other._entry_type;
     _expires = other._expires;
     _expire_time = other._expire_time;
+    _parent = other._parent;
+    _persistent = other._persistent;
+    _source = other._source;
   }
-  return *this;
+  return (*this);
 }
 
 comment::~comment() {
@@ -221,8 +210,7 @@ comment::~comment() {
       NEBATTR_NONE,
       get_comment_type(),
       get_entry_type(),
-      get_host_name(),
-      get_service_description(),
+      get_parent(),
       get_entry_time(),
       get_author(),
       get_comment_data(),

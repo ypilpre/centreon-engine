@@ -522,7 +522,6 @@ void applier::contact::resolve_object(
       ++config_warnings;
     }
     else {
-      timeperiod* temp_timeperiod;
       try {
         cntct.set_service_notification_period(
           &find_timeperiod(obj.service_notification_period()));

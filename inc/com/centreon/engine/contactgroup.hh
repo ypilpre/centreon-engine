@@ -60,9 +60,9 @@ class                          contactgroup {
   bool                         contains_illegal_object_chars() const;
 
  private:
-  std::string                  _name;
   std::string                  _alias;
   umap<std::string, contact*>  _members;
+  std::string                  _name;
 };
 
 CCE_END()

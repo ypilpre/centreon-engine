@@ -33,7 +33,9 @@ hostgroup::hostgroup() {}
  *
  *  @param[in] other  Object to copy.
  */
-hostgroup::hostgroup(hostgroup const& other) {}
+hostgroup::hostgroup(hostgroup const& other) {
+  _internal_copy(other);
+}
 
 /**
  *  Destructor.

@@ -119,18 +119,18 @@ class           comment {
   static unsigned long
                 _next_id;
 
-  notifications::notifier*
-                _parent;
   std::string   _author;
   std::string   _comment_data;
-  comment_type  _comment_type;
-  entry_type    _entry_type;
-  int           _source;
-  time_t        _entry_time;
   unsigned long _comment_id;
-  bool          _persistent;
+  comment_type  _comment_type;
+  time_t        _entry_time;
+  entry_type    _entry_type;
   bool          _expires;
   time_t        _expire_time;
+  notifications::notifier*
+                _parent;
+  bool          _persistent;
+  int           _source;
 };
 
 CCE_END()

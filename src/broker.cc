@@ -41,7 +41,7 @@ extern "C" {
  *  @param[in] flags                Flags.
  *  @param[in] attr                 Attributes.
  *  @param[in] acknowledgement_type Type (sticky or not).
- *  @param[in] data                 Data.
+ *  @param[in] target               Target object
  *  @param[in] ack_author           Author.
  *  @param[in] ack_data             Acknowledgement text.
  *  @param[in] subtype              Subtype.
@@ -53,7 +53,7 @@ void broker_acknowledgement_data(
        int flags,
        int attr,
        int acknowledgement_type,
-       void* data,
+       notifications::notifier* target,
        char* ack_author,
        char* ack_data,
        int subtype,
@@ -74,18 +74,18 @@ void broker_acknowledgement_data(
   ds.timestamp = get_broker_timestamp(timestamp);
   ds.acknowledgement_type = acknowledgement_type;
   if (acknowledgement_type == SERVICE_ACKNOWLEDGEMENT) {
-    temp_service = (service*)data;
+    temp_service = (service*)target;
     ds.host_name = temp_service->get_host_name().c_str();
     ds.service_description = temp_service->get_description().c_str();
     ds.state = temp_service->get_current_state();
   }
   else {
-    temp_host = (host*)data;
+    temp_host = (host*)target;
     ds.host_name = temp_host->get_name().c_str();
     ds.service_description = NULL;
     ds.state = temp_host->get_current_state();
   }
-  ds.object_ptr = data;
+  ds.object_ptr = target;
   ds.author_name = ack_author;
   ds.comment_data = ack_data;
   ds.is_sticky = (subtype == notifier::ACKNOWLEDGEMENT_STICKY) ? true : false;
@@ -445,8 +445,7 @@ void broker_command_data(
  *  @param[in] attr            Attributes.
  *  @param[in] comment_type    Comment type.
  *  @param[in] entry_type      Entry type.
- *  @param[in] host_name       Host name.
- *  @param[in] svc_description Service description.
+ *  @param[in] target          Target object.
  *  @param[in] author_name     Author name.
  *  @param[in] comment_data    Comment data.
  *  @param[in] persistent      Is this comment persistent.
@@ -462,8 +461,7 @@ void broker_comment_data(
        int attr,
        int comment_type,
        int entry_type,
-       std::string const& host_name,
-       std::string const& svc_description,
+       notifications::notifier* target,
        time_t entry_time,
        std::string const& author_name,
        std::string const& comment_data,
@@ -477,29 +475,37 @@ void broker_comment_data(
   if (!(config->event_broker_options() & BROKER_COMMENT_DATA))
     return;
 
-//  // Fill struct with relevant data.
-//  nebstruct_comment_data ds;
-//  ds.type = type;
-//  ds.flags = flags;
-//  ds.attr = attr;
-//  ds.timestamp = get_broker_timestamp(timestamp);
-//  ds.comment_type = comment_type;
-//  ds.entry_type = entry_type;
-//  ds.host_name = host_name.c_str();
-//  ds.service_description = svc_description.c_str();
-//  ds.object_ptr = NULL; // Not implemented yet.
-//  ds.entry_time = entry_time;
-//  ds.author_name = author_name.c_str();
-//  ds.comment_data = comment_data.c_str();
-//  ds.persistent = persistent;
-//  ds.source = source;
-//  ds.expires = expires;
-//  ds.expire_time = expire_time;
-//  ds.comment_id = comment_id;
-//
-//  // Make callbacks.
-//  neb_make_callbacks(NEBCALLBACK_COMMENT_DATA, &ds);
-//  return;
+  // Fill struct with relevant data.
+  nebstruct_comment_data ds;
+  ds.type = type;
+  ds.flags = flags;
+  ds.attr = attr;
+  ds.timestamp = get_broker_timestamp(timestamp);
+  ds.comment_type = comment_type;
+  ds.entry_type = entry_type;
+  if (target->is_host()) {
+    host* h(static_cast<host*>(target));
+    ds.host_name = h->get_name().c_str();
+    ds.service_description = NULL;
+  }
+  else {
+    service* s(static_cast<service*>(target));
+    ds.host_name = s->get_host_name().c_str();
+    ds.service_description = s->get_description().c_str();
+  }
+  ds.object_ptr = target;
+  ds.entry_time = entry_time;
+  ds.author_name = author_name.c_str();
+  ds.comment_data = comment_data.c_str();
+  ds.persistent = persistent;
+  ds.source = source;
+  ds.expires = expires;
+  ds.expire_time = expire_time;
+  ds.comment_id = comment_id;
+
+  // Make callbacks.
+  neb_make_callbacks(NEBCALLBACK_COMMENT_DATA, &ds);
+  return;
 }
 
 /**

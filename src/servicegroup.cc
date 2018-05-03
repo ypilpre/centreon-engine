@@ -33,7 +33,9 @@ servicegroup::servicegroup() {}
  *
  *  @param[in] other  Object to copy.
  */
-servicegroup::servicegroup(servicegroup const& other) {}
+servicegroup::servicegroup(servicegroup const& other) {
+  _internal_copy(other);
+}
 
 /**
  *  Destructor.

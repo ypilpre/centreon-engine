@@ -47,18 +47,19 @@ downtime::downtime(
             bool fixed,
             unsigned long duration,
             unsigned long triggered_by)
-  : _id(id),
-    _parent(parent),
-    _entry_time(entry_time),
-    _author(author),
+  : _author(author),
     _comment_data(comment_data),
-    _start_time(start_time),
-    _end_time(end_time),
-    _fixed(fixed),
-    _triggered_by(triggered_by),
     _comment_id(comment_id),
     _duration(duration),
-    _in_effect(false) {}
+    _end_time(end_time),
+    _entry_time(entry_time),
+    _fixed(fixed),
+    _id(id),
+    _in_effect(false),
+    _incremented_pending_downtime(false),
+    _parent(parent),
+    _start_time(start_time),
+    _triggered_by(triggered_by) {}
 
 /**
  *  Copy constructor.
