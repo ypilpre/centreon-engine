@@ -100,6 +100,22 @@ void service::set_description(std::string const& description) {
 }
 
 /**
+ *  Get information about this object (for printing purposes).
+ *
+ *  @return The string "Service '<description>' of Host '<host>'" where
+ *          <description> is this service description and <host> its
+ *          host name.
+ */
+std::string service::get_info() const {
+  std::string retval("Service '");
+  retval.append(_description);
+  retval.append("' of Host '");
+  retval.append(get_host_name());
+  retval.append("'");
+  return (retval);
+}
+
+/**
  *  Check if this service should be stalked on critical state.
  *
  *  @return True if this service should be stalked on critical state.

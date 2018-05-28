@@ -56,6 +56,7 @@ if (WITH_TESTING)
     "${TESTS_DIR}/notifications/notifier/check_notification_management.cc"
     "${TESTS_DIR}/notifications/notifier/flapping_notification.cc"
     "${TESTS_DIR}/notifications/notifier/recovery_notification.cc"
+    "${TESTS_DIR}/notifications/notifier/recovery_notification_delay.cc"
     "${TESTS_DIR}/retention/contact.cc"
     "${TESTS_DIR}/timeperiod/get_next_valid_time/between_two_years.cc"
     "${TESTS_DIR}/timeperiod/get_next_valid_time/calendar_date.cc"

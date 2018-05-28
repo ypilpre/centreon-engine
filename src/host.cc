@@ -141,6 +141,18 @@ void host::set_circular_path_checked(int check_level) {
 }
 
 /**
+ *  Get information about this object (for printing purposes).
+ *
+ *  @return The string "Host '<name>'" where <name> is this host name.
+ */
+std::string host::get_info() const {
+  std::string retval("Host '");
+  retval.append(_name);
+  retval.append("'");
+  return (retval);
+}
+
+/**
  *  Get host name.
  *
  *  @return Host name.

@@ -1304,8 +1304,8 @@ int broker_notification_data(
       struct timeval start_time,
       struct timeval end_time,
       void* data,
-      char* ack_author,
-      char* ack_data,
+      char const* ack_author,
+      char const* ack_data,
       int escalated,
       int contacts_notified,
       struct timeval const* timestamp) {

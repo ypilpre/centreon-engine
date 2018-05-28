@@ -44,6 +44,7 @@ class RecoveryNotification : public ::testing::Test {
     if (config == NULL)
       config = new configuration::state;
     configuration::applier::state::load();
+    config->enable_notifications(true);
 
     configuration::applier::host hst_aply;
     configuration::applier::service svc_aply;
@@ -93,6 +94,7 @@ class RecoveryNotification : public ::testing::Test {
 // Then the filter method returns true and the notification is sent.
 TEST_F(RecoveryNotification, SimpleRecovery) {
   _service->set_notifications_enabled(true);
+  _service->set_current_state_type(HARD_STATE);
   _service->set_current_state(2);
   _service->set_last_hard_state(2);
   _service->add_notification_flag(notifier::PROBLEM);

@@ -51,6 +51,7 @@ class                        host : public monitorable {
   int                        get_circular_path_checked() const;
   void                       set_circular_path_checked(int check_level);
   virtual bool               is_host() const;
+  std::string                get_info() const;
   std::string const&         get_name() const;
   void                       set_name(std::string const& name);
   bool                       get_stalk_on_down() const;

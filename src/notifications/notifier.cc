@@ -19,15 +19,20 @@
 
 #include <memory>
 #include <sstream>
+#include "com/centreon/engine/broker.hh"
 #include "com/centreon/engine/configuration/applier/state.hh"
 #include "com/centreon/engine/contact.hh"
 #include "com/centreon/engine/contactgroup.hh"
 #include "com/centreon/engine/downtime_manager.hh"
 #include "com/centreon/engine/events/defines.hh"
 #include "com/centreon/engine/logging/logger.hh"
+#include "com/centreon/engine/macros.hh"
 #include "com/centreon/engine/macros/grab_host.hh"
 #include "com/centreon/engine/macros/grab_service.hh"
+#include "com/centreon/engine/neberrors.hh"
 #include "com/centreon/engine/notifications/notifier.hh"
+#include "com/centreon/engine/timeperiod.hh"
+#include "com/centreon/engine/timezone_locker.hh"
 
 using namespace com::centreon;
 using namespace com::centreon::engine;
@@ -45,11 +50,12 @@ using namespace com::centreon::engine::notifications;
  */
 notifier::notifier()
   : _acknowledgement_timeout(0),
-    _current_notifications(0),
     _current_acknowledgement(ACKNOWLEDGEMENT_NONE),
     _current_notification_id(0),
     _current_notification_number(0),
+    _current_notifications(0),
     _escalate_notification(false),
+    _first_notification(0),
     _first_notification_delay(0),
     _last_acknowledgement(0),
     _last_notification(0),
@@ -326,33 +332,65 @@ void notifier::notify(
                  std::string const& author,
                  std::string const& comment,
                  int options) {
-
-  // Create users list to notify.
-  umap<std::string, engine::contact*> users_to_notify(_contacts);
-  for (umap<std::string, engine::contactgroup*>::const_iterator
-         grp_it(_contact_groups.begin()),
-         grp_end(_contact_groups.end());
-       grp_it != grp_end;
-       ++grp_it) {
-    for (umap<std::string, engine::contact*>::const_iterator
-           cntct_it(grp_it->second->get_members().begin()),
-           cntct_end(grp_it->second->get_members().end());
-         cntct_it != cntct_end;
-         ++cntct_it)
-      users_to_notify[cntct_it->second->get_name()] = cntct_it->second;
+  // Debug.
+  time_t now(time(NULL));
+  {
+    time_t last_notification(get_last_notification());
+    logger(logging::dbg_notifications, logging::basic)
+      << "** Notification Attempt ** " << get_info()
+      << "', Type: " << type << ", Options: " << options
+      << ", Current State: " << get_current_state()
+      << ", Last Notification: " << my_ctime(&last_notification);
   }
-  if (users_to_notify.empty())
-    return ;
 
-  if (get_notifications_enabled()) {
-    notifier_filter should_notify = _get_filter(type);
-    if ((this->*should_notify)()) {
-      nagios_macros mac;
+  // Viability checks.
+  if (!_is_notification_viable(type, options)) {
+    logger(logging::dbg_notifications, logging::basic)
+      << "Notification viability test failed.  No notification will "
+         "be sent out.";
+  }
+  else {
+    logger(logging::dbg_notifications, logging::basic)
+      << "Notification viability test passed.";
+
+    // Should the notification number be increased ?
+    bool incremented_notification_number(false);
+    if ((type == PROBLEM)
+        || (type == RECOVERY)
+        || (options & NOTIFICATION_OPTION_INCREMENT)) {
+      ++_current_notification_number;
+      incremented_notification_number = true;
+    }
+    logger(logging::dbg_notifications, logging::more)
+      << "Current notification number: "
+      << get_current_notification_number()
+      << (incremented_notification_number ? " (incremented)" : " (unchanged)");
+
+    // Save and increase the current notification id.
+    _current_notification_id = next_notification_id++;
+
+    // Create users list to notify.
+    logger(logging::dbg_notifications, logging::most)
+      << "Creating list of contacts to be notified.";
+    umap<std::string, engine::contact*> users_to_notify(_contacts);
+    for (umap<std::string, engine::contactgroup*>::const_iterator
+           grp_it(_contact_groups.begin()),
+           grp_end(_contact_groups.end());
+         grp_it != grp_end;
+         ++grp_it) {
+      for (umap<std::string, engine::contact*>::const_iterator
+             cntct_it(grp_it->second->get_members().begin()),
+             cntct_end(grp_it->second->get_members().end());
+           cntct_it != cntct_end;
+           ++cntct_it)
+        users_to_notify[cntct_it->second->get_name()] = cntct_it->second;
+    }
+    // Debug.
+    std::string recipients;
+    {
       std::ostringstream oss;
-      bool first_time = true;
-
-      // Notify each contact
-      for (umap<std::string, engine::contact*>::iterator
+      bool first_time(true);
+      for (umap<std::string, engine::contact*>::const_iterator
              it(users_to_notify.begin()),
              end(users_to_notify.end());
            it != end;
@@ -366,10 +404,52 @@ void notifier::notify(
         else
           oss << ',' << it->second->get_name();
       }
+      recipients = oss.str();
+    }
 
+    // Send data to event broker.
+    int neb_result;
+    {
+      struct timeval start_time_tv;
+      memset(&start_time_tv, 0, sizeof(start_time_tv));
+      start_time_tv.tv_sec = now;
+      struct timeval end_time_tv;
+      memset(&end_time_tv, 0, sizeof(end_time_tv));
+      neb_result = broker_notification_data(
+        NEBTYPE_NOTIFICATION_START,
+        NEBFLAG_NONE,
+        NEBATTR_NONE,
+        SERVICE_NOTIFICATION,
+        type,
+        start_time_tv,
+        end_time_tv,
+        this,
+        author.c_str(),
+        comment.c_str(),
+        false, // XXX escalated,
+        0,
+        NULL);
+    }
+    if ((neb_result == NEBERROR_CALLBACKCANCEL)
+        || (neb_result == NEBERROR_CALLBACKOVERRIDE))
+      return ;
+
+  // if (get_notifications_enabled()) {
+  //   notifier_filter should_notify = _get_filter(type);
+  //   if ((this->*should_notify)()) {
+
+    // Set initial notification time if not already set.
+    if ((type == PROBLEM) && !_first_notification)
+      _first_notification = time(NULL);
+
+    // Cancel sending of recovery notification if recovery
+    // notification delay not elapsed. Keep other processing.
+    if ((type != RECOVERY)
+        || (_first_notification + _recovery_notification_delay <= time(NULL))) {
+      nagios_macros mac;
       memset(&mac, 0, sizeof(mac));
 
-      // grab the macro variables
+      // Host/service base macros.
       if (is_host()) {
         host* hst = static_cast<host*>(this);
         grab_host_macros_r(&mac, hst);
@@ -380,9 +460,12 @@ void notifier::notify(
         grab_service_macros_r(&mac, svc);
       }
 
-      /* The author is a string taken from an external command. It can be
-         the contact name or the contact alias. And if the external command
-         is badly configured, maybe no contact is associated to this author */
+      // Notification author macros.
+      //
+      // The author is a string taken from an external command. It can
+      // be the contact name or the contact alias. And if the external
+      // command is badly configured, maybe no contact is associated to
+      // this author.
       engine::contact* author_contact(NULL);
       if (!author.empty()) {
         contact_map::iterator it(
@@ -392,27 +475,32 @@ void notifier::notify(
         else
           author_contact = NULL;
       }
-
       string::setstr(mac.x[MACRO_NOTIFICATIONAUTHOR], author);
       string::setstr(mac.x[MACRO_NOTIFICATIONCOMMENT], comment);
       if (author_contact) {
-        string::setstr(mac.x[MACRO_NOTIFICATIONAUTHORNAME], author_contact->get_name());
-        string::setstr(mac.x[MACRO_NOTIFICATIONAUTHORALIAS], author_contact->get_alias());
+        string::setstr(
+                  mac.x[MACRO_NOTIFICATIONAUTHORNAME],
+                  author_contact->get_name());
+        string::setstr(
+                  mac.x[MACRO_NOTIFICATIONAUTHORALIAS],
+                  author_contact->get_alias());
       }
       else {
         string::setstr(mac.x[MACRO_NOTIFICATIONAUTHORNAME]);
         string::setstr(mac.x[MACRO_NOTIFICATIONAUTHORALIAS]);
       }
 
-      /* Old Nagios comment: these macros are deprecated and will likely
-         disappear in next major release. if this is an acknowledgement,
-         get author and comment macros: FIXME: Is it useful for us ??? */
-      if (_notification_is_active(ACKNOWLEDGEMENT)) {
+      // Acknowledgement macros.
+      if (type == ACKNOWLEDGEMENT) {
         string::setstr(mac.x[MACRO_SERVICEACKAUTHOR], author);
         string::setstr(mac.x[MACRO_SERVICEACKCOMMENT], comment);
         if (author_contact) {
-          string::setstr(mac.x[MACRO_SERVICEACKAUTHORNAME], author_contact->get_name());
-          string::setstr(mac.x[MACRO_SERVICEACKAUTHORALIAS], author_contact->get_alias());
+          string::setstr(
+                    mac.x[MACRO_SERVICEACKAUTHORNAME],
+                    author_contact->get_name());
+          string::setstr(
+                    mac.x[MACRO_SERVICEACKAUTHORALIAS],
+                    author_contact->get_alias());
         }
         else {
           string::setstr(mac.x[MACRO_SERVICEACKAUTHORNAME]);
@@ -420,49 +508,184 @@ void notifier::notify(
         }
       }
 
-      // Set the notification type macro
+      // Notification macros.
       string::setstr(
                 mac.x[MACRO_NOTIFICATIONTYPE],
-                _notification_string[type]);
-
-      // Set the notification number
+                  _notification_string[type]);
       string::setstr(
                 mac.x[MACRO_SERVICENOTIFICATIONNUMBER],
                 _current_notification_number);
-
-      /* set the notification id macro */
-      // FIXME DBR: _current_notification_id is not managed now, the only
-      // possible value is 0.
       string::setstr(
                 mac.x[MACRO_SERVICENOTIFICATIONID],
                 _current_notification_id);
-
       string::setstr(
                 mac.x[MACRO_NOTIFICATIONISESCALATED],
                 should_be_escalated());
       string::setstr(
                 mac.x[MACRO_NOTIFICATIONRECIPIENTS],
-                oss.str());
+                recipients);
 
-      // Post treatment
-      _current_notifications |= (1 << type);
-      switch (type) {
-        case PROBLEM:
-          _current_notifications &= ~(1 << RECOVERY);
-          break;
-        case RECOVERY:
-          _current_notifications &= ~(1 << PROBLEM);
-          break;
-        case FLAPPINGSTART:
-          _current_notifications &= ~((1 << FLAPPINGSTOP) | (1 << FLAPPINGDISABLED));
-          break;
-        case FLAPPINGSTOP:
-        case FLAPPINGDISABLED:
-          _current_notifications &= ~(1 << FLAPPINGSTART);
-          break;
+      // Notify contacts.
+      int contacts_notified(0);
+      for (umap<std::string, engine::contact*>::iterator
+             it_cntct(users_to_notify.begin()),
+             end_cntct(users_to_notify.end());
+           it_cntct != end_cntct;
+           ++it_cntct) {
+        // Grab the macro variables for this contact.
+        grab_contact_macros_r(&mac, it_cntct->second);
+
+        // Clear summary macros (they are customized for each contact).
+        clear_summary_macros_r(&mac);
+
+        // Notify this contact with all its commands.
+        std::list<std::pair<commands::command*, std::string> > const&
+          cmds(
+               is_host()
+               ? it_cntct->second->get_host_notification_commands()
+               : it_cntct->second->get_service_notification_commands());
+        for (std::list<std::pair<commands::command*, std::string> >::const_iterator
+               it_cmd(cmds.begin()),
+               end_cmd(cmds.end());
+             it_cmd != end_cmd;
+             ++it_cmd) {
+          commands::result res;
+          try {
+            std::string processed_cmd(it_cmd->first->process_cmd(&mac));
+            it_cmd->first->run(
+                             processed_cmd,
+                             mac,
+                             0,
+                             res);
+          }
+          catch (std::exception const& e) {
+            logger(logging::log_runtime_warning, logging::basic)
+              << "Error: notification failed: " << e.what();
+          }
+        }
       }
-      time(&_last_notification);
+      clear_summary_macros_r(&mac);
+
+      if ((type == PROBLEM) || (type == RECOVERY)) {
+        // Adjust last/next notification time and notification flags if
+        // we notified someone.
+        if (contacts_notified > 0) {
+          // Calculate the next acceptable re-notification time.
+          // XXX set_next_notification(get_next_notification(now));
+          {
+            time_t next_notification(get_next_notification());
+            logger(logging::dbg_notifications, logging::basic)
+              << contacts_notified << " contacts were notified.  "
+                 "Next possible notification time: "
+              << my_ctime(&next_notification);
+          }
+
+          // Update the last notification time for this notifier
+          // (this is needed for rescheduling later notifications).
+          set_last_notification(now);
+
+          // Update notifications flags.
+          if (is_host()) {
+            host* hst(static_cast<host*>(this));
+            switch (get_current_state()) {
+             case HOST_UNREACHABLE:
+              hst->set_notify_on(ON_UNREACHABLE, true);
+              break ;
+             case HOST_DOWN:
+               hst->set_notify_on(ON_DOWN, true);
+              break ;
+            }
+          }
+          else {
+            service* svc(static_cast<service*>(this));
+            switch (get_current_state()) {
+             case STATE_UNKNOWN:
+              svc->set_notify_on(ON_UNKNOWN, true);
+              break ;
+             case STATE_WARNING:
+              svc->set_notify_on(ON_WARNING, true);
+              break ;
+             case STATE_CRITICAL:
+              svc->set_notify_on(ON_CRITICAL, true);
+              break ;
+            }
+          }
+        }
+        // We didn't end up notifying anyone.
+        else if (incremented_notification_number) {
+          /* adjust current notification number */
+          --_current_notification_number;
+          {
+            time_t next_notification(get_next_notification());
+            logger(logging::dbg_notifications, logging::basic)
+              << "No contacts were notified.  Next possible "
+                 "notification time: " << my_ctime(&next_notification);
+          }
+        }
+        logger(logging::dbg_notifications, logging::basic)
+          << contacts_notified << " contacts were notified.";
+      }
+      // There were no contacts, so no notification really occurred...
+      else {
+        // Readjust current notification number, since one didn't go out.
+        if (incremented_notification_number)
+          --_current_notification_number;
+        logger(logging::dbg_notifications, logging::basic)
+          << "No contacts were found for notification purposes.  "
+             "No notification was sent out.";
+      }
+
+      // Send data to event broker.
+      {
+        struct timeval start_time_tv;
+        memset(&start_time_tv, 0, sizeof(start_time_tv));
+        start_time_tv.tv_sec = now;
+        struct timeval end_time_tv;
+        gettimeofday(&end_time_tv, NULL);
+        broker_notification_data(
+          NEBTYPE_NOTIFICATION_END,
+          NEBFLAG_NONE,
+          NEBATTR_NONE,
+          SERVICE_NOTIFICATION,
+          type,
+          start_time_tv,
+          end_time_tv,
+          this,
+          author.c_str(),
+          comment.c_str(),
+          false, // XXX escalated,
+          contacts_notified,
+          NULL);
+      }
+
+      // Update the status log with the service information.
+      // XXX update_service_status(svc, false);
+
+      // Clear volatile macros.
+      clear_volatile_macros_r(&mac);
     }
+
+    // Post treatment
+    _current_notifications |= (1 << type);
+    switch (type) {
+     case PROBLEM:
+      _current_notifications &= ~(1 << RECOVERY);
+      break;
+     case RECOVERY:
+      _current_notifications &= ~(1 << PROBLEM);
+      _first_notification = 0;
+      break;
+     case FLAPPINGSTART:
+      _current_notifications &= ~((1 << FLAPPINGSTOP) | (1 << FLAPPINGDISABLED));
+      break;
+     case FLAPPINGSTOP:
+     case FLAPPINGDISABLED:
+      _current_notifications &= ~(1 << FLAPPINGSTART);
+      break;
+     default:
+      break ;
+    }
+    time(&_last_notification);
   }
 }
 
@@ -762,9 +985,6 @@ void notifier::delete_all_comments() {
  *  notifier
  */
 void notifier::delete_acknowledgement_comments() {
-  comment* temp_comment = NULL;
-  comment* next_comment = NULL;
-
   /* delete comments from memory */
   for (std::map<unsigned long, comment*>::iterator
          it(comment_list.begin()),
@@ -794,8 +1014,6 @@ void notifier::delete_acknowledgement_comments() {
 notifier::notifier_filter notifier::_get_filter(notification_type type) const {
   return _filter[type];
 }
-
-
 
 /**************************************
 *                                     *
@@ -970,13 +1188,13 @@ bool notifier::_custom_filter() {
 
 
 
-time_t notifier::get_initial_notif_time() const {
-  // FIXME DBR: to implement...
-  return 0;
+time_t notifier::get_first_notification() const {
+  return (_first_notification);
 }
 
-void notifier::set_initial_notif_time(time_t initial) {
-  // FIXME DBR: to implement...
+void notifier::set_first_notification(time_t first_notification) {
+  _first_notification = first_notification;
+  return ;
 }
 
 void notifier::set_recovery_been_sent(bool sent) {
@@ -1079,19 +1297,6 @@ bool notifier::get_no_more_notifications() const {
   return true;
 }
 
-std::string notifier::get_info() {
-  std::ostringstream oss;
-  service* svc = dynamic_cast<service*>(this);
-
-  if (svc)
-    oss << "Notifier: service '" << svc->get_description() << "' ; host '"
-        << svc->get_host_name() << "'";
-  else
-    oss << "Notifier: host '"
-        << svc->get_host_name() << "'";
-  return oss.str();
-}
-
 /**
  *  Copy internal data members.
  *
@@ -1106,6 +1311,7 @@ void notifier::_internal_copy(notifier const& other) {
   _current_notification_number = other._current_notification_number;
   _current_notifications = other._current_notifications;
   _escalate_notification = other._escalate_notification;
+  _first_notification = other._first_notification;
   _first_notification_delay = other._first_notification_delay;
   _last_acknowledgement = other._last_acknowledgement;
   _last_notification = other._last_notification;
@@ -1118,6 +1324,352 @@ void notifier::_internal_copy(notifier const& other) {
   _recovery_notification_delay = other._recovery_notification_delay;
   _scheduled_downtime_depth = other._scheduled_downtime_depth;
   return ;
+}
+
+/**
+ *  Check if notification is viable.
+ *
+ *  @param[in] type     Notification type.
+ *  @param[in] options  Notification options.
+ *
+ *  @return True if notification is viable.
+ */
+bool notifier::_is_notification_viable(int type, int options) {
+  // Forced notification.
+  if (options & NOTIFICATION_OPTION_FORCED) {
+    logger(logging::dbg_notifications, logging::more)
+      << "This is a forced service notification, so we'll send it out.";
+    return (true);
+  }
+
+  // Are notifications enabled?
+  if (!config->enable_notifications()) {
+    logger(logging::dbg_notifications, logging::more)
+      << "Notifications are disabled, so service notifications will "
+         "not be sent out.";
+    return (false);
+  }
+
+  // See if the service can have notifications sent out at this time.
+  time_t now(time(NULL));
+  {
+    timezone_locker lock(get_timezone().c_str());
+    if (check_time_against_period(now, get_notification_period()) == ERROR) {
+      logger(logging::dbg_notifications, logging::more)
+        << "This service shouldn't have notifications sent out "
+        "at this time.";
+
+      // Calculate the next acceptable notification time,
+      // once the next valid time range arrives...
+      if ((type == PROBLEM) || (type == RECOVERY)) {
+        time_t next_valid_time(now);
+        get_next_valid_time(
+          now,
+          &next_valid_time,
+          get_notification_period());
+
+        // Looks like there are no valid notification times defined, so
+        // schedule the next one far into the future (one year)...
+        if ((next_valid_time == (time_t)0) || (next_valid_time == (time_t)-1))
+          set_next_notification(now + 60 * 60 * 24 * 365);
+        // Else use the next valid notification time.
+        else
+          set_next_notification(next_valid_time);
+        {
+          time_t next_notification(get_next_notification());
+          logger(logging::dbg_notifications, logging::more)
+            << "Next possible notification time: "
+            << my_ctime(&next_notification);
+        }
+      }
+
+      return (false);
+    }
+  }
+
+  // Are notifications temporarily disabled for this object?
+  if (!get_notifications_enabled()) {
+    logger(logging::dbg_notifications, logging::more)
+      << "Notifications are temporarily disabled for "
+         "this service, so we won't send one out.";
+    return (false);
+  }
+
+  //
+  // SPECIAL CASE FOR CUSTOM NOTIFICATIONS
+  //
+
+  // Custom notifications are good to go at this point...
+  if (type == CUSTOM) {
+    if (get_scheduled_downtime_depth() > 0) {
+      logger(logging::dbg_notifications, logging::more)
+        << "We shouldn't send custom notification during "
+           "scheduled downtime.";
+      return (false);
+    }
+    return (true);
+  }
+
+  //
+  // SPECIAL CASE FOR ACKNOWLEGEMENTS
+  //
+
+  // Acknowledgements only have to pass three general filters,
+  // although they have another test of their own...
+  if (type == ACKNOWLEDGEMENT) {
+    // Don't send an acknowledgement if there isn't a problem...
+    if (get_current_state() == STATE_OK) {
+      logger(logging::dbg_notifications, logging::more)
+        << "The service is currently OK, so we won't send an "
+           "acknowledgement.";
+      return (false);
+    }
+    // Acknowledgement viability test passed,
+    // so the notification can be sent out.
+    return (true);
+  }
+
+  //
+  // SPECIAL CASE FOR FLAPPING ALERTS
+  //
+
+  // Flapping notifications only have to pass three general filters.
+  if (type == FLAPPINGSTART
+      || type == FLAPPINGSTOP
+      || type == FLAPPINGDISABLED) {
+    // Don't send a notification if we're not supposed to...
+    if (!get_notify_on(ON_FLAPPING)) {
+      logger(logging::dbg_notifications, logging::more)
+        << "We shouldn't notify about FLAPPING events for this "
+           "service.";
+      return (false);
+    }
+    // Don't send notifications during scheduled downtime.
+    if (get_scheduled_downtime_depth() > 0) {
+      logger(logging::dbg_notifications, logging::more)
+        << "We shouldn't notify about FLAPPING events during "
+           "scheduled downtime.";
+      return (false);
+    }
+    // Flapping viability test passed,
+    // so the notification can be sent out.
+    return (true);
+  }
+
+  //
+  // SPECIAL CASE FOR DOWNTIME ALERTS
+  //
+
+  // Downtime notifications only have to pass three general filters.
+  if (type == DOWNTIMESTART
+      || type == DOWNTIMESTOP
+      || type == DOWNTIMECANCELLED) {
+    // Don't send a notification if we're not supposed to....
+    if (!get_notify_on(ON_DOWNTIME)) {
+      logger(logging::dbg_notifications, logging::more)
+        << "We shouldn't notify about DOWNTIME events for "
+           "this service.";
+      return (false);
+    }
+    // Don't send notifications during scheduled downtime.
+    if (get_scheduled_downtime_depth() > 0) {
+      logger(logging::dbg_notifications, logging::more)
+        << "We shouldn't notify about DOWNTIME events during "
+           "scheduled downtime.";
+      return (false);
+    }
+    // Downtime viability test passed,
+    // so the notification can be sent out.
+    return (true);
+  }
+
+  //
+  // NORMAL NOTIFICATIONS
+  //
+
+  // Is this a hard problem/recovery?
+  if (get_current_state_type() == SOFT_STATE) {
+    logger(logging::dbg_notifications, logging::more)
+      << "This service is in a soft state, so we won't send a "
+         "notification out.";
+    return (false);
+  }
+  // Has this problem already been acknowledged?
+  if (is_acknowledged()) {
+    logger(logging::dbg_notifications, logging::more)
+      << "This service problem has already been acknowledged, "
+         "so we won't send a notification out.";
+    return (false);
+  }
+  /* XXX check service notification dependencies */
+  // if (check_service_dependencies(
+  //       svc,
+  //       NOTIFICATION_DEPENDENCY) == DEPENDENCIES_FAILED) {
+  //   logger(dbg_notifications, more)
+  //     << "Service notification dependencies for this service "
+  //     "have failed, so we won't sent a notification out.";
+  //   return (ERROR);
+  // }
+  // /* check host notification dependencies */
+  // if (check_host_dependencies(
+  //       temp_host,
+  //       NOTIFICATION_DEPENDENCY) == DEPENDENCIES_FAILED) {
+  //   logger(dbg_notifications, more)
+  //     << "Host notification dependencies for this service have failed, "
+  //     "so we won't sent a notification out.";
+  //   return (ERROR);
+  // }
+
+  // See if we should notify about problems with this host.
+  if (is_host()) {
+    host* hst(static_cast<host*>(this));
+  }
+  else {
+    service* svc(static_cast<service*>(this));
+    switch (get_current_state()) {
+     case STATE_UNKNOWN:
+      if (!svc->get_notify_on(ON_UNKNOWN)) {
+        logger(logging::dbg_notifications, logging::more)
+          << "We shouldn't notify about UNKNOWN states for this service.";
+        return (false);
+      }
+      break ;
+     case STATE_WARNING:
+      if (!svc->get_notify_on(ON_WARNING)) {
+        logger(logging::dbg_notifications, logging::more)
+          << "We shouldn't notify about WARNING states for this service.";
+        return (false);
+      }
+      break ;
+     case STATE_CRITICAL:
+      if (!svc->get_notify_on(ON_CRITICAL)) {
+        logger(logging::dbg_notifications, logging::more)
+          << "We shouldn't notify about CRITICAL states for this service.";
+        return (false);
+      }
+      break ;
+     case STATE_OK:
+      if (!svc->get_notify_on(ON_RECOVERY)) {
+        logger(logging::dbg_notifications, logging::more)
+          << "We shouldn't notify about RECOVERY states for this service.";
+        return (false);
+      }
+      // XXX
+      // if (!(_notification_is_activec->get_notified_on(ON_UNKNOWN)
+      //       || svc->get_notified_on(ON_WARNING)
+      //       || svc->get_notified_on(ON_CRITICAL))) {
+      //   logger(logging::dbg_notifications, logging::more)
+      //     << "We shouldn't notify about this recovery.";
+      //   return (false);
+      // }
+    }
+  }
+
+  // // See if enough time has elapsed for first notification.
+  // if (((type == PROBLEM) || (type == RECOVERY))
+  //     && (get_current_notification_number() == 0
+  //         || (get_current_state == STATE_OK
+  //               && !service_other_props[std::make_pair(
+  //                   svc->host_ptr->name,
+  //                   svc->description)].recovery_been_sent))) {
+
+  //   /* get the time at which a notification should have been sent */
+  //   time_t& initial_notif_time(
+  //             service_other_props[std::make_pair(
+  //                                        svc->host_ptr->name,
+  //                                        svc->description)].initial_notif_time);
+
+  //   /* if not set, set it to now */
+  //   if (!initial_notif_time)
+  //     initial_notif_time = time(NULL);
+
+  //   double notification_delay = (svc->current_state != STATE_OK ?
+  //            svc->first_notification_delay
+  //            : service_other_props[std::make_pair(
+  //                svc->host_ptr->name,
+  //                svc->description)].recovery_notification_delay)
+  //       * config->interval_length();
+
+  //   if (current_time
+  //       < (time_t)(initial_notif_time
+  //                  + (time_t)(notification_delay))) {
+  //     if (svc->current_state == STATE_OK)
+  //       logger(dbg_notifications, more)
+  //         << "Not enough time has elapsed since the service changed to a "
+  //         "OK state, so we should not notify about this problem yet";
+  //     else
+  //       logger(dbg_notifications, more)
+  //         << "Not enough time has elapsed since the service changed to a "
+  //         "non-OK state, so we should not notify about this problem yet";
+  //     return (ERROR);
+  //   }
+  // }
+
+  // If this service is currently flapping, don't send the notification.
+  if (get_flapping()) {
+    logger(logging::dbg_notifications, logging::more)
+      << "This node is currently flapping, so we won't send "
+         "notifications.";
+    return (false);
+  }
+
+  // If this service is currently in a scheduled downtime period,
+  // don't send the notification.
+  if (get_scheduled_downtime_depth() > 0) {
+    logger(logging::dbg_notifications, logging::more)
+      << "This node is currently in a scheduled downtime, so "
+         "we won't send notifications.";
+    return (false);
+  }
+
+  // // If this host is currently in a scheduled downtime period, don't send the notification
+  // if (temp_host->scheduled_downtime_depth > 0) {
+  //   logger(dbg_notifications, more)
+  //     << "The host this service is associated with is currently in "
+  //     "a scheduled downtime, so we won't send notifications.";
+  //   return (ERROR);
+  // }
+
+  // RECOVERY NOTIFICATIONS ARE GOOD TO GO AT THIS POINT IF
+  // ANY OTHER NOTIFICATION WAS SENT.
+  if (get_current_state() == STATE_OK)
+    return ((get_current_notification_number() > 0)
+            ? true
+            : false);
+
+  // Don't notify contacts about this service problem again if the
+  // notification interval is set to 0.
+  if (get_no_more_notifications()) {
+    logger(logging::dbg_notifications, logging::more)
+      << "We shouldn't re-notify contacts about this service problem.";
+    return (false);
+  }
+
+  /* if the host is down or unreachable, don't notify contacts about service failures */
+  // XXX
+  // if (temp_host->current_state != HOST_UP) {
+  //   logger(dbg_notifications, more)
+  //     << "The host is either down or unreachable, so we won't "
+  //     "notify contacts about this service.";
+  //   return (ERROR);
+  // }
+
+  // Don't notify if we haven't waited long enough since the last time
+  // (and the service is not marked as being volatile).
+  // if ((now < get_next_notification()) && !is_volatile()) {
+  //   logger(logging::dbg_notifications, logging::more)
+  //     << "We haven't waited long enough to re-notify contacts "
+  //        "about this service.";
+  //   {
+  //     time_t next_notification(get_next_notification());
+  //     logger(logging::dbg_notifications, logging::more)
+  //       << "Next valid notification time: "
+  //       << my_ctime(&next_notification);
+  //   }
+  //   return (false);
+  // }
+
+  return (true);
 }
 
 /**

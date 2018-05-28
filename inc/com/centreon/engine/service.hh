@@ -49,6 +49,7 @@ class                service : public monitorable {
   // Configuration.
   std::string const& get_description() const;
   void               set_description(std::string const& description);
+  std::string        get_info() const;
   bool               get_stalk_on_critical() const;
   void               set_stalk_on_critical(bool stalk);
   bool               get_stalk_on_ok() const;

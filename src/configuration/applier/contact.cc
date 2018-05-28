@@ -447,118 +447,122 @@ void applier::contact::resolve_object(
     cntct.set_host_notification_period(NULL);
     cntct.clear_contactgroups();
 
-    // Resolve service notification commands.
-    if (obj.service_notification_commands().empty()) {
-      logger(logging::log_verification_error, logging::basic)
-        << "Error: Contact '" << cntct.get_name()
-        << "' has no service notification commands defined!";
-      ++config_errors;
-      failure = true;
-    }
-    else
-      for (list_string::const_iterator
-             it(obj.service_notification_commands().begin()),
-             end(obj.service_notification_commands().end());
-           it != end;
-           ++it) {
-        std::string buf(*it);
-        size_t index(buf.find(buf, '!'));
-        std::string command_name(buf.substr(0, index));
-        shared_ptr<commands::command> cmd;
-        try {
-          cmd = find_command(command_name);
-        }
-        catch (not_found const& e) {
-          (void)e;
-          logger(logging::log_verification_error, logging::basic)
-            << "Error: Service notification command '"
-            << command_name << "' specified for contact '"
-            << cntct.get_name() << "' is not defined anywhere!";
-          ++config_errors;
-          failure = true;
-        }
-        cntct.add_service_notification_command(cmd.get(), *it);
+    if (obj.service_notifications_enabled()) {
+      // Resolve service notification commands.
+      if (obj.service_notification_commands().empty()) {
+        logger(logging::log_verification_error, logging::basic)
+          << "Error: Contact '" << cntct.get_name()
+          << "' has no service notification commands defined!";
+        ++config_errors;
+        failure = true;
       }
+      else
+        for (list_string::const_iterator
+               it(obj.service_notification_commands().begin()),
+               end(obj.service_notification_commands().end());
+             it != end;
+             ++it) {
+          std::string buf(*it);
+          size_t index(buf.find(buf, '!'));
+          std::string command_name(buf.substr(0, index));
+          shared_ptr<commands::command> cmd;
+          try {
+            cmd = find_command(command_name);
+          }
+          catch (not_found const& e) {
+            (void)e;
+            logger(logging::log_verification_error, logging::basic)
+              << "Error: Service notification command '"
+              << command_name << "' specified for contact '"
+              << cntct.get_name() << "' is not defined anywhere!";
+            ++config_errors;
+            failure = true;
+          }
+          cntct.add_service_notification_command(cmd.get(), *it);
+        }
 
-    // Resolve host notification commands.
-    if (obj.host_notification_commands().empty()) {
-      logger(logging::log_verification_error, logging::basic)
-        << "Error: Contact '" << cntct.get_name() << "' has no host "
-           "notification commands defined!";
-      ++config_errors;
-      failure = true;
-    }
-    else
-      for (list_string::const_iterator
-             it(obj.host_notification_commands().begin()),
-             end(obj.host_notification_commands().end());
-           it != end;
-           ++it) {
-        std::string buf(*it);
-        size_t index(buf.find('!'));
-        std::string command_name(buf.substr(0, index));
-        shared_ptr<commands::command> cmd;
+      // Resolve service notification timeperiod.
+      cntct.set_service_notification_period(NULL);
+      if (obj.service_notification_period().empty()) {
+        logger(logging::log_verification_error, logging::basic)
+          << "Warning: Contact '" << cntct.get_name()
+          << "' has no service notification time period defined!";
+        ++config_warnings;
+      }
+      else {
         try {
-          cmd = find_command(command_name);
+          cntct.set_service_notification_period(
+                  &find_timeperiod(obj.service_notification_period()));
         }
         catch (not_found const& e) {
           (void)e;
           logger(logging::log_verification_error, logging::basic)
-            << "Error: Host notification command '" << command_name
+            << "Error: Service notification period '"
+            << obj.service_notification_period()
             << "' specified for contact '" << cntct.get_name()
             << "' is not defined anywhere!";
           ++config_errors;
           failure = true;
         }
-        cntct.add_host_notification_command(cmd.get(), *it);
-      }
-
-    // Resolve service notification timeperiod.
-    cntct.set_service_notification_period(NULL);
-    if (obj.service_notification_period().empty()) {
-      logger(logging::log_verification_error, logging::basic)
-        << "Warning: Contact '" << cntct.get_name()
-        << "' has no service notification time period defined!";
-      ++config_warnings;
-    }
-    else {
-      try {
-        cntct.set_service_notification_period(
-          &find_timeperiod(obj.service_notification_period()));
-      }
-      catch (not_found const& e) {
-        (void)e;
-        logger(logging::log_verification_error, logging::basic)
-          << "Error: Service notification period '"
-          << obj.service_notification_period()
-          << "' specified for contact '" << cntct.get_name()
-          << "' is not defined anywhere!";
-        ++config_errors;
-        failure = true;
       }
     }
 
-    // Resolve host notification timeperiod.
-    if (obj.host_notification_period().empty()) {
-      logger(logging::log_verification_error, logging::basic)
-        << "Warning: Contact '" << cntct.get_name()
-        << "' has no host notification time period defined!";
-      ++config_warnings;
-    }
-    else {
-      try {
-        cntct.set_host_notification_period(
-                &find_timeperiod(obj.host_notification_period()));
-      }
-      catch (not_found const& e) {
-        (void)e;
+    if (obj.host_notifications_enabled()) {
+      // Resolve host notification commands.
+      if (obj.host_notification_commands().empty()) {
         logger(logging::log_verification_error, logging::basic)
-          << "Error: Host notification period '"
-          << obj.host_notification_period()
-          << "' specified for contact '" << cntct.get_name()
-          << "' is not defined anywhere!";
+          << "Error: Contact '" << cntct.get_name() << "' has no host "
+          "notification commands defined!";
         ++config_errors;
         failure = true;
+      }
+      else
+        for (list_string::const_iterator
+               it(obj.host_notification_commands().begin()),
+               end(obj.host_notification_commands().end());
+             it != end;
+             ++it) {
+          std::string buf(*it);
+          size_t index(buf.find('!'));
+          std::string command_name(buf.substr(0, index));
+          shared_ptr<commands::command> cmd;
+          try {
+            cmd = find_command(command_name);
+          }
+          catch (not_found const& e) {
+            (void)e;
+            logger(logging::log_verification_error, logging::basic)
+              << "Error: Host notification command '" << command_name
+              << "' specified for contact '" << cntct.get_name()
+              << "' is not defined anywhere!";
+            ++config_errors;
+            failure = true;
+          }
+          cntct.add_host_notification_command(cmd.get(), *it);
+        }
+
+      // Resolve host notification timeperiod.
+      if (obj.host_notification_period().empty()) {
+        logger(logging::log_verification_error, logging::basic)
+          << "Warning: Contact '" << cntct.get_name()
+          << "' has no host notification time period defined!";
+        ++config_warnings;
+      }
+      else {
+        try {
+          cntct.set_host_notification_period(
+                  &find_timeperiod(obj.host_notification_period()));
+        }
+        catch (not_found const& e) {
+          (void)e;
+          logger(logging::log_verification_error, logging::basic)
+            << "Error: Host notification period '"
+            << obj.host_notification_period()
+            << "' specified for contact '" << cntct.get_name()
+            << "' is not defined anywhere!";
+          ++config_errors;
+          failure = true;
+        }
       }
     }
 

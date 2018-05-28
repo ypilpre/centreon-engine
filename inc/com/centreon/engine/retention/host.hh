@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2013,2015-2016 Centreon
+** Copyright 2011-2013,2015-2016,2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -60,6 +60,7 @@ namespace                         retention {
     map_customvar const&          customvariables() const throw ();
     opt<std::string> const&       event_handler() const throw ();
     opt<bool> const&              event_handler_enabled() const throw ();
+    opt<time_t> const&            first_notification() const throw ();
     opt<bool> const&              flap_detection_enabled() const throw ();
     opt<bool> const&              has_been_checked() const throw ();
     std::string const&            host_name() const throw ();
@@ -121,6 +122,7 @@ namespace                         retention {
     bool                          _set_event_handler(std::string const& value);
     bool                          _set_event_handler_enabled(bool value);
     bool                          _set_failure_prediction_enabled(bool value);
+    bool                          _set_first_notification(time_t value);
     bool                          _set_flap_detection_enabled(bool value);
     bool                          _set_has_been_checked(bool value);
     bool                          _set_host_name(std::string const& value);
@@ -176,6 +178,7 @@ namespace                         retention {
     map_customvar                 _customvariables;
     opt<std::string>              _event_handler;
     opt<bool>                     _event_handler_enabled;
+    opt<time_t>                   _first_notification;
     opt<bool>                     _flap_detection_enabled;
     opt<bool>                     _has_been_checked;
     std::string                   _host_name;

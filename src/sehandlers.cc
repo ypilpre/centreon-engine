@@ -1100,7 +1100,7 @@ int handle_host_state(host* hst) {
 
     if (hst->get_current_state() == HOST_UP) {
       hst->set_recovery_been_sent(false);
-      hst->set_initial_notif_time(0);
+      hst->set_first_notification(0);
     }
 
     /* notify contacts about the recovery or problem if its a "hard" state */

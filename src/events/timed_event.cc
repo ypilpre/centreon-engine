@@ -613,12 +613,12 @@ void compensate_for_system_time_change(
         current_time,
         time_difference,
         svc->get_last_hard_state_change()));
-    svc->set_initial_notif_time(
+    svc->set_first_notification(
       adjusted_timestamp_for_time_change(
         last_time,
         current_time,
         time_difference,
-        svc->get_initial_notif_time()));
+        svc->get_first_notification()));
     svc->set_last_acknowledgement(
       adjusted_timestamp_for_time_change(
         last_time,
@@ -680,12 +680,12 @@ void compensate_for_system_time_change(
         current_time,
         time_difference,
         hst->get_last_historical_state_update()));
-    hst->set_initial_notif_time(
+    hst->set_first_notification(
       adjusted_timestamp_for_time_change(
         last_time,
         current_time,
         time_difference,
-        hst->get_initial_notif_time()));
+        hst->get_first_notification()));
     hst->set_last_acknowledgement(
       adjusted_timestamp_for_time_change(
         last_time,

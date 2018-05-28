@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2013,2016-2017 Centreon
+** Copyright 2011-2013,2016-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -47,6 +47,7 @@ host::setters const host::_setters[] = {
   { "event_handler",                        SETTER(std::string const&, _set_event_handler) },
   { "event_handler_enabled",                SETTER(bool, _set_event_handler_enabled) },
   { "failure_prediction_enabled",           SETTER(bool, _set_failure_prediction_enabled) },
+  { "first_notification",                   SETTER(time_t, _set_first_notification) },
   { "flap_detection_enabled",               SETTER(bool, _set_flap_detection_enabled) },
   { "has_been_checked",                     SETTER(bool, _set_has_been_checked) },
   { "host_name",                            SETTER(std::string const&, _set_host_name) },
@@ -133,6 +134,7 @@ host& host::operator=(host const& right) {
     _customvariables = right._customvariables;
     _event_handler = right._event_handler;
     _event_handler_enabled = right._event_handler_enabled;
+    _first_notification = right._first_notification;
     _flap_detection_enabled = right._flap_detection_enabled;
     _has_been_checked = right._has_been_checked;
     _host_name = right._host_name;
@@ -200,6 +202,7 @@ bool host::operator==(host const& right) const throw () {
           && std::operator==(_customvariables, right._customvariables)
           && _event_handler == right._event_handler
           && _event_handler_enabled == right._event_handler_enabled
+          && _first_notification == right._first_notification
           && _flap_detection_enabled == right._flap_detection_enabled
           && _has_been_checked == right._has_been_checked
           && _host_name == right._host_name
@@ -430,6 +433,15 @@ opt<std::string> const& host::event_handler() const throw () {
  */
 opt<bool> const& host::event_handler_enabled() const throw () {
   return (_event_handler_enabled);
+}
+
+/**
+ *  Get first notification.
+ *
+ *  @return First time a notification was sent since last OK.
+ */
+opt<time_t> const& host::first_notification() const throw () {
+  return (_first_notification);
 }
 
 /**
@@ -933,6 +945,16 @@ bool host::_set_event_handler_enabled(bool value) {
  */
 bool host::_set_failure_prediction_enabled(bool value) {
   (void)value;
+  return (true);
+}
+
+/**
+ *  Set first notification.
+ *
+ *  @param[in] value  First notification.
+ */
+bool host::_set_first_notification(time_t value) {
+  _first_notification = value;
   return (true);
 }
 

@@ -651,7 +651,7 @@ int handle_async_service_check_result(
       state_was_logged = true;
 
       /* Set the recovery been sent parameter. */
-      temp_service->set_initial_notif_time(0);
+      temp_service->set_first_notification(0);
       temp_service->set_recovery_been_sent(false);
 
       /* 10/04/07 check to see if the service and/or associate host is flapping */
@@ -712,7 +712,7 @@ int handle_async_service_check_result(
       temp_service->set_notify_on(service::ON_UNKNOWN, false);
       temp_service->set_notify_on(service::ON_WARNING, false);
       temp_service->set_notify_on(service::ON_CRITICAL, false);
-      temp_service->set_initial_notif_time(0);
+      temp_service->set_first_notification(0);
     }
     temp_service->set_acknowledged(notifier::ACKNOWLEDGEMENT_NONE);
 

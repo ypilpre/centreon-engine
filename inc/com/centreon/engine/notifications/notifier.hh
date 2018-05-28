@@ -60,16 +60,16 @@ namespace                  notifications {
       ON_DOWNTIME = (1 << 5)
     };
     enum                   notification_type {
-      PROBLEM              = 0,
-      RECOVERY             = 1,
-      ACKNOWLEDGEMENT      = 2,
-      FLAPPINGSTART        = 3,
-      FLAPPINGSTOP         = 4,
-      FLAPPINGDISABLED     = 5,
-      DOWNTIMESTART        = 6,
-      DOWNTIMESTOP         = 7,
-      DOWNTIMECANCELLED    = 8,
-      CUSTOM               = 9
+      PROBLEM = 0,
+      RECOVERY = 1,
+      ACKNOWLEDGEMENT = 2,
+      FLAPPINGSTART = 3,
+      FLAPPINGSTOP = 4,
+      FLAPPINGDISABLED = 5,
+      DOWNTIMESTART = 6,
+      DOWNTIMESTOP = 7,
+      DOWNTIMECANCELLED = 8,
+      CUSTOM = 9
     };
     enum                   notifier_type {
       HOST_NOTIFICATION,
@@ -156,11 +156,11 @@ namespace                  notifications {
     void                   check_pending_flex_downtime();
     bool                   should_be_escalated() const;
     bool                   get_recovery_been_sent() const;
-    time_t                 get_initial_notif_time() const;
-    void                   set_initial_notif_time(time_t initial);
+    time_t                 get_first_notification() const;
+    void                   set_first_notification(time_t first_notification);
 //    void                   set_no_more_notifications(bool no_more);
     void                   set_recovery_been_sent(bool sent);
-    std::string            get_info();
+    virtual std::string    get_info() const = 0;
     void                   set_flapping_comment_id(unsigned int id);
     unsigned int           get_flapping_comment_id() const;
 
@@ -169,7 +169,9 @@ namespace                  notifications {
                              nagios_macros& mac) = 0;
 
    private:
-    unsigned int           _current_notifications;
+    void                   _internal_copy(notifier const& other);
+    bool                   _is_notification_viable(int type, int options);
+
     notifier_filter        _get_filter(notification_type type) const;
     macro_builder          _get_macro_builder(
                              notification_type type) const;
@@ -181,7 +183,6 @@ namespace                  notifications {
     bool                   _downtimestart_filter();
     bool                   _downtimestopcancelled_filter();
     bool                   _custom_filter();
-    void                   _internal_copy(notifier const& other);
 
     void                   _problem_macro_builder(nagios_macros& mac);
     void                   _recovery_macro_builder(nagios_macros& mac);
@@ -202,7 +203,9 @@ namespace                  notifications {
     acknowledgement_type   _current_acknowledgement;
     int                    _current_notification_id;
     int                    _current_notification_number;
+    unsigned int           _current_notifications;
     bool                   _escalate_notification;
+    time_t                 _first_notification;
     int                    _first_notification_delay;
     time_t                 _last_acknowledgement;
     time_t                 _last_notification;
