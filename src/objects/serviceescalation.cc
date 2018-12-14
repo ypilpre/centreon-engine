@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2014 Merethis
+** Copyright 2011-2014,2017 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -22,8 +22,6 @@
 #include "com/centreon/engine/deleter/serviceescalation.hh"
 #include "com/centreon/engine/globals.hh"
 #include "com/centreon/engine/logging/logger.hh"
-#include "com/centreon/engine/objects/contactgroupsmember.hh"
-#include "com/centreon/engine/objects/contactsmember.hh"
 #include "com/centreon/engine/objects/serviceescalation.hh"
 #include "com/centreon/engine/objects/tool.hh"
 #include "com/centreon/engine/shared.hh"
@@ -62,8 +60,8 @@ bool operator==(
           && obj1.escalate_on_warning == obj2.escalate_on_warning
           && obj1.escalate_on_unknown == obj2.escalate_on_unknown
           && obj1.escalate_on_critical == obj2.escalate_on_critical
-          && is_equal(obj1.contact_groups, obj2.contact_groups)
-          && is_equal(obj1.contacts, obj2.contacts));
+          && obj1.contact_groups == obj2.contact_groups
+          && obj1.contacts == obj2.contacts);
 }
 
 /**
@@ -110,23 +108,27 @@ bool operator<(
     return (obj1.escalate_on_critical < obj2.escalate_on_critical);
   else if (obj1.escalate_on_unknown != obj2.escalate_on_unknown)
     return (obj1.escalate_on_unknown < obj2.escalate_on_unknown);
-  for (contactgroupsmember
-         * m1(obj1.contact_groups),
-         * m2(obj2.contact_groups);
-       m1 || m2;
-       m1 = m1->next, m2 = m2->next) {
-    if (!m1 || !m2)
-      return (!!m1 < !!m2);
-    else if (*m1 != *m2)
-      return (*m1 < *m2);
+  for (umap<std::string, shared_ptr<engine::contactgroup> >::const_iterator
+         it1(obj1.contact_groups.begin()),
+         it2(obj2.contact_groups.begin()),
+         end1(obj1.contact_groups.end()),
+         end2(obj2.contact_groups.end());
+       it1 != end1 || it2 != end2;
+       ++it1, ++it2) {
+    int cmp(it1->first.compare(it2->first));
+    if (cmp)
+      return (cmp < 0);
   }
-  for (contactsmember* m1(obj1.contacts), * m2(obj2.contacts);
-       m1 || m2;
-       m1 = m1->next, m2 = m2->next) {
-    if (!m1 || !m2)
-      return (!!m1 < !!m2);
-    else if (*m1 != *m2)
-      return (*m1 < *m2);
+  for (umap<std::string, shared_ptr<engine::contact> >::const_iterator
+         it1(obj1.contacts.begin()),
+         it2(obj2.contacts.begin()),
+         end1(obj1.contacts.end()),
+         end2(obj2.contacts.end());
+       it1 != end1 || it2 != end2;
+       ++it1, ++it2) {
+    int cmp(it1->first.compare(it2->first));
+    if (cmp)
+      return (cmp < 0);
   }
   return (false);
 }
@@ -145,9 +147,9 @@ std::ostream& operator<<(std::ostream& os, serviceescalation const& obj) {
     escalation_period_str = chkstr(obj.escalation_period_ptr->name);
   std::string svc_str("\"NULL\"");
   if (obj.service_ptr) {
-    svc_str = chkstr(obj.service_ptr->host_name);
+    svc_str = obj.service_ptr->get_host_name();
     svc_str += ", ";
-    svc_str += chkstr(obj.service_ptr->description);
+    svc_str += obj.service_ptr->get_description();
   }
 
   os << "serviceescalation {\n"

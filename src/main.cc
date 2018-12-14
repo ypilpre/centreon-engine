@@ -1,7 +1,7 @@
 /*
 ** Copyright 1999-2009 Ethan Galstad
 ** Copyright 2009-2010 Nagios Core Development Team and Community Contributors
-** Copyright 2011-2017 Centreon
+** Copyright 2011-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -39,12 +39,12 @@
 #include "com/centreon/engine/broker/compatibility.hh"
 #include "com/centreon/engine/broker/loader.hh"
 #include "com/centreon/engine/checks/checker.hh"
-#include "com/centreon/engine/commands/set.hh"
 #include "com/centreon/engine/config.hh"
 #include "com/centreon/engine/configuration/applier/state.hh"
 #include "com/centreon/engine/configuration/parser.hh"
 #include "com/centreon/engine/configuration/state.hh"
 #include "com/centreon/engine/diagnostic.hh"
+#include "com/centreon/engine/downtime_manager.hh"
 #include "com/centreon/engine/error.hh"
 #include "com/centreon/engine/events/loop.hh"
 #include "com/centreon/engine/globals.hh"
@@ -53,9 +53,7 @@
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/macros/misc.hh"
 #include "com/centreon/engine/nebmods.hh"
-#include "com/centreon/engine/notifications.hh"
-#include "com/centreon/engine/objects/comment.hh"
-#include "com/centreon/engine/objects/downtime.hh"
+#include "com/centreon/engine/comment.hh"
 #include "com/centreon/engine/perfdata.hh"
 #include "com/centreon/engine/retention/dump.hh"
 #include "com/centreon/engine/retention/parser.hh"
@@ -112,7 +110,7 @@ int main(int argc, char* argv[]) {
   com::centreon::logging::engine::load();
   config = new configuration::state;
   com::centreon::engine::timezone_manager::load();
-  com::centreon::engine::commands::set::load();
+  com::centreon::engine::downtime_manager::load();
   com::centreon::engine::configuration::applier::state::load();
   com::centreon::engine::checks::checker::load();
   com::centreon::engine::events::loop::load();
@@ -380,10 +378,12 @@ int main(int argc, char* argv[]) {
         initialize_status_data();
 
         // Initialize comment data.
-        initialize_comment_data();
+        //FIXME DBR: this function no more exists and may be should be rewritten
+        //initialize_comment_data();
 
         // Initialize scheduled downtime data.
-        initialize_downtime_data();
+        // FIXME DBR: this function no more exists
+        //initialize_downtime_data();
 
         // Initialize check statistics.
         init_check_stats();
@@ -468,7 +468,7 @@ int main(int argc, char* argv[]) {
   com::centreon::engine::broker::compatibility::unload();
   com::centreon::engine::broker::loader::unload();
   com::centreon::engine::configuration::applier::state::unload();
-  com::centreon::engine::commands::set::unload();
+  com::centreon::engine::downtime_manager::unload();
   com::centreon::engine::checks::checker::unload();
   delete config;
   config = NULL;

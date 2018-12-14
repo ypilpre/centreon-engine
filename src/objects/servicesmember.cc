@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2013 Merethis
+** Copyright 2011-2013,2017 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -20,12 +20,10 @@
 #include "com/centreon/engine/broker.hh"
 #include "com/centreon/engine/deleter/servicesmember.hh"
 #include "com/centreon/engine/logging/logger.hh"
-#include "com/centreon/engine/objects/contact.hh"
-#include "com/centreon/engine/objects/host.hh"
-#include "com/centreon/engine/objects/service.hh"
 #include "com/centreon/engine/objects/servicegroup.hh"
 #include "com/centreon/engine/objects/servicesmember.hh"
 #include "com/centreon/engine/objects/tool.hh"
+#include "com/centreon/engine/service.hh"
 #include "com/centreon/engine/shared.hh"
 #include "com/centreon/engine/string.hh"
 
@@ -80,104 +78,4 @@ std::ostream& operator<<(std::ostream& os, servicesmember const& obj) {
     os << "(" << chkstr(m->host_name) << ", "
        << chkstr(m->service_description) << (m->next ? "), " : ")");
   return (os);
-}
-
-/**
- *  Link a service to its host.
- *
- *  @param[in,out] hst Host.
- *  @param[in]     svc Service.
- *
- *  @return Host-service relation.
- */
-servicesmember* add_service_link_to_host(host* hst, service* svc) {
-  // Make sure we have the data we need.
-  if (!hst || !svc)
-    return (NULL);
-
-  // Allocate memory.
-  servicesmember* obj(new servicesmember);
-  memset(obj, 0, sizeof(*obj));
-
-  try {
-    // Initialize values.
-    obj->service_ptr = svc;
-
-    // Add the child entry to the host definition.
-    obj->next = hst->services;
-    hst->services = obj;
-
-    // Notify event broker.
-    timeval tv(get_broker_timestamp(NULL));
-    broker_relation_data(
-      NEBTYPE_PARENT_ADD,
-      NEBFLAG_NONE,
-      NEBATTR_NONE,
-      hst,
-      NULL,
-      NULL,
-      svc,
-      &tv);
-  }
-  catch (...) {
-    deleter::servicesmember(obj);
-    obj = NULL;
-  }
-
-  return (obj);
-}
-
-/**
- *  Add a new service to a service group.
- *
- *  @param[in,out] temp_servicegroup Target service group.
- *  @param[in]     host_name         Host name.
- *  @param[in]     svc_description   Service description.
- *
- *  @return Service group membership.
- */
-servicesmember* add_service_to_servicegroup(
-                  servicegroup* grp,
-                  char const* host_name,
-                  char const* svc_description) {
-  // Make sure we have the data we need.
-  if (!grp
-      || !host_name
-      || !host_name[0]
-      || !svc_description
-      || !svc_description[0]) {
-    logger(log_config_error, basic)
-      << "Error: Servicegroup or group member is NULL";
-    return (NULL);
-  }
-
-  // Allocate memory for a new member.
-  servicesmember* obj(new servicesmember);
-  memset(obj, 0, sizeof(*obj));
-
-  try {
-    // Duplicate vars.
-    obj->host_name = string::dup(host_name);
-    obj->service_description = string::dup(svc_description);
-
-    // Add new member to member list.
-    obj->next = grp->members;
-    grp->members = obj;
-
-    // Notify event broker.
-    timeval tv(get_broker_timestamp(NULL));
-    broker_group_member(
-      NEBTYPE_SERVICEGROUPMEMBER_ADD,
-      NEBFLAG_NONE,
-      NEBATTR_NONE,
-      obj,
-      grp,
-      &tv);
-  }
-  catch (...) {
-    deleter::servicesmember(obj);
-    obj = NULL;
-  }
-
-  return (obj);
 }

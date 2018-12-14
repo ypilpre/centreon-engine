@@ -21,7 +21,7 @@
 #  define CCE_CONFIGURATION_APPLIER_SERVICE_HH
 
 #  include "com/centreon/engine/namespace.hh"
-#  include "com/centreon/shared_ptr.hh"
+#  include "com/centreon/engine/service.hh"
 
 CCE_BEGIN()
 
@@ -46,6 +46,21 @@ namespace             configuration {
                         configuration::service const& obj);
       void            resolve_object(
                         configuration::service const& obj);
+      void            unresolve_objects();
+
+      // Specific member resolution.
+      void         resolve_check_period(
+                     ::service& svc,
+                     std::string const& period);
+      void         resolve_check_command(
+                     ::service& svc,
+                     std::string const& cmd);
+      void         resolve_event_handler(
+                     ::service& svc,
+                     std::string const& cmd);
+      void         resolve_notification_period(
+                     ::service& svc,
+                     std::string const& period);
 
      private:
       void            _expand_service_memberships(

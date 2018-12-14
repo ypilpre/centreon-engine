@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2013,2015 Merethis
+** Copyright 2011-2013,2015,2017-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -24,18 +24,17 @@
 #  include <map>
 #  include <string>
 #  include "com/centreon/concurrency/mutex.hh"
+#  include "com/centreon/engine/configuration/applier/state.hh"
+#  include "com/centreon/engine/contactgroup.hh"
+#  include "com/centreon/engine/host.hh"
+#  include "com/centreon/engine/hostgroup.hh"
 #  include "com/centreon/engine/namespace.hh"
-#  include "com/centreon/engine/objects/contact.hh"
-#  include "com/centreon/engine/objects/contactsmember.hh"
-#  include "com/centreon/engine/objects/contactgroup.hh"
-#  include "com/centreon/engine/objects/host.hh"
-#  include "com/centreon/engine/objects/hostsmember.hh"
-#  include "com/centreon/engine/objects/hostgroup.hh"
-#  include "com/centreon/engine/objects/service.hh"
-#  include "com/centreon/engine/objects/servicesmember.hh"
-#  include "com/centreon/engine/objects/servicegroup.hh"
+#  include "com/centreon/engine/not_found.hh"
+#  include "com/centreon/engine/service.hh"
+#  include "com/centreon/engine/servicegroup.hh"
+#  include "com/centreon/engine/shared.hh"
+#  include "com/centreon/engine/utils.hh"
 #  include "com/centreon/unordered_hash.hh"
-#  include "find.hh"
 
 CCE_BEGIN()
 
@@ -149,9 +148,15 @@ namespace         modules {
         (void)entry_time;
 
         char* name(my_strtok(args, ";"));
-        host* hst(::find_host(name));
-        if (!hst)
+        host* hst(NULL);
+        try {
+          hst = configuration::applier::state::instance().hosts_find(
+                  name).get();
+        }
+        catch (not_found const& e) {
+          (void)e;
           return ;
+        }
         (*fptr)(hst);
       }
 
@@ -164,9 +169,15 @@ namespace         modules {
         (void)entry_time;
 
         char* name(my_strtok(args, ";"));
-        host* hst(::find_host(name));
-        if (!hst)
+        host* hst(NULL);
+        try {
+          hst = configuration::applier::state::instance().hosts_find(
+                  name).get();
+        }
+        catch (not_found const& e) {
+          (void)e;
           return ;
+        }
         (*fptr)(hst, args + strlen(name) + 1);
       }
 
@@ -179,15 +190,23 @@ namespace         modules {
         (void)entry_time;
 
         char* group_name(my_strtok(args, ";"));
-        hostgroup* group(::find_hostgroup(group_name));
-        if (!group)
+        hostgroup* group;
+        try {
+          group = &(::find_hostgroup(group_name));
+        }
+        catch (not_found const& e) {
+          (void)e;
           return ;
+        }
 
-        for (hostsmember* member = group->members;
-             member != NULL;
-             member = member->next)
-          if (member->host_ptr)
-            (*fptr)(member->host_ptr);
+        for (umap<std::string, host*>::const_iterator
+               it(group->get_members().begin()),
+               end(group->get_members().end());
+             it != end;
+             ++it) {
+          if (it->second)
+            (*fptr)(it->second);
+        }
       }
 
       template <void (*fptr)(service*)>
@@ -200,9 +219,15 @@ namespace         modules {
 
         char* name(my_strtok(args, ";"));
         char* description(my_strtok(NULL, ";"));
-        service* svc(::find_service(name, description));
-        if (!svc)
+        service* svc(NULL);
+        try {
+          svc = configuration::applier::state::instance().services_find(
+                  std::make_pair(name, description)).get();
+        }
+        catch (not_found const& e) {
+          (void)e;
           return ;
+        }
         (*fptr)(svc);
       }
 
@@ -216,9 +241,15 @@ namespace         modules {
 
         char* name(my_strtok(args, ";"));
         char* description(my_strtok(NULL, ";"));
-        service* svc(::find_service(name, description));
-        if (!svc)
+        service* svc(NULL);
+        try {
+          svc = configuration::applier::state::instance().services_find(
+                  std::make_pair(name, description)).get();
+        }
+        catch (not_found const& e) {
+          (void)e;
           return ;
+        }
         (*fptr)(svc, args + strlen(name) + strlen(description) + 2);
       }
 
@@ -231,15 +262,21 @@ namespace         modules {
         (void)entry_time;
 
         char* group_name(my_strtok(args, ";"));
-        servicegroup* group(::find_servicegroup(group_name));
-        if (!group)
+        servicegroup* group;
+        try {
+          group = &::find_servicegroup(group_name);
+        }
+        catch (not_found const& e) {
           return ;
+        }
 
-        for (servicesmember* member = group->members;
-             member != NULL;
-             member = member->next)
-          if (member->service_ptr)
-            (*fptr)(member->service_ptr);
+        for (service_map::const_iterator
+               it(group->get_members().begin()),
+               end(group->get_members().end());
+             it != end;
+             ++it)
+          if (it->second)
+            (*fptr)(it->second);
       }
 
       template <void (*fptr)(host*)>
@@ -251,20 +288,37 @@ namespace         modules {
         (void)entry_time;
 
         char* group_name(my_strtok(args, ";"));
-        servicegroup* group(::find_servicegroup(group_name));
-        if (!group)
-          return ;
-
-        host* last_host(NULL);
-        for (servicesmember* member = group->members;
-             member != NULL;
-             member = member->next) {
-          host* hst(::find_host(member->host_name));
-          if (!hst || hst == last_host)
-            continue ;
-          (*fptr)(hst);
-          last_host = hst;
+        servicegroup* group;
+        try {
+          group = &::find_servicegroup(group_name);
         }
+        catch (not_found const& e) {
+          (void)e;
+          return ;
+        }
+
+        std::set<host*> hst_set;
+        for (service_map::const_iterator
+               it(group->get_members().begin()),
+               end(group->get_members().end());
+             it != end;
+             ++it) {
+          host* hst(it->second->get_host());
+          if (hst_set.find(hst) == hst_set.end()) {
+            (*fptr)(hst);
+            hst_set.insert(hst);
+          }
+        }
+//        host* last_host(NULL);
+//        for (servicesmember* member = group->members;
+//             member != NULL;
+//             member = member->next) {
+//          host* hst(::find_host(member->host_name));
+//          if (!hst || hst == last_host)
+//            continue ;
+//          (*fptr)(hst);
+//          last_host = hst;
+//        }
       }
 
       template <void (*fptr)(contact*)>
@@ -276,9 +330,14 @@ namespace         modules {
         (void)entry_time;
 
         char* name(my_strtok(args, ";"));
-        contact* cntc(::find_contact(name));
-        if (!cntc)
+        contact* cntc(NULL);
+        try {
+          cntc = configuration::applier::state::instance().contacts_find(
+                   name).get();
+        }
+        catch (not_found const& e) {
           return ;
+        }
         (*fptr)(cntc);
       }
 
@@ -291,15 +350,25 @@ namespace         modules {
         (void)entry_time;
 
         char* group_name(my_strtok(args, ";"));
-        contactgroup* group(::find_contactgroup(group_name));
-        if (!group)
+        contactgroup* group(NULL);
+        try {
+          group = configuration::applier::state::instance().contactgroups_find(
+                    group_name).get();
+        }
+        catch (not_found const& e) {
+          (void)e;
           return ;
+        }
 
-        for (contactsmember* member(group->members);
-             member;
-             member = member->next)
-          if (member->contact_ptr)
-            (*fptr)(member->contact_ptr);
+        for (umap<std::string, contact*>::const_iterator
+               it(group->get_members().begin()),
+               end(group->get_members().end());
+             it != end;
+             ++it) {
+          contact* ctct(it->second);
+          (*fptr)(ctct);
+        }
+
       }
 
       umap<std::string, command_info> _lst_command;

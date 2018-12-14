@@ -1,6 +1,6 @@
 /*
-** Copyright 2000-2008 Ethan Galstad
-** Copyright 2011-2013 Merethis
+** Copyright 2000-2008           Ethan Galstad
+** Copyright 2011-2013,2017-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -27,26 +27,32 @@
 #include "com/centreon/engine/common.hh"
 #include "com/centreon/engine/events/defines.hh"
 #include "com/centreon/engine/globals.hh"
+#include "com/centreon/engine/host.hh"
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/macros.hh"
-#include "com/centreon/engine/objects/command.hh"
-#include "com/centreon/engine/objects/host.hh"
-#include "com/centreon/engine/objects/service.hh"
+#include "com/centreon/engine/not_found.hh"
+#include "com/centreon/engine/service.hh"
 #include "com/centreon/engine/string.hh"
 #include "com/centreon/engine/xpddefault.hh"
-#include "find.hh"
+#include "com/centreon/shared_ptr.hh"
 
+using namespace com::centreon;
 using namespace com::centreon::engine;
+using namespace com::centreon::engine::commands;
 using namespace com::centreon::engine::logging;
 
-static command*        xpddefault_host_perfdata_command_ptr(NULL);
-static command*        xpddefault_service_perfdata_command_ptr(NULL);
+static command*
+                       xpddefault_host_perfdata_command_ptr(NULL);
+static command*
+                       xpddefault_service_perfdata_command_ptr(NULL);
 
 static char*           xpddefault_host_perfdata_file_template(NULL);
 static char*           xpddefault_service_perfdata_file_template(NULL);
 
-static command*        xpddefault_host_perfdata_file_processing_command_ptr(NULL);
-static command*        xpddefault_service_perfdata_file_processing_command_ptr(NULL);
+static command*
+                       xpddefault_host_perfdata_file_processing_command_ptr(NULL);
+static command*
+                       xpddefault_service_perfdata_file_processing_command_ptr(NULL);
 
 static FILE*           xpddefault_host_perfdata_fp(NULL);
 static FILE*           xpddefault_service_perfdata_fp(NULL);
@@ -63,7 +69,7 @@ static pthread_mutex_t xpddefault_service_perfdata_fp_lock;
 // initializes performance data.
 int xpddefault_initialize_performance_data() {
   char* temp_command_name(NULL);
-  command* temp_command(NULL);
+  shared_ptr<command> temp_command;
 
   // reset vars.
   xpddefault_host_perfdata_command_ptr = NULL;
@@ -90,7 +96,12 @@ int xpddefault_initialize_performance_data() {
     // get the command name, leave any arguments behind.
     temp_command_name = my_strtok(temp_buffer, "!");
 
-    if ((temp_command = find_command(temp_command_name)) == NULL) {
+    try {
+      temp_command = find_command(temp_command_name);
+    }
+    catch (not_found const& e) {
+      (void) e;
+      temp_command.clear();
       logger(log_runtime_warning, basic)
         << "Warning: Host performance command '" << temp_command_name
         << "' was not found - host performance data will not "
@@ -99,7 +110,7 @@ int xpddefault_initialize_performance_data() {
     delete[] temp_buffer;
 
     // save the command pointer for later.
-    xpddefault_host_perfdata_command_ptr = temp_command;
+    xpddefault_host_perfdata_command_ptr = temp_command.get();
   }
 
   if (!config->service_perfdata_command().empty()) {
@@ -108,7 +119,12 @@ int xpddefault_initialize_performance_data() {
     // get the command name, leave any arguments behind.
     temp_command_name = my_strtok(temp_buffer, "!");
 
-    if ((temp_command = find_command(temp_command_name)) == NULL) {
+    try {
+      temp_command = find_command(temp_command_name);
+    }
+    catch (not_found const& e) {
+      (void)e;
+      temp_command.clear();
       logger(log_runtime_warning, basic)
         << "Warning: Service performance command '" << temp_command_name
         << "' was not found - service performance data will not "
@@ -119,7 +135,7 @@ int xpddefault_initialize_performance_data() {
     delete[] temp_buffer;
 
     // save the command pointer for later.
-    xpddefault_service_perfdata_command_ptr = temp_command;
+    xpddefault_service_perfdata_command_ptr = temp_command.get();
   }
 
   if (!config->host_perfdata_file_processing_command().empty()) {
@@ -128,7 +144,12 @@ int xpddefault_initialize_performance_data() {
 
     // get the command name, leave any arguments behind.
     temp_command_name = my_strtok(temp_buffer, "!");
-    if ((temp_command = find_command(temp_command_name)) == NULL) {
+    try {
+      temp_command = find_command(temp_command_name);
+    }
+    catch (not_found const& e) {
+      (void)e;
+      temp_command.clear();
       logger(log_runtime_warning, basic)
         << "Warning: Host performance file processing command '"
         << temp_command_name << "' was not found - host performance "
@@ -139,7 +160,7 @@ int xpddefault_initialize_performance_data() {
     delete[] temp_buffer;
 
     // save the command pointer for later.
-    xpddefault_host_perfdata_file_processing_command_ptr = temp_command;
+    xpddefault_host_perfdata_file_processing_command_ptr = temp_command.get();
   }
 
   if (!config->service_perfdata_file_processing_command().empty()) {
@@ -148,7 +169,12 @@ int xpddefault_initialize_performance_data() {
 
     // get the command name, leave any arguments behind.
     temp_command_name = my_strtok(temp_buffer, "!");
-    if ((temp_command = find_command(temp_command_name)) == NULL) {
+    try {
+      temp_command = find_command(temp_command_name);
+    }
+    catch (not_found const& e) {
+      (void)e;
+      temp_command.clear();
       logger(log_runtime_warning, basic)
         << "Warning: Service performance file processing command '"
         << temp_command_name << "' was not found - service performance "
@@ -160,7 +186,7 @@ int xpddefault_initialize_performance_data() {
 
     // save the command pointer for later.
     xpddefault_service_perfdata_file_processing_command_ptr
-      = temp_command;
+      = temp_command.get();
   }
 
   return (OK);
@@ -195,7 +221,7 @@ int xpddefault_update_service_performance_data(service* svc) {
    * bail early if we've got nothing to do so we don't spend a lot
    * of time calculating macros that never get used
    */
-  if (!svc || !svc->perf_data || !*svc->perf_data)
+  if (!svc || svc->get_perfdata().empty())
     return (OK);
   if ((!xpddefault_service_perfdata_fp
        || !xpddefault_service_perfdata_file_template)
@@ -207,7 +233,7 @@ int xpddefault_update_service_performance_data(service* svc) {
    * macros and get busy
    */
   memset(&mac, 0, sizeof(mac));
-  hst = find_host(svc->host_name);
+  hst = svc->get_host();
   grab_host_macros_r(&mac, hst);
   grab_service_macros_r(&mac, svc);
 
@@ -235,7 +261,7 @@ int xpddefault_update_host_performance_data(host* hst) {
    * bail early if we've got nothing to do so we don't spend a lot
    * of time calculating macros that never get used
    */
-  if (!hst || !hst->perf_data || !*hst->perf_data)
+  if (!hst || hst->get_perfdata().empty())
     return (OK);
   if ((!xpddefault_host_perfdata_fp
        || !xpddefault_host_perfdata_file_template)
@@ -334,8 +360,8 @@ int xpddefault_run_service_performance_data_command(
     logger(log_runtime_warning, basic)
       << "Warning: Service performance data command '"
       << processed_command_line << "' for service '"
-      << svc->description << "' on host '"
-      << svc->host_name << "' timed out after "
+      << svc->get_description() << "' on host '"
+      << svc->get_host_name() << "' timed out after "
       << config->perfdata_timeout() << " seconds";
 
   // free memory.
@@ -413,7 +439,7 @@ int xpddefault_run_host_performance_data_command(
   if (early_timeout == true)
     logger(log_runtime_warning, basic)
       << "Warning: Host performance data command '"
-      << processed_command_line << "' for host '" << hst->name
+      << processed_command_line << "' for host '" << hst->get_name()
       << "' timed out after " << config->perfdata_timeout()
       << " seconds";
 

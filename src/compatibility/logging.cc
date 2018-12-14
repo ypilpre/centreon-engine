@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2013,2017 Centreon
+** Copyright 2011-2013,2017-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -24,10 +24,10 @@
 #include <sys/time.h>
 #include "com/centreon/engine/common.hh"
 #include "com/centreon/engine/globals.hh"
+#include "com/centreon/engine/host.hh"
 #include "com/centreon/engine/logging.hh"
 #include "com/centreon/engine/logging/logger.hh"
-#include "com/centreon/engine/objects/host.hh"
-#include "com/centreon/engine/objects/service.hh"
+#include "com/centreon/engine/service.hh"
 #include "com/centreon/engine/statusdata.hh"
 #include "com/centreon/logging/file.hh"
 
@@ -189,28 +189,29 @@ int write_to_syslog(char const* buffer, unsigned long type) {
  *  @return Return true on success.
  */
 int log_service_event(service const* svc) {
-  if (svc->state_type == SOFT_STATE
+  if (svc->get_current_state_type() == SOFT_STATE
       && !config->log_service_retries())
     return (OK);
 
-  if (!svc->host_ptr || !svc->host_name || !svc->description)
+  if (!svc->get_host()
+      || svc->get_host_name().empty()
+      || svc->get_description().empty())
     return (ERROR);
 
   unsigned long log_options(NSLOG_SERVICE_UNKNOWN);
   char const* state("UNKNOWN");
-  if (svc->current_state >= 0
-      && (unsigned int)svc->current_state
+  if (svc->get_current_state() >= 0
+      && (unsigned int)svc->get_current_state()
       < sizeof(tab_service_states) / sizeof(*tab_service_states)) {
-    log_options = tab_service_states[svc->current_state].id;
-    state = tab_service_states[svc->current_state].str;
+    log_options = tab_service_states[svc->get_current_state()].id;
+    state = tab_service_states[svc->get_current_state()].str;
   }
-  char const* state_type(tab_state_type[svc->state_type]);
-  char const* output(svc->plugin_output ? svc->plugin_output : "");
+  char const* state_type(tab_state_type[svc->get_current_state_type()]);
 
-  logger(log_options, basic)
-    << "SERVICE ALERT: " << svc->host_name << ";" << svc->description
-    << ";" << state << ";" << state_type << ";" << svc->current_attempt
-    << ";" << output;
+  logger(log_options, basic) << "SERVICE ALERT: "
+    << svc->get_host_name() << ";" << svc->get_description()
+    << ";" << state << ";" << state_type << ";" << svc->get_current_attempt()
+    << ";" << svc->get_output();
   return (OK);
 }
 
@@ -223,23 +224,22 @@ int log_service_event(service const* svc) {
  *  @return Return true on success.
  */
 int log_host_event(host const* hst) {
-  if (!hst || !hst->name)
+  if (!hst || hst->get_name().empty())
     return (ERROR);
 
   unsigned long log_options(NSLOG_HOST_UP);
   char const* state("UP");
-  if (hst->current_state > 0
-      && (unsigned int)hst->current_state
+  if (hst->get_current_state() > 0
+      && (unsigned int)hst->get_current_state()
       < sizeof(tab_host_states) / sizeof(*tab_host_states)) {
-    log_options = tab_host_states[hst->current_state].id;
-    state = tab_host_states[hst->current_state].str;
+    log_options = tab_host_states[hst->get_current_state()].id;
+    state = tab_host_states[hst->get_current_state()].str;
   }
-  char const* state_type(tab_state_type[hst->state_type]);
-  char const* output(hst->plugin_output ? hst->plugin_output : "");
+  char const* state_type(tab_state_type[hst->get_current_state_type()]);
 
-  logger(log_options, basic)
-    << "HOST ALERT: " << hst->name << ";" << state << ";"
-    << state_type << ";" << hst->current_attempt << ";" << output;
+  logger(log_options, basic) << "HOST ALERT: " << hst->get_name()
+    << ";" << state << ";" << state_type << ";"
+    << hst->get_current_attempt() << ";" << hst->get_output();
 
   return (OK);
 }
@@ -251,37 +251,19 @@ int log_host_event(host const* hst) {
  *  @param[in] hst   Host object.
  */
 void log_host_state(unsigned int type, host* hst) {
-  if (hst->name) {
+  if (!hst->get_name().empty()) {
     char const* type_str(tab_initial_state[type]);
     char const* state("UP");
-    if ((hst->current_state > 0)
-        && ((unsigned int)hst->current_state
+    if ((hst->get_current_state() > 0)
+        && ((unsigned int)hst->get_current_state()
             < sizeof(tab_host_states) / sizeof(*tab_host_states)))
-      state = tab_host_states[hst->current_state].str;
-    char const* state_type(tab_state_type[hst->state_type]);
-    char const* output(hst->plugin_output ? hst->plugin_output : "");
-    logger(log_info_message, basic)
-      << type_str << " HOST STATE: " << hst->name << ";" << state
-      << ";" << state_type << ";" << hst->current_attempt << ";"
-      << output;
+      state = tab_host_states[hst->get_current_state()].str;
+    char const* state_type(tab_state_type[hst->get_current_state_type()]);
+    logger(log_info_message, basic) << type_str << " HOST STATE: "
+      << hst->get_name() << ";" << state << ";" << state_type
+      << ";" << hst->get_current_attempt() << ";" << hst->get_output();
   }
   return ;
-}
-
-/**
- *  Log host states information.
- *  This function has been DEPRECATED.
- *
- *  @param[in] type      State logging types.
- *  @param[in] timestamp Unused.
- *
- *  @return Return true on success.
- */
-int log_host_states(unsigned int type, time_t* timestamp) {
-  (void)timestamp;
-  for (host* hst(host_list); hst; hst = hst->next)
-    log_host_state(type, hst);
-  return (OK);
 }
 
 /**
@@ -291,37 +273,20 @@ int log_host_states(unsigned int type, time_t* timestamp) {
  *  @param[in] svc   Service object.
  */
 void log_service_state(unsigned int type, service* svc) {
-  if (svc->host_name && svc->description) {
+  if (!svc->get_host_name().empty() && !svc->get_description().empty()) {
     char const* type_str(tab_initial_state[type]);
     char const* state("UNKNOWN");
-    if ((svc->current_state >= 0)
-        && ((unsigned int)svc->current_state
+    if ((svc->get_current_state() >= 0)
+        && ((unsigned int)svc->get_current_state()
             < sizeof(tab_service_states) / sizeof(*tab_service_states)))
-      state = tab_service_states[svc->current_state].str;
-    char const* state_type(tab_state_type[svc->state_type]);
-    char const* output(svc->plugin_output ? svc->plugin_output : "");
-    logger(log_info_message, basic)
-      << type_str << " SERVICE STATE: " << svc->host_name << ";"
-      << svc->description << ";" << state << ";" << state_type
-      << ";" << svc->current_attempt << ";" << output;
+      state = tab_service_states[svc->get_current_state()].str;
+    char const* state_type(tab_state_type[svc->get_current_state_type()]);
+    logger(log_info_message, basic) << type_str << " SERVICE STATE: "
+      << svc->get_host_name() << ";" << svc->get_description() << ";"
+      << state << ";" << state_type << ";" << svc->get_current_attempt()
+      << ";" << svc->get_output();
   }
   return ;
-}
-
-/**
- *  Log service states information.
- *  This function has been DEPRECATED.
- *
- *  @param[in] type      State logging types.
- *  @param[in] timestamp Unused.
- *
- *  @return Return true on success.
- */
-int log_service_states(unsigned int type, time_t* timestamp) {
-  (void)timestamp;
-  for (service* svc(service_list); svc; svc = svc->next)
-    log_service_state(type, svc);
-  return (OK);
 }
 
 /**

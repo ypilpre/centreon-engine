@@ -1,6 +1,6 @@
 /*
 ** Copyright 2002-2006           Ethan Galstad
-** Copyright 2011-2013,2015-2016 Centreon
+** Copyright 2011-2013,2015-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -20,19 +20,26 @@
 
 #include <cstdlib>
 #include "com/centreon/engine/broker.hh"
+#include "com/centreon/engine/configuration/applier/state.hh"
 #include "com/centreon/engine/flapping.hh"
 #include "com/centreon/engine/globals.hh"
+#include "com/centreon/engine/hostgroup.hh"
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/modules/external_commands/commands.hh"
 #include "com/centreon/engine/modules/external_commands/compatibility.hh"
+#include "com/centreon/engine/not_found.hh"
 #include "com/centreon/engine/retention/applier/state.hh"
 #include "com/centreon/engine/retention/dump.hh"
 #include "com/centreon/engine/retention/parser.hh"
 #include "com/centreon/engine/retention/state.hh"
+#include "com/centreon/engine/servicegroup.hh"
 #include "com/centreon/engine/string.hh"
+#include "com/centreon/unordered_hash.hh"
 
+using namespace com::centreon;
 using namespace com::centreon::engine;
 using namespace com::centreon::engine::logging;
+using namespace com::centreon::engine::notifications;
 
 int process_external_command1(char* cmd) {
   char* command_id = NULL;
@@ -996,10 +1003,8 @@ int process_hostgroup_command(int cmd,
                               char* args) {
   char* hostgroup_name = NULL;
   hostgroup* temp_hostgroup = NULL;
-  hostsmember* temp_member = NULL;
   host* temp_host = NULL;
   service* temp_service = NULL;
-  servicesmember* temp_servicesmember = NULL;
 
   (void)entry_time;
 
@@ -1008,15 +1013,21 @@ int process_hostgroup_command(int cmd,
     return (ERROR);
 
   /* find the hostgroup */
-  if ((temp_hostgroup = find_hostgroup(hostgroup_name)) == NULL)
+  try {
+    temp_hostgroup = &find_hostgroup(hostgroup_name);
+  }
+  catch (not_found const& e) {
+    (void)e;
     return (ERROR);
+  }
 
   /* loop through all hosts in the hostgroup */
-  for (temp_member = temp_hostgroup->members;
-       temp_member != NULL;
-       temp_member = temp_member->next) {
-
-    if ((temp_host = (host*)temp_member->host_ptr) == NULL)
+  for (umap<std::string, host*>::const_iterator
+         it(temp_hostgroup->get_members().begin()),
+         end(temp_hostgroup->get_members().end());
+       it != end;
+       ++it) {
+    if ((temp_host = it->second) == NULL)
       continue;
 
     switch (cmd) {
@@ -1048,11 +1059,13 @@ int process_hostgroup_command(int cmd,
     default:
 
       /* loop through all services on the host */
-      for (temp_servicesmember = temp_host->services;
-           temp_servicesmember != NULL;
-           temp_servicesmember = temp_servicesmember->next) {
-        if ((temp_service = temp_servicesmember->service_ptr) == NULL)
-          continue;
+      for (service_set::const_iterator
+             it(temp_host->get_services().begin()),
+             end(temp_host->get_services().end());
+           it != end;
+           ++it) {
+        if ((temp_service = *it) == NULL)
+          continue ;
 
         switch (cmd) {
 
@@ -1094,9 +1107,8 @@ int process_host_command(int cmd,
                          time_t entry_time,
                          char* args) {
   char* host_name = NULL;
-  host* temp_host = NULL;
+  shared_ptr<host> temp_host;
   service* temp_service = NULL;
-  servicesmember* temp_servicesmember = NULL;
   char* str = NULL;
   char* buf[2] = { NULL, NULL };
   int intval = 0;
@@ -1108,106 +1120,116 @@ int process_host_command(int cmd,
     return (ERROR);
 
   /* find the host */
-  if ((temp_host = find_host(host_name)) == NULL)
+  try {
+    temp_host = configuration::applier::state::instance().hosts_find(
+                  host_name);
+  }
+  catch (not_found const& e) {
+    (void) e;
     return (ERROR);
+  }
 
   switch (cmd) {
   case CMD_ENABLE_HOST_NOTIFICATIONS:
-    enable_host_notifications(temp_host);
+    enable_host_notifications(temp_host.get());
     break;
 
   case CMD_DISABLE_HOST_NOTIFICATIONS:
-    disable_host_notifications(temp_host);
+    disable_host_notifications(temp_host.get());
     break;
 
   case CMD_ENABLE_HOST_AND_CHILD_NOTIFICATIONS:
-    enable_and_propagate_notifications(temp_host, 0, true, true, false);
+    enable_and_propagate_notifications(temp_host.get(), 0, true, true, false);
     break;
 
   case CMD_DISABLE_HOST_AND_CHILD_NOTIFICATIONS:
-    disable_and_propagate_notifications(temp_host, 0, true, true, false);
+    disable_and_propagate_notifications(temp_host.get(), 0, true, true, false);
     break;
 
   case CMD_ENABLE_ALL_NOTIFICATIONS_BEYOND_HOST:
-    enable_and_propagate_notifications(temp_host, 0, false, true, true);
+    enable_and_propagate_notifications(temp_host.get(), 0, false, true, true);
     break;
 
   case CMD_DISABLE_ALL_NOTIFICATIONS_BEYOND_HOST:
-    disable_and_propagate_notifications(temp_host, 0, false, true, true);
+    disable_and_propagate_notifications(temp_host.get(), 0, false, true, true);
     break;
 
   case CMD_ENABLE_HOST_SVC_NOTIFICATIONS:
   case CMD_DISABLE_HOST_SVC_NOTIFICATIONS:
-    for (temp_servicesmember = temp_host->services;
-         temp_servicesmember != NULL;
-         temp_servicesmember = temp_servicesmember->next) {
-      if ((temp_service = temp_servicesmember->service_ptr) == NULL)
-        continue;
+    for (service_set::const_iterator
+           it(temp_host->get_services().begin()),
+           end(temp_host->get_services().end());
+         it != end;
+         ++it) {
+      if ((temp_service = *it) == NULL)
+        continue ;
       if (cmd == CMD_ENABLE_HOST_SVC_NOTIFICATIONS)
         enable_service_notifications(temp_service);
       else
         disable_service_notifications(temp_service);
     }
-    break;
+    break ;
 
   case CMD_ENABLE_HOST_SVC_CHECKS:
   case CMD_DISABLE_HOST_SVC_CHECKS:
-    for (temp_servicesmember = temp_host->services;
-         temp_servicesmember != NULL;
-         temp_servicesmember = temp_servicesmember->next) {
-      if ((temp_service = temp_servicesmember->service_ptr) == NULL)
-        continue;
+    for (service_set::const_iterator
+           it(temp_host->get_services().begin()),
+           end(temp_host->get_services().end());
+         it != end;
+         ++it) {
+      if ((temp_service = *it) == NULL)
+        continue ;
       if (cmd == CMD_ENABLE_HOST_SVC_CHECKS)
         enable_service_checks(temp_service);
       else
         disable_service_checks(temp_service);
     }
-    break;
+    break ;
 
   case CMD_ENABLE_HOST_CHECK:
-    enable_host_checks(temp_host);
+    enable_host_checks(temp_host.get());
     break;
 
   case CMD_DISABLE_HOST_CHECK:
-    disable_host_checks(temp_host);
+    disable_host_checks(temp_host.get());
     break;
 
   case CMD_ENABLE_HOST_EVENT_HANDLER:
-    enable_host_event_handler(temp_host);
+    enable_host_event_handler(temp_host.get());
     break;
 
   case CMD_DISABLE_HOST_EVENT_HANDLER:
-    disable_host_event_handler(temp_host);
+    disable_host_event_handler(temp_host.get());
     break;
 
   case CMD_ENABLE_HOST_FLAP_DETECTION:
-    enable_host_flap_detection(temp_host);
+    enable_host_flap_detection(temp_host.get());
     break;
 
   case CMD_DISABLE_HOST_FLAP_DETECTION:
-    disable_host_flap_detection(temp_host);
+    disable_host_flap_detection(temp_host.get());
     break;
 
   case CMD_ENABLE_PASSIVE_HOST_CHECKS:
-    enable_passive_host_checks(temp_host);
+    enable_passive_host_checks(temp_host.get());
     break;
 
   case CMD_DISABLE_PASSIVE_HOST_CHECKS:
-    disable_passive_host_checks(temp_host);
+    disable_passive_host_checks(temp_host.get());
     break;
 
   case CMD_START_OBSESSING_OVER_HOST:
-    start_obsessing_over_host(temp_host);
+    start_obsessing_over_host(temp_host.get());
     break;
 
   case CMD_STOP_OBSESSING_OVER_HOST:
-    stop_obsessing_over_host(temp_host);
+    stop_obsessing_over_host(temp_host.get());
     break;
 
   case CMD_SET_HOST_NOTIFICATION_NUMBER:
     if ((str = my_strtok(NULL, ";"))) {
       intval = atoi(str);
-      set_host_notification_number(temp_host, intval);
+      set_host_notification_number(temp_host.get(), intval);
     }
     break;
 
@@ -1221,7 +1243,7 @@ int process_host_command(int cmd,
     if (str)
       buf[1] = string::dup(str);
     if (buf[0] && buf[1])
-      host_notification(temp_host, NOTIFICATION_CUSTOM, buf[0], buf[1], intval);
+      temp_host->notify(notifier::CUSTOM, buf[0], buf[1], intval);
     break;
 
   default:
@@ -1236,7 +1258,7 @@ int process_service_command(int cmd,
                             char* args) {
   char* host_name = NULL;
   char* svc_description = NULL;
-  service* temp_service = NULL;
+  shared_ptr<service> temp_service;
   char* str = NULL;
   char* buf[2] = { NULL, NULL };
   int intval = 0;
@@ -1252,62 +1274,68 @@ int process_service_command(int cmd,
     return (ERROR);
 
   /* find the service */
-  if ((temp_service = find_service(host_name, svc_description)) == NULL)
+  try {
+    temp_service = configuration::applier::state::instance().services_find(
+                     std::make_pair(host_name, svc_description));
+  }
+  catch (not_found const& e) {
+    (void)e;
     return (ERROR);
+  }
 
   switch (cmd) {
   case CMD_ENABLE_SVC_NOTIFICATIONS:
-    enable_service_notifications(temp_service);
+    enable_service_notifications(temp_service.get());
     break;
 
   case CMD_DISABLE_SVC_NOTIFICATIONS:
-    disable_service_notifications(temp_service);
+    disable_service_notifications(temp_service.get());
     break;
 
   case CMD_ENABLE_SVC_CHECK:
-    enable_service_checks(temp_service);
+    enable_service_checks(temp_service.get());
     break;
 
   case CMD_DISABLE_SVC_CHECK:
-    disable_service_checks(temp_service);
+    disable_service_checks(temp_service.get());
     break;
 
   case CMD_ENABLE_SVC_EVENT_HANDLER:
-    enable_service_event_handler(temp_service);
+    enable_service_event_handler(temp_service.get());
     break;
 
   case CMD_DISABLE_SVC_EVENT_HANDLER:
-    disable_service_event_handler(temp_service);
+    disable_service_event_handler(temp_service.get());
     break;
 
   case CMD_ENABLE_SVC_FLAP_DETECTION:
-    enable_service_flap_detection(temp_service);
+    enable_service_flap_detection(temp_service.get());
     break;
 
   case CMD_DISABLE_SVC_FLAP_DETECTION:
-    disable_service_flap_detection(temp_service);
+    disable_service_flap_detection(temp_service.get());
     break;
 
   case CMD_ENABLE_PASSIVE_SVC_CHECKS:
-    enable_passive_service_checks(temp_service);
+    enable_passive_service_checks(temp_service.get());
     break;
 
   case CMD_DISABLE_PASSIVE_SVC_CHECKS:
-    disable_passive_service_checks(temp_service);
+    disable_passive_service_checks(temp_service.get());
     break;
 
   case CMD_START_OBSESSING_OVER_SVC:
-    start_obsessing_over_service(temp_service);
+    start_obsessing_over_service(temp_service.get());
     break;
 
   case CMD_STOP_OBSESSING_OVER_SVC:
-    stop_obsessing_over_service(temp_service);
+    stop_obsessing_over_service(temp_service.get());
     break;
 
   case CMD_SET_SVC_NOTIFICATION_NUMBER:
     if ((str = my_strtok(NULL, ";"))) {
       intval = atoi(str);
-      set_service_notification_number(temp_service, intval);
+      set_service_notification_number(temp_service.get(), intval);
     }
     break;
 
@@ -1321,11 +1349,7 @@ int process_service_command(int cmd,
     if (str)
       buf[1] = string::dup(str);
     if (buf[0] && buf[1])
-      service_notification(temp_service,
-                           NOTIFICATION_CUSTOM,
-                           buf[0],
-                           buf[1],
-                           intval);
+      temp_service->notify(notifier::CUSTOM, buf[0], buf[1], intval);
     break;
 
   default:
@@ -1340,10 +1364,9 @@ int process_servicegroup_command(int cmd,
                                  char* args) {
   char* servicegroup_name = NULL;
   servicegroup* temp_servicegroup = NULL;
-  servicesmember* temp_member = NULL;
-  host* temp_host = NULL;
+  shared_ptr<host> temp_host;
   host* last_host = NULL;
-  service* temp_service = NULL;
+  shared_ptr<service> temp_service;
 
   (void)entry_time;
 
@@ -1352,8 +1375,13 @@ int process_servicegroup_command(int cmd,
     return (ERROR);
 
   /* find the servicegroup */
-  if ((temp_servicegroup = find_servicegroup(servicegroup_name)) == NULL)
+  try {
+    temp_servicegroup = &find_servicegroup(servicegroup_name);
+  }
+  catch (not_found const& e) {
+    (void)e;
     return (ERROR);
+  }
 
   switch (cmd) {
 
@@ -1365,38 +1393,44 @@ int process_servicegroup_command(int cmd,
   case CMD_DISABLE_SERVICEGROUP_PASSIVE_SVC_CHECKS:
 
     /* loop through all servicegroup members */
-    for (temp_member = temp_servicegroup->members;
-         temp_member != NULL;
-         temp_member = temp_member->next) {
-
-      temp_service = find_service(temp_member->host_name, temp_member->service_description);
-      if (temp_service == NULL)
-        continue;
+    for (service_map::const_iterator
+           it(temp_servicegroup->get_members().begin()),
+           end(temp_servicegroup->get_members().end());
+         it != end;
+         ++it) {
+      try {
+        temp_service = configuration::applier::state::instance().services_find(
+                         std::make_pair(it->first.first, it->first.second));
+      }
+      catch (not_found const& e) {
+        (void)e;
+        continue ;
+      }
 
       switch (cmd) {
 
       case CMD_ENABLE_SERVICEGROUP_SVC_NOTIFICATIONS:
-        enable_service_notifications(temp_service);
+        enable_service_notifications(temp_service.get());
         break;
 
       case CMD_DISABLE_SERVICEGROUP_SVC_NOTIFICATIONS:
-        disable_service_notifications(temp_service);
+        disable_service_notifications(temp_service.get());
         break;
 
       case CMD_ENABLE_SERVICEGROUP_SVC_CHECKS:
-        enable_service_checks(temp_service);
+        enable_service_checks(temp_service.get());
         break;
 
       case CMD_DISABLE_SERVICEGROUP_SVC_CHECKS:
-        disable_service_checks(temp_service);
+        disable_service_checks(temp_service.get());
         break;
 
       case CMD_ENABLE_SERVICEGROUP_PASSIVE_SVC_CHECKS:
-        enable_passive_service_checks(temp_service);
+        enable_passive_service_checks(temp_service.get());
         break;
 
       case CMD_DISABLE_SERVICEGROUP_PASSIVE_SVC_CHECKS:
-        disable_passive_service_checks(temp_service);
+        disable_passive_service_checks(temp_service.get());
         break;
 
       default:
@@ -1412,48 +1446,58 @@ int process_servicegroup_command(int cmd,
   case CMD_ENABLE_SERVICEGROUP_PASSIVE_HOST_CHECKS:
   case CMD_DISABLE_SERVICEGROUP_PASSIVE_HOST_CHECKS:
     /* loop through all hosts that have services belonging to the servicegroup */
-    last_host = NULL;
-    for (temp_member = temp_servicegroup->members;
-         temp_member != NULL;
-         temp_member = temp_member->next) {
+    {
+      std::set<host*> hst_set;
+      for (service_map::const_iterator
+             it(temp_servicegroup->get_members().begin()),
+             end(temp_servicegroup->get_members().end());
+           it != end;
+           ++it) {
 
-      if ((temp_host = find_host(temp_member->host_name)) == NULL)
-        continue;
+        try {
+          temp_host = configuration::applier::state::instance().hosts_find(
+                        it->first.first);
+        }
+        catch (not_found const& e) {
+          (void) e;
+          continue ;
+        }
 
-      if (temp_host == last_host)
-        continue;
+        if (hst_set.find(temp_host.get()) != hst_set.end())
+          continue;
 
-      switch (cmd) {
+        switch (cmd) {
 
-      case CMD_ENABLE_SERVICEGROUP_HOST_NOTIFICATIONS:
-        enable_host_notifications(temp_host);
-        break;
+        case CMD_ENABLE_SERVICEGROUP_HOST_NOTIFICATIONS:
+          enable_host_notifications(temp_host.get());
+          break;
 
-      case CMD_DISABLE_SERVICEGROUP_HOST_NOTIFICATIONS:
-        disable_host_notifications(temp_host);
-        break;
+        case CMD_DISABLE_SERVICEGROUP_HOST_NOTIFICATIONS:
+          disable_host_notifications(temp_host.get());
+          break;
 
-      case CMD_ENABLE_SERVICEGROUP_HOST_CHECKS:
-        enable_host_checks(temp_host);
-        break;
+        case CMD_ENABLE_SERVICEGROUP_HOST_CHECKS:
+          enable_host_checks(temp_host.get());
+          break;
 
-      case CMD_DISABLE_SERVICEGROUP_HOST_CHECKS:
-        disable_host_checks(temp_host);
-        break;
+        case CMD_DISABLE_SERVICEGROUP_HOST_CHECKS:
+          disable_host_checks(temp_host.get());
+          break;
 
-      case CMD_ENABLE_SERVICEGROUP_PASSIVE_HOST_CHECKS:
-        enable_passive_host_checks(temp_host);
-        break;
+        case CMD_ENABLE_SERVICEGROUP_PASSIVE_HOST_CHECKS:
+          enable_passive_host_checks(temp_host.get());
+          break;
 
-      case CMD_DISABLE_SERVICEGROUP_PASSIVE_HOST_CHECKS:
-        disable_passive_host_checks(temp_host);
-        break;
+        case CMD_DISABLE_SERVICEGROUP_PASSIVE_HOST_CHECKS:
+          disable_passive_host_checks(temp_host.get());
+          break;
 
-      default:
-        break;
+        default:
+          break;
+        }
+
+        hst_set.insert(temp_host.get());
       }
-
-      last_host = temp_host;
     }
     break;
 
@@ -1476,29 +1520,30 @@ int process_contact_command(int cmd,
     return (ERROR);
 
   /* find the contact */
-  if ((temp_contact = find_contact(contact_name)) == NULL)
+  try {
+    temp_contact = configuration::applier::state::instance().contacts_find(
+                     contact_name).get();
+  }
+  catch (not_found const& e) {
+    (void)e;
     return (ERROR);
+  }
 
   switch (cmd) {
-
-  case CMD_ENABLE_CONTACT_HOST_NOTIFICATIONS:
+   case CMD_ENABLE_CONTACT_HOST_NOTIFICATIONS:
     enable_contact_host_notifications(temp_contact);
-    break;
-
-  case CMD_DISABLE_CONTACT_HOST_NOTIFICATIONS:
+    break ;
+   case CMD_DISABLE_CONTACT_HOST_NOTIFICATIONS:
     disable_contact_host_notifications(temp_contact);
-    break;
-
-  case CMD_ENABLE_CONTACT_SVC_NOTIFICATIONS:
+    break ;
+   case CMD_ENABLE_CONTACT_SVC_NOTIFICATIONS:
     enable_contact_service_notifications(temp_contact);
     break;
-
-  case CMD_DISABLE_CONTACT_SVC_NOTIFICATIONS:
+   case CMD_DISABLE_CONTACT_SVC_NOTIFICATIONS:
     disable_contact_service_notifications(temp_contact);
-    break;
-
-  default:
-    break;
+    break ;
+   default:
+    break ;
   }
   return (OK);
 }
@@ -1508,7 +1553,6 @@ int process_contactgroup_command(int cmd,
                                  char* args) {
   char* contactgroup_name = NULL;
   contactgroup* temp_contactgroup = NULL;
-  contactsmember* temp_member = NULL;
   contact* temp_contact = NULL;
 
   (void)entry_time;
@@ -1518,50 +1562,49 @@ int process_contactgroup_command(int cmd,
     return (ERROR);
 
   /* find the contactgroup */
-  if ((temp_contactgroup = find_contactgroup(contactgroup_name)) == NULL)
+  try {
+    temp_contactgroup = configuration::applier::state::instance().contactgroups_find(
+                          contactgroup_name).get();
+  }
+  catch (not_found const& e) {
+    (void)e;
     return (ERROR);
+  }
 
   switch (cmd) {
-
-  case CMD_ENABLE_CONTACTGROUP_HOST_NOTIFICATIONS:
-  case CMD_DISABLE_CONTACTGROUP_HOST_NOTIFICATIONS:
-  case CMD_ENABLE_CONTACTGROUP_SVC_NOTIFICATIONS:
-  case CMD_DISABLE_CONTACTGROUP_SVC_NOTIFICATIONS:
-
-    /* loop through all contactgroup members */
-    for (temp_member = temp_contactgroup->members;
-         temp_member != NULL;
-         temp_member = temp_member->next) {
-
-      if ((temp_contact = temp_member->contact_ptr) == NULL)
-        continue;
-
+   case CMD_ENABLE_CONTACTGROUP_HOST_NOTIFICATIONS:
+   case CMD_DISABLE_CONTACTGROUP_HOST_NOTIFICATIONS:
+   case CMD_ENABLE_CONTACTGROUP_SVC_NOTIFICATIONS:
+   case CMD_DISABLE_CONTACTGROUP_SVC_NOTIFICATIONS:
+    // Loop through all contactgroup members.
+    for (umap<std::string, engine::contact*>::const_iterator
+           it(temp_contactgroup->get_members().begin()),
+           end(temp_contactgroup->get_members().end());
+         it != end;
+         ++it) {
+      if (!it->second)
+        continue ;
+      engine::contact* temp_member(it->second);
       switch (cmd) {
-
-      case CMD_ENABLE_CONTACTGROUP_HOST_NOTIFICATIONS:
+       case CMD_ENABLE_CONTACTGROUP_HOST_NOTIFICATIONS:
         enable_contact_host_notifications(temp_contact);
-        break;
-
-      case CMD_DISABLE_CONTACTGROUP_HOST_NOTIFICATIONS:
+        break ;
+       case CMD_DISABLE_CONTACTGROUP_HOST_NOTIFICATIONS:
         disable_contact_host_notifications(temp_contact);
-        break;
-
-      case CMD_ENABLE_CONTACTGROUP_SVC_NOTIFICATIONS:
+        break ;
+       case CMD_ENABLE_CONTACTGROUP_SVC_NOTIFICATIONS:
         enable_contact_service_notifications(temp_contact);
-        break;
-
-      case CMD_DISABLE_CONTACTGROUP_SVC_NOTIFICATIONS:
+        break ;
+       case CMD_DISABLE_CONTACTGROUP_SVC_NOTIFICATIONS:
         disable_contact_service_notifications(temp_contact);
-        break;
-
-      default:
-        break;
+        break ;
+       default:
+        break ;
       }
     }
-    break;
-
+    break ;
   default:
-    break;
+    break ;
   }
   return (OK);
 }

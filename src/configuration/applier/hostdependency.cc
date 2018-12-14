@@ -315,6 +315,13 @@ void applier::hostdependency::resolve_object(
 }
 
 /**
+ *  Do nothing.
+ */
+void applier::hostdependency::unresolve_objects() {
+  return ;
+}
+
+/**
  *  Expand hosts.
  *
  *  @param[in]     hosts      Host list.

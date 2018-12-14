@@ -359,6 +359,13 @@ void applier::servicedependency::resolve_object(
 }
 
 /**
+ *  Do nothing.
+ */
+void applier::servicedependency::unresolve_objects() {
+  return ;
+}
+
+/**
  *  Expand services.
  *
  *  @param[in]     hst      Hosts.

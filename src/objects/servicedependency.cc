@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2013 Merethis
+** Copyright 2011-2013,2017 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -135,15 +135,15 @@ std::ostream& operator<<(std::ostream& os, servicedependency const& obj) {
     dependency_period_str = chkstr(obj.dependency_period_ptr->name);
   std::string dependent_svc_str("\"NULL\"");
   if (obj.dependent_service_ptr) {
-    dependent_svc_str = obj.dependent_service_ptr->host_name;
+    dependent_svc_str = obj.dependent_service_ptr->get_host_name();
     dependent_svc_str += ", ";
-    dependent_svc_str += obj.dependent_service_ptr->description;
+    dependent_svc_str += obj.dependent_service_ptr->get_description();
   }
   std::string master_svc_str("\"NULL\"");
   if (obj.master_service_ptr) {
-    master_svc_str = obj.master_service_ptr->host_name;
+    master_svc_str = obj.master_service_ptr->get_host_name();
     master_svc_str += ", ";
-    master_svc_str += obj.master_service_ptr->description;
+    master_svc_str += obj.master_service_ptr->get_description();
   }
 
   os << "servicedependency {\n"

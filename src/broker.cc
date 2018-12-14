@@ -1,7 +1,7 @@
 /*
-** Copyright 2002-2010 Ethan Galstad
-** Copyright 2010      Nagios Core Development Team
-** Copyright 2011-2013 Merethis
+** Copyright 2002-2010           Ethan Galstad
+** Copyright 2010                Nagios Core Development Team
+** Copyright 2011-2013,2017-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -22,14 +22,15 @@
 #include <unistd.h>
 #include "com/centreon/engine/broker.hh"
 #include "com/centreon/engine/flapping.hh"
-#include "com/centreon/engine/globals.hh"
 #include "com/centreon/engine/nebmods.hh"
 #include "com/centreon/engine/nebstructs.hh"
-#include "com/centreon/engine/notifications.hh"
+#include "com/centreon/engine/notifications/notifier.hh"
 #include "com/centreon/engine/sehandlers.hh"
 #include "com/centreon/engine/string.hh"
 
 using namespace com::centreon::engine;
+using namespace com::centreon::engine::notifications;
+using namespace com::centreon::engine::commands;
 
 extern "C" {
 
@@ -40,7 +41,7 @@ extern "C" {
  *  @param[in] flags                Flags.
  *  @param[in] attr                 Attributes.
  *  @param[in] acknowledgement_type Type (sticky or not).
- *  @param[in] data                 Data.
+ *  @param[in] target               Target object
  *  @param[in] ack_author           Author.
  *  @param[in] ack_data             Acknowledgement text.
  *  @param[in] subtype              Subtype.
@@ -52,7 +53,7 @@ void broker_acknowledgement_data(
        int flags,
        int attr,
        int acknowledgement_type,
-       void* data,
+       notifications::notifier* target,
        char* ack_author,
        char* ack_data,
        int subtype,
@@ -73,21 +74,21 @@ void broker_acknowledgement_data(
   ds.timestamp = get_broker_timestamp(timestamp);
   ds.acknowledgement_type = acknowledgement_type;
   if (acknowledgement_type == SERVICE_ACKNOWLEDGEMENT) {
-    temp_service = (service*)data;
-    ds.host_name = temp_service->host_name;
-    ds.service_description = temp_service->description;
-    ds.state = temp_service->current_state;
+    temp_service = (service*)target;
+    ds.host_name = temp_service->get_host_name().c_str();
+    ds.service_description = temp_service->get_description().c_str();
+    ds.state = temp_service->get_current_state();
   }
   else {
-    temp_host = (host*)data;
-    ds.host_name = temp_host->name;
+    temp_host = (host*)target;
+    ds.host_name = temp_host->get_name().c_str();
     ds.service_description = NULL;
-    ds.state = temp_host->current_state;
+    ds.state = temp_host->get_current_state();
   }
-  ds.object_ptr = data;
+  ds.object_ptr = target;
   ds.author_name = ack_author;
   ds.comment_data = ack_data;
-  ds.is_sticky = (subtype == ACKNOWLEDGEMENT_STICKY) ? true : false;
+  ds.is_sticky = (subtype == notifier::ACKNOWLEDGEMENT_STICKY) ? true : false;
   ds.notify_contacts = notify_contacts;
   ds.persistent_comment = persistent_comment;
 
@@ -417,7 +418,7 @@ void broker_command_data(
        int type,
        int flags,
        int attr,
-       command* cmd,
+       command const* cmd,
        struct timeval const* timestamp) {
   // Config check.
   if (!(config->event_broker_options() & BROKER_COMMAND_DATA))
@@ -444,8 +445,7 @@ void broker_command_data(
  *  @param[in] attr            Attributes.
  *  @param[in] comment_type    Comment type.
  *  @param[in] entry_type      Entry type.
- *  @param[in] host_name       Host name.
- *  @param[in] svc_description Service description.
+ *  @param[in] target          Target object.
  *  @param[in] author_name     Author name.
  *  @param[in] comment_data    Comment data.
  *  @param[in] persistent      Is this comment persistent.
@@ -461,11 +461,10 @@ void broker_comment_data(
        int attr,
        int comment_type,
        int entry_type,
-       char const* host_name,
-       char const* svc_description,
+       notifications::notifier* target,
        time_t entry_time,
-       char const* author_name,
-       char const* comment_data,
+       std::string const& author_name,
+       std::string const& comment_data,
        int persistent,
        int source,
        int expires,
@@ -484,12 +483,20 @@ void broker_comment_data(
   ds.timestamp = get_broker_timestamp(timestamp);
   ds.comment_type = comment_type;
   ds.entry_type = entry_type;
-  ds.host_name = host_name;
-  ds.service_description = svc_description;
-  ds.object_ptr = NULL; // Not implemented yet.
+  if (target->is_host()) {
+    host* h(static_cast<host*>(target));
+    ds.host_name = h->get_name().c_str();
+    ds.service_description = NULL;
+  }
+  else {
+    service* s(static_cast<service*>(target));
+    ds.host_name = s->get_host_name().c_str();
+    ds.service_description = s->get_description().c_str();
+  }
+  ds.object_ptr = target;
   ds.entry_time = entry_time;
-  ds.author_name = author_name;
-  ds.comment_data = comment_data;
+  ds.author_name = author_name.c_str();
+  ds.comment_data = comment_data.c_str();
   ds.persistent = persistent;
   ds.source = source;
   ds.expires = expires;
@@ -548,20 +555,20 @@ int broker_contact_notification_data(
   ds.start_time = start_time;
   ds.end_time = end_time;
   ds.reason_type = reason_type;
-  ds.contact_name = cntct->name;
-  if (notification_type == SERVICE_NOTIFICATION) {
+  ds.contact_name = const_cast<char*>(cntct->get_name().c_str());
+  if (notification_type == notifier::SERVICE_NOTIFICATION) {
     temp_service = (service*)data;
-    ds.host_name = temp_service->host_name;
-    ds.service_description = temp_service->description;
-    ds.state = temp_service->current_state;
-    ds.output = temp_service->plugin_output;
+    ds.host_name = temp_service->get_host_name().c_str();
+    ds.service_description = temp_service->get_description().c_str();
+    ds.state = temp_service->get_current_state();
+    ds.output = temp_service->get_output().c_str();
   }
   else {
     temp_host = (host*)data;
-    ds.host_name = temp_host->name;
+    ds.host_name = temp_host->get_name().c_str();
     ds.service_description = NULL;
-    ds.state = temp_host->current_state;
-    ds.output = temp_host->plugin_output;
+    ds.state = temp_host->get_current_state();
+    ds.output = temp_host->get_output().c_str();
   }
   ds.object_ptr = data;
   ds.contact_ptr = cntct;
@@ -636,22 +643,22 @@ int broker_contact_notification_method_data(
   ds.start_time = start_time;
   ds.end_time = end_time;
   ds.reason_type = reason_type;
-  ds.contact_name = cntct->name;
+  ds.contact_name = const_cast<char*>(cntct->get_name().c_str());
   ds.command_name = command_name;
   ds.command_args = command_args;
-  if (notification_type == SERVICE_NOTIFICATION) {
+  if (notification_type == notifier::SERVICE_NOTIFICATION) {
     temp_service = (service*)data;
-    ds.host_name = temp_service->host_name;
-    ds.service_description = temp_service->description;
-    ds.state = temp_service->current_state;
-    ds.output = temp_service->plugin_output;
+    ds.host_name = temp_service->get_host_name().c_str();
+    ds.service_description = temp_service->get_description().c_str();
+    ds.state = temp_service->get_current_state();
+    ds.output = temp_service->get_output().c_str();
   }
   else {
     temp_host = (host*)data;
-    ds.host_name = temp_host->name;
+    ds.host_name = temp_host->get_name().c_str();
     ds.service_description = NULL;
-    ds.state = temp_host->current_state;
-    ds.output = temp_host->plugin_output;
+    ds.state = temp_host->get_current_state();
+    ds.output = temp_host->get_output().c_str();
   }
   ds.object_ptr = data;
   ds.contact_ptr = cntct;
@@ -674,33 +681,24 @@ int broker_contact_notification_method_data(
 /**
  *  Sends contact status updates to broker.
  *
- *  @param[in] type      Type.
- *  @param[in] flags     Flags.
- *  @param[in] attr      Attributes.
- *  @param[in] cntct     Target contact.
- *  @param[in] timestamp Timestamp.
+ *  @param[in] cntct  Target contact.
  */
-void broker_contact_status(
-       int type,
-       int flags,
-       int attr,
-       contact* cntct,
-       struct timeval const* timestamp) {
+void broker_contact_status(contact* cntct) {
   // Config check.
   if (!(config->event_broker_options() & BROKER_STATUS_DATA))
-    return;
+    return ;
 
   // Fill struct with relevant data.
   nebstruct_service_status_data ds;
-  ds.type = type;
-  ds.flags = flags;
-  ds.attr = attr;
-  ds.timestamp = get_broker_timestamp(timestamp);
+  ds.type = NEBTYPE_CONTACTSTATUS_UPDATE;
+  ds.flags = NEBFLAG_NONE;
+  ds.attr = NEBATTR_NONE;
+  ds.timestamp = get_broker_timestamp(NULL);
   ds.object_ptr = cntct;
 
   // Make callbacks.
   neb_make_callbacks(NEBCALLBACK_CONTACT_STATUS_DATA, &ds);
-  return;
+  return ;
 }
 
 /**
@@ -767,11 +765,11 @@ void broker_downtime_data(
        int flags,
        int attr,
        int downtime_type,
-       char const* host_name,
-       char const* svc_description,
+       std::string const& host_name,
+       std::string const& svc_description,
        time_t entry_time,
-       char const* author_name,
-       char const* comment_data,
+       std::string const& author_name,
+       std::string const& comment_data,
        time_t start_time,
        time_t end_time,
        int fixed,
@@ -790,12 +788,12 @@ void broker_downtime_data(
   ds.attr = attr;
   ds.timestamp = get_broker_timestamp(timestamp);
   ds.downtime_type = downtime_type;
-  ds.host_name = host_name;
-  ds.service_description = svc_description;
+  ds.host_name = host_name.c_str();
+  ds.service_description = svc_description.c_str();
   ds.object_ptr = NULL; // Not implemented yet.
   ds.entry_time = entry_time;
-  ds.author_name = author_name;
-  ds.comment_data = comment_data;
+  ds.author_name = author_name.c_str();
+  ds.comment_data = comment_data.c_str();
   ds.start_time = start_time;
   ds.end_time = end_time;
   ds.fixed = fixed;
@@ -877,12 +875,12 @@ int broker_event_handler(
   if ((eventhandler_type == SERVICE_EVENTHANDLER)
       || (eventhandler_type == GLOBAL_SERVICE_EVENTHANDLER)) {
     temp_service = (service*)data;
-    ds.host_name = temp_service->host_name;
-    ds.service_description = temp_service->description;
+    ds.host_name = temp_service->get_host_name().c_str();
+    ds.service_description = temp_service->get_description().c_str();
   }
   else {
     temp_host = (host*)data;
-    ds.host_name = temp_host->name;
+    ds.host_name = temp_host->get_name().c_str();
     ds.service_description = NULL;
   }
   ds.object_ptr = data;
@@ -990,15 +988,15 @@ void broker_flapping_data(
   ds.flapping_type = flapping_type;
   if (flapping_type == SERVICE_FLAPPING) {
     temp_service = (service*)data;
-    ds.host_name = temp_service->host_name;
-    ds.service_description = temp_service->description;
-    ds.comment_id = temp_service->flapping_comment_id;
+    ds.host_name = temp_service->get_host_name().c_str();
+    ds.service_description = temp_service->get_description().c_str();
+    // XXX ds.comment_id = temp_service->flapping_comment_id;
   }
   else {
     temp_host = (host*)data;
-    ds.host_name = temp_host->name;
+    ds.host_name = temp_host->get_name().c_str();
     ds.service_description = NULL;
-    ds.comment_id = temp_host->flapping_comment_id;
+    // XXX ds.comment_id = temp_host->flapping_comment_id;
   }
   ds.object_ptr = data;
   ds.percent_change = percent_change;
@@ -1064,7 +1062,7 @@ void broker_group_member(
   if (!(config->event_broker_options() & BROKER_GROUP_MEMBER_DATA))
     return;
 
-  // Fill struct will relevant data.
+  // Fill struct with relevant data.
   nebstruct_group_member_data ds;
   ds.type = type;
   ds.flags = flags;
@@ -1121,10 +1119,10 @@ int broker_host_check(
       int timeout,
       int early_timeout,
       int retcode,
-      char* cmdline,
-      char* output,
-      char* long_output,
-      char* perfdata,
+      char const* cmdline,
+      char const* output,
+      char const* long_output,
+      char const* perfdata,
       struct timeval const* timestamp) {
   // Config check.
   if (!(config->event_broker_options() & BROKER_HOST_CHECKS))
@@ -1148,11 +1146,11 @@ int broker_host_check(
   ds.flags = flags;
   ds.attr = attr;
   ds.timestamp = get_broker_timestamp(timestamp);
-  ds.host_name = hst->name;
+  ds.host_name = hst->get_name().c_str();
   ds.object_ptr = hst;
   ds.check_type = check_type;
-  ds.current_attempt = hst->current_attempt;
-  ds.max_attempts = hst->max_attempts;
+  ds.current_attempt = hst->get_current_attempt();
+  ds.max_attempts = hst->get_max_attempts();
   ds.state = state;
   ds.state_type = state_type;
   ds.timeout = timeout;
@@ -1181,28 +1179,19 @@ int broker_host_check(
 /**
  *  Sends host status updates to broker.
  *
- *  @param[in] type      Type.
- *  @param[in] flags     Flags.
- *  @param[in] attr      Attributes.
- *  @param[in] hst       Host.
- *  @param[in] timestamp Timestamp.
+ *  @param[in] hst  Host.
  */
-void broker_host_status(
-       int type,
-       int flags,
-       int attr,
-       host* hst,
-       struct timeval const* timestamp) {
+void broker_host_status(host* hst) {
   // Config check.
   if (!(config->event_broker_options() & BROKER_STATUS_DATA))
     return;
 
   // Fill struct with relevant data.
   nebstruct_host_status_data ds;
-  ds.type = type;
-  ds.flags = flags;
-  ds.attr = attr;
-  ds.timestamp = get_broker_timestamp(timestamp);
+  ds.type = NEBTYPE_HOSTSTATUS_UPDATE;
+  ds.flags = NEBFLAG_NONE;
+  ds.attr = NEBATTR_NONE;
+  ds.timestamp = get_broker_timestamp(NULL);
   ds.object_ptr = hst;
 
   // Make callbacks.
@@ -1315,8 +1304,8 @@ int broker_notification_data(
       struct timeval start_time,
       struct timeval end_time,
       void* data,
-      char* ack_author,
-      char* ack_data,
+      char const* ack_author,
+      char const* ack_data,
       int escalated,
       int contacts_notified,
       struct timeval const* timestamp) {
@@ -1336,19 +1325,19 @@ int broker_notification_data(
   ds.start_time = start_time;
   ds.end_time = end_time;
   ds.reason_type = reason_type;
-  if (notification_type == SERVICE_NOTIFICATION) {
+  if (notification_type == notifier::SERVICE_NOTIFICATION) {
     temp_service = (service*)data;
-    ds.host_name = temp_service->host_name;
-    ds.service_description = temp_service->description;
-    ds.state = temp_service->current_state;
-    ds.output = temp_service->plugin_output;
+    ds.host_name = temp_service->get_host_name().c_str();
+    ds.service_description = temp_service->get_description().c_str();
+    ds.state = temp_service->get_current_state();
+    ds.output = temp_service->get_output().c_str();
   }
   else {
     temp_host = (host*)data;
-    ds.host_name = temp_host->name;
+    ds.host_name = temp_host->get_name().c_str();
     ds.service_description = NULL;
-    ds.state = temp_host->current_state;
-    ds.output = temp_host->plugin_output;
+    ds.state = temp_host->get_current_state();
+    ds.output = temp_host->get_output().c_str();
   }
   ds.object_ptr = data;
   ds.ack_author = ack_author;
@@ -1578,14 +1567,14 @@ int broker_service_check(
   ds.flags = flags;
   ds.attr = attr;
   ds.timestamp = get_broker_timestamp(timestamp);
-  ds.host_name = svc->host_name;
-  ds.service_description = svc->description;
+  ds.host_name = svc->get_host_name().c_str();
+  ds.service_description = svc->get_description().c_str();
   ds.object_ptr = svc;
   ds.check_type = check_type;
-  ds.current_attempt = svc->current_attempt;
-  ds.max_attempts = svc->max_attempts;
-  ds.state = svc->current_state;
-  ds.state_type = svc->state_type;
+  ds.current_attempt = svc->get_current_attempt();
+  ds.max_attempts = svc->get_max_attempts();
+  ds.state = svc->get_current_state();
+  ds.state_type = svc->get_current_state_type();
   ds.timeout = timeout;
   ds.command_name = command_name;
   ds.command_args = command_args;
@@ -1596,9 +1585,9 @@ int broker_service_check(
   ds.execution_time = exectime;
   ds.latency = latency;
   ds.return_code = retcode;
-  ds.output = svc->plugin_output;
-  ds.long_output = svc->long_plugin_output;
-  ds.perf_data = svc->perf_data;
+  ds.output = svc->get_output().c_str();
+  ds.long_output = svc->get_long_output().c_str();
+  ds.perf_data = svc->get_perfdata().c_str();
 
   // Make callbacks.
   int return_code;
@@ -1614,28 +1603,19 @@ int broker_service_check(
 /**
  *  Sends service status updates to broker.
  *
- *  @param[in] type      Type.
- *  @param[in] flags     Flags.
- *  @param[in] attr      Attributes.
- *  @param[in] svc       Target service.
- *  @param[in] timestamp Timestamp.
+ *  @param[in] svc  Target service.
  */
-void broker_service_status(
-       int type,
-       int flags,
-       int attr,
-       service* svc,
-       struct timeval const* timestamp) {
+void broker_service_status(service* svc) {
   // Config check.
   if (!(config->event_broker_options() & BROKER_STATUS_DATA))
-    return;
+    return ;
 
   // Fill struct with relevant data.
   nebstruct_service_status_data ds;
-  ds.type = type;
-  ds.flags = flags;
-  ds.attr = attr;
-  ds.timestamp = get_broker_timestamp(timestamp);
+  ds.type = NEBTYPE_SERVICESTATUS_UPDATE;
+  ds.flags = NEBFLAG_NONE;
+  ds.attr = NEBATTR_NONE;
+  ds.timestamp = get_broker_timestamp(NULL);
   ds.object_ptr = svc;
 
   // Make callbacks.
@@ -1683,15 +1663,15 @@ void broker_statechange_data(
   ds.statechange_type = statechange_type;
   if (statechange_type == SERVICE_STATECHANGE) {
     temp_service = (service*)data;
-    ds.host_name = temp_service->host_name;
-    ds.service_description = temp_service->description;
-    ds.output = temp_service->plugin_output;
+    ds.host_name = temp_service->get_host_name().c_str();
+    ds.service_description = temp_service->get_description().c_str();
+    ds.output = temp_service->get_output().c_str();
   }
   else {
     temp_host = (host*)data;
-    ds.host_name = temp_host->name;
+    ds.host_name = temp_host->get_name().c_str();
     ds.service_description = NULL;
-    ds.output = temp_host->plugin_output;
+    ds.output = temp_host->get_output().c_str();
   }
   ds.object_ptr = data;
   ds.state = state;

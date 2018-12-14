@@ -18,8 +18,8 @@
 */
 
 #include "com/centreon/engine/common.hh"
+#include "com/centreon/engine/downtime_manager.hh"
 #include "com/centreon/engine/globals.hh"
-#include "com/centreon/engine/objects/command.hh"
 #include "com/centreon/engine/retention/applier/program.hh"
 #include "com/centreon/engine/retention/applier/utils.hh"
 #include "com/centreon/engine/string.hh"
@@ -113,7 +113,7 @@ void applier::program::apply(
       next_comment_id = *obj.next_comment_id();
 
     if (obj.next_downtime_id().is_set())
-      next_downtime_id = *obj.next_downtime_id();
+      downtime_manager::instance().set_next_downtime_id(*obj.next_downtime_id());
 
     if (obj.next_event_id().is_set())
       next_event_id = *obj.next_event_id();

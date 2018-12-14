@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2013 Merethis
+** Copyright 2011-2013,2017-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -124,10 +124,10 @@ std::ostream& operator<<(std::ostream& os, hostdependency const& obj) {
     dependency_period_str = chkstr(obj.dependency_period_ptr->name);
   char const* dependent_hst_str(NULL);
   if (obj.dependent_host_ptr)
-    dependent_hst_str = obj.dependent_host_ptr->name;
+    dependent_hst_str = obj.dependent_host_ptr->get_name().c_str();
   char const* master_hst_str(NULL);
   if (obj.master_host_ptr)
-    master_hst_str = obj.master_host_ptr->name;
+    master_hst_str = obj.master_host_ptr->get_name().c_str();
 
   os << "hostdependency {\n"
     "  dependency_type:        " << obj.dependency_type << "\n"
@@ -291,4 +291,3 @@ int check_for_circular_hostdependency_path(
 
   return (false);
 }
-

@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2013 Merethis
+** Copyright 2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -17,9 +17,13 @@
 ** <http://www.gnu.org/licenses/>.
 */
 
+#include <memory>
+#include "com/centreon/engine/configuration/applier/state.hh"
+#include "com/centreon/engine/downtime_manager.hh"
 #include "com/centreon/engine/globals.hh"
-#include "com/centreon/engine/objects/downtime.hh"
+#include "com/centreon/engine/host.hh"
 #include "com/centreon/engine/retention/applier/downtime.hh"
+#include "com/centreon/engine/service.hh"
 
 using namespace com::centreon::engine;
 using namespace com::centreon::engine::retention;
@@ -30,9 +34,6 @@ using namespace com::centreon::engine::retention;
  *  @param[in] lst The downtime list to add.
  */
 void applier::downtime::apply(list_downtime const& lst) {
-  // Big speedup when reading retention.dat in bulk.
-  defer_downtime_sorting = 1;
-
   for (list_downtime::const_iterator it(lst.begin()), end(lst.end());
        it != end;
        ++it) {
@@ -41,9 +42,6 @@ void applier::downtime::apply(list_downtime const& lst) {
     else
       _add_service_downtime(**it);
   }
-
-  // Sort all downtimes.
-  sort_downtime();
 }
 
 /**
@@ -52,39 +50,63 @@ void applier::downtime::apply(list_downtime const& lst) {
  *  @param[in] obj The downtime to add into the host.
  */
 void applier::downtime::_add_host_downtime(
-       retention::downtime const& obj) throw () {
-  add_host_downtime(
-    obj.host_name().c_str(),
-    obj.entry_time(),
-    obj.author().c_str(),
-    obj.comment_data().c_str(),
-    obj.start_time(),
-    obj.end_time(),
-    obj.fixed(),
-    obj.triggered_by(),
-    obj.duration(),
-    obj.downtime_id());
-  register_downtime(HOST_DOWNTIME, obj.downtime_id());
+       retention::downtime const& obj) {
+  // Check if downtime already exist.
+  if (downtime_manager::instance().get_downtimes().find(obj.downtime_id())
+      != downtime_manager::instance().get_downtimes().end()) {
+    logger(logging::log_runtime_error, logging::basic)
+      << "Error: attempting to create host downtime "
+      << obj.downtime_id()
+      << " from retention, which does already exist";
+  }
+  // Downtime does not exist, good to go.
+  else {
+    downtime_manager::instance().schedule(
+      configuration::applier::state::instance().hosts_find(obj.host_name()).get(),
+      obj.entry_time(),
+      obj.author(),
+      obj.comment_data(),
+      obj.start_time(),
+      obj.end_time(),
+      obj.fixed(),
+      obj.duration(),
+      obj.triggered_by(),
+      downtime_manager::DOWNTIME_PROPAGATE_NONE,
+      obj.downtime_id());
+  }
+  return ;
 }
 
 /**
- *  Add serivce downtime.
+ *  Add service downtime.
  *
  *  @param[in] obj The downtime to add into the service.
  */
 void applier::downtime::_add_service_downtime(
-       retention::downtime const& obj) throw () {
-  add_service_downtime(
-    obj.host_name().c_str(),
-    obj.service_description().c_str(),
-    obj.entry_time(),
-    obj.author().c_str(),
-    obj.comment_data().c_str(),
-    obj.start_time(),
-    obj.end_time(),
-    obj.fixed(),
-    obj.triggered_by(),
-    obj.duration(),
-    obj.downtime_id());
-  register_downtime(SERVICE_DOWNTIME, obj.downtime_id());
+       retention::downtime const& obj) {
+  // Check if downtime already exist.
+  if (downtime_manager::instance().get_downtimes().find(obj.downtime_id())
+      != downtime_manager::instance().get_downtimes().end()) {
+    logger(logging::log_runtime_error, logging::basic)
+      << "Error: attempting to create service downtime "
+      << obj.downtime_id()
+      << " from retention, which does already exist";
+  }
+  // Downtime does not exist, good to go.
+  else {
+    downtime_manager::instance().schedule(
+      configuration::applier::state::instance().services_find(
+        std::make_pair(obj.host_name(), obj.service_description().c_str())).get(),
+      obj.entry_time(),
+      obj.author(),
+      obj.comment_data(),
+      obj.start_time(),
+      obj.end_time(),
+      obj.fixed(),
+      obj.duration(),
+      obj.triggered_by(),
+      downtime_manager::DOWNTIME_PROPAGATE_NONE,
+      obj.downtime_id());
+  }
+  return ;
 }

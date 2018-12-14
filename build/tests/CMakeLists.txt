@@ -1,5 +1,5 @@
 ##
-## Copyright 2016 Centreon
+## Copyright 2016-2018 Centreon
 ##
 ## This file is part of Centreon Engine.
 ##
@@ -30,11 +30,34 @@ if (WITH_TESTING)
   # Unit test executable.
   add_executable("ut"
     # Sources.
+    "${TESTS_DIR}/commands/simple-command.cc"
+    "${TESTS_DIR}/comments/comment.cc"
+    "${TESTS_DIR}/configuration/applier/applier-command.cc"
+    "${TESTS_DIR}/configuration/applier/applier-connector.cc"
+    "${TESTS_DIR}/configuration/applier/applier-contact.cc"
+    "${TESTS_DIR}/configuration/applier/applier-contactgroup.cc"
+    "${TESTS_DIR}/configuration/applier/applier-hostgroup.cc"
+    "${TESTS_DIR}/configuration/applier/applier-service.cc"
+    "${TESTS_DIR}/configuration/applier/applier-servicegroup.cc"
+    "${TESTS_DIR}/configuration/command.cc"
+    "${TESTS_DIR}/configuration/connector.cc"
+    "${TESTS_DIR}/configuration/contact.cc"
+    "${TESTS_DIR}/configuration/contactgroup.cc"
     "${TESTS_DIR}/configuration/host.cc"
     "${TESTS_DIR}/configuration/object.cc"
     "${TESTS_DIR}/configuration/service.cc"
+    "${TESTS_DIR}/contacts/contactgroup-config.cc"
+    "${TESTS_DIR}/downtimes/downtime_manager.cc"
     "${TESTS_DIR}/downtime_finder.cc"
     "${TESTS_DIR}/main.cc"
+    "${TESTS_DIR}/macros/host.cc"
+    "${TESTS_DIR}/macros/service.cc"
+    "${TESTS_DIR}/notifications/notifier/acknowledgement_notification.cc"
+    "${TESTS_DIR}/notifications/notifier/check_notification_management.cc"
+    "${TESTS_DIR}/notifications/notifier/flapping_notification.cc"
+    "${TESTS_DIR}/notifications/notifier/recovery_notification.cc"
+    "${TESTS_DIR}/notifications/notifier/recovery_notification_delay.cc"
+    "${TESTS_DIR}/retention/contact.cc"
     "${TESTS_DIR}/timeperiod/get_next_valid_time/between_two_years.cc"
     "${TESTS_DIR}/timeperiod/get_next_valid_time/calendar_date.cc"
     "${TESTS_DIR}/timeperiod/get_next_valid_time/dst_backward.cc"

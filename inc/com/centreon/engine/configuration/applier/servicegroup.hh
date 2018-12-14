@@ -46,6 +46,7 @@ namespace                  configuration {
                              configuration::servicegroup const& obj);
       void                 resolve_object(
                              configuration::servicegroup const& obj);
+      void                 unresolve_objects();
 
      private:
       typedef std::map<configuration::servicegroup::key_type, configuration::servicegroup> resolved_set;

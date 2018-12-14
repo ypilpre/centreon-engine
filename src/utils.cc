@@ -1,7 +1,7 @@
 /*
-** Copyright 1999-2009      Ethan Galstad
-** Copyright 2009-2012      Icinga Development Team (http://www.icinga.org)
-** Copyright 2011-2014,2016 Centreon
+** Copyright 1999-2009           Ethan Galstad
+** Copyright 2009-2012           Icinga Development Team (http://www.icinga.org)
+** Copyright 2011-2014,2016-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -38,15 +38,16 @@
 #include "com/centreon/engine/broker/loader.hh"
 #include "com/centreon/engine/checks/checker.hh"
 #include "com/centreon/engine/commands/raw.hh"
-#include "com/centreon/engine/commands/set.hh"
+#include "com/centreon/engine/configuration/applier/state.hh"
 #include "com/centreon/engine/events/defines.hh"
 #include "com/centreon/engine/events/loop.hh"
 #include "com/centreon/engine/globals.hh"
+#include "com/centreon/engine/hostgroup.hh"
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/macros.hh"
 #include "com/centreon/engine/nebmods.hh"
-#include "com/centreon/engine/notifications.hh"
-#include "com/centreon/engine/objects/comment.hh"
+#include "com/centreon/engine/not_found.hh"
+#include "com/centreon/engine/comment.hh"
 #include "com/centreon/engine/shared.hh"
 #include "com/centreon/engine/string.hh"
 #include "com/centreon/engine/utils.hh"
@@ -184,7 +185,7 @@ char const* my_ctime(time_t const* t) {
 /* given a "raw" command, return the "expanded" or "whole" command line */
 int get_raw_command_line_r(
       nagios_macros* mac,
-      command* cmd_ptr,
+      commands::command* cmd_ptr,
       char const* cmd,
       char** full_command,
       int macro_options) {
@@ -207,12 +208,12 @@ int get_raw_command_line_r(
   }
 
   logger(dbg_commands | dbg_checks | dbg_macros, most)
-    << "Raw Command Input: " << cmd_ptr->command_line;
+    << "Raw Command Input: " << cmd_ptr->get_command_line();
 
   /* get the full command line */
   if (full_command != NULL) {
     *full_command
-      = string::dup(cmd_ptr->command_line ? cmd_ptr->command_line : "");
+      = string::dup(cmd_ptr->get_command_line());
   }
 
   /* get the command arguments */
@@ -275,7 +276,7 @@ int get_raw_command_line_r(
  * threadsafe
  */
 int get_raw_command_line(
-      command* cmd_ptr,
+      commands::command* cmd_ptr,
       char* cmd,
       char** full_command,
       int macro_options) {
@@ -380,14 +381,18 @@ int free_check_result(check_result* info) {
   return (OK);
 }
 
-/* parse raw plugin output and return: short and long output, perf data */
+/**
+ *  Parse raw plugin output and set target object with short and long
+ *  output, perf data.
+ *
+ *  @param[out] object  Target object.
+ *  @param[in]  buffer  Source buffer.
+ *
+ *  @return OK on success.
+ */
 int parse_check_output(
-      char* buf,
-      char** short_output,
-      char** long_output,
-      char** perf_data,
-      int escape_newlines_please,
-      int newlines_are_escaped) {
+      checks::checkable& object,
+      std::string const& buffer) {
   int current_line = 0;
   bool found_newline = false;
   bool eof = false;
@@ -402,16 +407,17 @@ int parse_check_output(
   int y = 0;
 
   /* initialize values */
-  if (short_output)
-    *short_output = NULL;
-  if (long_output)
-    *long_output = NULL;
-  if (perf_data)
-    *perf_data = NULL;
+  object.set_output(std::string());
+  object.set_long_output(std::string());
+  object.set_perfdata(std::string());
 
   /* nothing to do */
-  if (buf == NULL || *buf == 0)
+  if (buffer.empty())
     return (OK);
+
+  /* copy buffer to a modifiable buffer */
+  char* buf(new char[buffer.size() + 1]);
+  strcpy(buf, buffer.c_str());
 
   used_buf = strlen(buf) + 1;
 
@@ -420,21 +426,19 @@ int parse_check_output(
   dbuf_init(&db2, dbuf_chunk);
 
   /* unescape newlines and escaped backslashes first */
-  if (newlines_are_escaped) {
-    for (x = 0, y = 0; buf[x] != '\x0'; x++) {
-      if (buf[x] == '\\' && buf[x + 1] == '\\') {
-        x++;
-        buf[y++] = buf[x];
-      }
-      else if (buf[x] == '\\' && buf[x + 1] == 'n') {
-        x++;
-        buf[y++] = '\n';
-      }
-      else
-        buf[y++] = buf[x];
+  for (x = 0, y = 0; buf[x] != '\x0'; x++) {
+    if (buf[x] == '\\' && buf[x + 1] == '\\') {
+      x++;
+      buf[y++] = buf[x];
     }
-    buf[y] = '\x0';
+    else if (buf[x] == '\\' && buf[x + 1] == 'n') {
+      x++;
+      buf[y++] = '\n';
+    }
+    else
+      buf[y++] = buf[x];
   }
+  buf[y] = '\x0';
 
   /* process each line of input */
   for (x = 0; !eof; x++) {
@@ -442,8 +446,7 @@ int parse_check_output(
     /* we found the end of a line */
     if (buf[x] == '\n')
       found_newline = true;
-    else if (buf[x] == '\\' && buf[x + 1] == 'n'
-             && newlines_are_escaped == true) {
+    else if (buf[x] == '\\' && buf[x + 1] == 'n') {
       found_newline = true;
       buf[x] = '\x0';
       x++;
@@ -468,8 +471,8 @@ int parse_check_output(
 
         /* get the short plugin output */
         if ((ptr = strtok(tempbuf, "|"))) {
-          if (short_output)
-            *short_output = string::dup(ptr);
+          strip(ptr);
+          object.set_output(ptr);
 
           /* get the optional perf data */
           if ((ptr = strtok(NULL, "\n")))
@@ -535,46 +538,38 @@ int parse_check_output(
   }
 
   /* save long output */
-  if (long_output && (db1.buf && strcmp(db1.buf, ""))) {
-    if (escape_newlines_please == false)
-      *long_output = string::dup(db1.buf);
-    else {
-      /* escape newlines (and backslashes) in long output */
-      tempbuf = new char[strlen(db1.buf) * 2 + 1];
+  if (db1.buf && strcmp(db1.buf, "")) {
+    /* escape newlines (and backslashes) in long output */
+    tempbuf = new char[strlen(db1.buf) * 2 + 1];
 
-      for (x = 0, y = 0; db1.buf[x] != '\x0'; x++) {
-
-        if (db1.buf[x] == '\n') {
-          tempbuf[y++] = '\\';
-          tempbuf[y++] = 'n';
-        }
-        else if (db1.buf[x] == '\\') {
-          tempbuf[y++] = '\\';
-          tempbuf[y++] = '\\';
-        }
-        else
-          tempbuf[y++] = db1.buf[x];
+    for (x = 0, y = 0; db1.buf[x] != '\x0'; x++) {
+      if (db1.buf[x] == '\n') {
+        tempbuf[y++] = '\\';
+        tempbuf[y++] = 'n';
       }
-
-      tempbuf[y] = '\x0';
-      *long_output = string::dup(tempbuf);
-      delete[] tempbuf;
+      else if (db1.buf[x] == '\\') {
+        tempbuf[y++] = '\\';
+        tempbuf[y++] = '\\';
+      }
+      else
+        tempbuf[y++] = db1.buf[x];
     }
+
+    tempbuf[y] = '\x0';
+    object.set_long_output(tempbuf);
+    delete [] tempbuf;
   }
 
   /* save perf data */
-  if (perf_data && (db2.buf && strcmp(db2.buf, "")))
-    *perf_data = string::dup(db2.buf);
-
-  /* strip short output and perf data */
-  if (short_output)
-    strip(*short_output);
-  if (perf_data)
-    strip(*perf_data);
+  if (db2.buf && strcmp(db2.buf, "")) {
+    strip(db2.buf);
+    object.set_perfdata(db2.buf);
+  }
 
   /* free dynamic buffers */
   dbuf_free(&db1);
   dbuf_free(&db2);
+  delete [] buf;
 
   return (OK);
 }
@@ -628,10 +623,10 @@ char* get_next_string_from_buf(
  *  @return True if the object name contains an illegal character, false
  *          otherwise.
  */
-int contains_illegal_object_chars(char* name) {
+bool contains_illegal_object_chars(char const* name) {
   if (!name || !illegal_object_chars)
     return (false);
-  return (strpbrk(name, illegal_object_chars) ? TRUE : FALSE);
+  return (strpbrk(name, illegal_object_chars) ? true : false);
 }
 
 /* escapes newlines in a string */
@@ -961,10 +956,13 @@ void cleanup() {
  */
 void free_memory(nagios_macros* mac) {
   // Free memory allocated to comments.
-  free_comment_data();
-
-  // Free memory allocated to downtimes.
-  free_downtime_data();
+  for (std::map<unsigned long, comment*>::iterator
+         it(comment_list.begin()),
+         end(comment_list.end());
+       it != end;
+       ++it)
+    delete it->second;
+  comment_list.clear();
 
   // Free memory for the high priority event list.
   for (timed_event* this_event(event_list_high); this_event;) {
@@ -992,8 +990,11 @@ void free_memory(nagios_macros* mac) {
   event_list_low = NULL;
   quick_timed_event.clear(hash_timed_event::low);
 
-  // Free any notification list that may have been overlooked.
-  free_notification_list();
+    ///////////////
+    // FIXME DBR //
+    ///////////////
+//  // Free any notification list that may have been overlooked.
+//  free_notification_list();
 
   /*
   ** Free memory associated with macros. It's ok to only free the
@@ -1007,19 +1008,104 @@ void free_memory(nagios_macros* mac) {
   return;
 }
 
-/* free a notification list that was created */
-void free_notification_list() {
-  notification* temp_notification = NULL;
-  notification* next_notification = NULL;
+/**
+ *  Given a command name, find a command from the list in memory.
+ *
+ *  @param[in] name Command name.
+ *
+ *  @return Command object if found, an exception is thrown otherwise.
+ */
+shared_ptr<commands::command>& find_command(std::string const& name) {
+  if (name.empty())
+    throw (not_found_error() << "Could not find a command with an empty name");
 
-  temp_notification = notification_list;
-  while (temp_notification != NULL) {
-    next_notification = temp_notification->next;
-    delete temp_notification;
-    temp_notification = next_notification;
-  }
+  command_map::iterator
+    it(configuration::applier::state::instance().commands().find(name));
+  if (it == configuration::applier::state::instance().commands().end())
+    throw (not_found_error() << "Could not find command '" << name << "'");
 
-  /* reset notification list pointer */
-  notification_list = NULL;
-  return;
+  return (it->second);
+}
+
+/**
+ *  Given a command name, find a command from the list in memory.
+ *
+ *  @param[in] name Command name.
+ *
+ *  @return Command object if found, an exception is thrown otherwise.
+ */
+shared_ptr<commands::connector>& find_connector(std::string const& name) {
+  if (name.empty())
+    throw (not_found_error() << "Could not find a connector with an empty name");
+
+  connector_map::iterator
+    it(configuration::applier::state::instance().connectors().find(name));
+  if (it == configuration::applier::state::instance().connectors().end())
+    throw (not_found_error() << "Could not find connector '" << name << "'");
+
+  return (it->second);
+}
+
+/**
+ *  Given a timeperiod name, find the timeperiod from the list in memory.
+ *
+ *  @param[in] name Timeperiod name.
+ *
+ *  @return Timeperiod object if found, an exception is thrown otherwise.
+ */
+timeperiod& find_timeperiod(std::string const& name) {
+  if (name.empty())
+    throw (not_found_error()
+      << "Could not find a timeperiod with an empty name");
+
+  umap<std::string, shared_ptr<timeperiod_struct> >::const_iterator
+    it(configuration::applier::state::instance().timeperiods().find(name));
+  if (it == configuration::applier::state::instance().timeperiods().end())
+    throw (not_found_error() << "Could not find timeperiod '" << name << "'");
+
+  return (*it->second.get());
+}
+
+/**
+ *  Get hostgroup by name.
+ *
+ *  @param[in] name The hostgroup name.
+ *
+ *  @return The struct hostgroup or throw exception if the
+ *          hostgroup is not found.
+ */
+hostgroup& find_hostgroup(std::string const& name) {
+  if (name.empty())
+    throw (not_found_error()
+      << "Could not find a hostgroup with an empty name");
+
+  umap<std::string, shared_ptr<hostgroup> >::const_iterator
+    it(configuration::applier::state::instance().hostgroups().find(name));
+  if (it == configuration::applier::state::instance().hostgroups().end())
+    throw (not_found_error()
+      << "Could not find a hostgroup with an empty name");
+
+  return (*it->second.get());
+}
+
+/**
+ *  Get servicegroup by name.
+ *
+ *  @param[in] name The servicegroup name.
+ *
+ *  @return The struct servicegroup or throw exception if the
+ *          servicegroup is not found.
+ */
+servicegroup& find_servicegroup(std::string const& name) {
+  if (name.empty())
+    throw (not_found_error()
+      << "Could not find a servicegroup with an empty name");
+
+  umap<std::string, shared_ptr<servicegroup> >::const_iterator
+    it(configuration::applier::state::instance().servicegroups().find(name));
+  if (it == configuration::applier::state::instance().servicegroups().end())
+    throw (not_found_error()
+      << "Could not find a servicegroup with an empty name");
+
+  return (*it->second.get());
 }

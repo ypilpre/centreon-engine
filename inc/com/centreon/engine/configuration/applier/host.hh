@@ -20,6 +20,7 @@
 #ifndef CCE_CONFIGURATION_APPLIER_HOST_HH
 #  define CCE_CONFIGURATION_APPLIER_HOST_HH
 
+#  include "com/centreon/engine/host.hh"
 #  include "com/centreon/engine/namespace.hh"
 
 CCE_BEGIN()
@@ -45,6 +46,21 @@ namespace          configuration {
                      configuration::host const& obj);
       void         resolve_object(
                      configuration::host const& obj);
+      void         unresolve_objects();
+
+      // Specific member resolution.
+      void         resolve_check_period(
+                     ::host& hst,
+                     std::string const& period);
+      void         resolve_check_command(
+                     ::host& hst,
+                     std::string const& cmd);
+      void         resolve_event_handler(
+                     ::host& hst,
+                     std::string const& cmd);
+      void         resolve_notification_period(
+                     ::host& hst,
+                     std::string const& period);
     };
   }
 }

@@ -1,6 +1,6 @@
 /*
-** Copyright 1999-2010      Ethan Galstad
-** Copyright 2011-2013,2016 Centreon
+** Copyright 1999-2010           Ethan Galstad
+** Copyright 2011-2013,2016-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -18,6 +18,7 @@
 ** <http://www.gnu.org/licenses/>.
 */
 
+#include "com/centreon/engine/common.hh"
 #include "com/centreon/engine/macros/clear_host.hh"
 #include "com/centreon/engine/macros/defines.hh"
 #include "com/centreon/engine/macros/misc.hh"
@@ -86,18 +87,9 @@ int clear_host_macros_r(nagios_macros* mac) {
   }
 
   // Clear custom host variables.
-  customvariablesmember* next(NULL);
-  for (customvariablesmember* it = mac->custom_host_vars;
-       it != NULL;
-       it = next) {
-    next = it->next;
-    delete[] it->variable_name;
-    delete[] it->variable_value;
-    delete it;
-  }
+  mac->custom_host_vars.clear();
 
   // Clear pointers.
-  mac->custom_host_vars = NULL;
   mac->host_ptr = NULL;
 
   return (OK);

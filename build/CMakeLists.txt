@@ -665,17 +665,28 @@ set(
   # Sources.
   "${SRC_DIR}/broker.cc"
   "${SRC_DIR}/checks.cc"
+  "${SRC_DIR}/comment.cc"
   "${SRC_DIR}/config.cc"
+  "${SRC_DIR}/contact.cc"
+  "${SRC_DIR}/contactgroup.cc"
+  "${SRC_DIR}/customvar.cc"
   "${SRC_DIR}/diagnostic.cc"
+  "${SRC_DIR}/downtime.cc"
   "${SRC_DIR}/downtime_finder.cc"
+  "${SRC_DIR}/downtime_manager.cc"
   "${SRC_DIR}/error.cc"
   "${SRC_DIR}/flapping.cc"
   "${SRC_DIR}/globals.cc"
+  "${SRC_DIR}/host.cc"
+  "${SRC_DIR}/hostgroup.cc"
   "${SRC_DIR}/macros.cc"
+  "${SRC_DIR}/monitorable.cc"
   "${SRC_DIR}/nebmods.cc"
-  "${SRC_DIR}/notifications.cc"
+  "${SRC_DIR}/not_found.cc"
   "${SRC_DIR}/perfdata.cc"
   "${SRC_DIR}/sehandlers.cc"
+  "${SRC_DIR}/service.cc"
+  "${SRC_DIR}/servicegroup.cc"
   "${SRC_DIR}/shared.cc"
   "${SRC_DIR}/statusdata.cc"
   "${SRC_DIR}/string.cc"
@@ -683,33 +694,44 @@ set(
   "${SRC_DIR}/timezone_locker.cc"
   "${SRC_DIR}/timezone_manager.cc"
   "${SRC_DIR}/utils.cc"
-  "${SRC_DIR}/xcddefault.cc"
-  "${SRC_DIR}/xdddefault.cc"
   "${SRC_DIR}/xpddefault.cc"
   "${SRC_DIR}/xsddefault.cc"
 
   # Headers.
   "${INC_DIR}/com/centreon/engine/broker.hh"
   "${INC_DIR}/com/centreon/engine/checks.hh"
+  "${INC_DIR}/com/centreon/engine/checks/checkable.hh"
   "${INC_DIR}/com/centreon/engine/circular_buffer.hh"
+  "${INC_DIR}/com/centreon/engine/comment.hh"
   "${INC_DIR}/com/centreon/engine/common.hh"
   "${INC_DIR}/com/centreon/engine/config.hh"
+  "${INC_DIR}/com/centreon/engine/contact.hh"
+  "${INC_DIR}/com/centreon/engine/contactgroup.hh"
+  "${INC_DIR}/com/centreon/engine/customvar.hh"
   "${INC_DIR}/com/centreon/engine/diagnostic.hh"
+  "${INC_DIR}/com/centreon/engine/downtime.hh"
   "${INC_DIR}/com/centreon/engine/downtime_finder.hh"
+  "${INC_DIR}/com/centreon/engine/downtime_manager.hh"
   "${INC_DIR}/com/centreon/engine/error.hh"
   "${INC_DIR}/com/centreon/engine/flapping.hh"
   "${INC_DIR}/com/centreon/engine/globals.hh"
+  "${INC_DIR}/com/centreon/engine/host.hh"
+  "${INC_DIR}/com/centreon/engine/hostgroup.hh"
   "${INC_DIR}/com/centreon/engine/logging.hh"
   "${INC_DIR}/com/centreon/engine/macros.hh"
+  "${INC_DIR}/com/centreon/engine/monitorable.hh"
   "${INC_DIR}/com/centreon/engine/nebcallbacks.hh"
   "${INC_DIR}/com/centreon/engine/neberrors.hh"
   "${INC_DIR}/com/centreon/engine/nebmods.hh"
   "${INC_DIR}/com/centreon/engine/nebmodules.hh"
   "${INC_DIR}/com/centreon/engine/nebstructs.hh"
-  "${INC_DIR}/com/centreon/engine/notifications.hh"
+  "${INC_DIR}/com/centreon/engine/not_found.hh"
+  "${INC_DIR}/com/centreon/engine/notifications/notifier.hh"
   "${INC_DIR}/com/centreon/engine/opt.hh"
   "${INC_DIR}/com/centreon/engine/perfdata.hh"
   "${INC_DIR}/com/centreon/engine/sehandlers.hh"
+  "${INC_DIR}/com/centreon/engine/service.hh"
+  "${INC_DIR}/com/centreon/engine/servicegroup.hh"
   "${INC_DIR}/com/centreon/engine/shared.hh"
   "${INC_DIR}/com/centreon/engine/statusdata.hh"
   "${INC_DIR}/com/centreon/engine/string.hh"
@@ -718,8 +740,6 @@ set(
   "${INC_DIR}/com/centreon/engine/timezone_manager.hh"
   "${INC_DIR}/com/centreon/engine/utils.hh"
   "${INC_DIR}/com/centreon/engine/version.hh"
-  "${INC_DIR}/com/centreon/engine/xcddefault.hh"
-  "${INC_DIR}/com/centreon/engine/xdddefault.hh"
   "${INC_DIR}/com/centreon/engine/xpddefault.hh"
   "${INC_DIR}/com/centreon/engine/xsddefault.hh"
 )
@@ -727,15 +747,16 @@ set(
 # Subdirectories with core features.
 add_subdirectory("broker")
 add_subdirectory("checks")
-add_subdirectory("conf")
-add_subdirectory("configuration")
 add_subdirectory("commands")
 add_subdirectory("compatibility")
+add_subdirectory("conf")
+add_subdirectory("configuration")
 add_subdirectory("deleter")
 add_subdirectory("events")
 add_subdirectory("logging")
 add_subdirectory("macros")
 add_subdirectory("modules")
+add_subdirectory("notifications")
 add_subdirectory("objects")
 add_subdirectory("retention")
 

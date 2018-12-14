@@ -46,6 +46,7 @@ namespace               configuration {
                           configuration::hostgroup const& obj);
       void              resolve_object(
                           configuration::hostgroup const& obj);
+      void              unresolve_objects();
 
      private:
       typedef std::map<configuration::hostgroup::key_type, configuration::hostgroup> resolved_set;

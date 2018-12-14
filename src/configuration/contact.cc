@@ -21,10 +21,8 @@
 #include "com/centreon/engine/configuration/host.hh"
 #include "com/centreon/engine/configuration/service.hh"
 #include "com/centreon/engine/error.hh"
-#include "com/centreon/engine/string.hh"
 
 using namespace com::centreon;
-using namespace com::centreon::engine;
 using namespace com::centreon::engine::configuration;
 
 #define SETTER(type, method) \
@@ -317,7 +315,7 @@ bool contact::parse(char const* key, char const* value) {
  *
  *  @return The address.
  */
-tab_string const& contact::address() const throw () {
+std::vector<std::string> const& contact::address() const throw () {
   return (_address);
 }
 
@@ -371,7 +369,7 @@ std::string const& contact::contact_name() const throw () {
  *
  *  @return The customvariables.
  */
-map_customvar const& contact::customvariables() const throw () {
+engine::map_customvar const& contact::customvariables() const throw () {
   return (_customvariables);
 }
 

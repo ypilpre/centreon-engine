@@ -610,7 +610,6 @@ int xrddefault_read_state_information() {
 
   /* Big speedup when reading retention.dat in bulk */
   defer_downtime_sorting = 1;
-  defer_comment_sorting = 1;
 
   /* read all lines in the retention file */
   while (1) {
@@ -835,18 +834,24 @@ int xrddefault_read_state_information() {
       case XRDDEFAULT_HOSTCOMMENT_DATA:
       case XRDDEFAULT_SERVICECOMMENT_DATA:
         /* add the comment */
-        add_comment((data_type == XRDDEFAULT_HOSTCOMMENT_DATA) ? HOST_COMMENT : SERVICE_COMMENT,
-		    entry_type,
-		    host_name,
-		    service_description,
-		    entry_time,
-		    author,
-                    comment_data,
-		    comment_id,
-		    persistent,
-		    expires,
-		    expire_time,
-		    source);
+        {
+          comment* new_comment(
+                     new comment(
+                       (data_type == XRDDEFAULT_HOSTCOMMENT_DATA)
+                          ? HOST_COMMENT : SERVICE_COMMENT,
+                       entry_type,
+                       host_name,
+                       service_description,
+                       entry_time,
+                       author,
+                       comment_data,
+                       comment_id,
+                       persistent,
+                       expires,
+                       expire_time,
+                       source));
+          comment_list.insert(std::make_pair(new_comment->get_id(), new_comment));
+        }
 
         /* delete the comment if necessary */
         /* it seems a bit backwards to add and then immediately delete the comment, but its necessary to track comment deletions in the event broker */
@@ -1777,8 +1782,9 @@ int xrddefault_read_state_information() {
   delete[] inputbuf;
   mmap_fclose(thefile);
 
-  if (sort_downtime() != OK)
-    return (ERROR);
+  // FIXME DBR: no more defined...
+//  if (sort_downtime() != OK)
+//    return (ERROR);
   if (sort_comments() != OK)
     return (ERROR);
 

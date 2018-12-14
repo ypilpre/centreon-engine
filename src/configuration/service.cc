@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2013,2015-2017 Centreon
+** Copyright 2011-2013,2015-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -62,12 +62,12 @@ service::setters const service::_setters[] = {
   { "icon_image",                   SETTER(std::string const&, _set_icon_image) },
   { "icon_image_alt",               SETTER(std::string const&, _set_icon_image_alt) },
   { "initial_state",                SETTER(std::string const&, _set_initial_state) },
-  { "max_check_attempts",           SETTER(unsigned int, _set_max_check_attempts) },
-  { "check_interval",               SETTER(unsigned int, _set_check_interval) },
-  { "normal_check_interval",        SETTER(unsigned int, _set_check_interval) },
-  { "retry_interval",               SETTER(unsigned int, _set_retry_interval) },
-  { "retry_check_interval",         SETTER(unsigned int, _set_retry_interval) },
-  { "recovery_notification_delay",  SETTER(unsigned int, _set_recovery_notification_delay) },
+  { "max_check_attempts",           SETTER(int, _set_max_check_attempts) },
+  { "check_interval",               SETTER(int, _set_check_interval) },
+  { "normal_check_interval",        SETTER(int, _set_check_interval) },
+  { "retry_interval",               SETTER(int, _set_retry_interval) },
+  { "retry_check_interval",         SETTER(int, _set_retry_interval) },
+  { "recovery_notification_delay",  SETTER(int, _set_recovery_notification_delay) },
   { "active_checks_enabled",        SETTER(bool, _set_checks_active) },
   { "passive_checks_enabled",       SETTER(bool, _set_checks_passive) },
   { "parallelize_check",            SETTER(bool, _set_parallelize_check) },
@@ -75,15 +75,15 @@ service::setters const service::_setters[] = {
   { "obsess_over_service",          SETTER(bool, _set_obsess_over_service) },
   { "event_handler_enabled",        SETTER(bool, _set_event_handler_enabled) },
   { "check_freshness",              SETTER(bool, _set_check_freshness) },
-  { "freshness_threshold",          SETTER(unsigned int, _set_freshness_threshold) },
+  { "freshness_threshold",          SETTER(int, _set_freshness_threshold) },
   { "low_flap_threshold",           SETTER(unsigned int, _set_low_flap_threshold) },
   { "high_flap_threshold",          SETTER(unsigned int, _set_high_flap_threshold) },
   { "flap_detection_enabled",       SETTER(bool, _set_flap_detection_enabled) },
   { "flap_detection_options",       SETTER(std::string const&, _set_flap_detection_options) },
   { "notification_options",         SETTER(std::string const&, _set_notification_options) },
   { "notifications_enabled",        SETTER(bool, _set_notifications_enabled) },
-  { "notification_interval",        SETTER(unsigned int, _set_notification_interval) },
-  { "first_notification_delay",     SETTER(unsigned int, _set_first_notification_delay) },
+  { "notification_interval",        SETTER(int, _set_notification_interval) },
+  { "first_notification_delay",     SETTER(int, _set_first_notification_delay) },
   { "stalking_options",             SETTER(std::string const&, _set_stalking_options) },
   { "process_perf_data",            SETTER(bool, _set_process_perf_data) },
   { "failure_prediction_enabled",   SETTER(bool, _set_failure_prediction_enabled) },
@@ -97,23 +97,23 @@ static int                  default_acknowledgement_timeout(0);
 static bool const           default_checks_active(true);
 static bool const           default_checks_passive(true);
 static bool const           default_check_freshness(0);
-static unsigned int const   default_check_interval(5);
+static int const            default_check_interval(5);
 static bool const           default_event_handler_enabled(true);
-static unsigned int const   default_first_notification_delay(0);
+static int const            default_first_notification_delay(0);
 static bool const           default_flap_detection_enabled(true);
 static unsigned short const default_flap_detection_options(
                               service::ok
                               | service::warning
                               | service::unknown
                               | service::critical);
-static unsigned int const   default_freshness_threshold(0);
+static int const            default_freshness_threshold(0);
 static unsigned int const   default_high_flap_threshold(0);
-static unsigned int const   default_initial_state(STATE_OK);
+static int const            default_initial_state(STATE_OK);
 static bool const           default_is_volatile(false);
 static unsigned int const   default_low_flap_threshold(0);
-static unsigned int const   default_max_check_attempts(3);
+static int const            default_max_check_attempts(3);
 static bool const           default_notifications_enabled(true);
-static unsigned int const   default_notification_interval(30);
+static int const            default_notification_interval(30);
 static unsigned short const default_notification_options(
                               service::ok
                               | service::warning
@@ -126,7 +126,7 @@ static bool const           default_obsess_over_service(true);
 static bool const           default_process_perf_data(true);
 static bool const           default_retain_nonstatus_information(true);
 static bool const           default_retain_status_information(true);
-static unsigned int const   default_retry_interval(1);
+static int const            default_retry_interval(1);
 static unsigned short const default_stalking_options(service::none);
 
 /**
@@ -146,7 +146,6 @@ service::service()
     _flap_detection_options(default_flap_detection_options),
     _freshness_threshold(default_freshness_threshold),
     _high_flap_threshold(default_high_flap_threshold),
-    _host_id(0),
     _initial_state(default_initial_state),
     _is_volatile(default_is_volatile),
     _low_flap_threshold(default_low_flap_threshold),
@@ -207,7 +206,6 @@ service& service::operator=(service const& other) {
     _flap_detection_options = other._flap_detection_options;
     _freshness_threshold = other._freshness_threshold;
     _high_flap_threshold = other._high_flap_threshold;
-    _host_id = other._host_id;
     _hostgroups = other._hostgroups;
     _hosts = other._hosts;
     _icon_image = other._icon_image;
@@ -267,7 +265,6 @@ bool service::operator==(service const& other) const throw () {
           && _freshness_threshold == other._freshness_threshold
           && _high_flap_threshold == other._high_flap_threshold
           && _hostgroups == other._hostgroups
-          && _host_id == other._host_id
           && _hosts == other._hosts
           && _icon_image == other._icon_image
           && _icon_image_alt == other._icon_image_alt
@@ -365,8 +362,6 @@ bool service::operator<(service const& other) const throw () {
     return (_high_flap_threshold < other._high_flap_threshold);
   else if (_hostgroups != other._hostgroups)
     return (_hostgroups < other._hostgroups);
-  else if (_host_id != other._host_id)
-    return (_host_id < other._host_id);
   else if (_icon_image != other._icon_image)
     return (_icon_image < other._icon_image);
   else if (_icon_image_alt != other._icon_image_alt)
@@ -598,7 +593,7 @@ bool service::check_freshness() const throw () {
  *
  *  @return The check_interval.
  */
-unsigned int service::check_interval() const throw () {
+int service::check_interval() const throw () {
   return (_check_interval);
 }
 
@@ -706,7 +701,7 @@ bool service::event_handler_enabled() const throw () {
  *
  *  @return The first_notification_delay.
  */
-unsigned int service::first_notification_delay() const throw () {
+int service::first_notification_delay() const throw () {
   return (_first_notification_delay);
 }
 
@@ -733,7 +728,7 @@ unsigned short service::flap_detection_options() const throw () {
  *
  *  @return The freshness_threshold.
  */
-unsigned int service::freshness_threshold() const throw () {
+int service::freshness_threshold() const throw () {
   return (_freshness_threshold);
 }
 
@@ -783,25 +778,6 @@ set_string const& service::hosts() const throw () {
 }
 
 /**
- *  Get host ID.
- *
- *  @return Service's host's ID.
- */
-unsigned int service::host_id() const throw () {
-  return (_host_id);
-}
-
-/**
- *  Set service's host's ID.
- *
- *  @param[in] id  New host ID.
- */
-void service::host_id(unsigned int id) {
-  _host_id = id;
-  return ;
-}
-
-/**
  *  Get icon_image.
  *
  *  @return The icon_image.
@@ -824,7 +800,7 @@ std::string const& service::icon_image_alt() const throw () {
  *
  *  @return The initial_state.
  */
-unsigned int service::initial_state() const throw () {
+int service::initial_state() const throw () {
   return (_initial_state);
 }
 
@@ -851,7 +827,7 @@ unsigned int service::low_flap_threshold() const throw () {
  *
  *  @return The max_check_attempts.
  */
-unsigned int service::max_check_attempts() const throw () {
+int service::max_check_attempts() const throw () {
   return (_max_check_attempts);
 }
 
@@ -887,7 +863,7 @@ bool service::notifications_enabled() const throw () {
  *
  *  @param[in] interval Notification interval.
  */
-void service::notification_interval(unsigned int interval) throw () {
+void service::notification_interval(int interval) throw () {
   _notification_interval = interval;
   return ;
 }
@@ -906,7 +882,7 @@ bool service::notification_interval_defined() const throw () {
  *
  *  @return The notification_interval.
  */
-unsigned int service::notification_interval() const throw () {
+int service::notification_interval() const throw () {
   return (_notification_interval);
 }
 
@@ -988,7 +964,7 @@ bool service::retain_status_information() const throw () {
  *
  *  @return The retry_interval.
  */
-unsigned int service::retry_interval() const throw () {
+int service::retry_interval() const throw () {
   return (_retry_interval);
 }
 
@@ -997,7 +973,7 @@ unsigned int service::retry_interval() const throw () {
  *
  *  @return The recovery_notification_delay.
  */
-unsigned int service::recovery_notification_delay() const throw() {
+int service::recovery_notification_delay() const throw() {
   return (_recovery_notification_delay);
 }
 
@@ -1180,7 +1156,9 @@ bool service::_set_check_freshness(bool value) {
  *
  *  @return True on success, otherwise false.
  */
-bool service::_set_check_interval(unsigned int value) {
+bool service::_set_check_interval(int value) {
+  if (value < 0)
+    return (false);
   _check_interval = value;
   return (true);
 }
@@ -1294,7 +1272,9 @@ bool service::_set_failure_prediction_options(std::string const& value) {
  *
  *  @return True on success, otherwise false.
  */
-bool service::_set_first_notification_delay(unsigned int value) {
+bool service::_set_first_notification_delay(int value) {
+  if (value < 0)
+    return (false);
   _first_notification_delay = value;
   return (true);
 }
@@ -1353,7 +1333,9 @@ bool service::_set_flap_detection_options(std::string const& value) {
  *
  *  @return True on success, otherwise false.
  */
-bool service::_set_freshness_threshold(unsigned int value) {
+bool service::_set_freshness_threshold(int value) {
+  if (value < 0)
+    return (false);
   _freshness_threshold = value;
   return (true);
 }
@@ -1472,7 +1454,7 @@ bool service::_set_low_flap_threshold(unsigned int value) {
  *
  *  @return True on success, otherwise false.
  */
-bool service::_set_max_check_attempts(unsigned int value) {
+bool service::_set_max_check_attempts(int value) {
   if (value <= 0)
     return (false);
   _max_check_attempts = value;
@@ -1561,7 +1543,9 @@ bool service::_set_notification_options(std::string const& value) {
  *
  *  @return True on success, otherwise false.
  */
-bool service::_set_notification_interval(unsigned int value) {
+bool service::_set_notification_interval(int value) {
+  if (value < 0)
+    return (false);
   _notification_interval = value;
   return (true);
 }
@@ -1648,8 +1632,8 @@ bool service::_set_retain_status_information(bool value) {
  *
  *  @return True on success, otherwise false.
  */
-bool service::_set_retry_interval(unsigned int value) {
-  if (!value)
+bool service::_set_retry_interval(int value) {
+  if (value <= 0)
     return (false);
   _retry_interval = value;
   return (true);
@@ -1662,7 +1646,9 @@ bool service::_set_retry_interval(unsigned int value) {
  *
  *  @return  True on success, otherwhise false.
  */
-bool service::_set_recovery_notification_delay(unsigned int value) {
+bool service::_set_recovery_notification_delay(int value) {
+  if (value < 0)
+    return (false);
   _recovery_notification_delay = value;
   return (true);
 }

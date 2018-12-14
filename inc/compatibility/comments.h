@@ -26,11 +26,4 @@
 #  include "config.h"
 #  include "objects.h"
 
-/*
-** If you are going to be adding a lot of comments in sequence,
-** set defer_comment_sorting to 1 before you start and then
-** call sort_comments afterwards. Things will go MUCH faster.
-*/
-extern int defer_comment_sorting;
-
 #endif // !CCE_COMPATIBILITY_COMMENTS_H

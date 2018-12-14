@@ -1,6 +1,6 @@
 /*
 ** Copyright 1999-2008           Ethan Galstad
-** Copyright 2011-2013,2015-2016 Centreon
+** Copyright 2011-2013,2015-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -25,7 +25,12 @@
 #include <sys/time.h>
 #include "com/centreon/engine/broker.hh"
 #include "com/centreon/engine/checks/checker.hh"
+#include "com/centreon/engine/configuration/applier/host.hh"
+#include "com/centreon/engine/configuration/applier/service.hh"
+#include "com/centreon/engine/configuration/applier/state.hh"
+#include "com/centreon/engine/contact.hh"
 #include "com/centreon/engine/downtime_finder.hh"
+#include "com/centreon/engine/downtime_manager.hh"
 #include "com/centreon/engine/events/defines.hh"
 #include "com/centreon/engine/flapping.hh"
 #include "com/centreon/engine/globals.hh"
@@ -34,16 +39,80 @@
 #include "com/centreon/engine/modules/external_commands/internal.hh"
 #include "com/centreon/engine/modules/external_commands/processing.hh"
 #include "com/centreon/engine/modules/external_commands/utils.hh"
-#include "com/centreon/engine/notifications.hh"
-#include "com/centreon/engine/objects/comment.hh"
-#include "com/centreon/engine/objects/downtime.hh"
+#include "com/centreon/engine/not_found.hh"
+#include "com/centreon/engine/notifications/notifier.hh"
+#include "com/centreon/engine/comment.hh"
 #include "com/centreon/engine/statusdata.hh"
 #include "com/centreon/engine/string.hh"
 #include "com/centreon/engine/timeperiod.hh"
+#include "com/centreon/shared_ptr.hh"
 #include "mmap.h"
 
+using namespace com::centreon;
 using namespace com::centreon::engine;
+using namespace com::centreon::engine::commands;
 using namespace com::centreon::engine::logging;
+using namespace com::centreon::engine::notifications;
+
+static shared_ptr<service> find_service(
+                             std::string const& hst_name,
+                             std::string const& svc_desc) {
+  shared_ptr<service> retval;
+  try {
+    retval = configuration::applier::state::instance().services_find(
+               std::make_pair(hst_name, svc_desc));
+  }
+  catch (not_found const& e) {
+    (void)e;
+  }
+  return (retval);
+}
+
+/*
+** Deletes all host and service downtimes on a host by hostname,
+** optionally filtered by service description, start time and comment.
+** All char* must be set or NULL - "" will silently fail to match.
+** Returns number deleted.
+*/
+static int delete_downtime_by_hostname_service_description_start_time_comment(
+             char const* hostname,
+             char const* service_description,
+             time_t start_time,
+             char const* comment) {
+  int deleted(0);
+
+  shared_ptr<host> hst;
+  if (hostname != NULL && *hostname != 0)
+    hst = configuration::applier::state::instance().hosts_find(hostname);
+  shared_ptr<service> svc;
+  if (service_description != NULL && *service_description != 0)
+    svc = find_service(hostname, service_description);
+
+  std::set<unsigned long> to_unschedule;
+  for (umap<unsigned long, downtime>::const_iterator
+         it(downtime_manager::instance().get_downtimes().begin()),
+         end(downtime_manager::instance().get_downtimes().end());
+       it != end;
+       ++it) {
+    downtime const& temp_downtime(it->second);
+    if (start_time != 0 && start_time != temp_downtime.get_start_time())
+      continue ;
+    if (comment != NULL && temp_downtime.get_comment() != comment)
+      continue ;
+    if (svc.is_null() && temp_downtime.get_parent() != hst.get())
+      continue ;
+    if (!svc.is_null() && temp_downtime.get_parent() != svc.get())
+      continue ;
+    to_unschedule.insert(it->first);
+  }
+  for (std::set<unsigned long>::const_iterator
+         it(to_unschedule.begin()),
+         end(to_unschedule.end());
+       it != end;
+       ++it)
+    downtime_manager::instance().unschedule(*it);
+  return (to_unschedule.size());
+}
 
 /******************************************************************/
 /****************** EXTERNAL COMMAND PROCESSING *******************/
@@ -171,13 +240,15 @@ int process_external_command(char const* cmd) {
 /* adds a host or service comment to the status log */
 int cmd_add_comment(int cmd, time_t entry_time, char* args) {
   char* temp_ptr(NULL);
-  host* temp_host(NULL);
-  service* temp_service(NULL);
+  shared_ptr<host> temp_host;
+  shared_ptr<service> temp_service;
+  notifications::notifier* notif(NULL);
   char* host_name(NULL);
   char* svc_description(NULL);
   char* user(NULL);
   char* comment_data(NULL);
   int persistent(0);
+  comment* new_comment;
   int result(0);
 
   /* get the host name */
@@ -194,11 +265,19 @@ int cmd_add_comment(int cmd, time_t entry_time, char* args) {
     /* verify that the service is valid */
     if ((temp_service = find_service(host_name, svc_description)) == NULL)
       return (ERROR);
+    notif = static_cast<notifications::notifier*>(temp_service.get());
   }
-
-  /* else verify that the host is valid */
-  if ((temp_host = find_host(host_name)) == NULL)
-    return (ERROR);
+  else {
+    /* else verify that the host is valid */
+    try {
+      temp_host = configuration::applier::state::instance().hosts_find(host_name);
+      notif = static_cast<notifications::notifier*>(temp_host.get());
+    }
+    catch (not_found const& e) {
+      (void) e;
+      return (ERROR);
+    }
+  }
 
   /* get the persistent flag */
   if ((temp_ptr = my_strtok(NULL, ";")) == NULL)
@@ -218,20 +297,18 @@ int cmd_add_comment(int cmd, time_t entry_time, char* args) {
     return (ERROR);
 
   /* add the comment */
-  result = add_new_comment(
-             (cmd == CMD_ADD_HOST_COMMENT) ? HOST_COMMENT : SERVICE_COMMENT,
-             USER_COMMENT,
-             host_name,
-             svc_description,
+  new_comment = comment::add_new_comment(
+             (cmd == CMD_ADD_HOST_COMMENT) ? comment::HOST_COMMENT : comment::SERVICE_COMMENT,
+             comment::USER_COMMENT,
+             notif,
              entry_time,
              user,
              comment_data,
              persistent,
-             COMMENTSOURCE_EXTERNAL,
+             comment::COMMENTSOURCE_EXTERNAL,
              false,
-             (time_t)0,
-             NULL);
-  if (result < 0)
+             (time_t)0);
+  if (new_comment == NULL)
     return (ERROR);
   return (OK);
 }
@@ -245,18 +322,16 @@ int cmd_delete_comment(int cmd, char* args) {
     return (ERROR);
 
   /* delete the specified comment */
-  if (cmd == CMD_DEL_HOST_COMMENT)
-    delete_host_comment(comment_id);
-  else
-    delete_service_comment(comment_id);
+  comment::delete_comment(comment_id);
 
   return (OK);
 }
 
 /* removes all comments associated with a host or service from the status log */
 int cmd_delete_all_comments(int cmd, char* args) {
-  service* temp_service(NULL);
-  host* temp_host(NULL);
+  shared_ptr<service> temp_service;
+  shared_ptr<host> temp_host;
+  notifications::notifier* notif(NULL);
   char* host_name(NULL);
   char* svc_description(NULL);
 
@@ -274,25 +349,30 @@ int cmd_delete_all_comments(int cmd, char* args) {
     /* verify that the service is valid */
     if ((temp_service = find_service(host_name, svc_description)) == NULL)
       return (ERROR);
+    notif = static_cast<notifications::notifier*>(temp_service.get());
+  }
+  else {
+    /* else verify that the host is valid */
+    try {
+      temp_host = configuration::applier::state::instance().hosts_find(host_name);
+    }
+    catch (not_found const& e) {
+      (void)e;
+      return (ERROR);
+    }
+    notif = static_cast<notifications::notifier*>(temp_host.get());
   }
 
-  /* else verify that the host is valid */
-  if ((temp_host = find_host(host_name)) == NULL)
-    return (ERROR);
-
   /* delete comments */
-  delete_all_comments(
-    (cmd == CMD_DEL_ALL_HOST_COMMENTS) ? HOST_COMMENT : SERVICE_COMMENT,
-    host_name,
-    svc_description);
+  notif->delete_all_comments();
   return (OK);
 }
 
 /* delays a host or service notification for given number of minutes */
 int cmd_delay_notification(int cmd, char* args) {
   char* temp_ptr(NULL);
-  host* temp_host(NULL);
-  service* temp_service(NULL);
+  shared_ptr<host> temp_host;
+  shared_ptr<service> temp_service;
   char* host_name(NULL);
   char* svc_description(NULL);
   time_t delay_time(0);
@@ -315,8 +395,13 @@ int cmd_delay_notification(int cmd, char* args) {
 
   /* else verify that the host is valid */
   else {
-    if ((temp_host = find_host(host_name)) == NULL)
+    try {
+      temp_host = configuration::applier::state::instance().hosts_find(host_name);
+    }
+    catch (not_found const& e) {
+      (void) e;
       return (ERROR);
+    }
   }
 
   /* get the time that we should delay until... */
@@ -326,9 +411,9 @@ int cmd_delay_notification(int cmd, char* args) {
 
   /* delay the next notification... */
   if (cmd == CMD_DELAY_HOST_NOTIFICATION)
-    temp_host->next_host_notification = delay_time;
+    temp_host->set_next_notification(delay_time);
   else
-    temp_service->next_notification = delay_time;
+    temp_service->set_next_notification(delay_time);
 
   return (OK);
 }
@@ -336,9 +421,8 @@ int cmd_delay_notification(int cmd, char* args) {
 /* schedules a host check at a particular time */
 int cmd_schedule_check(int cmd, char* args) {
   char* temp_ptr(NULL);
-  host* temp_host(NULL);
-  service* temp_service(NULL);
-  servicesmember* temp_servicesmember(NULL);
+  shared_ptr<host> temp_host;
+  shared_ptr<service> temp_service;
   char* host_name(NULL);
   char* svc_description(NULL);
   time_t delay_time(0);
@@ -353,8 +437,13 @@ int cmd_schedule_check(int cmd, char* args) {
       || cmd == CMD_SCHEDULE_FORCED_HOST_SVC_CHECKS) {
 
     /* verify that the host is valid */
-    if ((temp_host = find_host(host_name)) == NULL)
+    try {
+      temp_host = configuration::applier::state::instance().hosts_find(host_name);
+    }
+    catch (not_found const& e) {
+      (void) e;
       return (ERROR);
+    }
   }
 
   else {
@@ -377,7 +466,7 @@ int cmd_schedule_check(int cmd, char* args) {
   if (cmd == CMD_SCHEDULE_HOST_CHECK
       || cmd == CMD_SCHEDULE_FORCED_HOST_CHECK)
     schedule_host_check(
-      temp_host,
+      temp_host.get(),
       delay_time,
       (cmd == CMD_SCHEDULE_FORCED_HOST_CHECK)
       ? CHECK_OPTION_FORCE_EXECUTION : CHECK_OPTION_NONE);
@@ -385,22 +474,26 @@ int cmd_schedule_check(int cmd, char* args) {
   /* schedule service checks */
   else if (cmd == CMD_SCHEDULE_HOST_SVC_CHECKS
            || cmd == CMD_SCHEDULE_FORCED_HOST_SVC_CHECKS) {
-    for (temp_servicesmember = temp_host->services;
-         temp_servicesmember != NULL;
-         temp_servicesmember = temp_servicesmember->next) {
-      if ((temp_service = temp_servicesmember->service_ptr) == NULL)
-        continue;
+    for (service_set::const_iterator
+           it(temp_host->get_services().begin()),
+           end(temp_host->get_services().end());
+         it != end;
+         ++it) {
       schedule_service_check(
-        temp_service, delay_time,
+        *it,
+        delay_time,
         (cmd == CMD_SCHEDULE_FORCED_HOST_SVC_CHECKS)
-        ? CHECK_OPTION_FORCE_EXECUTION : CHECK_OPTION_NONE);
+        ? CHECK_OPTION_FORCE_EXECUTION
+        : CHECK_OPTION_NONE);
     }
   }
   else
     schedule_service_check(
-      temp_service, delay_time,
+      temp_service.get(),
+      delay_time,
       (cmd == CMD_SCHEDULE_FORCED_SVC_CHECK)
-      ? CHECK_OPTION_FORCE_EXECUTION : CHECK_OPTION_NONE);
+      ? CHECK_OPTION_FORCE_EXECUTION
+      : CHECK_OPTION_NONE);
 
   return (OK);
 }
@@ -409,8 +502,7 @@ int cmd_schedule_check(int cmd, char* args) {
 int cmd_schedule_host_service_checks(int cmd, char* args, int force) {
   char* temp_ptr(NULL);
   service* temp_service(NULL);
-  servicesmember* temp_servicesmember(NULL);
-  host* temp_host(NULL);
+  shared_ptr<host> temp_host;
   char* host_name(NULL);
   time_t delay_time(0);
 
@@ -421,8 +513,13 @@ int cmd_schedule_host_service_checks(int cmd, char* args, int force) {
     return (ERROR);
 
   /* verify that the host is valid */
-  if ((temp_host = find_host(host_name)) == NULL)
+  try {
+    temp_host = configuration::applier::state::instance().hosts_find(host_name);
+  }
+  catch (not_found const& e) {
+    (void) e;
     return (ERROR);
+  }
 
   /* get the next check time */
   if ((temp_ptr = my_strtok(NULL, "\n")) == NULL)
@@ -430,15 +527,15 @@ int cmd_schedule_host_service_checks(int cmd, char* args, int force) {
   delay_time = strtoul(temp_ptr, NULL, 10);
 
   /* reschedule all services on the specified host */
-  for (temp_servicesmember = temp_host->services;
-       temp_servicesmember != NULL;
-       temp_servicesmember = temp_servicesmember->next) {
-    if ((temp_service = temp_servicesmember->service_ptr) == NULL)
-      continue;
+  for (service_set::const_iterator
+         it(temp_host->get_services().begin()),
+         end(temp_host->get_services().end());
+       it != end;
+       ++it) {
     schedule_service_check(
-      temp_service,
+      *it,
       delay_time,
-      (force) ? CHECK_OPTION_FORCE_EXECUTION : CHECK_OPTION_NONE);
+      force ? CHECK_OPTION_FORCE_EXECUTION : CHECK_OPTION_NONE);
   }
 
   return (OK);
@@ -530,8 +627,7 @@ int process_passive_service_check(
       char const* svc_description,
       int return_code,
       char const* output) {
-  host* temp_host(NULL);
-  service* temp_service(NULL);
+  shared_ptr<service> temp_service;
   char const* real_host_name(NULL);
 
   /* skip this service check result if we aren't accepting passive service checks */
@@ -543,15 +639,25 @@ int process_passive_service_check(
     return (ERROR);
 
   /* find the host by its name or address */
-  if (find_host(host_name) != NULL)
+  if (configuration::applier::state::instance().hosts_find(host_name) != NULL)
     real_host_name = host_name;
   else {
-    for (temp_host = host_list; temp_host != NULL; temp_host = temp_host->next) {
-      if (!strcmp(host_name, temp_host->address)) {
-        real_host_name = temp_host->name;
-        break ;
+    for (umap<std::string, shared_ptr<host> >::iterator
+           it(configuration::applier::state::instance().hosts().begin()),
+           end(configuration::applier::state::instance().hosts().end());
+         it != end;
+         ++it) {
+      if (it->second->get_address() == host_name) {
+        real_host_name = it->second->get_name().c_str();
+        break;
       }
     }
+//    for (temp_host = host_list; temp_host != NULL; temp_host = temp_host->next) {
+//      if (!strcmp(host_name, temp_host->address)) {
+//        real_host_name = temp_host->name;
+//        break ;
+//      }
+//    }
   }
 
   /* we couldn't find the host */
@@ -573,7 +679,7 @@ int process_passive_service_check(
   }
 
   /* skip this is we aren't accepting passive checks for this service */
-  if (temp_service->accept_passive_service_checks == false)
+  if (!temp_service->get_passive_checks_enabled())
     return (ERROR);
 
   timeval tv;
@@ -667,7 +773,7 @@ int process_passive_host_check(
       char const* host_name,
       int return_code,
       char const* output) {
-  host const* temp_host(NULL);
+  shared_ptr<host> temp_host;
   char const* real_host_name(NULL);
 
   /* skip this host check result if we aren't accepting passive host checks */
@@ -683,12 +789,20 @@ int process_passive_host_check(
     return (ERROR);
 
   /* find the host by its name or address */
-  if ((temp_host = find_host(host_name)) != NULL)
+  try {
+    temp_host = configuration::applier::state::instance().hosts_find(host_name);
     real_host_name = host_name;
-  else {
-    for (temp_host = host_list; temp_host != NULL; temp_host = temp_host->next) {
-      if (!strcmp(host_name, temp_host->address)) {
-        real_host_name = temp_host->name;
+  }
+  catch (not_found const& e) {
+    (void) e;
+    for (umap<std::string, shared_ptr<host> >::iterator
+           it(configuration::applier::state::instance().hosts().begin()),
+           end(configuration::applier::state::instance().hosts().end());
+         it != end;
+         ++it) {
+      if (it->second->get_address() == host_name) {
+        temp_host = it->second.get();
+        real_host_name = it->second->get_name().c_str();
         break;
       }
     }
@@ -703,7 +817,7 @@ int process_passive_host_check(
   }
 
   /* skip this is we aren't accepting passive checks for this host */
-  if (temp_host->accept_passive_host_checks == false)
+  if (!temp_host->get_passive_checks_enabled())
     return (ERROR);
 
   timeval tv;
@@ -749,14 +863,14 @@ int process_passive_host_check(
 
 /* acknowledges a host or service problem */
 int cmd_acknowledge_problem(int cmd, char* args) {
-  service* temp_service(NULL);
-  host* temp_host(NULL);
+  shared_ptr<service> temp_service;
+  shared_ptr<host> temp_host;
   char* host_name(NULL);
   char* svc_description(NULL);
   char* ack_author(NULL);
   char* ack_data(NULL);
   char* temp_ptr(NULL);
-  int type(ACKNOWLEDGEMENT_NORMAL);
+  int type(notifier::ACKNOWLEDGEMENT_NORMAL);
   int notify(true);
   int persistent(true);
 
@@ -765,8 +879,13 @@ int cmd_acknowledge_problem(int cmd, char* args) {
     return (ERROR);
 
   /* verify that the host is valid */
-  if ((temp_host = find_host(host_name)) == NULL)
+  try {
+    temp_host = configuration::applier::state::instance().hosts_find(host_name);
+  }
+  catch (not_found const& e) {
+    (void) e;
     return (ERROR);
+  }
 
   /* this is a service acknowledgement */
   if (cmd == CMD_ACKNOWLEDGE_SVC_PROBLEM) {
@@ -776,7 +895,9 @@ int cmd_acknowledge_problem(int cmd, char* args) {
       return (ERROR);
 
     /* verify that the service is valid */
-    if ((temp_service = find_service(temp_host->name, svc_description)) == NULL)
+    if ((temp_service = find_service(
+                          temp_host->get_name(),
+                          svc_description)) == NULL)
       return (ERROR);
   }
 
@@ -810,7 +931,7 @@ int cmd_acknowledge_problem(int cmd, char* args) {
   /* acknowledge the host problem */
   if (cmd == CMD_ACKNOWLEDGE_HOST_PROBLEM)
     acknowledge_host_problem(
-      temp_host,
+      temp_host.get(),
       ack_author,
       ack_data,
       type,
@@ -819,7 +940,7 @@ int cmd_acknowledge_problem(int cmd, char* args) {
   /* acknowledge the service problem */
   else
     acknowledge_service_problem(
-      temp_service,
+      temp_service.get(),
       ack_author,
       ack_data,
       type,
@@ -835,8 +956,8 @@ int cmd_acknowledge_problem(int cmd, char* args) {
 
 /* removes a host or service acknowledgement */
 int cmd_remove_acknowledgement(int cmd, char* args) {
-  service* temp_service(NULL);
-  host* temp_host(NULL);
+  shared_ptr<service> temp_service;
+  shared_ptr<host> temp_host;
   char* host_name(NULL);
   char* svc_description(NULL);
 
@@ -845,8 +966,13 @@ int cmd_remove_acknowledgement(int cmd, char* args) {
     return (ERROR);
 
   /* verify that the host is valid */
-  if ((temp_host = find_host(host_name)) == NULL)
+  try {
+    temp_host = configuration::applier::state::instance().hosts_find(host_name);
+  }
+  catch (not_found const& e) {
+    (void) e;
     return (ERROR);
+  }
 
   /* we are removing a service acknowledgement */
   if (cmd == CMD_REMOVE_SVC_ACKNOWLEDGEMENT) {
@@ -856,31 +982,30 @@ int cmd_remove_acknowledgement(int cmd, char* args) {
       return (ERROR);
 
     /* verify that the service is valid */
-    if (!(temp_service = find_service(temp_host->name, svc_description)))
+    if ((temp_service = find_service(
+                           temp_host->get_name(),
+                           svc_description)).is_null())
       return (ERROR);
   }
 
   /* acknowledge the host problem */
   if (cmd == CMD_REMOVE_HOST_ACKNOWLEDGEMENT)
-    remove_host_acknowledgement(temp_host);
+    remove_host_acknowledgement(temp_host.get());
 
   /* acknowledge the service problem */
   else
-    remove_service_acknowledgement(temp_service);
+    remove_service_acknowledgement(temp_service.get());
 
   return (OK);
 }
 
 /* schedules downtime for a specific host or service */
 int cmd_schedule_downtime(int cmd, time_t entry_time, char* args) {
-  servicesmember* temp_servicesmember(NULL);
-  service* temp_service(NULL);
-  host* temp_host(NULL);
-  host* last_host(NULL);
+  shared_ptr<service> temp_service;
+  shared_ptr<host> temp_host;
   hostgroup* temp_hostgroup(NULL);
-  hostsmember* temp_hgmember(NULL);
+  host* temp_hg;
   servicegroup* temp_servicegroup(NULL);
-  servicesmember* temp_sgmember(NULL);
   char* host_name(NULL);
   char* hostgroup_name(NULL);
   char* servicegroup_name(NULL);
@@ -903,7 +1028,7 @@ int cmd_schedule_downtime(int cmd, time_t entry_time, char* args) {
       return (ERROR);
 
     /* verify that the hostgroup is valid */
-    if ((temp_hostgroup = find_hostgroup(hostgroup_name)) == NULL)
+    if ((temp_hostgroup = &find_hostgroup(hostgroup_name)) == NULL)
       return (ERROR);
   }
 
@@ -915,7 +1040,7 @@ int cmd_schedule_downtime(int cmd, time_t entry_time, char* args) {
       return (ERROR);
 
     /* verify that the servicegroup is valid */
-    if ((temp_servicegroup = find_servicegroup(servicegroup_name)) == NULL)
+    if ((temp_servicegroup = &find_servicegroup(servicegroup_name)) == NULL)
       return (ERROR);
   }
 
@@ -926,8 +1051,13 @@ int cmd_schedule_downtime(int cmd, time_t entry_time, char* args) {
       return (ERROR);
 
     /* verify that the host is valid */
-    if ((temp_host = find_host(host_name)) == NULL)
+    try {
+      temp_host = configuration::applier::state::instance().hosts_find(host_name);
+    }
+    catch (not_found const& e) {
+      (void) e;
       return (ERROR);
+    }
 
     /* this is a service downtime */
     if (cmd == CMD_SCHEDULE_SVC_DOWNTIME) {
@@ -937,7 +1067,7 @@ int cmd_schedule_downtime(int cmd, time_t entry_time, char* args) {
         return (ERROR);
 
       /* verify that the service is valid */
-      if ((temp_service = find_service(temp_host->name, svc_description)) == NULL)
+      if ((temp_service = find_service(temp_host->get_name(), svc_description)) == NULL)
         return (ERROR);
     }
   }
@@ -990,212 +1120,159 @@ int cmd_schedule_downtime(int cmd, time_t entry_time, char* args) {
 
   /* schedule downtime */
   switch (cmd) {
-
-  case CMD_SCHEDULE_HOST_DOWNTIME:
-    schedule_downtime(
-      HOST_DOWNTIME,
-      host_name,
-      NULL,
+   case CMD_SCHEDULE_HOST_DOWNTIME:
+    downtime_manager::instance().schedule(
+      temp_host.get(),
       entry_time,
       author,
       comment_data,
       start_time,
       end_time,
       fixed,
-      triggered_by,
       duration,
-      &downtime_id);
-    break;
-
-  case CMD_SCHEDULE_SVC_DOWNTIME:
-    schedule_downtime(
-      SERVICE_DOWNTIME,
-      host_name,
-      svc_description,
+      triggered_by);
+    break ;
+   case CMD_SCHEDULE_SVC_DOWNTIME:
+    downtime_manager::instance().schedule(
+      temp_service.get(),
       entry_time,
       author,
       comment_data,
       start_time,
       end_time,
       fixed,
-      triggered_by,
       duration,
-      &downtime_id);
-    break;
-
-  case CMD_SCHEDULE_HOST_SVC_DOWNTIME:
-    for (temp_servicesmember = temp_host->services;
-         temp_servicesmember != NULL;
-         temp_servicesmember = temp_servicesmember->next) {
-      if ((temp_service = temp_servicesmember->service_ptr) == NULL)
-        continue;
-      schedule_downtime(
-        SERVICE_DOWNTIME,
-        host_name,
-        temp_service->description,
+      triggered_by);
+    break ;
+   case CMD_SCHEDULE_HOST_SVC_DOWNTIME:
+    for (service_set::const_iterator
+           it(temp_host->get_services().begin()),
+           end(temp_host->get_services().end());
+         it != end;
+         ++it)
+      downtime_manager::instance().schedule(
+        *it,
         entry_time,
         author,
         comment_data,
         start_time,
         end_time,
         fixed,
-        triggered_by,
         duration,
-        &downtime_id);
-    }
-    break;
-
-  case CMD_SCHEDULE_HOSTGROUP_HOST_DOWNTIME:
-    for (temp_hgmember = temp_hostgroup->members;
-         temp_hgmember != NULL;
-         temp_hgmember = temp_hgmember->next)
-      schedule_downtime(
-        HOST_DOWNTIME,
-        temp_hgmember->host_name,
-        NULL,
+        triggered_by);
+    break ;
+   case CMD_SCHEDULE_HOSTGROUP_HOST_DOWNTIME:
+    for (umap<std::string, host*>::const_iterator
+           it(temp_hostgroup->get_members().begin()),
+           end(temp_hostgroup->get_members().end());
+         it != end;
+         ++it)
+      downtime_manager::instance().schedule(
+        it->second,
         entry_time,
         author,
         comment_data,
         start_time,
         end_time,
         fixed,
-        triggered_by,
         duration,
-        &downtime_id);
-    break;
-
-  case CMD_SCHEDULE_HOSTGROUP_SVC_DOWNTIME:
-    for (temp_hgmember = temp_hostgroup->members;
-         temp_hgmember != NULL;
-         temp_hgmember = temp_hgmember->next) {
-      if ((temp_host = temp_hgmember->host_ptr) == NULL)
-        continue;
-      for (temp_servicesmember = temp_host->services;
-           temp_servicesmember != NULL;
-           temp_servicesmember = temp_servicesmember->next) {
-        if ((temp_service = temp_servicesmember->service_ptr) == NULL)
-          continue;
-        schedule_downtime(
-          SERVICE_DOWNTIME,
-          temp_service->host_name,
-          temp_service->description,
-          entry_time, author,
+        triggered_by);
+    break ;
+   case CMD_SCHEDULE_HOSTGROUP_SVC_DOWNTIME:
+    for (umap<std::string, host*>::const_iterator
+           it(temp_hostgroup->get_members().begin()),
+           end(temp_hostgroup->get_members().end());
+         it != end;
+         ++it)
+      for (service_set::const_iterator
+             it_svc(it->second->get_services().begin()),
+             end_svc(it->second->get_services().end());
+           it_svc != end_svc;
+           ++it_svc)
+        downtime_manager::instance().schedule(
+          *it_svc,
+          entry_time,
+          author,
           comment_data,
           start_time,
           end_time,
           fixed,
-          triggered_by,
           duration,
-          &downtime_id);
+          triggered_by);
+    break ;
+   case CMD_SCHEDULE_SERVICEGROUP_HOST_DOWNTIME:
+    {
+      std::set<host*> hst_set;
+      for (service_map::const_iterator
+             it(temp_servicegroup->get_members().begin()),
+             end(temp_servicegroup->get_members().end());
+           it != end;
+           ++it) {
+        temp_host = it->second->get_host();
+        if (temp_host == NULL)
+          continue;
+        if (hst_set.find(temp_host.get()) == hst_set.end())
+          downtime_manager::instance().schedule(
+            temp_host.get(),
+            entry_time,
+            author,
+            comment_data,
+            start_time,
+            end_time,
+            fixed,
+            duration,
+            triggered_by);
+          hst_set.insert(temp_host.get());
       }
     }
-    break;
-
-  case CMD_SCHEDULE_SERVICEGROUP_HOST_DOWNTIME:
-    last_host = NULL;
-    for (temp_sgmember = temp_servicegroup->members;
-         temp_sgmember != NULL;
-         temp_sgmember = temp_sgmember->next) {
-      temp_host = find_host(temp_sgmember->host_name);
-      if (temp_host == NULL)
-        continue;
-      if (last_host == temp_host)
-        continue;
-      schedule_downtime(
-        HOST_DOWNTIME,
-        temp_sgmember->host_name,
-        NULL,
+    break ;
+   case CMD_SCHEDULE_SERVICEGROUP_SVC_DOWNTIME:
+    for (service_map::iterator
+           it(temp_servicegroup->get_members().begin()),
+           end(temp_servicegroup->get_members().end());
+         it != end;
+         ++it)
+      downtime_manager::instance().schedule(
+        it->second,
         entry_time,
         author,
         comment_data,
         start_time,
         end_time,
         fixed,
-        triggered_by,
         duration,
-        &downtime_id);
-      last_host = temp_host;
-    }
-    break;
-
-  case CMD_SCHEDULE_SERVICEGROUP_SVC_DOWNTIME:
-    for (temp_sgmember = temp_servicegroup->members;
-         temp_sgmember != NULL;
-         temp_sgmember = temp_sgmember->next)
-      schedule_downtime(
-        SERVICE_DOWNTIME,
-        temp_sgmember->host_name,
-        temp_sgmember->service_description,
-        entry_time, author,
-        comment_data,
-        start_time,
-        end_time,
-        fixed,
-        triggered_by,
-        duration,
-        &downtime_id);
-    break;
-
-  case CMD_SCHEDULE_AND_PROPAGATE_HOST_DOWNTIME:
+        triggered_by);
+    break ;
+   case CMD_SCHEDULE_AND_PROPAGATE_HOST_DOWNTIME:
     /* schedule downtime for "parent" host */
-    schedule_downtime(
-      HOST_DOWNTIME,
-      host_name,
-      NULL,
+    downtime_manager::instance().schedule(
+      temp_host.get(),
       entry_time,
       author,
       comment_data,
       start_time,
       end_time,
       fixed,
-      triggered_by,
       duration,
-      &downtime_id);
-
-    /* schedule (non-triggered) downtime for all child hosts */
-    schedule_and_propagate_downtime(
-      temp_host,
-      entry_time,
-      author,
-      comment_data,
-      start_time,
-      end_time,
-      fixed,
-      0,
-      duration);
-    break;
-
-  case CMD_SCHEDULE_AND_PROPAGATE_TRIGGERED_HOST_DOWNTIME:
+      triggered_by,
+      downtime_manager::DOWNTIME_PROPAGATE_SIMPLE);
+    break ;
+   case CMD_SCHEDULE_AND_PROPAGATE_TRIGGERED_HOST_DOWNTIME:
     /* schedule downtime for "parent" host */
-    schedule_downtime(
-      HOST_DOWNTIME,
-      host_name,
-      NULL,
+    downtime_manager::instance().schedule(
+      temp_host.get(),
       entry_time,
       author,
       comment_data,
       start_time,
       end_time,
       fixed,
-      triggered_by,
       duration,
-      &downtime_id);
-
-    /* schedule triggered downtime for all child hosts */
-    schedule_and_propagate_downtime(
-      temp_host,
-      entry_time,
-      author,
-      comment_data,
-      start_time,
-      end_time,
-      fixed,
-      downtime_id,
-      duration);
-    break;
-
-  default:
-    break;
+      triggered_by,
+      downtime_manager::DOWNTIME_PROPAGATE_TRIGGERED);
+    break ;
+   default:
+    break ;
   }
   return (OK);
 }
@@ -1210,12 +1287,7 @@ int cmd_delete_downtime(int cmd, char* args) {
     return (ERROR);
 
   downtime_id = strtoul(temp_ptr, NULL, 10);
-
-  if (CMD_DEL_HOST_DOWNTIME == cmd)
-    unschedule_downtime(HOST_DOWNTIME, downtime_id);
-  else
-    unschedule_downtime(SERVICE_DOWNTIME, downtime_id);
-
+  downtime_manager::instance().unschedule(downtime_id);
   return (OK);
 }
 
@@ -1237,14 +1309,14 @@ int cmd_delete_downtime_full(int cmd, char* args) {
   // Service description and downtime type.
   int downtime_type;
   if (cmd == CMD_DEL_SVC_DOWNTIME_FULL) {
-    downtime_type = SERVICE_DOWNTIME;
+    downtime_type = downtime::SERVICE_DOWNTIME;
     if (!(temp_ptr = my_strtok(NULL, ";")))
       return (ERROR);
     if (*temp_ptr)
       criterias.push_back(downtime_finder::criteria("service", temp_ptr));
   }
   else {
-    downtime_type = HOST_DOWNTIME;
+    downtime_type = downtime::HOST_DOWNTIME;
     criterias.push_back(downtime_finder::criteria("service", ""));
   }
   // Start time.
@@ -1283,15 +1355,15 @@ int cmd_delete_downtime_full(int cmd, char* args) {
   if (*temp_ptr)
     criterias.push_back(downtime_finder::criteria("comment", temp_ptr));
 
-  // Find downtimes.
-  downtime_finder dtf(scheduled_downtime_list);
+  // Unschedule downtimes.
+  downtime_finder dtf;
   downtime_finder::result_set result(dtf.find_matching_all(criterias));
   for (downtime_finder::result_set::const_iterator
-         it(result.begin()), end(result.end());
+         it(result.begin()),
+         end(result.end());
        it != end;
-       ++it) {
-    unschedule_downtime(downtime_type, *it);
-  }
+       ++it)
+    downtime_manager::instance().unschedule(*it);
 
   return (OK);
 }
@@ -1343,7 +1415,7 @@ int cmd_delete_downtime_by_host_name(int cmd, char* args) {
               service_description,
               downtime_start_time,
               downtime_comment);
-  if (0 == deleted)
+  if (deleted == 0)
     return (ERROR);
   return (OK);
 }
@@ -1352,9 +1424,8 @@ int cmd_delete_downtime_by_host_name(int cmd, char* args) {
 int cmd_delete_downtime_by_hostgroup_name(int cmd, char* args) {
   char *temp_ptr(NULL);
   char *end_ptr(NULL);
-  host *temp_host(NULL);
   hostgroup *temp_hostgroup(NULL);
-  hostsmember *temp_member(NULL);
+  host* temp_host;
   char *service_description(NULL);
   char *downtime_comment(NULL);
   char *host_name(NULL);
@@ -1368,9 +1439,12 @@ int cmd_delete_downtime_by_hostgroup_name(int cmd, char* args) {
   if (NULL == temp_ptr)
     return (ERROR);
 
-  temp_hostgroup = find_hostgroup(temp_ptr);
-  if (NULL == temp_hostgroup)
+  try {
+    temp_hostgroup = &find_hostgroup(temp_ptr);
+  }
+  catch (not_found const& e) {
     return (ERROR);
+  }
 
   /* Get the optional host name. */
   temp_ptr = my_strtok(NULL, ";");
@@ -1419,15 +1493,18 @@ int cmd_delete_downtime_by_hostgroup_name(int cmd, char* args) {
     }
   }
 
-  for (temp_member = temp_hostgroup->members;
-       temp_member != NULL;
-       temp_member = temp_member->next) {
-    if (NULL == (temp_host = temp_member->host_ptr))
+  for (umap<std::string, host*>::const_iterator
+         it(temp_hostgroup->get_members().begin()),
+         end(temp_hostgroup->get_members().end());
+       it != end;
+       ++it) {
+    temp_host = it->second;
+    if (temp_host == NULL)
       continue ;
-    if ((host_name != NULL) && strcmp(temp_host->name, host_name))
+    if (host_name != NULL && temp_host->get_name() != host_name)
       continue ;
     deleted = delete_downtime_by_hostname_service_description_start_time_comment(
-                temp_host->name,
+                host_name,
                 service_description,
                 downtime_start_time,
                 downtime_comment);
@@ -1478,8 +1555,8 @@ int cmd_delete_downtime_by_start_time_comment(int cmd, char* args){
 
 /* changes a host or service (integer) variable */
 int cmd_change_object_int_var(int cmd, char* args) {
-  service* temp_service(NULL);
-  host* temp_host(NULL);
+  shared_ptr<service> temp_service;
+  shared_ptr<host> temp_host;
   contact* temp_contact(NULL);
   char* host_name(NULL);
   char* svc_description(NULL);
@@ -1523,8 +1600,13 @@ int cmd_change_object_int_var(int cmd, char* args) {
       return (ERROR);
 
     /* verify that the host is valid */
-    if ((temp_host = find_host(host_name)) == NULL)
+    try {
+      temp_host = configuration::applier::state::instance().hosts_find(host_name);
+    }
+    catch (not_found const& e) {
+      (void) e;
       return (ERROR);
+    }
     break;
 
   case CMD_CHANGE_CONTACT_MODATTR:
@@ -1535,8 +1617,13 @@ int cmd_change_object_int_var(int cmd, char* args) {
       return (ERROR);
 
     /* verify that the contact is valid */
-    if ((temp_contact = find_contact(contact_name)) == NULL)
+    try {
+      temp_contact = configuration::applier::state::instance().contacts_find(
+                       contact_name).get();
+    }
+    catch (not_found const& e) {
       return (ERROR);
+    }
     break;
 
   default:
@@ -1557,103 +1644,103 @@ int cmd_change_object_int_var(int cmd, char* args) {
 
   case CMD_CHANGE_NORMAL_HOST_CHECK_INTERVAL:
     /* save the old check interval */
-    old_dval = temp_host->check_interval;
+    old_dval = temp_host->get_normal_check_interval();
 
     /* modify the check interval */
-    temp_host->check_interval = dval;
+    temp_host->set_normal_check_interval(dval);
     attr = MODATTR_NORMAL_CHECK_INTERVAL;
 
     /* schedule a host check if previous interval was 0 (checks were not regularly scheduled) */
-    if (old_dval == 0 && temp_host->checks_enabled) {
+    if (old_dval == 0 && temp_host->get_active_checks_enabled()) {
 
       /* set the host check flag */
-      temp_host->should_be_scheduled = true;
+      temp_host->set_should_be_scheduled(true);
 
       /* schedule a check for right now (or as soon as possible) */
       time(&preferred_time);
       if (check_time_against_period(
             preferred_time,
-            temp_host->check_period_ptr) == ERROR) {
+            temp_host->get_check_period()) == ERROR) {
         get_next_valid_time(
           preferred_time,
           &next_valid_time,
-          temp_host->check_period_ptr);
-        temp_host->next_check = next_valid_time;
+          temp_host->get_check_period());
+        temp_host->set_next_check(next_valid_time);
       }
       else
-        temp_host->next_check = preferred_time;
+        temp_host->set_next_check(preferred_time);
 
       /* schedule a check if we should */
-      if (temp_host->should_be_scheduled)
-        schedule_host_check(temp_host, temp_host->next_check, CHECK_OPTION_NONE);
+      if (temp_host->get_should_be_scheduled())
+        schedule_host_check(temp_host.get(), temp_host->get_next_check(), CHECK_OPTION_NONE);
     }
     break;
 
   case CMD_CHANGE_RETRY_HOST_CHECK_INTERVAL:
-    temp_host->retry_interval = dval;
+    temp_host->set_retry_check_interval(dval);
     attr = MODATTR_RETRY_CHECK_INTERVAL;
     break;
 
   case CMD_CHANGE_MAX_HOST_CHECK_ATTEMPTS:
-    temp_host->max_attempts = intval;
+    temp_host->set_max_attempts(intval);
     attr = MODATTR_MAX_CHECK_ATTEMPTS;
 
     /* adjust current attempt number if in a hard state */
-    if (temp_host->state_type == HARD_STATE
-        && temp_host->current_state != HOST_UP
-        && temp_host->current_attempt > 1)
-      temp_host->current_attempt = temp_host->max_attempts;
+    if (temp_host->get_current_state_type() == HARD_STATE
+        && temp_host->get_current_state() != HOST_UP
+        && temp_host->get_current_attempt() > 1)
+      temp_host->set_current_attempt(temp_host->get_max_attempts());
     break;
 
   case CMD_CHANGE_NORMAL_SVC_CHECK_INTERVAL:
     /* save the old check interval */
-    old_dval = temp_service->check_interval;
+    old_dval = temp_service->get_normal_check_interval();
 
     /* modify the check interval */
-    temp_service->check_interval = dval;
+    temp_service->set_normal_check_interval(dval);
     attr = MODATTR_NORMAL_CHECK_INTERVAL;
 
     /* schedule a service check if previous interval was 0 (checks were not regularly scheduled) */
-    if (old_dval == 0 && temp_service->checks_enabled
-        && temp_service->check_interval != 0) {
+    if (old_dval == 0 && temp_service->get_active_checks_enabled()
+        && temp_service->get_normal_check_interval() != 0) {
 
       /* set the service check flag */
-      temp_service->should_be_scheduled = true;
+      temp_service->set_should_be_scheduled(true);
 
       /* schedule a check for right now (or as soon as possible) */
       time(&preferred_time);
       if (check_time_against_period(
             preferred_time,
-            temp_service->check_period_ptr) == ERROR) {
+            temp_service->get_check_period()) == ERROR) {
         get_next_valid_time(
           preferred_time,
           &next_valid_time,
-          temp_service->check_period_ptr);
-        temp_service->next_check = next_valid_time;
+          temp_service->get_check_period());
+        temp_service->set_next_check(next_valid_time);
       }
       else
-        temp_service->next_check = preferred_time;
+        temp_service->set_next_check(preferred_time);
 
       /* schedule a check if we should */
-      if (temp_service->should_be_scheduled)
-        schedule_service_check(temp_service, temp_service->next_check, CHECK_OPTION_NONE);
+      if (temp_service->get_should_be_scheduled())
+        schedule_service_check(temp_service.get(), temp_service->get_next_check(), CHECK_OPTION_NONE);
     }
     break;
 
   case CMD_CHANGE_RETRY_SVC_CHECK_INTERVAL:
-    temp_service->retry_interval = dval;
+    temp_service->set_retry_check_interval(dval);
     attr = MODATTR_RETRY_CHECK_INTERVAL;
     break;
 
   case CMD_CHANGE_MAX_SVC_CHECK_ATTEMPTS:
-    temp_service->max_attempts = intval;
+    temp_service->set_max_attempts(intval);
     attr = MODATTR_MAX_CHECK_ATTEMPTS;
 
     /* adjust current attempt number if in a hard state */
-    if (temp_service->state_type == HARD_STATE
-        && temp_service->current_state != STATE_OK
-        && temp_service->current_attempt > 1)
-      temp_service->current_attempt = temp_service->max_attempts;
+    if (temp_service->get_current_state_type() == HARD_STATE
+        && temp_service->get_current_state() != STATE_OK
+        && temp_service->get_current_attempt() > 1)
+      temp_service->set_current_attempt(temp_service->get_max_attempts());
     break;
 
   case CMD_CHANGE_HOST_MODATTR:
@@ -1684,22 +1771,23 @@ int cmd_change_object_int_var(int cmd, char* args) {
 
     /* set the modified service attribute */
     if (cmd == CMD_CHANGE_SVC_MODATTR)
-      temp_service->modified_attributes = attr;
+      temp_service->set_modified_attributes(attr);
     else
-      temp_service->modified_attributes |= attr;
+      temp_service->set_modified_attributes(
+        temp_service->get_modified_attributes() | attr);
 
     /* send data to event broker */
     broker_adaptive_service_data(
       NEBTYPE_ADAPTIVESERVICE_UPDATE,
       NEBFLAG_NONE,
       NEBATTR_NONE,
-      temp_service,
+      temp_service.get(),
       cmd, attr,
-      temp_service->modified_attributes,
+      temp_service->get_modified_attributes(),
       NULL);
 
     /* update the status log with the service info */
-    update_service_status(temp_service, false);
+    broker_service_status(temp_service.get());
     break;
 
   case CMD_CHANGE_NORMAL_HOST_CHECK_INTERVAL:
@@ -1708,23 +1796,23 @@ int cmd_change_object_int_var(int cmd, char* args) {
   case CMD_CHANGE_HOST_MODATTR:
     /* set the modified host attribute */
     if (cmd == CMD_CHANGE_HOST_MODATTR)
-      temp_host->modified_attributes = attr;
+      temp_host->set_modified_attributes(attr);
     else
-      temp_host->modified_attributes |= attr;
+      temp_host->set_modified_attributes(temp_host->get_modified_attributes() | attr);
 
     /* send data to event broker */
     broker_adaptive_host_data(
       NEBTYPE_ADAPTIVEHOST_UPDATE,
       NEBFLAG_NONE,
       NEBATTR_NONE,
-      temp_host,
+      temp_host.get(),
       cmd,
       attr,
-      temp_host->modified_attributes,
+      temp_host->get_modified_attributes(),
       NULL);
 
     /* update the status log with the host info */
-    update_host_status(temp_host, false);
+    broker_host_status(temp_host.get());
     break;
 
   case CMD_CHANGE_CONTACT_MODATTR:
@@ -1733,15 +1821,15 @@ int cmd_change_object_int_var(int cmd, char* args) {
     /* set the modified attribute */
     switch (cmd) {
     case CMD_CHANGE_CONTACT_MODATTR:
-      temp_contact->modified_attributes = attr;
+      temp_contact->set_modified_attributes(attr);
       break;
 
     case CMD_CHANGE_CONTACT_MODHATTR:
-      temp_contact->modified_host_attributes = hattr;
+      temp_contact->set_modified_host_attributes(hattr);
       break;
 
     case CMD_CHANGE_CONTACT_MODSATTR:
-      temp_contact->modified_service_attributes = sattr;
+      temp_contact->set_modified_service_attributes(sattr);
       break;
 
     default:
@@ -1755,16 +1843,16 @@ int cmd_change_object_int_var(int cmd, char* args) {
       NEBATTR_NONE,
       temp_contact,
       cmd, attr,
-      temp_contact->modified_attributes,
+      temp_contact->get_modified_attributes(),
       hattr,
-      temp_contact->modified_host_attributes,
+      temp_contact->get_modified_host_attributes(),
       sattr,
-      temp_contact->modified_service_attributes,
+      temp_contact->get_modified_service_attributes(),
       NULL);
 
     /* update the status log with the contact info */
-    update_contact_status(temp_contact, false);
-    break;
+    broker_contact_status(temp_contact);
+    break ;
 
   default:
     break;
@@ -1775,11 +1863,11 @@ int cmd_change_object_int_var(int cmd, char* args) {
 
 /* changes a host or service (char) variable */
 int cmd_change_object_char_var(int cmd, char* args) {
-  service* temp_service(NULL);
-  host* temp_host(NULL);
+  shared_ptr<service> temp_service;
+  shared_ptr<host> temp_host;
   contact* temp_contact(NULL);
   timeperiod* temp_timeperiod(NULL);
-  command* temp_command(NULL);
+  shared_ptr<command> temp_command;
   char* host_name(NULL);
   char* svc_description(NULL);
   char* contact_name(NULL);
@@ -1789,6 +1877,8 @@ int cmd_change_object_char_var(int cmd, char* args) {
   unsigned long attr(MODATTR_NONE);
   unsigned long hattr(MODATTR_NONE);
   unsigned long sattr(MODATTR_NONE);
+  configuration::applier::host hstaplr;
+  configuration::applier::service svcaplr;
 
   /* SECURITY PATCH - disable these for the time being */
   switch (cmd) {
@@ -1819,8 +1909,13 @@ int cmd_change_object_char_var(int cmd, char* args) {
       return (ERROR);
 
     /* verify that the host is valid */
-    if ((temp_host = find_host(host_name)) == NULL)
+    try {
+      temp_host = configuration::applier::state::instance().hosts_find(host_name);
+    }
+    catch (not_found const& e) {
+      (void) e;
       return (ERROR);
+    }
 
     if ((charval = my_strtok(NULL, "\n")) == NULL)
       return (ERROR);
@@ -1853,8 +1948,14 @@ int cmd_change_object_char_var(int cmd, char* args) {
       return (ERROR);
 
     /* verify that the contact is valid */
-    if ((temp_contact = find_contact(contact_name)) == NULL)
+    try {
+      temp_contact = configuration::applier::state::instance().contacts_find(
+                       contact_name).get();
+    }
+    catch (not_found const& e) {
+      (void)e;
       return (ERROR);
+    }
 
     if ((charval = my_strtok(NULL, "\n")) == NULL)
       return (ERROR);
@@ -1878,7 +1979,11 @@ int cmd_change_object_char_var(int cmd, char* args) {
   case CMD_CHANGE_CONTACT_HOST_NOTIFICATION_TIMEPERIOD:
   case CMD_CHANGE_CONTACT_SVC_NOTIFICATION_TIMEPERIOD:
     /* make sure the timeperiod is valid */
-    if ((temp_timeperiod = find_timeperiod(temp_ptr)) == NULL) {
+    try {
+      temp_timeperiod = &find_timeperiod(temp_ptr);
+    }
+    catch (not_found const& e) {
+      (void)e;
       delete[] temp_ptr;
       return (ERROR);
     }
@@ -1892,7 +1997,11 @@ int cmd_change_object_char_var(int cmd, char* args) {
   case CMD_CHANGE_SVC_CHECK_COMMAND:
     /* make sure the command exists */
     temp_ptr2 = my_strtok(temp_ptr, "!");
-    if ((temp_command = find_command(temp_ptr2)) == NULL) {
+    try {
+      temp_command = find_command(temp_ptr2);
+    }
+    catch (not_found const& e) {
+      (void)e;
       delete[] temp_ptr;
       return (ERROR);
     }
@@ -1910,83 +2019,63 @@ int cmd_change_object_char_var(int cmd, char* args) {
 
   case CMD_CHANGE_GLOBAL_HOST_EVENT_HANDLER:
     config->global_host_event_handler(temp_ptr);
-    global_host_event_handler_ptr = temp_command;
+    global_host_event_handler_ptr = temp_command.get();
     attr = MODATTR_EVENT_HANDLER_COMMAND;
     break;
 
   case CMD_CHANGE_GLOBAL_SVC_EVENT_HANDLER:
     config->global_service_event_handler(temp_ptr);
-    global_service_event_handler_ptr = temp_command;
+    global_service_event_handler_ptr = temp_command.get();
     attr = MODATTR_EVENT_HANDLER_COMMAND;
     break;
 
   case CMD_CHANGE_HOST_EVENT_HANDLER:
-    delete[] temp_host->event_handler;
-    temp_host->event_handler = temp_ptr;
-    temp_host->event_handler_ptr = temp_command;
+    hstaplr.resolve_event_handler(*temp_host, temp_ptr);
     attr = MODATTR_EVENT_HANDLER_COMMAND;
     break;
 
   case CMD_CHANGE_HOST_CHECK_COMMAND:
-    delete[] temp_host->host_check_command;
-    temp_host->host_check_command = temp_ptr;
-    temp_host->check_command_ptr = temp_command;
+    hstaplr.resolve_check_command(*temp_host, temp_ptr);
     attr = MODATTR_CHECK_COMMAND;
     break;
 
   case CMD_CHANGE_HOST_CHECK_TIMEPERIOD:
-    delete[] temp_host->check_period;
-    temp_host->check_period = temp_ptr;
-    temp_host->check_period_ptr = temp_timeperiod;
+    hstaplr.resolve_check_period(*temp_host, temp_ptr);
     attr = MODATTR_CHECK_TIMEPERIOD;
     break;
 
   case CMD_CHANGE_HOST_NOTIFICATION_TIMEPERIOD:
-    delete[] temp_host->notification_period;
-    temp_host->notification_period = temp_ptr;
-    temp_host->notification_period_ptr = temp_timeperiod;
+    hstaplr.resolve_notification_period(*temp_host, temp_ptr);
     attr = MODATTR_NOTIFICATION_TIMEPERIOD;
     break;
 
   case CMD_CHANGE_SVC_EVENT_HANDLER:
-    delete[] temp_service->event_handler;
-    temp_service->event_handler = temp_ptr;
-    temp_service->event_handler_ptr = temp_command;
+    svcaplr.resolve_event_handler(*temp_service, temp_ptr);
     attr = MODATTR_EVENT_HANDLER_COMMAND;
     break;
 
   case CMD_CHANGE_SVC_CHECK_COMMAND:
-    delete[] temp_service->service_check_command;
-    temp_service->service_check_command = temp_ptr;
-    temp_service->check_command_ptr = temp_command;
+    svcaplr.resolve_check_command(*temp_service, temp_ptr);
     attr = MODATTR_CHECK_COMMAND;
     break;
 
   case CMD_CHANGE_SVC_CHECK_TIMEPERIOD:
-    delete[] temp_service->check_period;
-    temp_service->check_period = temp_ptr;
-    temp_service->check_period_ptr = temp_timeperiod;
+    svcaplr.resolve_check_period(*temp_service, temp_ptr);
     attr = MODATTR_CHECK_TIMEPERIOD;
     break;
 
   case CMD_CHANGE_SVC_NOTIFICATION_TIMEPERIOD:
-    delete[] temp_service->notification_period;
-    temp_service->notification_period = temp_ptr;
-    temp_service->notification_period_ptr = temp_timeperiod;
+    svcaplr.resolve_notification_period(*temp_service, temp_ptr);
     attr = MODATTR_NOTIFICATION_TIMEPERIOD;
     break;
 
   case CMD_CHANGE_CONTACT_HOST_NOTIFICATION_TIMEPERIOD:
-    delete[] temp_contact->host_notification_period;
-    temp_contact->host_notification_period = temp_ptr;
-    temp_contact->host_notification_period_ptr = temp_timeperiod;
+    temp_contact->set_host_notification_period(temp_timeperiod);
     hattr = MODATTR_NOTIFICATION_TIMEPERIOD;
     break;
 
   case CMD_CHANGE_CONTACT_SVC_NOTIFICATION_TIMEPERIOD:
-    delete[] temp_contact->service_notification_period;
-    temp_contact->service_notification_period = temp_ptr;
-    temp_contact->service_notification_period_ptr = temp_timeperiod;
+    temp_contact->set_service_notification_period(temp_timeperiod);
     sattr = MODATTR_NOTIFICATION_TIMEPERIOD;
     break;
 
@@ -2042,21 +2131,22 @@ int cmd_change_object_char_var(int cmd, char* args) {
   case CMD_CHANGE_SVC_NOTIFICATION_TIMEPERIOD:
 
     /* set the modified service attribute */
-    temp_service->modified_attributes |= attr;
+    temp_service->set_modified_attributes(
+      temp_service->get_modified_attributes() | attr);
 
     /* send data to event broker */
     broker_adaptive_service_data(
       NEBTYPE_ADAPTIVESERVICE_UPDATE,
       NEBFLAG_NONE,
       NEBATTR_NONE,
-      temp_service,
+      temp_service.get(),
       cmd,
       attr,
-      temp_service->modified_attributes,
+      temp_service->get_modified_attributes(),
       NULL);
 
     /* update the status log with the service info */
-    update_service_status(temp_service, false);
+    broker_service_status(temp_service.get());
     break;
 
   case CMD_CHANGE_HOST_EVENT_HANDLER:
@@ -2064,28 +2154,30 @@ int cmd_change_object_char_var(int cmd, char* args) {
   case CMD_CHANGE_HOST_CHECK_TIMEPERIOD:
   case CMD_CHANGE_HOST_NOTIFICATION_TIMEPERIOD:
     /* set the modified host attribute */
-    temp_host->modified_attributes |= attr;
+    temp_host->set_modified_attributes(temp_host->get_modified_attributes() | attr);
 
     /* send data to event broker */
     broker_adaptive_host_data(
       NEBTYPE_ADAPTIVEHOST_UPDATE,
       NEBFLAG_NONE,
       NEBATTR_NONE,
-      temp_host,
+      temp_host.get(),
       cmd,
       attr,
-      temp_host->modified_attributes,
+      temp_host->get_modified_attributes(),
       NULL);
 
     /* update the status log with the host info */
-    update_host_status(temp_host, false);
+    broker_host_status(temp_host.get());
     break;
 
   case CMD_CHANGE_CONTACT_HOST_NOTIFICATION_TIMEPERIOD:
   case CMD_CHANGE_CONTACT_SVC_NOTIFICATION_TIMEPERIOD:
     /* set the modified attributes */
-    temp_contact->modified_host_attributes |= hattr;
-    temp_contact->modified_service_attributes |= sattr;
+    temp_contact->set_modified_host_attributes(
+        temp_contact->get_modified_host_attributes() | hattr);
+    temp_contact->set_modified_service_attributes(
+        temp_contact->get_modified_service_attributes() | sattr);
 
     /* send data to event broker */
     broker_adaptive_contact_data(
@@ -2095,16 +2187,16 @@ int cmd_change_object_char_var(int cmd, char* args) {
       temp_contact,
       cmd,
       attr,
-      temp_contact->modified_attributes,
+      temp_contact->get_modified_attributes(),
       hattr,
-      temp_contact->modified_host_attributes,
+      temp_contact->get_modified_host_attributes(),
       sattr,
-      temp_contact->modified_service_attributes,
+      temp_contact->get_modified_service_attributes(),
       NULL);
 
     /* update the status log with the contact info */
-    update_contact_status(temp_contact, false);
-    break;
+    broker_contact_status(temp_contact);
+    break ;
 
   default:
     break;
@@ -2115,10 +2207,9 @@ int cmd_change_object_char_var(int cmd, char* args) {
 
 /* changes a custom host or service variable */
 int cmd_change_object_custom_var(int cmd, char* args) {
-  host* temp_host(NULL);
-  service* temp_service(NULL);
+  shared_ptr<host> temp_host;
+  shared_ptr<service> temp_service;
   contact* temp_contact(NULL);
-  customvariablesmember* temp_customvariablesmember(NULL);
   char* temp_ptr(NULL);
   char* name1(NULL);
   char* name2(NULL);
@@ -2154,25 +2245,37 @@ int cmd_change_object_custom_var(int cmd, char* args) {
   else
     varvalue = string::dup("");
 
+  customvar_set temp_customvars;
   /* find the object */
   switch (cmd) {
 
   case CMD_CHANGE_CUSTOM_HOST_VAR:
-    if ((temp_host = find_host(name1)) == NULL)
+    try {
+      temp_host = configuration::applier::state::instance().hosts_find(name1);
+    }
+    catch (not_found const& e) {
+      (void) e;
       return (ERROR);
-    temp_customvariablesmember = temp_host->custom_variables;
+    }
+    temp_customvars = temp_host->get_customvars();
     break;
 
   case CMD_CHANGE_CUSTOM_SVC_VAR:
     if ((temp_service = find_service(name1, name2)) == NULL)
       return (ERROR);
-    temp_customvariablesmember = temp_service->custom_variables;
+    temp_customvars = temp_service->get_customvars();
     break;
 
   case CMD_CHANGE_CUSTOM_CONTACT_VAR:
-    if ((temp_contact = find_contact(name1)) == NULL)
+    try {
+      temp_contact = configuration::applier::state::instance().contacts_find(
+                       name1).get();
+    }
+    catch (not_found const& e) {
+      (void)e;
       return (ERROR);
-    temp_customvariablesmember = temp_contact->custom_variables;
+    }
+    temp_customvars = temp_contact->get_customvars();
     break;
 
   default:
@@ -2184,19 +2287,17 @@ int cmd_change_object_custom_var(int cmd, char* args) {
     varname[x] = toupper(varname[x]);
 
   /* find the proper variable */
-  for (; temp_customvariablesmember != NULL;
-       temp_customvariablesmember = temp_customvariablesmember->next) {
-
+  for (customvar_set::const_iterator
+         it(temp_customvars.begin()),
+         end(temp_customvars.end());
+       it != end;
+       ++it) {
     /* we found the variable, so update the value */
-    if (!strcmp(varname, temp_customvariablesmember->variable_name)) {
+    if (!strcmp(varname, it->first.c_str())) {
 
       /* update the value */
-      delete[] temp_customvariablesmember->variable_value;
-      temp_customvariablesmember->variable_value = string::dup(varvalue);
-
-      /* mark the variable value as having been changed */
-      temp_customvariablesmember->has_been_modified = true;
-
+      /* and mark the variable value as having been changed */
+      temp_customvars[varname] = customvar(varname, varvalue, true);
       break;
     }
   }
@@ -2211,19 +2312,22 @@ int cmd_change_object_custom_var(int cmd, char* args) {
   switch (cmd) {
 
   case CMD_CHANGE_CUSTOM_HOST_VAR:
-    temp_host->modified_attributes |= MODATTR_CUSTOM_VARIABLE;
-    update_host_status(temp_host, false);
+    temp_host->set_modified_attributes(
+      temp_host->get_modified_attributes() | MODATTR_CUSTOM_VARIABLE);
+    broker_host_status(temp_host.get());
     break;
 
   case CMD_CHANGE_CUSTOM_SVC_VAR:
-    temp_service->modified_attributes |= MODATTR_CUSTOM_VARIABLE;
-    update_service_status(temp_service, false);
+    temp_service->set_modified_attributes(
+      temp_service->get_modified_attributes() | MODATTR_CUSTOM_VARIABLE);
+    broker_service_status(temp_service.get());
     break;
 
   case CMD_CHANGE_CUSTOM_CONTACT_VAR:
-    temp_contact->modified_attributes |= MODATTR_CUSTOM_VARIABLE;
-    update_contact_status(temp_contact, false);
-    break;
+    temp_contact->set_modified_attributes(
+      temp_contact->get_modified_attributes() | MODATTR_CUSTOM_VARIABLE);
+    broker_contact_status(temp_contact);
+    break ;
 
   default:
     break;
@@ -2273,15 +2377,15 @@ void disable_service_checks(service* svc) {
   unsigned long attr(MODATTR_ACTIVE_CHECKS_ENABLED);
 
   /* checks are already disabled */
-  if (svc->checks_enabled == false)
+  if (!svc->get_active_checks_enabled())
     return;
 
   /* set the attribute modified flag */
-  svc->modified_attributes |= attr;
+  svc->set_modified_attributes(svc->get_modified_attributes() | attr);
 
   /* disable the service check... */
-  svc->checks_enabled = false;
-  svc->should_be_scheduled = false;
+  svc->set_active_checks_enabled(false);
+  svc->set_should_be_scheduled(false);
 
   /* send data to event broker */
   broker_adaptive_service_data(
@@ -2291,11 +2395,11 @@ void disable_service_checks(service* svc) {
     svc,
     CMD_NONE,
     attr,
-    svc->modified_attributes,
+    svc->get_modified_attributes(),
     NULL);
 
   /* update the status log to reflect the new service state */
-  update_service_status(svc, false);
+  broker_service_status(svc);
 }
 
 /* enables a service check */
@@ -2305,37 +2409,37 @@ void enable_service_checks(service* svc) {
   unsigned long attr(MODATTR_ACTIVE_CHECKS_ENABLED);
 
   /* checks are already enabled */
-  if (svc->checks_enabled)
+  if (svc->get_active_checks_enabled())
     return;
 
   /* set the attribute modified flag */
-  svc->modified_attributes |= attr;
+  svc->set_modified_attributes(svc->get_modified_attributes() | attr);
 
   /* enable the service check... */
-  svc->checks_enabled = true;
-  svc->should_be_scheduled = true;
+  svc->set_active_checks_enabled(true);
+  svc->set_should_be_scheduled(true);
 
   /* services with no check intervals don't get checked */
-  if (svc->check_interval == 0)
-    svc->should_be_scheduled = false;
+  if (svc->get_normal_check_interval() == 0)
+    svc->set_should_be_scheduled(false);
 
   /* schedule a check for right now (or as soon as possible) */
   time(&preferred_time);
   if (check_time_against_period(
         preferred_time,
-        svc->check_period_ptr) == ERROR) {
+        svc->get_check_period()) == ERROR) {
     get_next_valid_time(
       preferred_time,
       &next_valid_time,
-      svc->check_period_ptr);
-    svc->next_check = next_valid_time;
+      svc->get_check_period());
+    svc->set_next_check(next_valid_time);
   }
   else
-    svc->next_check = preferred_time;
+    svc->set_next_check(preferred_time);
 
   /* schedule a check if we should */
-  if (svc->should_be_scheduled)
-    schedule_service_check(svc, svc->next_check, CHECK_OPTION_NONE);
+  if (svc->get_should_be_scheduled())
+    schedule_service_check(svc, svc->get_next_check(), CHECK_OPTION_NONE);
 
   /* send data to event broker */
   broker_adaptive_service_data(
@@ -2345,11 +2449,11 @@ void enable_service_checks(service* svc) {
     svc,
     CMD_NONE,
     attr,
-    svc->modified_attributes,
+    svc->get_modified_attributes(),
     NULL);
 
   /* update the status log to reflect the new service state */
-  update_service_status(svc, false);
+  broker_service_status(svc);
 }
 
 /* enable notifications on a program-wide basis */
@@ -2419,14 +2523,14 @@ void enable_service_notifications(service* svc) {
   unsigned long attr(MODATTR_NOTIFICATIONS_ENABLED);
 
   /* no change */
-  if (svc->notifications_enabled)
+  if (svc->get_notifications_enabled())
     return;
 
   /* set the attribute modified flag */
-  svc->modified_attributes |= attr;
+  svc->set_modified_attributes(svc->get_modified_attributes() | attr);
 
   /* enable the service notifications... */
-  svc->notifications_enabled = true;
+  svc->set_notifications_enabled(true);
 
   /* send data to event broker */
   broker_adaptive_service_data(
@@ -2436,11 +2540,11 @@ void enable_service_notifications(service* svc) {
     svc,
     CMD_NONE,
     attr,
-    svc->modified_attributes,
+    svc->get_modified_attributes(),
     NULL);
 
   /* update the status log to reflect the new service state */
-  update_service_status(svc, false);
+  broker_service_status(svc);
 }
 
 /* disables notifications for a service */
@@ -2448,14 +2552,14 @@ void disable_service_notifications(service* svc) {
   unsigned long attr(MODATTR_NOTIFICATIONS_ENABLED);
 
   /* no change */
-  if (svc->notifications_enabled == false)
+  if (svc->get_notifications_enabled() == false)
     return;
 
   /* set the attribute modified flag */
-  svc->modified_attributes |= attr;
+  svc->set_modified_attributes(svc->get_modified_attributes() | attr);
 
   /* disable the service notifications... */
-  svc->notifications_enabled = false;
+  svc->set_notifications_enabled(false);
 
   /* send data to event broker */
   broker_adaptive_service_data(
@@ -2465,11 +2569,11 @@ void disable_service_notifications(service* svc) {
     svc,
     CMD_NONE,
     attr,
-    svc->modified_attributes,
+    svc->get_modified_attributes(),
     NULL);
 
   /* update the status log to reflect the new service state */
-  update_service_status(svc, false);
+  broker_service_status(svc);
 }
 
 /* enables notifications for a host */
@@ -2477,14 +2581,14 @@ void enable_host_notifications(host* hst) {
   unsigned long attr(MODATTR_NOTIFICATIONS_ENABLED);
 
   /* no change */
-  if (hst->notifications_enabled)
+  if (hst->get_notifications_enabled())
     return;
 
   /* set the attribute modified flag */
-  hst->modified_attributes |= attr;
+  hst->set_modified_attributes(hst->get_modified_attributes() | attr);
 
   /* enable the host notifications... */
-  hst->notifications_enabled = true;
+  hst->set_notifications_enabled(true);
 
   /* send data to event broker */
   broker_adaptive_host_data(
@@ -2494,11 +2598,11 @@ void enable_host_notifications(host* hst) {
     hst,
     CMD_NONE,
     attr,
-    hst->modified_attributes,
+    hst->get_modified_attributes(),
     NULL);
 
   /* update the status log to reflect the new host state */
-  update_host_status(hst, false);
+  broker_host_status(hst);
 }
 
 /* disables notifications for a host */
@@ -2506,14 +2610,14 @@ void disable_host_notifications(host* hst) {
   unsigned long attr(MODATTR_NOTIFICATIONS_ENABLED);
 
   /* no change */
-  if (hst->notifications_enabled == false)
+  if (hst->get_notifications_enabled() == false)
     return;
 
   /* set the attribute modified flag */
-  hst->modified_attributes |= attr;
+  hst->set_modified_attributes(hst->get_modified_attributes() | attr);
 
   /* disable the host notifications... */
-  hst->notifications_enabled = false;
+  hst->set_notifications_enabled(false);
 
   /* send data to event broker */
   broker_adaptive_host_data(
@@ -2523,11 +2627,11 @@ void disable_host_notifications(host* hst) {
     hst,
     CMD_NONE,
     attr,
-    hst->modified_attributes,
+    hst->get_modified_attributes(),
     NULL);
 
   /* update the status log to reflect the new host state */
-  update_host_status(hst, false);
+  broker_host_status(hst);
 }
 
 /* enables notifications for all hosts and services "beyond" a given host */
@@ -2537,26 +2641,25 @@ void enable_and_propagate_notifications(
        int affect_top_host,
        int affect_hosts,
        int affect_services) {
-  host* child_host(NULL);
-  service* temp_service(NULL);
-  servicesmember* temp_servicesmember(NULL);
-  hostsmember* temp_hostsmember(NULL);
+  shared_ptr<host> child_host;
+  shared_ptr<service> temp_service;
 
   /* enable notification for top level host */
   if (affect_top_host && level == 0)
     enable_host_notifications(hst);
 
   /* check all child hosts... */
-  for (temp_hostsmember = hst->child_hosts;
-       temp_hostsmember != NULL;
-       temp_hostsmember = temp_hostsmember->next) {
+  for (host_set::const_iterator
+         it(hst->get_children().begin()),
+         end(hst->get_children().end());
+       it != end;
+       ++it) {
 
-    if ((child_host = temp_hostsmember->host_ptr) == NULL)
-      continue;
+    child_host = *it;
 
     /* recurse... */
     enable_and_propagate_notifications(
-      child_host,
+      child_host.get(),
       level + 1,
       affect_top_host,
       affect_hosts,
@@ -2564,18 +2667,19 @@ void enable_and_propagate_notifications(
 
     /* enable notifications for this host */
     if (affect_hosts)
-      enable_host_notifications(child_host);
+      enable_host_notifications(child_host.get());
 
     /* enable notifications for all services on this host... */
     if (affect_services) {
-      for (temp_servicesmember = child_host->services;
-           temp_servicesmember != NULL;
-           temp_servicesmember = temp_servicesmember->next) {
-        if ((temp_service = temp_servicesmember->service_ptr) == NULL)
-          continue;
-        enable_service_notifications(temp_service);
-      }
+      for (service_set::const_iterator
+             it(child_host->get_services().begin()),
+             end(child_host->get_services().end());
+           it != end;
+           ++it)
+        (*it)->set_notifications_enabled(true);
+
     }
+
   }
 }
 
@@ -2588,8 +2692,6 @@ void disable_and_propagate_notifications(
        int affect_services) {
   host* child_host(NULL);
   service* temp_service(NULL);
-  servicesmember* temp_servicesmember(NULL);
-  hostsmember* temp_hostsmember(NULL);
 
   if (hst == NULL)
     return;
@@ -2599,12 +2701,12 @@ void disable_and_propagate_notifications(
     disable_host_notifications(hst);
 
   /* check all child hosts... */
-  for (temp_hostsmember = hst->child_hosts;
-       temp_hostsmember != NULL;
-       temp_hostsmember = temp_hostsmember->next) {
-
-    if ((child_host = temp_hostsmember->host_ptr) == NULL)
-      continue;
+  for (host_set::const_iterator
+         it(hst->get_children().begin()),
+         end(hst->get_children().end());
+       it != end;
+       ++it) {
+    host* child_host(*it);
 
     /* recurse... */
     disable_and_propagate_notifications(
@@ -2620,197 +2722,14 @@ void disable_and_propagate_notifications(
 
     /* disable notifications for all services on this host... */
     if (affect_services) {
-      for (temp_servicesmember = child_host->services;
-           temp_servicesmember != NULL;
-           temp_servicesmember = temp_servicesmember->next) {
-        if ((temp_service = temp_servicesmember->service_ptr) == NULL)
-          continue;
-        disable_service_notifications(temp_service);
+      for (service_set::const_iterator
+             sit(child_host->get_services().begin()),
+             send(child_host->get_services().end());
+           sit != send;
+           ++it) {
+        disable_service_notifications(*sit);
       }
     }
-  }
-}
-
-/* enables host notifications for a contact */
-void enable_contact_host_notifications(contact* cntct) {
-  unsigned long attr(MODATTR_NOTIFICATIONS_ENABLED);
-
-  /* no change */
-  if (cntct->host_notifications_enabled)
-    return;
-
-  /* set the attribute modified flag */
-  cntct->modified_host_attributes |= attr;
-
-  /* enable the host notifications... */
-  cntct->host_notifications_enabled = true;
-
-  /* send data to event broker */
-  broker_adaptive_contact_data(
-    NEBTYPE_ADAPTIVECONTACT_UPDATE,
-    NEBFLAG_NONE,
-    NEBATTR_NONE,
-    cntct,
-    CMD_NONE,
-    MODATTR_NONE,
-    cntct->modified_attributes,
-    attr,
-    cntct->modified_host_attributes,
-    MODATTR_NONE,
-    cntct->modified_service_attributes,
-    NULL);
-
-  /* update the status log to reflect the new contact state */
-  update_contact_status(cntct, false);
-}
-
-/* disables host notifications for a contact */
-void disable_contact_host_notifications(contact* cntct) {
-  unsigned long attr(MODATTR_NOTIFICATIONS_ENABLED);
-
-  /* no change */
-  if (cntct->host_notifications_enabled == false)
-    return;
-
-  /* set the attribute modified flag */
-  cntct->modified_host_attributes |= attr;
-
-  /* enable the host notifications... */
-  cntct->host_notifications_enabled = false;
-
-  /* send data to event broker */
-  broker_adaptive_contact_data(
-    NEBTYPE_ADAPTIVECONTACT_UPDATE,
-    NEBFLAG_NONE,
-    NEBATTR_NONE,
-    cntct,
-    CMD_NONE,
-    MODATTR_NONE,
-    cntct->modified_attributes,
-    attr,
-    cntct->modified_host_attributes,
-    MODATTR_NONE,
-    cntct->modified_service_attributes,
-    NULL);
-
-  /* update the status log to reflect the new contact state */
-  update_contact_status(cntct, false);
-}
-
-/* enables service notifications for a contact */
-void enable_contact_service_notifications(contact* cntct) {
-  unsigned long attr(MODATTR_NOTIFICATIONS_ENABLED);
-
-  /* no change */
-  if (cntct->service_notifications_enabled)
-    return;
-
-  /* set the attribute modified flag */
-  cntct->modified_service_attributes |= attr;
-
-  /* enable the host notifications... */
-  cntct->service_notifications_enabled = true;
-
-  /* send data to event broker */
-  broker_adaptive_contact_data(
-    NEBTYPE_ADAPTIVECONTACT_UPDATE,
-    NEBFLAG_NONE,
-    NEBATTR_NONE,
-    cntct,
-    CMD_NONE,
-    MODATTR_NONE,
-    cntct->modified_attributes,
-    MODATTR_NONE,
-    cntct->modified_host_attributes,
-    attr,
-    cntct->modified_service_attributes,
-    NULL);
-
-  /* update the status log to reflect the new contact state */
-  update_contact_status(cntct, false);
-}
-
-/* disables service notifications for a contact */
-void disable_contact_service_notifications(contact* cntct) {
-  unsigned long attr(MODATTR_NOTIFICATIONS_ENABLED);
-
-  /* no change */
-  if (cntct->service_notifications_enabled == false)
-    return;
-
-  /* set the attribute modified flag */
-  cntct->modified_service_attributes |= attr;
-
-  /* enable the host notifications... */
-  cntct->service_notifications_enabled = false;
-
-  /* send data to event broker */
-  broker_adaptive_contact_data(
-    NEBTYPE_ADAPTIVECONTACT_UPDATE,
-    NEBFLAG_NONE,
-    NEBATTR_NONE,
-    cntct,
-    CMD_NONE,
-    MODATTR_NONE,
-    cntct->modified_attributes,
-    MODATTR_NONE,
-    cntct->modified_host_attributes,
-    attr,
-    cntct->modified_service_attributes,
-    NULL);
-
-  /* update the status log to reflect the new contact state */
-  update_contact_status(cntct, false);
-}
-
-/* schedules downtime for all hosts "beyond" a given host */
-void schedule_and_propagate_downtime(
-       host* temp_host,
-       time_t entry_time,
-       char const* author,
-       char const* comment_data,
-       time_t start_time,
-       time_t end_time,
-       int fixed,
-       unsigned long triggered_by,
-       unsigned long duration) {
-  host* child_host(NULL);
-  hostsmember* temp_hostsmember(NULL);
-
-  /* check all child hosts... */
-  for (temp_hostsmember = temp_host->child_hosts;
-       temp_hostsmember != NULL;
-       temp_hostsmember = temp_hostsmember->next) {
-
-    if ((child_host = temp_hostsmember->host_ptr) == NULL)
-      continue;
-
-    /* recurse... */
-    schedule_and_propagate_downtime(
-      child_host,
-      entry_time,
-      author,
-      comment_data,
-      start_time,
-      end_time,
-      fixed,
-      triggered_by,
-      duration);
-
-    /* schedule downtime for this host */
-    schedule_downtime(
-      HOST_DOWNTIME,
-      child_host->name,
-      NULL,
-      entry_time,
-      author,
-      comment_data,
-      start_time,
-      end_time,
-      fixed,
-      triggered_by,
-      duration,
-      NULL);
   }
 }
 
@@ -2823,20 +2742,17 @@ void acknowledge_host_problem(
        int notify,
        int persistent) {
   /* cannot acknowledge a non-existent problem */
-  if (hst->current_state == HOST_UP)
+  if (hst->get_current_state() == HOST_UP)
     return;
 
-  /* set the acknowledgement flag */
-  hst->problem_has_been_acknowledged = true;
-
   /* set the acknowledgement type */
-  hst->acknowledgement_type = (type == ACKNOWLEDGEMENT_STICKY)
-    ? ACKNOWLEDGEMENT_STICKY : ACKNOWLEDGEMENT_NORMAL;
+  hst->set_acknowledged((type == notifier::ACKNOWLEDGEMENT_STICKY)
+         ? notifier::ACKNOWLEDGEMENT_STICKY : notifier::ACKNOWLEDGEMENT_NORMAL);
 
   /* schedule acknowledgement expiration */
   time_t current_time(time(NULL));
-  host_other_props[hst->name].last_acknowledgement = current_time;
-  schedule_acknowledgement_expiration(hst);
+  hst->set_last_acknowledgement(current_time);
+  hst->schedule_acknowledgement_expiration();
 
   /* send data to event broker */
   broker_acknowledgement_data(
@@ -2844,7 +2760,7 @@ void acknowledge_host_problem(
     NEBFLAG_NONE,
     NEBATTR_NONE,
     HOST_ACKNOWLEDGEMENT,
-    (void*)hst,
+    hst,
     ack_author,
     ack_data,
     type,
@@ -2853,29 +2769,32 @@ void acknowledge_host_problem(
     NULL);
 
   /* send out an acknowledgement notification */
+    ///////////////
+    // FIXME DBR // notify is a filter here and should be managed by the
+    // notify() method
+    ///////////////
   if (notify)
-    host_notification(
-      hst,
-      NOTIFICATION_ACKNOWLEDGEMENT,
+    hst->notify(
+      notifier::ACKNOWLEDGEMENT,
       ack_author,
       ack_data,
       NOTIFICATION_OPTION_NONE);
 
   /* update the status log with the host info */
-  update_host_status(hst, false);
+  broker_host_status(hst);
 
   /* add a comment for the acknowledgement */
-  add_new_host_comment(
-    ACKNOWLEDGEMENT_COMMENT,
-    hst->name,
+  comment::add_new_comment(
+    comment::HOST_COMMENT,
+    comment::ACKNOWLEDGEMENT_COMMENT,
+    hst,
     current_time,
     ack_author,
     ack_data,
     persistent,
-    COMMENTSOURCE_INTERNAL,
+    comment::COMMENTSOURCE_INTERNAL,
     false,
-    (time_t)0,
-    NULL);
+    (time_t)0);
 }
 
 /* acknowledges a service problem */
@@ -2887,22 +2806,18 @@ void acknowledge_service_problem(
        int notify,
        int persistent) {
   /* cannot acknowledge a non-existent problem */
-  if (svc->current_state == STATE_OK)
+  if (svc->get_current_state() == STATE_OK)
     return;
 
-  /* set the acknowledgement flag */
-  svc->problem_has_been_acknowledged = true;
-
   /* set the acknowledgement type */
-  svc->acknowledgement_type = (type == ACKNOWLEDGEMENT_STICKY)
-    ? ACKNOWLEDGEMENT_STICKY : ACKNOWLEDGEMENT_NORMAL;
+  svc->set_acknowledged((type == notifier::ACKNOWLEDGEMENT_STICKY)
+    ? notifier::ACKNOWLEDGEMENT_STICKY : notifier::ACKNOWLEDGEMENT_NORMAL);
 
   /* schedule acknowledgement expiration */
   time_t current_time(time(NULL));
-  service_other_props[std::make_pair(
-                             svc->host_ptr->name,
-                             svc->description)].last_acknowledgement = current_time;
-  schedule_acknowledgement_expiration(svc);
+  svc->set_last_acknowledgement(current_time);
+
+  svc->schedule_acknowledgement_expiration();
 
   /* send data to event broker */
   broker_acknowledgement_data(
@@ -2910,7 +2825,7 @@ void acknowledge_service_problem(
     NEBFLAG_NONE,
     NEBATTR_NONE,
     SERVICE_ACKNOWLEDGEMENT,
-    (void*)svc,
+    svc,
     ack_author,
     ack_data,
     type,
@@ -2919,54 +2834,55 @@ void acknowledge_service_problem(
     NULL);
 
   /* send out an acknowledgement notification */
+    ///////////////
+    // FIXME DBR // notify variable should disappear
+    ///////////////
   if (notify)
-    service_notification(
-      svc,
-      NOTIFICATION_ACKNOWLEDGEMENT,
+    svc->notify(
+      notifier::ACKNOWLEDGEMENT,
       ack_author,
       ack_data,
       NOTIFICATION_OPTION_NONE);
 
   /* update the status log with the service info */
-  update_service_status(svc, false);
+  broker_service_status(svc);
 
   /* add a comment for the acknowledgement */
-  add_new_service_comment(
-    ACKNOWLEDGEMENT_COMMENT,
-    svc->host_name,
-    svc->description,
+  comment::add_new_comment(
+    comment::SERVICE_COMMENT,
+    comment::ACKNOWLEDGEMENT_COMMENT,
+    svc,
     current_time,
     ack_author,
     ack_data,
     persistent,
-    COMMENTSOURCE_INTERNAL,
+    comment::COMMENTSOURCE_INTERNAL,
     false,
-    (time_t)0,
-    NULL);
+    (time_t)0);
 }
 
 /* removes a host acknowledgement */
 void remove_host_acknowledgement(host* hst) {
   /* set the acknowledgement flag */
-  hst->problem_has_been_acknowledged = false;
+  hst->set_acknowledged(notifier::ACKNOWLEDGEMENT_NONE);
 
   /* update the status log with the host info */
-  update_host_status(hst, false);
+  broker_host_status(hst);
 
   /* remove any non-persistant comments associated with the ack */
-  delete_host_acknowledgement_comments(hst);
+  hst->delete_acknowledgement_comments();
 }
 
 /* removes a service acknowledgement */
 void remove_service_acknowledgement(service* svc) {
   /* set the acknowledgement flag */
-  svc->problem_has_been_acknowledged = false;
+  svc->set_acknowledged(notifier::ACKNOWLEDGEMENT_NONE);
 
   /* update the status log with the service info */
-  update_service_status(svc, false);
+  broker_service_status(svc);
 
   /* remove any non-persistant comments associated with the ack */
-  delete_service_acknowledgement_comments(svc);
+  svc->delete_acknowledgement_comments();
 }
 
 /* starts executing service checks */
@@ -3094,14 +3010,14 @@ void enable_passive_service_checks(service* svc) {
   unsigned long attr(MODATTR_PASSIVE_CHECKS_ENABLED);
 
   /* no change */
-  if (svc->accept_passive_service_checks)
+  if (svc->get_passive_checks_enabled())
     return;
 
   /* set the attribute modified flag */
-  svc->modified_attributes |= attr;
+  svc->set_modified_attributes(svc->get_modified_attributes() | attr);
 
   /* set the passive check flag */
-  svc->accept_passive_service_checks = true;
+  svc->set_passive_checks_enabled(true);
 
   /* send data to event broker */
   broker_adaptive_service_data(
@@ -3111,11 +3027,11 @@ void enable_passive_service_checks(service* svc) {
     svc,
     CMD_NONE,
     attr,
-    svc->modified_attributes,
+    svc->get_modified_attributes(),
     NULL);
 
   /* update the status log with the service info */
-  update_service_status(svc, false);
+  broker_service_status(svc);
 }
 
 /* disables passive service checks for a particular service */
@@ -3123,14 +3039,14 @@ void disable_passive_service_checks(service* svc) {
   unsigned long attr(MODATTR_PASSIVE_CHECKS_ENABLED);
 
   /* no change */
-  if (svc->accept_passive_service_checks == false)
+  if (!svc->get_passive_checks_enabled())
     return;
 
   /* set the attribute modified flag */
-  svc->modified_attributes |= attr;
+  svc->set_modified_attributes(svc->get_modified_attributes() | attr);
 
   /* set the passive check flag */
-  svc->accept_passive_service_checks = false;
+  svc->set_passive_checks_enabled(false);
 
   /* send data to event broker */
   broker_adaptive_service_data(
@@ -3140,11 +3056,11 @@ void disable_passive_service_checks(service* svc) {
     svc,
     CMD_NONE,
     attr,
-    svc->modified_attributes,
+    svc->get_modified_attributes(),
     NULL);
 
   /* update the status log with the service info */
-  update_service_status(svc, false);
+  broker_service_status(svc);
 }
 
 /* starts executing host checks */
@@ -3271,14 +3187,14 @@ void enable_passive_host_checks(host* hst) {
   unsigned long attr(MODATTR_PASSIVE_CHECKS_ENABLED);
 
   /* no change */
-  if (hst->accept_passive_host_checks)
+  if (hst->get_passive_checks_enabled())
     return;
 
   /* set the attribute modified flag */
-  hst->modified_attributes |= attr;
+  hst->set_modified_attributes(hst->get_modified_attributes() | attr);
 
   /* set the passive check flag */
-  hst->accept_passive_host_checks = true;
+  hst->set_passive_checks_enabled(true);
 
   /* send data to event broker */
   broker_adaptive_host_data(
@@ -3288,11 +3204,11 @@ void enable_passive_host_checks(host* hst) {
     hst,
     CMD_NONE,
     attr,
-    hst->modified_attributes,
+    hst->get_modified_attributes(),
     NULL);
 
   /* update the status log with the host info */
-  update_host_status(hst, false);
+  broker_host_status(hst);
 }
 
 /* disables passive host checks for a particular host */
@@ -3300,14 +3216,14 @@ void disable_passive_host_checks(host* hst) {
   unsigned long attr(MODATTR_PASSIVE_CHECKS_ENABLED);
 
   /* no change */
-  if (hst->accept_passive_host_checks == false)
+  if (!hst->get_passive_checks_enabled())
     return;
 
   /* set the attribute modified flag */
-  hst->modified_attributes |= attr;
+  hst->set_modified_attributes(hst->get_modified_attributes() | attr);
 
   /* set the passive check flag */
-  hst->accept_passive_host_checks = false;
+  hst->set_passive_checks_enabled(false);
 
   /* send data to event broker */
   broker_adaptive_host_data(
@@ -3317,11 +3233,11 @@ void disable_passive_host_checks(host* hst) {
     hst,
     CMD_NONE,
     attr,
-    hst->modified_attributes,
+    hst->get_modified_attributes(),
     NULL);
 
   /* update the status log with the host info */
-  update_host_status(hst, false);
+  broker_host_status(hst);
 }
 
 /* enables event handlers on a program-wide basis */
@@ -3391,14 +3307,14 @@ void enable_service_event_handler(service* svc) {
   unsigned long attr(MODATTR_EVENT_HANDLER_ENABLED);
 
   /* no change */
-  if (svc->event_handler_enabled)
+  if (svc->get_event_handler_enabled())
     return;
 
   /* set the attribute modified flag */
-  svc->modified_attributes |= attr;
+  svc->set_modified_attributes(svc->get_modified_attributes() | attr);
 
   /* set the event handler flag */
-  svc->event_handler_enabled = true;
+  svc->set_event_handler_enabled(true);
 
   /* send data to event broker */
   broker_adaptive_service_data(
@@ -3408,11 +3324,11 @@ void enable_service_event_handler(service* svc) {
     svc,
     CMD_NONE,
     attr,
-    svc->modified_attributes,
+    svc->get_modified_attributes(),
     NULL);
 
   /* update the status log with the service info */
-  update_service_status(svc, false);
+  broker_service_status(svc);
 }
 
 /* disables the event handler for a particular service */
@@ -3420,14 +3336,14 @@ void disable_service_event_handler(service* svc) {
   unsigned long attr(MODATTR_EVENT_HANDLER_ENABLED);
 
   /* no change */
-  if (svc->event_handler_enabled == false)
+  if (!svc->get_event_handler_enabled())
     return;
 
   /* set the attribute modified flag */
-  svc->modified_attributes |= attr;
+  svc->set_modified_attributes(svc->get_modified_attributes() | attr);
 
   /* set the event handler flag */
-  svc->event_handler_enabled = false;
+  svc->set_event_handler_enabled(false);
 
   /* send data to event broker */
   broker_adaptive_service_data(
@@ -3437,11 +3353,11 @@ void disable_service_event_handler(service* svc) {
     svc,
     CMD_NONE,
     attr,
-    svc->modified_attributes,
+    svc->get_modified_attributes(),
     NULL);
 
   /* update the status log with the service info */
-  update_service_status(svc, false);
+  broker_service_status(svc);
 }
 
 /* enables the event handler for a particular host */
@@ -3449,14 +3365,14 @@ void enable_host_event_handler(host* hst) {
   unsigned long attr(MODATTR_EVENT_HANDLER_ENABLED);
 
   /* no change */
-  if (hst->event_handler_enabled)
+  if (hst->get_event_handler_enabled())
     return;
 
   /* set the attribute modified flag */
-  hst->modified_attributes |= attr;
+  hst->set_modified_attributes(hst->get_modified_attributes() | attr);
 
   /* set the event handler flag */
-  hst->event_handler_enabled = true;
+  hst->set_event_handler_enabled(true);
 
   /* send data to event broker */
   broker_adaptive_host_data(
@@ -3466,11 +3382,11 @@ void enable_host_event_handler(host* hst) {
     hst,
     CMD_NONE,
     attr,
-    hst->modified_attributes,
+    hst->get_modified_attributes(),
     NULL);
 
   /* update the status log with the host info */
-  update_host_status(hst, false);
+  broker_host_status(hst);
 }
 
 /* disables the event handler for a particular host */
@@ -3478,14 +3394,14 @@ void disable_host_event_handler(host* hst) {
   unsigned long attr(MODATTR_EVENT_HANDLER_ENABLED);
 
   /* no change */
-  if (hst->event_handler_enabled == false)
+  if (!hst->get_event_handler_enabled())
     return;
 
   /* set the attribute modified flag */
-  hst->modified_attributes |= attr;
+  hst->set_modified_attributes(hst->get_modified_attributes() | attr);
 
   /* set the event handler flag */
-  hst->event_handler_enabled = false;
+  hst->set_event_handler_enabled(false);
 
   /* send data to event broker */
   broker_adaptive_host_data(
@@ -3495,11 +3411,11 @@ void disable_host_event_handler(host* hst) {
     hst,
     CMD_NONE,
     attr,
-    hst->modified_attributes,
+    hst->get_modified_attributes(),
     NULL);
 
   /* update the status log with the host info */
-  update_host_status(hst, false);
+  broker_host_status(hst);
 }
 
 /* disables checks of a particular host */
@@ -3507,15 +3423,15 @@ void disable_host_checks(host* hst) {
   unsigned long attr(MODATTR_ACTIVE_CHECKS_ENABLED);
 
   /* checks are already disabled */
-  if (hst->checks_enabled == false)
+  if (!hst->get_active_checks_enabled())
     return;
 
   /* set the attribute modified flag */
-  hst->modified_attributes |= attr;
+  hst->set_modified_attributes(hst->get_modified_attributes() | attr);
 
   /* set the host check flag */
-  hst->checks_enabled = false;
-  hst->should_be_scheduled = false;
+  hst->set_active_checks_enabled(false);
+  hst->set_should_be_scheduled(false);
 
   /* send data to event broker */
   broker_adaptive_host_data(
@@ -3525,11 +3441,11 @@ void disable_host_checks(host* hst) {
     hst,
     CMD_NONE,
     attr,
-    hst->modified_attributes,
+    hst->get_modified_attributes(),
     NULL);
 
   /* update the status log with the host info */
-  update_host_status(hst, false);
+  broker_host_status(hst);
 }
 
 /* enables checks of a particular host */
@@ -3539,32 +3455,32 @@ void enable_host_checks(host* hst) {
   unsigned long attr(MODATTR_ACTIVE_CHECKS_ENABLED);
 
   /* checks are already enabled */
-  if (hst->checks_enabled)
+  if (hst->get_active_checks_enabled())
     return;
 
   /* set the attribute modified flag */
-  hst->modified_attributes |= attr;
+  hst->set_modified_attributes(hst->get_modified_attributes() | attr);
 
   /* set the host check flag */
-  hst->checks_enabled = true;
-  hst->should_be_scheduled = true;
+  hst->set_active_checks_enabled(true);
+  hst->set_should_be_scheduled(true);
 
   /* hosts with no check intervals don't get checked */
-  if (hst->check_interval == 0)
-    hst->should_be_scheduled = false;
+  if (hst->get_normal_check_interval() == 0)
+    hst->set_should_be_scheduled(false);
 
   /* schedule a check for right now (or as soon as possible) */
   time(&preferred_time);
-  if (check_time_against_period(preferred_time, hst->check_period_ptr) == ERROR) {
-    get_next_valid_time(preferred_time, &next_valid_time, hst->check_period_ptr);
-    hst->next_check = next_valid_time;
+  if (check_time_against_period(preferred_time, hst->get_check_period()) == ERROR) {
+    get_next_valid_time(preferred_time, &next_valid_time, hst->get_check_period());
+    hst->set_next_check(next_valid_time);
   }
   else
-    hst->next_check = preferred_time;
+    hst->set_next_check(preferred_time);
 
   /* schedule a check if we should */
-  if (hst->should_be_scheduled)
-    schedule_host_check(hst, hst->next_check, CHECK_OPTION_NONE);
+  if (hst->get_should_be_scheduled())
+    schedule_host_check(hst, hst->get_next_check(), CHECK_OPTION_NONE);
 
   /* send data to event broker */
   broker_adaptive_host_data(
@@ -3574,11 +3490,11 @@ void enable_host_checks(host* hst) {
     hst,
     CMD_NONE,
     attr,
-    hst->modified_attributes,
+    hst->get_modified_attributes(),
     NULL);
 
   /* update the status log with the host info */
-  update_host_status(hst, false);
+  broker_host_status(hst);
 }
 
 /* start obsessing over service check results */
@@ -3885,14 +3801,14 @@ void start_obsessing_over_service(service* svc) {
   unsigned long attr(MODATTR_OBSESSIVE_HANDLER_ENABLED);
 
   /* no change */
-  if (svc->obsess_over_service)
+  if (svc->get_ocp_enabled())
     return;
 
   /* set the attribute modified flag */
-  svc->modified_attributes |= attr;
+  svc->set_modified_attributes(svc->get_modified_attributes() | attr);
 
   /* set the obsess over service flag */
-  svc->obsess_over_service = true;
+  svc->set_ocp_enabled(true);
 
   /* send data to event broker */
   broker_adaptive_service_data(
@@ -3902,11 +3818,11 @@ void start_obsessing_over_service(service* svc) {
     svc,
     CMD_NONE,
     attr,
-    svc->modified_attributes,
+    svc->get_modified_attributes(),
     NULL);
 
   /* update the status log with the service info */
-  update_service_status(svc, false);
+  broker_service_status(svc);
 }
 
 /* stop obsessing over a particular service */
@@ -3914,14 +3830,14 @@ void stop_obsessing_over_service(service* svc) {
   unsigned long attr(MODATTR_OBSESSIVE_HANDLER_ENABLED);
 
   /* no change */
-  if (svc->obsess_over_service == false)
+  if (!svc->get_ocp_enabled())
     return;
 
   /* set the attribute modified flag */
-  svc->modified_attributes |= attr;
+  svc->set_modified_attributes(svc->get_modified_attributes() | attr);
 
   /* set the obsess over service flag */
-  svc->obsess_over_service = false;
+  svc->set_ocp_enabled(false);
 
   /* send data to event broker */
   broker_adaptive_service_data(
@@ -3931,11 +3847,11 @@ void stop_obsessing_over_service(service* svc) {
     svc,
     CMD_NONE,
     attr,
-    svc->modified_attributes,
+    svc->get_modified_attributes(),
     NULL);
 
   /* update the status log with the service info */
-  update_service_status(svc, false);
+  broker_service_status(svc);
 }
 
 /* start obsessing over a particular host */
@@ -3943,14 +3859,14 @@ void start_obsessing_over_host(host* hst) {
   unsigned long attr(MODATTR_OBSESSIVE_HANDLER_ENABLED);
 
   /* no change */
-  if (hst->obsess_over_host)
+  if (hst->get_ocp_enabled())
     return;
 
   /* set the attribute modified flag */
-  hst->modified_attributes |= attr;
+  hst->set_modified_attributes(hst->get_modified_attributes() | attr);
 
   /* set the obsess over host flag */
-  hst->obsess_over_host = true;
+  hst->set_ocp_enabled(true);
 
   /* send data to event broker */
   broker_adaptive_host_data(
@@ -3960,11 +3876,11 @@ void start_obsessing_over_host(host* hst) {
     hst,
     CMD_NONE,
     attr,
-    hst->modified_attributes,
+    hst->get_modified_attributes(),
     NULL);
 
   /* update the status log with the host info */
-  update_host_status(hst, false);
+  broker_host_status(hst);
 }
 
 /* stop obsessing over a particular host */
@@ -3972,14 +3888,14 @@ void stop_obsessing_over_host(host* hst) {
   unsigned long attr(MODATTR_OBSESSIVE_HANDLER_ENABLED);
 
   /* no change */
-  if (hst->obsess_over_host == false)
+  if (!hst->get_ocp_enabled())
     return;
 
   /* set the attribute modified flag */
-  hst->modified_attributes |= attr;
+  hst->set_modified_attributes(hst->get_modified_attributes() | attr);
 
   /* set the obsess over host flag */
-  hst->obsess_over_host = false;
+  hst->set_ocp_enabled(false);
 
   /* send data to event broker */
   broker_adaptive_host_data(
@@ -3989,27 +3905,127 @@ void stop_obsessing_over_host(host* hst) {
     hst,
     CMD_NONE,
     attr,
-    hst->modified_attributes,
+    hst->get_modified_attributes(),
     NULL);
 
   /* update the status log with the host info */
-  update_host_status(hst, false);
+  broker_host_status(hst);
 }
 
 /* sets the current notification number for a specific host */
 void set_host_notification_number(host* hst, int num) {
   /* set the notification number */
-  hst->current_notification_number = num;
+  hst->set_current_notification_number(num);
 
   /* update the status log with the host info */
-  update_host_status(hst, false);
+  broker_host_status(hst);
 }
 
 /* sets the current notification number for a specific service */
 void set_service_notification_number(service* svc, int num) {
   /* set the notification number */
-  svc->current_notification_number = num;
+  svc->set_current_notification_number(num);
 
   /* update the status log with the service info */
-  update_service_status(svc, false);
+  broker_service_status(svc);
+}
+
+void enable_contact_host_notifications(contact* cntct) {
+  // Modify property.
+  cntct->set_host_notifications_enabled(true);
+
+  // Notify event broker.
+  unsigned long attr(MODATTR_NOTIFICATIONS_ENABLED);
+  cntct->set_modified_host_attributes(
+    cntct->get_modified_host_attributes() | attr);
+  broker_adaptive_contact_data(
+    NEBTYPE_ADAPTIVECONTACT_UPDATE,
+    NEBFLAG_NONE,
+    NEBATTR_NONE,
+    cntct,
+    CMD_NONE,
+    MODATTR_NONE,
+    cntct->get_modified_attributes(),
+    attr,
+    cntct->get_modified_host_attributes(),
+    MODATTR_NONE,
+    cntct->get_modified_service_attributes(),
+    NULL);
+
+  return ;
+}
+
+void disable_contact_host_notifications(contact* cntct) {
+  // Modify property.
+  cntct->set_host_notifications_enabled(false);
+
+  // Notify event broker.
+  unsigned long attr(MODATTR_NOTIFICATIONS_ENABLED);
+  cntct->set_modified_host_attributes(
+    cntct->get_modified_host_attributes() | attr);
+  broker_adaptive_contact_data(
+    NEBTYPE_ADAPTIVECONTACT_UPDATE,
+    NEBFLAG_NONE,
+    NEBATTR_NONE,
+    cntct,
+    CMD_NONE,
+    MODATTR_NONE,
+    cntct->get_modified_attributes(),
+    attr,
+    cntct->get_modified_host_attributes(),
+    MODATTR_NONE,
+    cntct->get_modified_service_attributes(),
+    NULL);
+
+  return ;
+}
+
+void enable_contact_service_notifications(contact* cntct) {
+  // Modify property.
+  cntct->set_service_notifications_enabled(true);
+
+  // Notify event broker.
+  unsigned long attr(MODATTR_NOTIFICATIONS_ENABLED);
+  cntct->set_modified_service_attributes(
+    cntct->get_modified_service_attributes() | attr);
+  broker_adaptive_contact_data(
+    NEBTYPE_ADAPTIVECONTACT_UPDATE,
+    NEBFLAG_NONE,
+    NEBATTR_NONE,
+    cntct,
+    CMD_NONE,
+    MODATTR_NONE,
+    cntct->get_modified_attributes(),
+    MODATTR_NONE,
+    cntct->get_modified_host_attributes(),
+    attr,
+    cntct->get_modified_service_attributes(),
+    NULL);
+
+  return ;
+}
+
+void disable_contact_service_notifications(contact* cntct) {
+  // Modify property.
+  cntct->set_service_notifications_enabled(false);
+
+  // Notify event broker.
+  unsigned long attr(MODATTR_NOTIFICATIONS_ENABLED);
+  cntct->set_modified_service_attributes(
+    cntct->get_modified_service_attributes() | attr);
+  broker_adaptive_contact_data(
+    NEBTYPE_ADAPTIVECONTACT_UPDATE,
+    NEBFLAG_NONE,
+    NEBATTR_NONE,
+    cntct,
+    CMD_NONE,
+    MODATTR_NONE,
+    cntct->get_modified_attributes(),
+    MODATTR_NONE,
+    cntct->get_modified_host_attributes(),
+    attr,
+    cntct->get_modified_service_attributes(),
+    NULL);
+
+  return ;
 }

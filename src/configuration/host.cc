@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2013,2015-2017 Centreon
+** Copyright 2011-2013,2015-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -61,26 +61,26 @@ host::setters const host::_setters[] = {
   { "gd2_image",                    SETTER(std::string const&, _set_statusmap_image) },
   { "statusmap_image",              SETTER(std::string const&, _set_statusmap_image) },
   { "initial_state",                SETTER(std::string const&, _set_initial_state) },
-  { "check_interval",               SETTER(unsigned int, _set_check_interval) },
-  { "normal_check_interval",        SETTER(unsigned int, _set_check_interval) },
-  { "retry_interval",               SETTER(unsigned int, _set_retry_interval) },
-  { "retry_check_interval",         SETTER(unsigned int, _set_retry_interval) },
-  { "recovery_notification_delay",  SETTER(unsigned int, _set_recovery_notification_delay) },
-  { "max_check_attempts",           SETTER(unsigned int, _set_max_check_attempts) },
+  { "check_interval",               SETTER(int, _set_check_interval) },
+  { "normal_check_interval",        SETTER(int, _set_check_interval) },
+  { "retry_interval",               SETTER(int, _set_retry_interval) },
+  { "retry_check_interval",         SETTER(int, _set_retry_interval) },
+  { "recovery_notification_delay",  SETTER(int, _set_recovery_notification_delay) },
+  { "max_check_attempts",           SETTER(int, _set_max_check_attempts) },
   { "checks_enabled",               SETTER(bool, _set_checks_active) },
   { "active_checks_enabled",        SETTER(bool, _set_checks_active) },
   { "passive_checks_enabled",       SETTER(bool, _set_checks_passive) },
   { "event_handler_enabled",        SETTER(bool, _set_event_handler_enabled) },
   { "check_freshness",              SETTER(bool, _set_check_freshness) },
-  { "freshness_threshold",          SETTER(unsigned int, _set_freshness_threshold) },
+  { "freshness_threshold",          SETTER(int, _set_freshness_threshold) },
   { "low_flap_threshold",           SETTER(unsigned int, _set_low_flap_threshold) },
   { "high_flap_threshold",          SETTER(unsigned int, _set_high_flap_threshold) },
   { "flap_detection_enabled",       SETTER(bool, _set_flap_detection_enabled) },
   { "flap_detection_options",       SETTER(std::string const&, _set_flap_detection_options) },
   { "notification_options",         SETTER(std::string const&, _set_notification_options) },
   { "notifications_enabled",        SETTER(bool, _set_notifications_enabled) },
-  { "notification_interval",        SETTER(unsigned int, _set_notification_interval) },
-  { "first_notification_delay",     SETTER(unsigned int, _set_first_notification_delay) },
+  { "notification_interval",        SETTER(int, _set_notification_interval) },
+  { "first_notification_delay",     SETTER(int, _set_first_notification_delay) },
   { "stalking_options",             SETTER(std::string const&, _set_stalking_options) },
   { "process_perf_data",            SETTER(bool, _set_process_perf_data) },
   { "failure_prediction_enabled",   SETTER(bool, _set_failure_prediction_enabled) },
@@ -97,26 +97,26 @@ static int const            default_acknowledgement_timeout(0);
 static bool const           default_checks_active(true);
 static bool const           default_checks_passive(true);
 static bool const           default_check_freshness(false);
-static unsigned int const   default_check_interval(5);
+static int const            default_check_interval(5);
 static point_2d const       default_coords_2d;
 static point_3d const       default_coords_3d;
 static bool const           default_event_handler_enabled(true);
-static unsigned int const   default_first_notification_delay(0);
+static int const            default_first_notification_delay(0);
 static bool const           default_flap_detection_enabled(true);
 static unsigned short const default_flap_detection_options(host::up | host::down | host::unreachable);
-static unsigned int const   default_freshness_threshold(0);
+static int const            default_freshness_threshold(0);
 static unsigned int const   default_high_flap_threshold(0);
-static unsigned short const default_initial_state(HOST_UP);
+static int const            default_initial_state(HOST_UP);
 static unsigned int const   default_low_flap_threshold(0);
-static unsigned int const   default_max_check_attempts(3);
+static int const            default_max_check_attempts(3);
 static bool const           default_notifications_enabled(true);
-static unsigned int const   default_notification_interval(30);
+static int const            default_notification_interval(30);
 static unsigned short const default_notification_options(host::up | host::down | host::unreachable | host::flapping | host::downtime);
 static bool const           default_obsess_over_host(true);
 static bool const           default_process_perf_data(true);
 static bool const           default_retain_nonstatus_information(true);
 static bool const           default_retain_status_information(true);
-static unsigned int const   default_retry_interval(1);
+static int const            default_retry_interval(1);
 static unsigned short const default_stalking_options(host::none);
 
 /**
@@ -602,7 +602,7 @@ bool host::check_freshness() const throw () {
  *
  *  @return The check_interval.
  */
-unsigned int host::check_interval() const throw () {
+int host::check_interval() const throw () {
   return (_check_interval);
 }
 
@@ -692,7 +692,7 @@ bool host::event_handler_enabled() const throw () {
  *
  *  @return The first_notification_delay.
  */
-unsigned int host::first_notification_delay() const throw () {
+int host::first_notification_delay() const throw () {
   return (_first_notification_delay);
 }
 
@@ -719,7 +719,7 @@ unsigned int host::flap_detection_options() const throw () {
  *
  *  @return The freshness_threshold.
  */
-unsigned int host::freshness_threshold() const throw () {
+int host::freshness_threshold() const throw () {
   return (_freshness_threshold);
 }
 
@@ -809,7 +809,7 @@ std::string const& host::icon_image_alt() const throw () {
  *
  *  @return The initial_state.
  */
-unsigned int host::initial_state() const throw () {
+int host::initial_state() const throw () {
   return (_initial_state);
 }
 
@@ -827,7 +827,7 @@ unsigned int host::low_flap_threshold() const throw () {
  *
  *  @return The max_check_attempts.
  */
-unsigned int host::max_check_attempts() const throw () {
+int host::max_check_attempts() const throw () {
   return (_max_check_attempts);
 }
 
@@ -863,7 +863,7 @@ bool host::notifications_enabled() const throw () {
  *
  *  @return The notification_interval.
  */
-unsigned int host::notification_interval() const throw () {
+int host::notification_interval() const throw () {
   return (_notification_interval);
 }
 
@@ -944,7 +944,7 @@ bool host::retain_status_information() const throw () {
  *
  *  @return The retry_interval.
  */
-unsigned int host::retry_interval() const throw () {
+int host::retry_interval() const throw () {
   return (_retry_interval);
 }
 
@@ -953,7 +953,7 @@ unsigned int host::retry_interval() const throw () {
  *
  *  @return The recovery_notification_delay.
  */
-unsigned int host::recovery_notification_delay() const throw() {
+int host::recovery_notification_delay() const throw() {
   return (_recovery_notification_delay);
 }
 
@@ -1107,7 +1107,9 @@ bool host::_set_check_freshness(bool value) {
  *
  *  @return True on success, otherwise false.
  */
-bool host::_set_check_interval(unsigned int value) {
+bool host::_set_check_interval(int value) {
+  if (value < 0)
+    return (false);
   _check_interval = value;
   return (true);
 }
@@ -1279,8 +1281,9 @@ bool host::_set_failure_prediction_options(
  *
  *  @return True on success, otherwise false.
  */
-bool host::_set_first_notification_delay(
-       unsigned int value) {
+bool host::_set_first_notification_delay(int value) {
+  if (value < 0)
+    return (false);
   _first_notification_delay = value;
   return (true);
 }
@@ -1338,7 +1341,9 @@ bool host::_set_flap_detection_options(
  *
  *  @return True on success, otherwise false.
  */
-bool host::_set_freshness_threshold(unsigned int value) {
+bool host::_set_freshness_threshold(int value) {
+  if (value < 0)
+    return (false);
   _freshness_threshold = value;
   return (true);
 }
@@ -1455,8 +1460,8 @@ bool host::_set_low_flap_threshold(unsigned int value) {
  *
  *  @return True on success, otherwise false.
  */
-bool host::_set_max_check_attempts(unsigned int value) {
-  if (!value)
+bool host::_set_max_check_attempts(int value) {
+  if (value <= 0)
     return (false);
   _max_check_attempts = value;
   return (true);
@@ -1505,8 +1510,9 @@ bool host::_set_notifications_enabled(bool value) {
  *
  *  @return True on success, otherwise false.
  */
-bool host::_set_notification_interval(
-       unsigned int value) {
+bool host::_set_notification_interval(int value) {
+  if (value < 0)
+    return (false);
   _notification_interval = value;
   return (true);
 }
@@ -1630,7 +1636,9 @@ bool host::_set_retain_status_information(bool value) {
  *
  *  @return True on success, otherwise false.
  */
-bool host::_set_retry_interval(unsigned int value) {
+bool host::_set_retry_interval(int value) {
+  if (value < 0)
+    return (false);
   _retry_interval = value;
   return (true);
 }
@@ -1642,7 +1650,9 @@ bool host::_set_retry_interval(unsigned int value) {
  *
  *  @return  True on success, otherwhise false.
  */
-bool host::_set_recovery_notification_delay(unsigned int value) {
+bool host::_set_recovery_notification_delay(int value) {
+  if (value < 0)
+    return (false);
   _recovery_notification_delay = value;
   return (true);
 }

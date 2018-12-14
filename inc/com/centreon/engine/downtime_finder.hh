@@ -1,5 +1,5 @@
 /*
-** Copyright 2016 Centreon
+** Copyright 2016,2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -20,13 +20,15 @@
 #ifndef CCE_DOWNTIME_FINDER_HH
 #  define CCE_DOWNTIME_FINDER_HH
 
+#  include <list>
 #  include <string>
 #  include <vector>
 #  include "com/centreon/engine/namespace.hh"
 
-struct scheduled_downtime_struct;
-
 CCE_BEGIN()
+
+// Forward declarations
+class downtime;
 
 /**
  *  @class downtime_finder downtime_finder.hh "com/centreon/engine/downtime_finder.hh"
@@ -35,26 +37,21 @@ CCE_BEGIN()
  *  This class can find active downtimes according to some criterias.
  */
 class                 downtime_finder {
-public:
+ public:
   typedef std::pair<std::string, std::string>  criteria;
   typedef std::vector<criteria>                criteria_set;
   typedef std::vector<unsigned long>           result_set;
 
-                      downtime_finder(
-                        scheduled_downtime_struct const* list);
+                      downtime_finder();
                       downtime_finder(downtime_finder const& other);
                       ~downtime_finder();
   downtime_finder&    operator=(downtime_finder const& other);
   result_set          find_matching_all(criteria_set const& criterias);
-  // result_set          find_matching_any(criteria_set const& criterias);
 
-private:
+ private:
   bool                _match_criteria(
-                        scheduled_downtime_struct const* dt,
+                        downtime const& dt,
                         criteria const& crit);
-
-  scheduled_downtime_struct const*
-                      _list;
 };
 
 CCE_END()

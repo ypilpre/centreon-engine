@@ -49,6 +49,7 @@ namespace                configuration {
                            configuration::servicedependency const& obj);
       void               resolve_object(
                            configuration::servicedependency const& obj);
+      void               unresolve_objects();
 
      private:
       void               _expand_services(

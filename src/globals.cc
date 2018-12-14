@@ -1,7 +1,7 @@
 /*
 ** Copyright 1999-2009           Ethan Galstad
 ** Copyright 2009-2010           Nagios Core Development Team and Community Contributors
-** Copyright 2011-2013,2016-2017 Centreon
+** Copyright 2011-2013,2016-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -19,19 +19,15 @@
 ** <http://www.gnu.org/licenses/>.
 */
 
+#include "com/centreon/engine/downtime.hh"
 #include "com/centreon/engine/globals.hh"
 #include "com/centreon/engine/logging/logger.hh"
-#include "nagios.h"
+#include "com/centreon/engine/objects/defines.hh"
 
 using namespace com::centreon::engine;
 
 configuration::state* config(NULL);
 events::hash_timed_event quick_timed_event;
-std::map<std::string, host_other_properties> host_other_props;
-std::map<std::pair<std::string, std::string>, service_other_properties> service_other_props;
-std::map<std::string, contact_other_properties> contact_other_props;
-std::map<std::string, hostgroup_other_properties> hostgroup_other_props;
-std::map<std::string, servicegroup_other_properties> servicegroup_other_props;
 
 char const*         sigs[] = {
   "EXIT", "HUP", "INT", "QUIT", "ILL",
@@ -61,25 +57,18 @@ char*               use_timezone(NULL);
 char**              macro_x(NULL);
 check_stats         check_statistics[MAX_CHECK_STATS_TYPES];
 circular_buffer     external_command_buffer;
-command*            command_list(NULL);
-command*            command_list_tail(NULL);
-command*            global_host_event_handler_ptr(NULL);
-command*            global_service_event_handler_ptr(NULL);
-command*            ochp_command_ptr(NULL);
-command*            ocsp_command_ptr(NULL);
-comment*            comment_list(NULL);
-contact*            contact_list(NULL);
-contact*            contact_list_tail(NULL);
-contactgroup*       contactgroup_list(NULL);
-contactgroup*       contactgroup_list_tail(NULL);
+commands::command*  global_host_event_handler_ptr(NULL);
+commands::command*  global_service_event_handler_ptr(NULL);
+commands::command*  ochp_command_ptr(NULL);
+commands::command*  ocsp_command_ptr(NULL);
+
+std::map<unsigned long, comment*> comment_list;
 dbuf                check_result_dbuf;
 float               high_host_flap_threshold(30.0);
 float               high_service_flap_threshold(30.0);
 float               low_host_flap_threshold(20.0);
 float               low_service_flap_threshold(20.0);
 float               sleep_time(0.5);
-host*               host_list(NULL);
-host*               host_list_tail(NULL);
 hostdependency*     hostdependency_list(NULL);
 hostdependency*     hostdependency_list_tail(NULL);
 hostescalation*     hostescalation_list(NULL);
@@ -93,8 +82,6 @@ int                 caught_signal(false);
 int                 command_check_interval(-1);
 int                 config_errors(0);
 int                 config_warnings(0);
-int                 defer_comment_sorting(0);
-int                 defer_downtime_sorting(0);
 int                 embedded_perl_initialized(false);
 int                 external_command_buffer_slots(4096);
 int                 log_host_retries(false);
@@ -107,19 +94,15 @@ int                 test_scheduling(false);
 int                 verify_circular_paths(true);
 int                 verify_config(false);
 nebcallback*        neb_callback_list[NEBCALLBACK_NUMITEMS];
-notification*       notification_list(NULL);
 pthread_t           worker_threads[TOTAL_WORKER_THREADS];
 sched_info          scheduling_info;
-scheduled_downtime* scheduled_downtime_list(NULL);
-service*            service_list(NULL);
-service*            service_list_tail(NULL);
+std::map<unsigned long, downtime*> scheduled_downtime_list;
 servicedependency*  servicedependency_list(NULL);
 servicedependency*  servicedependency_list_tail(NULL);
 serviceescalation*  serviceescalation_list(NULL);
 serviceescalation*  serviceescalation_list_tail(NULL);
 servicegroup*       servicegroup_list(NULL);
 servicegroup*       servicegroup_list_tail(NULL);
-skiplist*           object_skiplists[NUM_OBJECT_SKIPLISTS];
 time_t              event_start((time_t)-1);
 time_t              last_command_check((time_t)-1);
 time_t              last_command_status_update((time_t)-1);
@@ -224,7 +207,6 @@ unsigned long       max_debug_file_size(1000000);
 unsigned long       modified_host_process_attributes(MODATTR_NONE);
 unsigned long       modified_service_process_attributes(MODATTR_NONE);
 unsigned long       next_comment_id(0L);
-unsigned long       next_downtime_id(0L);
 unsigned long       next_event_id(1);
 unsigned long       next_notification_id(1);
 unsigned long       next_problem_id(0L);

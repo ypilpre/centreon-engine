@@ -1,5 +1,5 @@
 /*
-** Copyright 2016 Centreon
+** Copyright 2016,2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -19,16 +19,19 @@
 
 #include <gtest/gtest.h>
 #include "com/centreon/clib.hh"
+#include "com/centreon/engine/timezone_manager.hh"
 
 class  CentreonEngineEnvironment : public testing::Environment {
 public:
   void SetUp() {
     setenv("TZ", ":Europe/Paris", 1);
     com::centreon::clib::load(com::centreon::clib::with_logging_engine);
+    com::centreon::engine::timezone_manager::load();
     return ;
   }
 
   void TearDown() {
+    com::centreon::engine::timezone_manager::unload();
     com::centreon::clib::unload();
     return ;
   }

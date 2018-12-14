@@ -1,6 +1,6 @@
 /*
-** Copyright 1999-2010      Ethan Galstad
-** Copyright 2011-2013,2016 Centreon
+** Copyright 1999-2010           Ethan Galstad
+** Copyright 2011-2013,2016-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -28,7 +28,10 @@
 #include "com/centreon/engine/macros/grab_service.hh"
 #include "com/centreon/engine/macros/misc.hh"
 #include "com/centreon/engine/objects/objectlist.hh"
+#include "com/centreon/engine/service.hh"
+#include "com/centreon/engine/servicegroup.hh"
 #include "com/centreon/engine/string.hh"
+#include "com/centreon/shared_ptr.hh"
 #include "com/centreon/unordered_hash.hh"
 
 using namespace com::centreon::engine;
@@ -50,12 +53,12 @@ using namespace com::centreon::engine::logging;
  *  @return Newly allocated string containing either "PASSIVE" or
  *          "ACTIVE".
  */
-static char* get_service_check_type(service& svc, nagios_macros* mac) {
+static char const* get_service_check_type(service& svc, nagios_macros* mac) {
   (void)mac;
   return (string::dup(
-            (SERVICE_CHECK_PASSIVE == svc.check_type
-             ? "PASSIVE"
-             : "ACTIVE")));
+            (SERVICE_CHECK_PASSIVE == svc.get_check_type()
+            ? "PASSIVE"
+            : "ACTIVE")));
 }
 
 /**
@@ -71,16 +74,15 @@ static char* get_service_group_names(service& svc, nagios_macros* mac) {
 
   // Find all servicegroups this service is associated with.
   std::string buf;
-  for (objectlist* temp_objectlist = svc.servicegroups_ptr;
-       temp_objectlist != NULL;
-       temp_objectlist = temp_objectlist->next) {
-    servicegroup* temp_servicegroup(
-      static_cast<servicegroup*>(temp_objectlist->object_ptr));
-    if (temp_servicegroup) {
-      if (!buf.empty())
-        buf.append(",");
-      buf.append(temp_servicegroup->group_name);
-    }
+  for (servicegroup_set::const_iterator
+         it(svc.get_groups().begin()),
+         end(svc.get_groups().end());
+       it != end;
+       ++it) {
+    servicegroup* temp_servicegroup(*it);
+    if (!buf.empty())
+      buf.append(",");
+    buf.append(temp_servicegroup->get_name());
   }
   return (string::dup(buf));
 }
@@ -88,52 +90,34 @@ static char* get_service_group_names(service& svc, nagios_macros* mac) {
 /**
  *  Extract service state.
  *
- *  @param[in] svc Service object.
- *  @param[in] mac Unused.
+ *  @param[in] stateid  State to convert.
  *
- *  @return Newly allocated string with host state as plain text.
+ *  @return Newly allocated string with service state as plain text.
  */
-template <int (service::* member)>
-static char* get_service_state(service& svc, nagios_macros* mac) {
-  (void)mac;
+static char* get_service_state(int stateid) {
   char const* state;
-  if (STATE_OK == svc.*member)
+  switch (stateid) {
+   case STATE_OK:
     state = "OK";
-  else if (STATE_WARNING == svc.*member)
+    break ;
+   case STATE_WARNING:
     state = "WARNING";
-  else if (STATE_CRITICAL == svc.*member)
+    break ;
+   case STATE_CRITICAL:
     state = "CRITICAL";
-  else
+    break ;
+   default:
     state = "UNKNOWN";
+  }
   return (string::dup(state));
 }
-
-/**
- *  Extract the service id.
- *
- *  @param[in] svc  The service
- *  @param[in] mac  Unused.
- *
- *  @return  Newly allocated string with the service id.
- */
-static char* get_service_id(service& svc, nagios_macros* mac) {
+static char const* get_current_service_state(service& svc, nagios_macros* mac) {
   (void)mac;
-  return (string::dup(string::from(com::centreon::engine::get_service_id(
-                                             svc.host_name,
-                                             svc.description)).c_str()));
+  return (get_service_state(svc.get_current_state()));
 }
-
-/**
- *  Get the timezone of a service.
- *
- *  @param[in] svc Service object.
- *  @param[in] mac Macro array.
- *
- *  @return Newly allocated string with requested value in plain text.
- */
-static char* get_service_macro_timezone(service& svc, nagios_macros* mac) {
+static char const* get_last_service_state(service& svc, nagios_macros* mac) {
   (void)mac;
-  return (string::dup(get_service_timezone(svc.host_name, svc.description)));
+  return (get_service_state(svc.get_last_state()));
 }
 
 /**************************************
@@ -144,141 +128,182 @@ static char* get_service_macro_timezone(service& svc, nagios_macros* mac) {
 
 // Redirection object.
 struct grab_service_redirection {
-  typedef umap<unsigned int, std::pair<char* (*)(service&, nagios_macros* mac), bool> > entry;
+  typedef umap<unsigned int, std::pair<com::centreon::shared_ptr<grabber<service> >, bool> > entry;
   entry routines;
   grab_service_redirection() {
     // Description.
-    routines[MACRO_SERVICEDESC].first = &get_member_as_string<service, char*, &service::description>;
+    routines[MACRO_SERVICEDESC].first =
+      new member_grabber<service, std::string const&>(&service::get_description);
     routines[MACRO_SERVICEDESC].second = true;
     // Display name.
-    routines[MACRO_SERVICEDISPLAYNAME].first = &get_member_as_string<service, char*, &service::display_name>;
+    routines[MACRO_SERVICEDISPLAYNAME].first =
+      new member_grabber<service, std::string const&>(&service::get_display_name);
     routines[MACRO_SERVICEDISPLAYNAME].second = true;
     // Output.
-    routines[MACRO_SERVICEOUTPUT].first = &get_member_as_string<service, char*, &service::plugin_output>;
+    routines[MACRO_SERVICEOUTPUT].first =
+      new member_grabber<service, std::string const&>(&service::get_output);
     routines[MACRO_SERVICEOUTPUT].second = true;
     // Long output.
-    routines[MACRO_LONGSERVICEOUTPUT].first = &get_member_as_string<service, char*, &service::long_plugin_output>;
+    routines[MACRO_LONGSERVICEOUTPUT].first =
+      new member_grabber<service, std::string const&>(&service::get_long_output);
     routines[MACRO_LONGSERVICEOUTPUT].second = true;
     // Perfdata.
-    routines[MACRO_SERVICEPERFDATA].first = &get_member_as_string<service, char*, &service::perf_data>;
+    routines[MACRO_SERVICEPERFDATA].first =
+      new member_grabber<service, std::string const&>(&service::get_perfdata);
     routines[MACRO_SERVICEPERFDATA].second = true;
     // Check command.
-    routines[MACRO_SERVICECHECKCOMMAND].first = &get_member_as_string<service, char*, &service::service_check_command>;
+    routines[MACRO_SERVICECHECKCOMMAND].first =
+      new member_grabber<service, std::string const&>(&service::get_check_command_args);
     routines[MACRO_SERVICECHECKCOMMAND].second = true;
     // Check type.
-    routines[MACRO_SERVICECHECKTYPE].first = &get_service_check_type;
+    routines[MACRO_SERVICECHECKTYPE].first =
+      new function_grabber<service>(&get_service_check_type);
     routines[MACRO_SERVICECHECKTYPE].second = true;
     // State type.
-    routines[MACRO_SERVICESTATETYPE].first = &get_state_type<service>;
+    routines[MACRO_SERVICESTATETYPE].first =
+      new function_grabber<service>(&get_state_type<service>);
     routines[MACRO_SERVICESTATETYPE].second = true;
     // State.
-    routines[MACRO_SERVICESTATE].first = &get_service_state<&service::current_state>;
+    routines[MACRO_SERVICESTATE].first =
+      new function_grabber<service>(&get_current_service_state);
     routines[MACRO_SERVICESTATE].second = true;
     // State ID.
-    routines[MACRO_SERVICESTATEID].first = &get_member_as_string<service, int, &service::current_state>;
+    routines[MACRO_SERVICESTATEID].first =
+      new member_grabber<service, int>(&service::get_current_state);
     routines[MACRO_SERVICESTATEID].second = true;
     // Last state.
-    routines[MACRO_LASTSERVICESTATE].first = &get_service_state<&service::last_state>;
+    routines[MACRO_LASTSERVICESTATE].first =
+      new function_grabber<service>(&get_last_service_state);
     routines[MACRO_LASTSERVICESTATE].second = true;
     // Last state ID.
-    routines[MACRO_LASTSERVICESTATEID].first = &get_member_as_string<service, int, &service::last_state>;
+    routines[MACRO_LASTSERVICESTATEID].first =
+      new member_grabber<service, int>(&service::get_last_state);
     routines[MACRO_LASTSERVICESTATEID].second = true;
     // Is volatile.
-    routines[MACRO_SERVICEISVOLATILE].first = &get_member_as_string<service, int, &service::is_volatile>;
+    routines[MACRO_SERVICEISVOLATILE].first =
+      new member_grabber<service, bool>(&service::get_volatile);
     routines[MACRO_SERVICEISVOLATILE].second = true;
     // Attempt.
-    routines[MACRO_SERVICEATTEMPT].first = &get_member_as_string<service, int, &service::current_attempt>;
+    routines[MACRO_SERVICEATTEMPT].first =
+      new member_grabber<service, int>(&service::get_current_attempt);
     routines[MACRO_SERVICEATTEMPT].second = true;
     // Max attempts.
-    routines[MACRO_MAXSERVICEATTEMPTS].first = &get_member_as_string<service, int, &service::max_attempts>;
+    routines[MACRO_MAXSERVICEATTEMPTS].first =
+      new member_grabber<service, int>(&service::get_max_attempts);
     routines[MACRO_MAXSERVICEATTEMPTS].second = true;
     // Execution time.
-    routines[MACRO_SERVICEEXECUTIONTIME].first = &get_double<service, &service::execution_time, 3>;
+    routines[MACRO_SERVICEEXECUTIONTIME].first =
+      new member_grabber<service, double>(&service::get_execution_time);
     routines[MACRO_SERVICEEXECUTIONTIME].second = true;
     // Latency.
-    routines[MACRO_SERVICELATENCY].first = &get_double<service, &service::latency, 3>;
+    routines[MACRO_SERVICELATENCY].first =
+      new member_grabber<service, double>(&service::get_latency);
     routines[MACRO_SERVICELATENCY].second = true;
     // Last check.
-    routines[MACRO_LASTSERVICECHECK].first = &get_member_as_string<service, time_t, &service::last_check>;
+    routines[MACRO_LASTSERVICECHECK].first =
+      new member_grabber<service, time_t>(&service::get_last_check);
     routines[MACRO_LASTSERVICECHECK].second = true;
     // Last state change.
-    routines[MACRO_LASTSERVICESTATECHANGE].first = &get_member_as_string<service, time_t, &service::last_state_change>;
+    routines[MACRO_LASTSERVICESTATECHANGE].first =
+      new member_grabber<service, time_t>(&service::get_last_state_change);
     routines[MACRO_LASTSERVICESTATECHANGE].second = true;
     // Last time ok.
-    routines[MACRO_LASTSERVICEOK].first = &get_member_as_string<service, time_t, &service::last_time_ok>;
+    routines[MACRO_LASTSERVICEOK].first =
+      new member_grabber<service, time_t>(&service::get_last_time_ok);
     routines[MACRO_LASTSERVICEOK].second = true;
     // Last time warning.
-    routines[MACRO_LASTSERVICEWARNING].first = &get_member_as_string<service, time_t, &service::last_time_warning>;
+    routines[MACRO_LASTSERVICEWARNING].first =
+      new member_grabber<service, time_t>(&service::get_last_time_warning);
     routines[MACRO_LASTSERVICEWARNING].second = true;
     // Last time unknown.
-    routines[MACRO_LASTSERVICEUNKNOWN].first = &get_member_as_string<service, time_t, &service::last_time_unknown>;
+    routines[MACRO_LASTSERVICEUNKNOWN].first =
+      new member_grabber<service, time_t>(&service::get_last_time_unknown);
     routines[MACRO_LASTSERVICEUNKNOWN].second = true;
     // Last time critical.
-    routines[MACRO_LASTSERVICECRITICAL].first = &get_member_as_string<service, time_t, &service::last_time_critical>;
+    routines[MACRO_LASTSERVICECRITICAL].first =
+      new member_grabber<service, time_t>(&service::get_last_time_critical);
     routines[MACRO_LASTSERVICECRITICAL].second = true;
     // Downtime.
-    routines[MACRO_SERVICEDOWNTIME].first = &get_member_as_string<service, int, &service::scheduled_downtime_depth>;
+    routines[MACRO_SERVICEDOWNTIME].first =
+      new member_grabber<service, int>(&service::get_scheduled_downtime_depth);
     routines[MACRO_SERVICEDOWNTIME].second = true;
     // Percent state change.
-    routines[MACRO_SERVICEPERCENTCHANGE].first = &get_double<service, &service::percent_state_change, 2>;
+    routines[MACRO_SERVICEPERCENTCHANGE].first =
+      new member_grabber<service, double>(&service::get_percent_state_change);
     routines[MACRO_SERVICEPERCENTCHANGE].second = true;
     // Duration.
-    routines[MACRO_SERVICEDURATION].first = &get_duration<service>;
+    routines[MACRO_SERVICEDURATION].first =
+      new function_grabber<service>(&get_duration<service>);
     routines[MACRO_SERVICEDURATION].second = true;
     // Duration in seconds.
-    routines[MACRO_SERVICEDURATIONSEC].first = &get_duration_sec<service>;
+    routines[MACRO_SERVICEDURATIONSEC].first =
+      new function_grabber<service>(&get_duration_sec<service>);
     routines[MACRO_SERVICEDURATIONSEC].second = true;
     // Notification number.
-    routines[MACRO_SERVICENOTIFICATIONNUMBER].first = &get_member_as_string<service, int, &service::current_notification_number>;
+    routines[MACRO_SERVICENOTIFICATIONNUMBER].first =
+      new member_grabber<service, int>(&service::get_current_notification_number);
     routines[MACRO_SERVICENOTIFICATIONNUMBER].second = true;
     // Notification ID.
-    routines[MACRO_SERVICENOTIFICATIONID].first = &get_member_as_string<service, unsigned long, &service::current_notification_id>;
+    routines[MACRO_SERVICENOTIFICATIONID].first =
+      new member_grabber<service, int>(&service::get_current_notification_id);
     routines[MACRO_SERVICENOTIFICATIONID].second = true;
     // Event ID.
-    routines[MACRO_SERVICEEVENTID].first = &get_member_as_string<service, unsigned long, &service::current_event_id>;
+    routines[MACRO_SERVICEEVENTID].first =
+      new member_grabber<service, int>(&service::get_current_event_id);
     routines[MACRO_SERVICEEVENTID].second = true;
     // Last event ID.
-    routines[MACRO_LASTSERVICEEVENTID].first = &get_member_as_string<service, unsigned long, &service::last_event_id>;
+    routines[MACRO_LASTSERVICEEVENTID].first =
+      new member_grabber<service, int>(&service::get_last_event_id);
     routines[MACRO_LASTSERVICEEVENTID].second = true;
     // Problem ID.
-    routines[MACRO_SERVICEPROBLEMID].first = &get_member_as_string<service, unsigned long, &service::current_problem_id>;
+    routines[MACRO_SERVICEPROBLEMID].first =
+      new member_grabber<service, int>(&service::get_current_problem_id);
     routines[MACRO_SERVICEPROBLEMID].second = true;
     // Last problem ID.
-    routines[MACRO_LASTSERVICEPROBLEMID].first = &get_member_as_string<service, unsigned long, &service::last_problem_id>;
+    routines[MACRO_LASTSERVICEPROBLEMID].first =
+      new member_grabber<service, int>(&service::get_last_problem_id);
     routines[MACRO_LASTSERVICEPROBLEMID].second = true;
     // Action URL.
-    routines[MACRO_SERVICEACTIONURL].first = &get_recursive<service, &service::action_url, URL_ENCODE_MACRO_CHARS>;
+    routines[MACRO_SERVICEACTIONURL].first =
+      new function_grabber<service>(&get_action_url<service>);
     routines[MACRO_SERVICEACTIONURL].second = true;
     // Notes URL.
-    routines[MACRO_SERVICENOTESURL].first = &get_recursive<service, &service::notes_url, URL_ENCODE_MACRO_CHARS>;
+    routines[MACRO_SERVICENOTESURL].first =
+      new function_grabber<service>(&get_notes_url<service>);
     routines[MACRO_SERVICENOTESURL].second = true;
     // Notes.
-    routines[MACRO_SERVICENOTES].first = &get_recursive<service, &service::notes, 0>;
+    routines[MACRO_SERVICENOTES].first =
+      new function_grabber<service>(&get_notes<service>);
     routines[MACRO_SERVICENOTES].second = true;
     // Group names.
-    routines[MACRO_SERVICEGROUPNAMES].first = &get_service_group_names;
+    routines[MACRO_SERVICEGROUPNAMES].first =
+      new function_grabber<service>(
+        (char const* (*)(service&, nagios_macros*))&get_service_group_names);
     routines[MACRO_SERVICEGROUPNAMES].second = true;
     // Acknowledgement author.
-    routines[MACRO_SERVICEACKAUTHOR].first = &get_macro_copy<service, MACRO_SERVICEACKAUTHOR>;
+    routines[MACRO_SERVICEACKAUTHOR].first =
+      new function_grabber<service>(&get_macro_copy<service, MACRO_SERVICEACKAUTHOR>);
     routines[MACRO_SERVICEACKAUTHOR].second = true;
     // Acknowledgement author name.
-    routines[MACRO_SERVICEACKAUTHORNAME].first = &get_macro_copy<service, MACRO_SERVICEACKAUTHORNAME>;
+    routines[MACRO_SERVICEACKAUTHORNAME].first =
+      new function_grabber<service>(&get_macro_copy<service, MACRO_SERVICEACKAUTHORNAME>);
     routines[MACRO_SERVICEACKAUTHORNAME].second = true;
     // Acknowledgement author alias.
-    routines[MACRO_SERVICEACKAUTHORALIAS].first = &get_macro_copy<service, MACRO_SERVICEACKAUTHORALIAS>;
+    routines[MACRO_SERVICEACKAUTHORALIAS].first =
+      new function_grabber<service>(&get_macro_copy<service, MACRO_SERVICEACKAUTHORALIAS>);
     routines[MACRO_SERVICEACKAUTHORALIAS].second = true;
     // Acknowledgement comment.
-    routines[MACRO_SERVICEACKCOMMENT].first = &get_macro_copy<service, MACRO_SERVICEACKCOMMENT>;
+    routines[MACRO_SERVICEACKCOMMENT].first =
+      new function_grabber<service>(&get_macro_copy<service, MACRO_SERVICEACKCOMMENT>);
     routines[MACRO_SERVICEACKCOMMENT].second = true;
-    // Service id.
-    routines[MACRO_SERVICEID].first = &get_service_id;
-    routines[MACRO_SERVICEID].second = true;
-    // Acknowledgement comment.
-    routines[MACRO_SERVICEACKCOMMENT].first = &get_macro_copy<service, MACRO_SERVICEACKCOMMENT>;
-    routines[MACRO_SERVICEACKCOMMENT].second = true;
-    // Acknowledgement comment.
-    routines[MACRO_SERVICETIMEZONE].first = &get_service_macro_timezone;
+    // Timezone.
+    routines[MACRO_SERVICETIMEZONE].first =
+      new member_grabber<service, std::string const&>(&service::get_timezone);
     routines[MACRO_SERVICETIMEZONE].second = true;
+    // Service id.
+    routines[MACRO_SERVICEID].first =
+      new member_grabber<service, unsigned int>(&service::get_id);
+    routines[MACRO_SERVICEID].second = true;
   }
 } static const redirector;
 
@@ -315,7 +340,7 @@ int grab_standard_service_macro_r(
     // Found matching routine.
     if (it != redirector.routines.end()) {
       // Call routine.
-      *output = (*it->second.first)(*svc, mac);
+      *output = const_cast<char*>((*it->second.first)(*svc, mac));
 
       // Set the free macro flag.
       *free_macro = it->second.second;
@@ -384,9 +409,8 @@ int grab_service_macros_r(nagios_macros* mac, service* svc) {
     return (ERROR);
 
   // Save first/primary servicegroup pointer for later.
-  if (svc->servicegroups_ptr)
-    mac->servicegroup_ptr
-      = static_cast<servicegroup*>(svc->servicegroups_ptr->object_ptr);
+  if (!svc->get_groups().empty())
+    mac->servicegroup_ptr = *svc->get_groups().begin();
 
   return (OK);
 }

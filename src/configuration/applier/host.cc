@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2017 Centreon
+** Copyright 2011-2018 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -26,17 +26,16 @@
 #include "com/centreon/engine/configuration/applier/object.hh"
 #include "com/centreon/engine/configuration/applier/scheduler.hh"
 #include "com/centreon/engine/configuration/applier/state.hh"
-#include "com/centreon/engine/deleter/contactsmember.hh"
-#include "com/centreon/engine/deleter/contactgroupsmember.hh"
-#include "com/centreon/engine/deleter/hostsmember.hh"
 #include "com/centreon/engine/deleter/listmember.hh"
 #include "com/centreon/engine/deleter/objectlist.hh"
-#include "com/centreon/engine/deleter/servicesmember.hh"
+#include "com/centreon/engine/downtime_manager.hh"
 #include "com/centreon/engine/error.hh"
 #include "com/centreon/engine/globals.hh"
+#include "com/centreon/engine/not_found.hh"
 
 using namespace com::centreon;
 using namespace com::centreon::engine;
+using namespace com::centreon::engine::commands;
 using namespace com::centreon::engine::configuration;
 
 /**
@@ -81,135 +80,109 @@ void applier::host::add_object(
   logger(logging::dbg_config, logging::more)
     << "Creating new host '" << obj.host_name() << "'.";
 
-  // Add host to the global configuration set.
-  config->hosts().insert(obj);
-
   // Create host.
-  host_struct*
-    h(add_host(
-        obj.host_name().c_str(),
-        NULL_IF_EMPTY(obj.display_name()),
-        NULL_IF_EMPTY(obj.alias()),
-        NULL_IF_EMPTY(obj.address()),
-        NULL_IF_EMPTY(obj.check_period()),
-        obj.initial_state(),
-        obj.check_interval(),
-        obj.retry_interval(),
-        obj.max_check_attempts(),
-        static_cast<bool>(obj.notification_options()
-                          & configuration::host::up),
-        static_cast<bool>(obj.notification_options()
-                          & configuration::host::down),
-        static_cast<bool>(obj.notification_options()
-                          & configuration::host::unreachable),
-        static_cast<bool>(obj.notification_options()
-                          & configuration::host::flapping),
-        static_cast<bool>(obj.notification_options()
-                          & configuration::host::downtime),
-        obj.notification_interval(),
-        obj.first_notification_delay(),
-        NULL_IF_EMPTY(obj.notification_period()),
-        obj.notifications_enabled(),
-        NULL_IF_EMPTY(obj.check_command()),
-        obj.checks_active(),
-        obj.checks_passive(),
-        NULL_IF_EMPTY(obj.event_handler()),
-        obj.event_handler_enabled(),
-        obj.flap_detection_enabled(),
-        obj.low_flap_threshold(),
-        obj.high_flap_threshold(),
-        static_cast<bool>(obj.flap_detection_options()
-                          & configuration::host::up),
-        static_cast<bool>(obj.flap_detection_options()
-                          & configuration::host::down),
-        static_cast<bool>(obj.flap_detection_options()
-                          & configuration::host::unreachable),
-        static_cast<bool>(obj.stalking_options()
-                          & configuration::host::up),
-        static_cast<bool>(obj.stalking_options()
-                          & configuration::host::down),
-        static_cast<bool>(obj.stalking_options()
-                          & configuration::host::unreachable),
-        obj.process_perf_data(),
-        false, // failure_prediction_enabled
-        NULL, // failure_prediction_options
-        obj.check_freshness(),
-        obj.freshness_threshold(),
-        NULL_IF_EMPTY(obj.notes()),
-        NULL_IF_EMPTY(obj.notes_url()),
-        NULL_IF_EMPTY(obj.action_url()),
-        NULL_IF_EMPTY(obj.icon_image()),
-        NULL_IF_EMPTY(obj.icon_image_alt()),
-        NULL_IF_EMPTY(obj.vrml_image()),
-        NULL_IF_EMPTY(obj.statusmap_image()),
-        obj.coords_2d().x(),
-        obj.coords_2d().y(),
-        obj.have_coords_2d(),
-        obj.coords_3d().x(),
-        obj.coords_3d().y(),
-        obj.coords_3d().z(),
-        obj.have_coords_3d(),
-        true, // should_be_drawn, enabled by Nagios
-        obj.retain_status_information(),
-        obj.retain_nonstatus_information(),
-        obj.obsess_over_host()));
-  if (!h)
-    throw (engine_error() << "Could not register host '"
-           << obj.host_name() << "'");
-  host_other_props[obj.host_name()].initial_notif_time = 0;
-  host_other_props[obj.host_name()].should_reschedule_current_check = false;
-  host_other_props[obj.host_name()].timezone = obj.timezone();
-  host_other_props[obj.host_name()].host_id = obj.host_id();
-  host_other_props[obj.host_name()].acknowledgement_timeout
-    = obj.get_acknowledgement_timeout() * config->interval_length();
-  host_other_props[obj.host_name()].last_acknowledgement = 0;
-  host_other_props[obj.host_name()].recovery_notification_delay
-    = obj.recovery_notification_delay();
-  host_other_props[obj.host_name()].recovery_been_sent
-    = true;
+  shared_ptr< ::host> h;
+  try {
+    h = new ::host();
+    // Self properties.
+    h->set_address(obj.address());
+    h->set_alias(obj.alias());
+    h->set_flap_detection_on_down(
+      obj.flap_detection_options() & configuration::host::down);
+    h->set_flap_detection_on_unreachable(
+      obj.flap_detection_options() & configuration::host::unreachable);
+    h->set_flap_detection_on_up(
+      obj.flap_detection_options() & configuration::host::up);
+    h->set_have_2d_coords(obj.have_coords_2d());
+    h->set_have_3d_coords(obj.have_coords_3d());
+    h->set_stalk_on_down(
+      obj.stalking_options() & configuration::host::down);
+    h->set_stalk_on_unreachable(
+      obj.stalking_options() & configuration::host::unreachable);
+    h->set_stalk_on_up(
+      obj.stalking_options() & configuration::host::up);
+    h->set_statusmap_image(obj.statusmap_image());
+    h->set_vrml_image(obj.vrml_image());
+    h->set_x_2d(obj.coords_2d().x());
+    h->set_y_2d(obj.coords_2d().y());
+    h->set_x_3d(obj.coords_3d().x());
+    h->set_y_3d(obj.coords_3d().y());
+    h->set_z_3d(obj.coords_3d().z());
+    // Inherited from monitorable.
+    h->set_action_url(obj.action_url());
+    h->set_display_name(obj.display_name());
+    h->set_icon_image(obj.icon_image());
+    h->set_icon_image_alt(obj.icon_image_alt());
+    h->set_id(obj.host_id());
+    h->set_initial_state(obj.initial_state());
+    h->set_name(obj.host_name());
+    h->set_notes(obj.notes());
+    h->set_notes_url(obj.notes_url());
+    h->set_retain_nonstate_info(obj.retain_nonstatus_information());
+    h->set_retain_state_info(obj.retain_status_information());
+    for (map_customvar::const_iterator
+           it(obj.customvariables().begin()),
+           end(obj.customvariables().end());
+         it != end;
+         ++it)
+      h->set_customvar(customvar(it->first, it->second));
+    // Inherited from notifier.
+    h->set_acknowledgement_timeout(obj.get_acknowledgement_timeout());
+    h->set_notifications_enabled(obj.notifications_enabled());
+    h->set_notify_on(
+      ::host::ON_DOWNTIME,
+      obj.notification_options() & configuration::host::downtime);
+    h->set_notify_on(
+      ::host::ON_FLAPPING,
+      obj.notification_options() & configuration::host::flapping);
+    h->set_notify_on(
+      ::host::ON_RECOVERY,
+      obj.notification_options() & configuration::host::up);
+    h->set_notify_on(
+      ::host::ON_UNREACHABLE,
+      obj.notification_options() & configuration::host::unreachable);
+    h->set_notification_interval(obj.notification_interval());
+    h->set_first_notification_delay(obj.first_notification_delay());
+    h->set_recovery_notification_delay(obj.recovery_notification_delay());
+    // Inherited from checkable.
+    h->set_active_checks_enabled(obj.checks_active());
+    h->set_event_handler_enabled(obj.event_handler_enabled());
+    h->set_flap_detection_enabled(obj.flap_detection_enabled());
+    h->set_freshness_checks_enabled(obj.check_freshness());
+    h->set_freshness_threshold(obj.freshness_threshold());
+    h->set_high_flap_threshold(obj.high_flap_threshold());
+    h->set_low_flap_threshold(obj.low_flap_threshold());
+    h->set_max_attempts(obj.max_check_attempts());
+    h->set_normal_check_interval(obj.check_interval());
+    h->set_ocp_enabled(obj.obsess_over_host());
+    h->set_passive_checks_enabled(obj.checks_passive());
+    h->set_process_perfdata(obj.process_perf_data());
+    h->set_retry_check_interval(obj.retry_interval());
+    h->set_timezone(obj.timezone());
 
-  // Contacts.
-  for (set_string::const_iterator
-         it(obj.contacts().begin()),
-         end(obj.contacts().end());
-       it != end;
-       ++it)
-    if (!add_contact_to_host(h, it->c_str()))
-      throw (engine_error() << "Could not add contact '"
-             << *it << "' to host '" << obj.host_name() << "'");
+    // Add host to global configuration set.
+    config->hosts().insert(obj);
+  }
+  catch (std::exception const& e) {
+    logger(logging::log_config_error, logging::basic)
+      << "Error: " << e.what();
+    throw (engine_error()
+           << "Could not register host '" << obj.host_name() << "'");
+  }
 
-  // Contact groups.
-  for (set_string::const_iterator
-         it(obj.contactgroups().begin()),
-         end(obj.contactgroups().end());
-       it != end;
-       ++it)
-    if (!add_contactgroup_to_host(h, it->c_str()))
-      throw (engine_error() << "Could not add contact group '"
-             << *it << "' to host '" << obj.host_name() << "'");
+  // Add new items to the configuration state.
+  configuration::applier::state::instance().hosts().insert(
+    std::make_pair(obj.host_name(), h));
 
   // Custom variables.
   for (map_customvar::const_iterator
          it(obj.customvariables().begin()),
          end(obj.customvariables().end());
        it != end;
-       ++it)
-    if (!add_custom_variable_to_host(
-           h,
-           it->first.c_str(),
-           it->second.c_str()))
-      throw (engine_error() << "Could not add custom variable '"
-             << it->first << "' to host '" << obj.host_name() << "'");
-
-  // Parents.
-  for (set_string::const_iterator
-         it(obj.parents().begin()),
-         end(obj.parents().end());
-       it != end;
-       ++it)
-    if (!add_parent_host_to_host(h, it->c_str()))
-      throw (engine_error() << "Could not add parent '"
-             << *it << "' to host '" << obj.host_name() << "'");
+       ++it) {
+    customvar var(it->first, it->second);
+    h->set_customvar(var);
+  }
 
   // Notify event broker.
   timeval tv(get_broker_timestamp(NULL));
@@ -217,13 +190,11 @@ void applier::host::add_object(
     NEBTYPE_HOST_ADD,
     NEBFLAG_NONE,
     NEBATTR_NONE,
-    h,
+    h.get(),
     CMD_NONE,
     MODATTR_ALL,
     MODATTR_ALL,
     &tv);
-
-  return ;
 }
 
 /**
@@ -287,12 +258,12 @@ void applier::host::modify_object(
            << obj.host_name() << "'");
 
   // Find host object.
-  umap<std::string, shared_ptr<host_struct> >::iterator
-    it_obj(applier::state::instance().hosts_find(obj.key()));
+  umap<std::string, shared_ptr< ::host> >::iterator
+    it_obj(applier::state::instance().hosts().find(obj.key()));
   if (it_obj == applier::state::instance().hosts().end())
     throw (engine_error() << "Could not modify non-existing "
            << "host object '" << obj.host_name() << "'");
-  host_struct* h(it_obj->second.get());
+  ::host* h(it_obj->second.get());
 
   // Update the global configuration set.
   configuration::host obj_old(*it_cfg);
@@ -300,207 +271,208 @@ void applier::host::modify_object(
   config->hosts().insert(obj);
 
   // Modify properties.
+  modify_if_different(*h, display_name, obj.display_name());
   modify_if_different(
-    h->display_name,
-    NULL_IF_EMPTY(obj.display_name()));
+    *h,
+    alias,
+    (obj.alias().empty() ? obj.host_name() : obj. alias()));
+  modify_if_different(*h, address, obj.address());
+  modify_if_different(*h, initial_state, obj.initial_state());
+  modify_if_different(*h, normal_check_interval, obj.check_interval());
+  modify_if_different(*h, retry_check_interval, obj.retry_interval());
+  modify_if_different(*h, max_attempts, obj.max_check_attempts());
+  h->set_notify_on(
+    ::host::ON_RECOVERY,
+    obj.notification_options() & configuration::host::up);
+  h->set_notify_on(
+    ::host::ON_DOWN,
+    obj.notification_options() & configuration::host::down);
+  h->set_notify_on(
+    ::host::ON_UNREACHABLE,
+    obj.notification_options() & configuration::host::unreachable);
+  h->set_notify_on(
+    ::host::ON_FLAPPING,
+    obj.notification_options() & configuration::host::flapping);
+  h->set_notify_on(
+    ::host::ON_DOWNTIME,
+    obj.notification_options() & configuration::host::downtime);
   modify_if_different(
-    h->alias,
-    (obj.alias().empty() ? obj.host_name() : obj. alias()).c_str());
-  modify_if_different(h->address, NULL_IF_EMPTY(obj.address()));
+    *h,
+    notification_interval,
+    obj.notification_interval());
   modify_if_different(
-    h->check_period,
-    NULL_IF_EMPTY(obj.check_period()));
+    *h,
+    first_notification_delay,
+    obj.first_notification_delay());
   modify_if_different(
-    h->initial_state,
-    static_cast<int>(obj.initial_state()));
+    *h,
+    notifications_enabled,
+    obj.notifications_enabled());
+  modify_if_different(*h, active_checks_enabled, obj.checks_active());
+  modify_if_different(*h, passive_checks_enabled, obj.checks_passive());
   modify_if_different(
-    h->check_interval,
-    static_cast<double>(obj.check_interval()));
+    *h,
+    event_handler_enabled,
+    obj.event_handler_enabled());
   modify_if_different(
-    h->retry_interval,
-    static_cast<double>(obj.retry_interval()));
+    *h,
+    flap_detection_enabled,
+    obj.flap_detection_enabled());
+  modify_if_different(*h, low_flap_threshold, obj.low_flap_threshold());
   modify_if_different(
-    h->max_attempts,
-    static_cast<int>(obj.max_check_attempts()));
+    *h,
+    high_flap_threshold,
+    obj.high_flap_threshold());
   modify_if_different(
-    h->notify_on_recovery,
-    static_cast<int>(static_cast<bool>(
-      obj.notification_options() & configuration::host::up)));
+    *h,
+    flap_detection_on_up,
+    static_cast<bool>(
+      obj.flap_detection_options() & configuration::host::up));
   modify_if_different(
-    h->notify_on_down,
-    static_cast<int>(static_cast<bool>(
-      obj.notification_options() & configuration::host::down)));
+    *h,
+    flap_detection_on_down,
+    static_cast<bool>(
+      obj.flap_detection_options() & configuration::host::down));
   modify_if_different(
-    h->notify_on_unreachable,
-    static_cast<int>(static_cast<bool>(
-      obj.notification_options() & configuration::host::unreachable)));
+    *h,
+    flap_detection_on_unreachable,
+    static_cast<bool>(
+      obj.flap_detection_options() & configuration::host::unreachable));
   modify_if_different(
-    h->notify_on_flapping,
-    static_cast<int>(static_cast<bool>(
-      obj.notification_options() & configuration::host::flapping)));
+    *h,
+    stalk_on_up,
+    static_cast<bool>(
+      obj.stalking_options() & configuration::host::up));
   modify_if_different(
-    h->notify_on_downtime,
-    static_cast<int>(static_cast<bool>(
-      obj.notification_options() & configuration::host::downtime)));
+    *h,
+    stalk_on_down,
+    static_cast<bool>(
+      obj.stalking_options() & configuration::host::down));
   modify_if_different(
-    h->notification_interval,
-    static_cast<double>(obj.notification_interval()));
+    *h,
+    stalk_on_unreachable,
+    static_cast<bool>(
+      obj.stalking_options() & configuration::host::unreachable));
   modify_if_different(
-    h->first_notification_delay,
-    static_cast<double>(obj.first_notification_delay()));
+    *h,
+    process_perfdata,
+    obj.process_perf_data());
   modify_if_different(
-    h->notification_period,
-    NULL_IF_EMPTY(obj.notification_period()));
+    *h,
+    freshness_checks_enabled,
+    obj.check_freshness());
   modify_if_different(
-    h->notifications_enabled,
-    static_cast<int>(obj.notifications_enabled()));
+    *h,
+    freshness_threshold,
+    obj.freshness_threshold());
+  modify_if_different(*h, notes, obj.notes());
+  modify_if_different(*h, notes_url, obj.notes_url());
+  modify_if_different(*h, action_url, obj.action_url());
+  modify_if_different(*h, icon_image, obj.icon_image());
+  modify_if_different(*h, icon_image_alt, obj.icon_image_alt());
+  modify_if_different(*h, vrml_image, obj.vrml_image());
+  modify_if_different(*h, statusmap_image, obj.statusmap_image());
+  modify_if_different(*h, x_2d, obj.coords_2d().x());
+  modify_if_different(*h, y_2d, obj.coords_2d().y());
+  modify_if_different(*h, have_2d_coords, obj.have_coords_2d());
+  modify_if_different(*h, x_3d, obj.coords_3d().x());
+  modify_if_different(*h, y_3d, obj.coords_3d().y());
+  modify_if_different(*h, z_3d, obj.coords_3d().z());
+  modify_if_different(*h, have_3d_coords, obj.have_coords_3d());
   modify_if_different(
-    h->host_check_command,
-    NULL_IF_EMPTY(obj.check_command()));
+    *h,
+    retain_state_info,
+    obj.retain_status_information());
   modify_if_different(
-    h->checks_enabled,
-    static_cast<int>(obj.checks_active()));
+    *h,
+    retain_nonstate_info,
+    obj.retain_nonstatus_information());
+  modify_if_different(*h, ocp_enabled, obj.obsess_over_host());
+  modify_if_different(*h, timezone, obj.timezone());
+  modify_if_different(*h, id, obj.host_id());
   modify_if_different(
-    h->accept_passive_host_checks,
-    static_cast<int>(obj.checks_passive()));
+    *h,
+    acknowledgement_timeout,
+    obj.get_acknowledgement_timeout());
   modify_if_different(
-    h->event_handler,
-    NULL_IF_EMPTY(obj.event_handler()));
-  modify_if_different(
-    h->event_handler_enabled,
-    static_cast<int>(obj.event_handler_enabled()));
-  modify_if_different(
-    h->flap_detection_enabled,
-    static_cast<int>(obj.flap_detection_enabled()));
-  modify_if_different(
-    h->low_flap_threshold,
-    static_cast<double>(obj.low_flap_threshold()));
-  modify_if_different(
-    h->high_flap_threshold,
-    static_cast<double>(obj.high_flap_threshold()));
-  modify_if_different(
-    h->flap_detection_on_up,
-    static_cast<int>(static_cast<bool>(
-      obj.flap_detection_options() & configuration::host::up)));
-  modify_if_different(
-    h->flap_detection_on_down,
-    static_cast<int>(static_cast<bool>(
-      obj.flap_detection_options() & configuration::host::down)));
-  modify_if_different(
-    h->flap_detection_on_unreachable,
-    static_cast<int>(static_cast<bool>(
-      obj.flap_detection_options() & configuration::host::unreachable)));
-  modify_if_different(
-    h->stalk_on_up,
-    static_cast<int>(static_cast<bool>(
-      obj.stalking_options() & configuration::host::up)));
-  modify_if_different(
-    h->stalk_on_down,
-    static_cast<int>(static_cast<bool>(
-      obj.stalking_options() & configuration::host::down)));
-  modify_if_different(
-    h->stalk_on_unreachable,
-    static_cast<int>(static_cast<bool>(
-      obj.stalking_options() & configuration::host::unreachable)));
-  modify_if_different(
-    h->process_performance_data,
-    static_cast<int>(obj.process_perf_data()));
-  modify_if_different(
-    h->check_freshness,
-    static_cast<int>(obj.check_freshness()));
-  modify_if_different(
-    h->freshness_threshold,
-    static_cast<int>(obj.freshness_threshold()));
-  modify_if_different(h->notes, NULL_IF_EMPTY(obj.notes()));
-  modify_if_different(h->notes_url, NULL_IF_EMPTY(obj.notes_url()));
-  modify_if_different(h->action_url, NULL_IF_EMPTY(obj.action_url()));
-  modify_if_different(h->icon_image, NULL_IF_EMPTY(obj.icon_image()));
-  modify_if_different(
-    h->icon_image_alt,
-    NULL_IF_EMPTY(obj.icon_image_alt()));
-  modify_if_different(h->vrml_image, NULL_IF_EMPTY(obj.vrml_image()));
-  modify_if_different(
-    h->statusmap_image,
-    NULL_IF_EMPTY(obj.statusmap_image()));
-  modify_if_different(h->x_2d, obj.coords_2d().x());
-  modify_if_different(h->y_2d, obj.coords_2d().y());
-  modify_if_different(
-    h->have_2d_coords,
-    static_cast<int>(obj.have_coords_2d()));
-  modify_if_different(h->x_3d, obj.coords_3d().x());
-  modify_if_different(h->y_3d, obj.coords_3d().y());
-  modify_if_different(h->z_3d, obj.coords_3d().z());
-  modify_if_different(
-    h->have_3d_coords,
-    static_cast<int>(obj.have_coords_3d()));
-  modify_if_different(
-    h->retain_status_information,
-    static_cast<int>(obj.retain_status_information()));
-  modify_if_different(
-    h->retain_nonstatus_information,
-    static_cast<int>(obj.retain_nonstatus_information()));
-  modify_if_different(
-    h->obsess_over_host,
-    static_cast<int>(obj.obsess_over_host()));
-  host_other_props[obj.host_name()].timezone = obj.timezone();
-  host_other_props[obj.host_name()].host_id = obj.host_id();
-  host_other_props[obj.host_name()].acknowledgement_timeout
-    = obj.get_acknowledgement_timeout() * config->interval_length();
-  host_other_props[obj.host_name()].recovery_notification_delay
-    = obj.recovery_notification_delay();
+    *h,
+    recovery_notification_delay,
+    obj.recovery_notification_delay());
 
   // Contacts.
   if (obj.contacts() != obj_old.contacts()) {
-    // Delete old contacts.
-    deleter::listmember(h->contacts, &deleter::contactsmember);
+    // Remove contacts.
+    h->clear_contacts();
 
     // Add contacts to host.
     for (set_string::const_iterator
            it(obj.contacts().begin()),
            end(obj.contacts().end());
          it != end;
-         ++it)
-      if (!add_contact_to_host(h, it->c_str()))
+         ++it) {
+      contact_map::iterator cntct(state::instance().contacts().find(*it));
+      if (cntct == state::instance().contacts().end())
         throw (engine_error() << "Could not add contact '"
                << *it << "' to host '" << obj.host_name() << "'");
+      h->add_contact(cntct->second.get());
+    }
   }
 
   // Contact groups.
   if (obj.contactgroups() != obj_old.contactgroups()) {
-    // Delete old contact groups.
-    deleter::listmember(
-      h->contact_groups,
-      &deleter::contactgroupsmember);
+    // Remove old contact groups.
+    h->clear_contactgroups();
 
     // Add contact groups to host.
     for (set_string::const_iterator
            it(obj.contactgroups().begin()),
            end(obj.contactgroups().end());
          it != end;
-         ++it)
-      if (!add_contactgroup_to_host(h, it->c_str()))
+         ++it) {
+      contactgroup_map::iterator
+        grp(state::instance().contactgroups().find(*it));
+      if (grp == state::instance().contactgroups().end())
         throw (engine_error() << "Could not add contact group '"
                << *it << "' to host '" << obj.host_name() << "'");
+      h->add_contactgroup(grp->second.get());
+    }
   }
 
   // Custom variables.
   if (obj.customvariables() != obj_old.customvariables()) {
     // Delete old custom variables.
-    remove_all_custom_variables_from_host(h);
+    timeval tv(get_broker_timestamp(NULL));
+    for (customvar_set::const_iterator
+           it(h->get_customvars().begin()),
+           end(h->get_customvars().end());
+         it != end;
+         ++it)
+      broker_custom_variable(
+        NEBTYPE_HOSTCUSTOMVARIABLE_DELETE,
+        NEBFLAG_NONE,
+        NEBATTR_NONE,
+        h,
+        it->second.get_name().c_str(),
+        it->second.get_value().c_str(),
+        &tv);
+    h->clear_customvars();
 
     // Add custom variables.
     for (map_customvar::const_iterator
            it(obj.customvariables().begin()),
            end(obj.customvariables().end());
          it != end;
-         ++it)
-      if (!add_custom_variable_to_host(
-             h,
-             it->first.c_str(),
-             it->second.c_str()))
-        throw (engine_error()
-               << "Could not add custom variable '" << it->first
-               << "' to host '" << obj.host_name() << "'");
+         ++it) {
+      h->set_customvar(customvar(it->first, it->second));
+      broker_custom_variable(
+        NEBTYPE_HOSTCUSTOMVARIABLE_ADD,
+        NEBFLAG_NONE,
+        NEBATTR_NONE,
+        h,
+        it->first.c_str(),
+        it->second.c_str(),
+        &tv);
+    }
   }
 
   // Parents.
@@ -508,30 +480,22 @@ void applier::host::modify_object(
     // Delete old parents.
     {
       timeval tv(get_broker_timestamp(NULL));
-      for (hostsmember* p(h->parent_hosts);
-           p;
-           p = p->next)
+      for (host_set::const_iterator
+             it(h->get_parents().begin()),
+             end(h->get_parents().end());
+           it != end;
+           ++it)
         broker_relation_data(
           NEBTYPE_PARENT_DELETE,
           NEBFLAG_NONE,
           NEBATTR_NONE,
-          p->host_ptr,
+          *it,
           NULL,
           h,
           NULL,
           &tv);
     }
-    deleter::listmember(h->parent_hosts, &deleter::hostsmember);
-
-    // Create parents.
-    for (set_string::const_iterator
-           it(obj.parents().begin()),
-           end(obj.parents().end());
-         it != end;
-         ++it)
-      if (!add_parent_host_to_host(h, it->c_str()))
-        throw (engine_error() << "Could not add parent '"
-               << *it << "' to host '" << obj.host_name() << "'");
+    h->clear_parents();
   }
 
   // Notify event broker.
@@ -561,26 +525,33 @@ void applier::host::remove_object(
     << "Removing host '" << obj.host_name() << "'.";
 
   // Find host.
-  umap<std::string, shared_ptr<host_struct> >::iterator
-    it(applier::state::instance().hosts_find(obj.key()));
+  umap<std::string, shared_ptr< ::host> >::iterator
+    it(applier::state::instance().hosts().find(obj.key()));
   if (it != applier::state::instance().hosts().end()) {
-    host_struct* hst(it->second.get());
-
-    // Remove host comments.
-    delete_all_host_comments(obj.host_name().c_str());
+    ::host* hst(it->second.get());
 
     // Remove host downtimes.
-    delete_downtime_by_hostname_service_description_start_time_comment(
-      obj.host_name().c_str(),
-      NULL,
-      (time_t)0,
-      NULL);
+    std::set<unsigned long> to_remove;
+    for (umap<unsigned long, downtime>::const_iterator
+           it_dt(downtime_manager::instance().get_downtimes().begin()),
+           end_dt(downtime_manager::instance().get_downtimes().end());
+         it_dt != end_dt;
+         ++it_dt) {
+      downtime const& dt(it_dt->second);
+      if (dt.get_parent()->is_host()
+          && (static_cast< ::host*>(dt.get_parent())->get_name()
+              == obj.host_name()))
+        to_remove.insert(dt.get_id());
+    }
+    for (std::set<unsigned long>::const_iterator
+           it_dt(to_remove.begin()),
+           end_dt(to_remove.end());
+         it_dt != end_dt;
+         ++it_dt)
+      downtime_manager::instance().unschedule(*it_dt);
 
     // Remove events related to this host.
     applier::scheduler::instance().remove_host(obj);
-
-    // Remove host from its list.
-    unregister_object<host_struct>(&host_list, hst);
 
     // Notify event broker.
     timeval tv(get_broker_timestamp(NULL));
@@ -595,7 +566,6 @@ void applier::host::remove_object(
       &tv);
 
     // Erase host object (will effectively delete the object).
-    host_other_props.erase(obj.host_name());
     applier::state::instance().hosts().erase(it);
   }
 
@@ -612,42 +582,273 @@ void applier::host::remove_object(
  */
 void applier::host::resolve_object(
                       configuration::host const& obj) {
+  // Failure flag.
+  bool failure(false);
+
   // Logging.
   logger(logging::dbg_config, logging::more)
     << "Resolving host '" << obj.host_name() << "'.";
 
-  // If it is the very first host to be resolved,
-  // remove all the child backlinks of all the hosts.
-  // It is necessary to do it only once to prevent the removal
-  // of valid child backlinks.
-  if (obj == *config->hosts().begin()) {
-    for (umap<std::string, shared_ptr<host_struct> >::iterator
-         it(applier::state::instance().hosts().begin()),
-         end(applier::state::instance().hosts().end()); it != end; ++it)
-      deleter::listmember(it->second->child_hosts, &deleter::hostsmember);
+  try {
+    // Find host.
+    ::host& hst(
+              *applier::state::instance().hosts_find(obj.key()).get());
+
+    // Make sure host has at least one service associated with it.
+    if (hst.get_services().empty()) {
+      logger(logging::log_verification_error, logging::basic)
+        << "Warning: Host '" << hst.get_name()
+        << "' has no services associated with it!";
+      ++config_warnings;
+    }
+
+    // Resolve check command.
+    try {
+      resolve_check_command(hst, obj.check_command());
+    }
+    catch (not_found const& e) {
+      (void)e;
+      logger(logging::log_verification_error, logging::basic)
+        << "Error: Host check command '" << obj.check_command()
+        << "' specified for host '" << hst.get_name()
+        << "' is not defined anywhere!";
+      ++config_errors;
+      failure = true;
+    }
+
+    // Resolve check period.
+    if (!obj.check_period().empty()) {
+      try {
+        resolve_check_period(hst, obj.check_period());
+      }
+      catch (not_found const& e) {
+        (void)e;
+        logger(logging::log_verification_error, logging::basic)
+          << "Error: Check period '" << obj.check_period()
+          << "' specified for host '" << hst.get_name()
+          << "' is not defined anywhere!";
+        ++config_errors;
+        failure = true;
+      }
+    }
+    else {
+      logger(logging::log_verification_error, logging::basic)
+        << "Warning: Host '" << hst.get_name()
+        << "' has no check time period defined!";
+      ++config_warnings;
+    }
+
+    // Resolve event handler.
+    if (!obj.event_handler().empty()) {
+      try {
+        // Get command.
+        resolve_event_handler(hst, obj.event_handler());
+      }
+      catch (not_found const& e) {
+        (void)e;
+        logger(logging::log_verification_error, logging::basic)
+          << "Error: Event handler command '" << obj.event_handler()
+          << "' specified for host '" << hst.get_name()
+          << "' not defined anywhere";
+        ++config_errors;
+        failure = true;
+      }
+    }
+
+    // Resolve parents.
+    for (set_string::const_iterator
+           it(obj.parents().begin()),
+           end(obj.parents().end());
+         it != end;
+         ++it)
+      try {
+        hst.add_parent(
+          configuration::applier::state::instance().hosts_find(
+            *it).get());
+      }
+      catch (not_found const& e) {
+        (void)e;
+        logger(logging::log_verification_error, logging::basic)
+          << "Error: '" << *it << "' is not a valid parent for host '"
+          << hst.get_name() << "'!";
+        ++config_errors;
+        failure = true;
+      }
+
+    // Resolve contacts.
+    for (set_string::const_iterator
+           it(obj.contacts().begin()),
+           end(obj.contacts().end());
+         it != end;
+         ++it)
+      try {
+        hst.add_contact(
+          configuration::applier::state::instance().contacts_find(
+                                                      *it).get());
+      }
+      catch (not_found const& e) {
+        (void)e;
+        logger(logging::log_verification_error, logging::basic)
+          << "Error: Contact '" << *it << "' specified in host '"
+          << hst.get_name() << "' is not defined anywhere!";
+        ++config_errors;
+        failure = true;
+      }
+
+    // Resolve contact groups.
+    for (set_string::const_iterator
+           it(obj.contactgroups().begin()),
+           end(obj.contactgroups().end());
+         it != end;
+         ++it)
+      try {
+        hst.add_contactgroup(
+          configuration::applier::state::instance().contactgroups_find(
+                                                      *it).get());
+      }
+      catch (not_found const& e) {
+        (void)e;
+        logger(logging::log_verification_error, logging::basic)
+          << "Error: Contact group '" << *it << "' specified in host '"
+          << hst.get_name() << "' is not defined anywhere!";
+        ++config_errors;
+        failure = true;
+      }
+
+    // Resolve notification period.
+    if (!obj.notification_period().empty())
+      try {
+        resolve_notification_period(hst, obj.notification_period());
+      }
+      catch (not_found const& e) {
+        (void)e;
+        logger(logging::log_verification_error, logging::basic)
+          << "Error: Notification period '" << obj.notification_period()
+          << "' specified for host '" << hst.get_name()
+          << "' is not defined anywhere!";
+        ++config_errors;
+        failure = true;
+      }
+
+    // Check for sane recovery options.
+    if (hst.get_notifications_enabled()
+        && hst.get_notify_on(::host::ON_RECOVERY)
+        && !hst.get_notify_on(::host::ON_DOWN)
+        && !hst.get_notify_on(::host::ON_UNREACHABLE)) {
+      logger(logging::log_verification_error, logging::basic)
+        << "Warning: Recovery notification option in host '"
+        << hst.get_name() << "' definition doesn't make any sense - "
+           "specify down and/or unreachable options as well";
+      ++config_warnings;
+    }
+
+    // Check for illegal characters in host name.
+    if (contains_illegal_object_chars(hst.get_name().c_str())) {
+      logger(logging::log_verification_error, logging::basic)
+        << "Error: The name of host '" << hst.get_name()
+        << "' contains one or more illegal characters.";
+      ++config_errors;
+      failure = true;
+    }
+
+    // Throw exception in case of failure.
+    if (failure)
+      throw (error() << "please check logs above");
+  }
+  catch (std::exception const& e) {
+    throw (engine_error() << "Could not resolve host '"
+           << obj.host_name() << "': " << e.what());
   }
 
-  // Find host.
-  umap<std::string, shared_ptr<host_struct> >::iterator
-    it(applier::state::instance().hosts_find(obj.key()));
-  if (applier::state::instance().hosts().end() == it)
-    throw (engine_error() << "Cannot resolve non-existing host '"
-           << obj.host_name() << "'");
+  return ;
+}
 
-  // Remove service backlinks.
-  deleter::listmember(it->second->services, &deleter::servicesmember);
+/**
+ *  Remove all links to other objects in all host objects.
+ */
+void applier::host::unresolve_objects() {
+  for (umap<std::string, shared_ptr< ::host> >::iterator
+         it(applier::state::instance().hosts().begin()),
+         end(applier::state::instance().hosts().end());
+       it != end;
+       ++it) {
+    ::host& h(*it->second);
+    h.clear_children();
+    h.clear_contacts();
+    h.clear_contactgroups();
+    h.clear_groups();
+    h.clear_parents();
+    h.clear_services();
+    h.set_check_command(NULL);
+    h.set_check_command_args("");
+    h.set_check_period(NULL);
+    h.set_event_handler(NULL);
+    h.set_event_handler_args("");
+    h.set_notification_period(NULL);
+  }
+  return ;
+}
 
-  // Remove host group links.
-  deleter::listmember(it->second->hostgroups_ptr, &deleter::objectlist);
+/**
+ *  Resolve host check command.
+ *
+ *  @param[out] hst  Target host.
+ *  @param[in]  cmd  New check command.
+ */
+void applier::host::resolve_check_command(
+                      ::host& hst,
+                      std::string const& cmd) {
+  std::string command_name(cmd.substr(
+                             0,
+                             cmd.find_first_of('!')));
+  hst.set_check_command(find_command(command_name).get());
+  hst.set_check_command_args(cmd);
+  return ;
+}
 
-  // Reset host counters.
-  it->second->total_services = 0;
-  it->second->total_service_check_interval = 0;
+/**
+ *  Resolve host check period.
+ *
+ *  @param[out] hst     Target host.
+ *  @param[in]  period  New check period.
+ */
+void applier::host::resolve_check_period(
+                      ::host& hst,
+                      std::string const& period) {
+  hst.set_check_period(
+    configuration::applier::state::instance().timeperiods_find(
+      period).get());
+  return ;
+}
 
-  // Resolve host.
-  if (!check_host(it->second.get(), &config_warnings, &config_errors))
-    throw (engine_error() << "Cannot resolve host '"
-           << obj.host_name() << "'");
+/**
+ *  Resolve event handler.
+ *
+ *  @param[out] hst  Target host.
+ *  @param[in]  cmd  New event handler.
+ */
+void applier::host::resolve_event_handler(
+                      ::host& hst,
+                      std::string const& cmd) {
+  std::string command_name(cmd.substr(
+                             0,
+                             cmd.find_first_of('!')));
+  hst.set_event_handler(find_command(command_name).get());
+  hst.set_event_handler_args(cmd);
+  return ;
+}
 
+/**
+ *  Resolve notification period.
+ *
+ *  @param[out] hst     Target host.
+ *  @param[in]  period  New notification period.
+ */
+void applier::host::resolve_notification_period(
+                      ::host& hst,
+                      std::string const& period) {
+  hst.set_notification_period(
+    configuration::applier::state::instance().timeperiods_find(
+      period).get());
   return ;
 }

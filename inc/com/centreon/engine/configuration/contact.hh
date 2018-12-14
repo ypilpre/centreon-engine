@@ -20,14 +20,11 @@
 #ifndef CCE_CONFIGURATION_CONTACT_HH
 #  define CCE_CONFIGURATION_CONTACT_HH
 
-#  include <set>
-#  include <string>
 #  include <vector>
 #  include "com/centreon/engine/configuration/group.hh"
 #  include "com/centreon/engine/configuration/object.hh"
 #  include "com/centreon/engine/objects/customvariable.hh"
 #  include "com/centreon/engine/opt.hh"
-#  include "com/centreon/engine/namespace.hh"
 
 typedef std::vector<std::string> tab_string;
 
@@ -53,7 +50,8 @@ namespace                  configuration {
     void                   merge(object const& obj);
     bool                   parse(char const* key, char const* value);
 
-    tab_string const&      address() const throw ();
+    std::vector<std::string> const&
+                           address() const throw ();
     std::string const&     alias() const throw ();
     bool                   can_submit_commands() const throw ();
     set_string&            contactgroups() throw ();
@@ -101,7 +99,8 @@ namespace                  configuration {
     bool                   _set_service_notifications_enabled(bool value);
     bool                   _set_timezone(std::string const& value);
 
-    tab_string             _address;
+    std::vector<std::string>
+                           _address;
     std::string            _alias;
     opt<bool>              _can_submit_commands;
     group<set_string>      _contactgroups;

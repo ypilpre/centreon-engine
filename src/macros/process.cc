@@ -42,7 +42,7 @@ int process_macros_r(
   int in_macro = false;
   char* selected_macro = NULL;
   char* original_macro = NULL;
-  char const* cleaned_macro = NULL;
+  std::string cleaned_macro;
   int clean_macro = false;
   int result = OK;
   int clean_options = 0;
@@ -193,20 +193,21 @@ int process_macros_r(
                 || (macro_options & ESCAPE_MACRO_CHARS))) {
 
           /* add the (cleaned) processed macro to the end of the already processed buffer */
-          if (selected_macro != NULL
-              && (cleaned_macro = clean_macro_chars(
-                                    selected_macro,
-                                    macro_options)) != NULL) {
+          if (selected_macro != NULL) {
+            cleaned_macro = clean_macro_chars(
+                              selected_macro,
+                              macro_options);
+            int len = strlen(*output_buffer);
             *output_buffer = resize_string(
                                *output_buffer,
-                               strlen(*output_buffer)
-                               + strlen(cleaned_macro)
-                               + 1);
-            strcat(*output_buffer, cleaned_macro);
+                               len + cleaned_macro.size() + 1);
+            strcpy(*output_buffer + len, cleaned_macro.c_str());
+            /* len is updated to match output_buffer length. */
+            len += cleaned_macro.size() + 1;
 
             logger(dbg_macros, basic)
               << "  Cleaned macro.  Running output ("
-              << strlen(*output_buffer) << "): '"
+              << len << "): '"
               << *output_buffer << "'";
           }
         }

@@ -46,6 +46,7 @@ namespace               configuration {
                           configuration::connector const& obj);
       void              resolve_object(
                           configuration::connector const& obj);
+      void              unresolve_objects();
     };
   }
 }

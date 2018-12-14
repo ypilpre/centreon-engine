@@ -28,6 +28,8 @@
 #include "com/centreon/engine/deleter/timerange.hh"
 #include "com/centreon/engine/error.hh"
 #include "com/centreon/engine/globals.hh"
+#include "com/centreon/engine/objects/timeperiodexclusion.hh"
+#include "com/centreon/engine/objects/timerange.hh"
 
 using namespace com::centreon::engine::configuration;
 
@@ -124,7 +126,7 @@ void applier::timeperiod::modify_object(
 
   // Find time period object.
   umap<std::string, shared_ptr<timeperiod_struct> >::iterator
-    it_obj(applier::state::instance().timeperiods_find(obj.key()));
+    it_obj(applier::state::instance().timeperiods().find(obj.key()));
   if (it_obj == applier::state::instance().timeperiods().end())
     throw (engine_error() << "Could not modify non-existing "
            << "time period object '" << obj.timeperiod_name() << "'");
@@ -136,7 +138,7 @@ void applier::timeperiod::modify_object(
   config->timeperiods().insert(obj);
 
   // Modify properties.
-  modify_if_different(
+  modify_cstr_if_different(
     tp->alias,
     (obj.alias().empty() ? obj.timeperiod_name() : obj.alias()).c_str());
 
@@ -196,7 +198,7 @@ void applier::timeperiod::remove_object(
 
   // Find time period.
   umap<std::string, shared_ptr<timeperiod_struct> >::iterator
-    it(applier::state::instance().timeperiods_find(obj.key()));
+    it(applier::state::instance().timeperiods().find(obj.key()));
   if (it != applier::state::instance().timeperiods().end()) {
     timeperiod_struct* tp(it->second.get());
 
@@ -239,7 +241,7 @@ void applier::timeperiod::resolve_object(
 
   // Find time period.
   umap<std::string, shared_ptr<timeperiod_struct> >::iterator
-    it(applier::state::instance().timeperiods_find(obj.key()));
+    it(applier::state::instance().timeperiods().find(obj.key()));
   if (applier::state::instance().timeperiods().end() == it)
     throw (engine_error() << "Cannot resolve non-existing "
            << "time period '" << obj.timeperiod_name() << "'");
@@ -249,6 +251,13 @@ void applier::timeperiod::resolve_object(
     throw (engine_error() << "Cannot resolve time period '"
            << obj.timeperiod_name() << "'");
 
+  return ;
+}
+
+/**
+ *  Do nothing.
+ */
+void applier::timeperiod::unresolve_objects() {
   return ;
 }
 

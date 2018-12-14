@@ -33,7 +33,6 @@ set(
   "${SRC_DIR}/forward.cc"
   "${SRC_DIR}/raw.cc"
   "${SRC_DIR}/result.cc"
-  "${SRC_DIR}/set.cc"
 
   # Headers.
   "${INC_DIR}/command.hh"
@@ -43,7 +42,6 @@ set(
   "${INC_DIR}/forward.hh"
   "${INC_DIR}/raw.hh"
   "${INC_DIR}/result.hh"
-  "${INC_DIR}/set.hh"
 
   PARENT_SCOPE
 )
