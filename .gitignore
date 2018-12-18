@@ -16,5 +16,4 @@ lib*.a
 tags
 test-coverage
 ut
-build/centengine
-build/compile_command.json
+build/*
