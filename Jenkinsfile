@@ -12,6 +12,7 @@ stage('Source') {
 }
 
 try {
+  /*
   stage('Unit tests') {
     parallel 'centos7': {
       node {
@@ -64,6 +65,7 @@ try {
       error('Unit tests stage failure.');
     }
   }
+  */
 
   stage('Package') {
     parallel 'centos7': {
