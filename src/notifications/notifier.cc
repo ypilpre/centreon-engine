@@ -571,9 +571,13 @@ void notifier::notify(
         // we notified someone.
         if (contacts_notified > 0) {
           // Calculate the next acceptable re-notification time.
-          // XXX set_next_notification(get_next_notification(now));
+          time_t next_notification(now + _notification_interval * config->interval_length());
+          get_next_valid_time(
+            next_notification,
+            &next_notification,
+            get_notification_period());
+          set_next_notification(next_notification);
           {
-            time_t next_notification(get_next_notification());
             logger(logging::dbg_notifications, logging::basic)
               << contacts_notified << " contacts were notified.  "
                  "Next possible notification time: "
