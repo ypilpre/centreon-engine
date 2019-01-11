@@ -26,8 +26,8 @@
 #include "com/centreon/engine/configuration/applier/object.hh"
 #include "com/centreon/engine/configuration/applier/scheduler.hh"
 #include "com/centreon/engine/configuration/applier/state.hh"
-#include "com/centreon/engine/deleter/contactsmember.hh"
 #include "com/centreon/engine/deleter/contactgroupsmember.hh"
+#include "com/centreon/engine/deleter/contactsmember.hh"
 #include "com/centreon/engine/deleter/hostsmember.hh"
 #include "com/centreon/engine/deleter/listmember.hh"
 #include "com/centreon/engine/deleter/objectlist.hh"
@@ -198,7 +198,7 @@ void applier::host::add_object(
     if (!add_custom_variable_to_host(
            h,
            it->first.c_str(),
-           it->second.c_str()))
+           it->second))
       throw (engine_error() << "Could not add custom variable '"
              << it->first << "' to host '" << obj.host_name() << "'");
 
@@ -501,7 +501,7 @@ void applier::host::modify_object(
       if (!add_custom_variable_to_host(
              h,
              it->first.c_str(),
-             it->second.c_str()))
+             it->second))
         throw (engine_error()
                << "Could not add custom variable '" << it->first
                << "' to host '" << obj.host_name() << "'");
