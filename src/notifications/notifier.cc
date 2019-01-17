@@ -1,5 +1,5 @@
 /*
-** Copyright 2017-2018 Centreon
+** Copyright 2017-2019 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -1298,7 +1298,7 @@ void notifier::check_pending_flex_downtime() {
 
 bool notifier::get_no_more_notifications() const {
   // FIXME DBR: to implement...
-  return true;
+  return (false);
 }
 
 /**
@@ -1569,10 +1569,10 @@ bool notifier::_is_notification_viable(int type, int options) {
     }
   }
 
-  // // See if enough time has elapsed for first notification.
+  // See if enough time has elapsed for first notification.
   // if (((type == PROBLEM) || (type == RECOVERY))
   //     && (get_current_notification_number() == 0
-  //         || (get_current_state == STATE_OK
+  //         || (get_current_state() == STATE_OK
   //               && !service_other_props[std::make_pair(
   //                   svc->host_ptr->name,
   //                   svc->description)].recovery_been_sent))) {
@@ -1660,18 +1660,19 @@ bool notifier::_is_notification_viable(int type, int options) {
 
   // Don't notify if we haven't waited long enough since the last time
   // (and the service is not marked as being volatile).
-  // if ((now < get_next_notification()) && !is_volatile()) {
-  //   logger(logging::dbg_notifications, logging::more)
-  //     << "We haven't waited long enough to re-notify contacts "
-  //        "about this service.";
-  //   {
-  //     time_t next_notification(get_next_notification());
-  //     logger(logging::dbg_notifications, logging::more)
-  //       << "Next valid notification time: "
-  //       << my_ctime(&next_notification);
-  //   }
-  //   return (false);
-  // }
+  if ((now < get_next_notification())
+      && (is_host() || !static_cast<service*>(this)->get_volatile())) {
+    logger(logging::dbg_notifications, logging::more)
+      << "We haven't waited long enough to re-notify contacts "
+         "about this " << (is_host() ? "host" : "service") << ".";
+    {
+      time_t next_notification(get_next_notification());
+      logger(logging::dbg_notifications, logging::more)
+        << "Next valid notification time: "
+        << my_ctime(&next_notification);
+    }
+    return (false);
+  }
 
   return (true);
 }
