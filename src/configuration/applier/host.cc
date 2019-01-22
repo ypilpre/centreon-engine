@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2018 Centreon
+** Copyright 2011-2019 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -84,6 +84,7 @@ void applier::host::add_object(
   shared_ptr< ::host> h;
   try {
     h = new ::host();
+    unsigned int interval_length(config->interval_length());
     // Self properties.
     h->set_address(obj.address());
     h->set_alias(obj.alias());
@@ -127,7 +128,8 @@ void applier::host::add_object(
          ++it)
       h->set_customvar(customvar(it->first, it->second));
     // Inherited from notifier.
-    h->set_acknowledgement_timeout(obj.get_acknowledgement_timeout());
+    h->set_acknowledgement_timeout(
+      obj.get_acknowledgement_timeout() * interval_length);
     h->set_notifications_enabled(obj.notifications_enabled());
     h->set_notify_on(
       ::host::ON_DOWNTIME,
@@ -141,9 +143,12 @@ void applier::host::add_object(
     h->set_notify_on(
       ::host::ON_UNREACHABLE,
       obj.notification_options() & configuration::host::unreachable);
-    h->set_notification_interval(obj.notification_interval());
-    h->set_first_notification_delay(obj.first_notification_delay());
-    h->set_recovery_notification_delay(obj.recovery_notification_delay());
+    h->set_notification_interval(
+      obj.notification_interval() * interval_length);
+    h->set_first_notification_delay(
+      obj.first_notification_delay() * interval_length);
+    h->set_recovery_notification_delay(
+      obj.recovery_notification_delay() * interval_length);
     // Inherited from checkable.
     h->set_active_checks_enabled(obj.checks_active());
     h->set_event_handler_enabled(obj.event_handler_enabled());
@@ -153,11 +158,13 @@ void applier::host::add_object(
     h->set_high_flap_threshold(obj.high_flap_threshold());
     h->set_low_flap_threshold(obj.low_flap_threshold());
     h->set_max_attempts(obj.max_check_attempts());
-    h->set_normal_check_interval(obj.check_interval());
+    h->set_normal_check_interval(
+      obj.check_interval() * interval_length);
     h->set_ocp_enabled(obj.obsess_over_host());
     h->set_passive_checks_enabled(obj.checks_passive());
     h->set_process_perfdata(obj.process_perf_data());
-    h->set_retry_check_interval(obj.retry_interval());
+    h->set_retry_check_interval(
+      obj.retry_interval() * interval_length);
     h->set_timezone(obj.timezone());
 
     // Add host to global configuration set.
@@ -271,6 +278,7 @@ void applier::host::modify_object(
   config->hosts().insert(obj);
 
   // Modify properties.
+  int interval_length(static_cast<int>(config->interval_length()));
   modify_if_different(*h, display_name, obj.display_name());
   modify_if_different(
     *h,
@@ -278,8 +286,14 @@ void applier::host::modify_object(
     (obj.alias().empty() ? obj.host_name() : obj. alias()));
   modify_if_different(*h, address, obj.address());
   modify_if_different(*h, initial_state, obj.initial_state());
-  modify_if_different(*h, normal_check_interval, obj.check_interval());
-  modify_if_different(*h, retry_check_interval, obj.retry_interval());
+  modify_if_different(
+    *h,
+    normal_check_interval,
+    obj.check_interval() * interval_length);
+  modify_if_different(
+    *h,
+    retry_check_interval,
+    obj.retry_interval() * interval_length);
   modify_if_different(*h, max_attempts, obj.max_check_attempts());
   h->set_notify_on(
     ::host::ON_RECOVERY,
@@ -299,11 +313,11 @@ void applier::host::modify_object(
   modify_if_different(
     *h,
     notification_interval,
-    obj.notification_interval());
+    obj.notification_interval() * interval_length);
   modify_if_different(
     *h,
     first_notification_delay,
-    obj.first_notification_delay());
+    obj.first_notification_delay() * interval_length);
   modify_if_different(
     *h,
     notifications_enabled,
@@ -393,11 +407,11 @@ void applier::host::modify_object(
   modify_if_different(
     *h,
     acknowledgement_timeout,
-    obj.get_acknowledgement_timeout());
+    obj.get_acknowledgement_timeout() * interval_length);
   modify_if_different(
     *h,
     recovery_notification_delay,
-    obj.recovery_notification_delay());
+    obj.recovery_notification_delay() * interval_length);
 
   // Contacts.
   if (obj.contacts() != obj_old.contacts()) {

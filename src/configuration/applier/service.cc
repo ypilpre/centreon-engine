@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2018 Centreon
+** Copyright 2011-2019 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -101,6 +101,7 @@ void applier::service::add_object(
   shared_ptr< ::service> svc;
   try {
     svc = new ::service();
+    unsigned int interval_length(config->interval_length());
     // Self properties.
     svc->set_description(obj.service_description());
     svc->set_stalk_on_critical(
@@ -138,7 +139,8 @@ void applier::service::add_object(
          ++it)
       svc->set_customvar(customvar(it->first, it->second));
     // Inherited from notifier.
-    svc->set_acknowledgement_timeout(obj.get_acknowledgement_timeout());
+    svc->set_acknowledgement_timeout(
+      obj.get_acknowledgement_timeout() * interval_length);
     svc->set_notifications_enabled(obj.notifications_enabled());
     svc->set_notify_on(
       ::service::ON_FLAPPING,
@@ -158,9 +160,12 @@ void applier::service::add_object(
     svc->set_notify_on(
       ::service::ON_WARNING,
       obj.notification_options() & configuration::service::warning);
-    svc->set_notification_interval(obj.notification_interval());
-    svc->set_first_notification_delay(obj.first_notification_delay());
-    svc->set_recovery_notification_delay(obj.recovery_notification_delay());
+    svc->set_notification_interval(
+      obj.notification_interval() * interval_length);
+    svc->set_first_notification_delay(
+      obj.first_notification_delay() * interval_length);
+    svc->set_recovery_notification_delay(
+      obj.recovery_notification_delay() * interval_length);
     // Inherited from checkable.
     svc->set_active_checks_enabled(obj.checks_active());
     svc->set_event_handler_enabled(obj.event_handler_enabled());
@@ -170,11 +175,13 @@ void applier::service::add_object(
     svc->set_high_flap_threshold(obj.high_flap_threshold());
     svc->set_low_flap_threshold(obj.low_flap_threshold());
     svc->set_max_attempts(obj.max_check_attempts());
-    svc->set_normal_check_interval(obj.check_interval());
+    svc->set_normal_check_interval(
+      obj.check_interval() * interval_length);
     svc->set_ocp_enabled(obj.obsess_over_service());
     svc->set_passive_checks_enabled(obj.checks_passive());
     svc->set_process_perfdata(obj.process_perf_data());
-    svc->set_retry_check_interval(obj.retry_interval());
+    svc->set_retry_check_interval(
+      obj.retry_interval() * interval_length);
     svc->set_timezone(obj.timezone());
 
     // Add service to global configuration set.
@@ -331,23 +338,30 @@ void applier::service::modify_object(
   config->services().insert(obj);
 
   // Modify properties.
+  int interval_length(static_cast<int>(config->interval_length()));
   modify_if_different(*s, display_name, obj.display_name());
   modify_if_different(
     *s,
     event_handler_enabled,
     obj.event_handler_enabled());
   modify_if_different(*s, initial_state, obj.initial_state());
-  modify_if_different(*s, normal_check_interval, obj.check_interval());
-  modify_if_different(*s, retry_check_interval, obj.retry_interval());
+  modify_if_different(
+    *s,
+    normal_check_interval,
+    obj.check_interval() * interval_length);
+  modify_if_different(
+    *s,
+    retry_check_interval,
+    obj.retry_interval() * interval_length);
   modify_if_different(*s, max_attempts, obj.max_check_attempts());
   modify_if_different(
     *s,
     notification_interval,
-    obj.notification_interval());
+    obj.notification_interval() * interval_length);
   modify_if_different(
     *s,
     first_notification_delay,
-    obj.first_notification_delay());
+    obj.first_notification_delay() * interval_length);
   s->set_notify_on(
     ::service::ON_FLAPPING,
     obj.notification_options() & configuration::service::downtime);
@@ -462,11 +476,11 @@ void applier::service::modify_object(
   modify_if_different(
     *s,
     acknowledgement_timeout,
-    obj.get_acknowledgement_timeout());
+    obj.get_acknowledgement_timeout() * interval_length);
   modify_if_different(
     *s,
     recovery_notification_delay,
-    obj.recovery_notification_delay());
+    obj.recovery_notification_delay() * interval_length);
 
   // Contacts.
   if (obj.contacts() != obj_old.contacts()) {

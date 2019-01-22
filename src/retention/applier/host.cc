@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2013,2015-2018 Centreon
+** Copyright 2011-2013,2015-2019 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -235,10 +235,12 @@ void applier::host::_update(
     }
     if (state.normal_check_interval().is_set()
         && (obj.get_modified_attributes() & MODATTR_NORMAL_CHECK_INTERVAL))
-      obj.set_normal_check_interval(*state.normal_check_interval());
+      obj.set_normal_check_interval(
+        *state.normal_check_interval() * config.interval_length());
     if (state.retry_check_interval().is_set()
         && (obj.get_modified_attributes() & MODATTR_RETRY_CHECK_INTERVAL))
-      obj.set_retry_check_interval(*state.retry_check_interval());
+      obj.set_retry_check_interval(
+        *state.retry_check_interval() * config.interval_length());
     if (state.max_attempts().is_set()
         && (obj.get_modified_attributes() & MODATTR_MAX_CHECK_ATTEMPTS)) {
       obj.set_max_attempts(*state.max_attempts());

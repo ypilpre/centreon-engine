@@ -1,5 +1,5 @@
 /*
-** Copyright 2017-2018 Centreon
+** Copyright 2017-2019 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -48,6 +48,7 @@ class RecoveryNotificationDelay : public ::testing::Test {
       config = new configuration::state;
     configuration::applier::state::load();
     config->enable_notifications(true);
+    config->interval_length(1);
 
     {
       char tmp[] = "/tmp/engine_recovery_notif_delayXXXXXX";

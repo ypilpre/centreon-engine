@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2013,2015-2018 Centreon
+** Copyright 2011-2013,2015-2019 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -258,7 +258,7 @@ std::ostream& dump::host(std::ostream& os, ::host const& obj) {
     "max_attempts=" << obj.get_max_attempts() << "\n"
     "modified_attributes=" << (obj.get_modified_attributes() & ~config->retained_host_attribute_mask()) << "\n"
     "next_check=" << static_cast<unsigned long>(obj.get_next_check()) << "\n"
-    "normal_check_interval=" << obj.get_normal_check_interval() << "\n"
+    "normal_check_interval=" << obj.get_normal_check_interval() / config->interval_length() << "\n"
     "notification_period=" << (obj.get_notification_period() ? obj.get_notification_period()->name : "") << "\n"
     "notifications_enabled=" << obj.get_notifications_enabled() << "\n"
     "notified_on_down=" << obj.get_notify_on(engine::host::ON_DOWN) << "\n"
@@ -270,7 +270,7 @@ std::ostream& dump::host(std::ostream& os, ::host const& obj) {
     "plugin_output=" << obj.get_output() << "\n"
     "problem_has_been_acknowledged=" << obj.is_acknowledged() << "\n"
     "process_performance_data=" << obj.get_process_perfdata() << "\n"
-    "retry_check_interval=" << obj.get_normal_check_interval() << "\n"
+    "retry_check_interval=" << obj.get_normal_check_interval() / config->interval_length() << "\n"
     "state_type=" << obj.get_current_state_type() << "\n"
     "recovery_been_sent=" << obj.get_recovery_been_sent() << "\n";
 
@@ -451,7 +451,7 @@ std::ostream& dump::service(std::ostream& os, ::service const& obj) {
     "max_attempts=" << obj.get_max_attempts() << "\n"
     "modified_attributes=" << (obj.get_modified_attributes() & ~config->retained_host_attribute_mask()) << "\n"
     "next_check=" << static_cast<unsigned long>(obj.get_next_check()) << "\n"
-    "normal_check_interval=" << obj.get_normal_check_interval() << "\n"
+    "normal_check_interval=" << obj.get_normal_check_interval() / config->interval_length() << "\n"
     "notification_period=" << (obj.get_notification_period() ? obj.get_notification_period()->name : "") << "\n"
     "notifications_enabled=" << obj.get_notifications_enabled() << "\n"
     "notified_on_critical=" << obj.get_notify_on(engine::service::ON_CRITICAL) << "\n"
@@ -464,7 +464,7 @@ std::ostream& dump::service(std::ostream& os, ::service const& obj) {
     "plugin_output=" << obj.get_output() << "\n"
     "problem_has_been_acknowledged=" << obj.is_acknowledged() << "\n"
     "process_performance_data=" << obj.get_process_perfdata() << "\n"
-    "retry_check_interval=" << obj.get_retry_check_interval() << "\n"
+    "retry_check_interval=" << obj.get_retry_check_interval() / config->interval_length() << "\n"
     "state_type=" << obj.get_current_state_type() << "\n"
     "recovery_been_sent=" << obj.get_recovery_been_sent() << "\n";
 
