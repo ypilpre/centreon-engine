@@ -97,6 +97,7 @@ TEST_F(RecoveryNotification, SimpleRecovery) {
   _service->set_current_state_type(HARD_STATE);
   _service->set_current_state(2);
   _service->set_last_hard_state(2);
+  _service->set_current_notification_number(1);
   _service->add_notification_flag(notifier::PROBLEM);
   _service->set_last_notification(10);
 

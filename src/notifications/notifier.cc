@@ -346,7 +346,7 @@ void notifier::notify(
   // Viability checks.
   if (!_is_notification_viable(type, options)) {
     logger(logging::dbg_notifications, logging::basic)
-      << "Notification viability test failed.  No notification will "
+      << "Notification viability test failed. No notification will "
          "be sent out.";
   }
   else {
@@ -563,6 +563,7 @@ void notifier::notify(
               << "Error: notification failed: " << e.what();
           }
         }
+        ++contacts_notified;
       }
       clear_summary_macros_r(&mac);
 
@@ -571,7 +572,7 @@ void notifier::notify(
         // we notified someone.
         if (contacts_notified > 0) {
           // Calculate the next acceptable re-notification time.
-          time_t next_notification(now + _notification_interval * config->interval_length());
+          time_t next_notification(now + _notification_interval);
           get_next_valid_time(
             next_notification,
             &next_notification,
@@ -1527,6 +1528,36 @@ bool notifier::_is_notification_viable(int type, int options) {
   // See if we should notify about problems with this host.
   if (is_host()) {
     host* hst(static_cast<host*>(this));
+    switch (get_current_state()) {
+     case HOST_DOWN:
+      if (!hst->get_notify_on(ON_DOWN)) {
+        logger(logging::dbg_notifications, logging::more)
+          << "We shouldn't notify about DOWN states for this host.";
+        return (false);
+      }
+      break ;
+     case HOST_UNREACHABLE:
+      if (!hst->get_notify_on(ON_UNREACHABLE)) {
+        logger(logging::dbg_notifications, logging::more)
+          << "We shouldn't notify about DOWN states for this host.";
+        return (false);
+      }
+      break ;
+     case STATE_UNKNOWN:
+      if (!hst->get_notify_on(ON_UNKNOWN)) {
+        logger(logging::dbg_notifications, logging::more)
+          << "We shouldn't notify about DOWN states for this host.";
+        return (false);
+      }
+      break ;
+     case HOST_UP:
+      if (!hst->get_notify_on(ON_UP)) {
+        logger(logging::dbg_notifications, logging::more)
+          << "We shouldn't notify about DOWN states for this host.";
+        return (false);
+      }
+      break ;
+    }
   }
   else {
     service* svc(static_cast<service*>(this));
@@ -1636,10 +1667,17 @@ bool notifier::_is_notification_viable(int type, int options) {
 
   // RECOVERY NOTIFICATIONS ARE GOOD TO GO AT THIS POINT IF
   // ANY OTHER NOTIFICATION WAS SENT.
-  if (get_current_state() == STATE_OK)
-    return ((get_current_notification_number() > 0)
-            ? true
-            : false);
+  if (get_current_state() == STATE_OK) {
+    if (get_current_notification_number() > 0) {
+      return (true);
+    }
+    else {
+      logger(logging::dbg_notifications, logging::more)
+        << "We should not sent a recovery notification as there was"
+        << " no problem notification sent initially.";
+      return (false);
+    }
+  }
 
   // Don't notify contacts about this service problem again if the
   // notification interval is set to 0.

@@ -1,5 +1,5 @@
 /*
-** Copyright 2017-2018 Centreon
+** Copyright 2017-2019 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -119,7 +119,7 @@ TEST_F(AcknowledgementNotification, AcknowledgementNotification) {
   _service->set_last_acknowledgement(now);
   // Then no more notification is sent while the state is WARNING
   _service->notify(notifier::ACKNOWLEDGEMENT, "admin", "Test comment");
-  ASSERT_TRUE(_service->get_last_notification() >= now);
+  ASSERT_GE(_service->get_last_notification(), now);
   now += 20;
   set_time(now);
   _service->notify(notifier::PROBLEM, "admin", "Test comment");
@@ -135,7 +135,7 @@ TEST_F(AcknowledgementNotification, AcknowledgementNotification) {
   _service->set_last_hard_state_change(now);
   _service->set_last_check(now);
   _service->notify(notifier::PROBLEM, "admin", "Test comment");
-  ASSERT_FALSE(_service->get_last_notification() >= now);
+  ASSERT_LT(_service->get_last_notification(), now);
 
   // When the service is set to hard CRITICAL
   now += 20;
@@ -149,7 +149,7 @@ TEST_F(AcknowledgementNotification, AcknowledgementNotification) {
   // Then the acknowledgement is removed and a notification is sent.
   _service->notify(notifier::PROBLEM, "admin", "Test comment");
   ASSERT_FALSE(_service->is_acknowledged());
-  ASSERT_TRUE(_service->get_last_notification() >= now);
+  ASSERT_GE(_service->get_last_notification(), now);
 
   // When the service is set to OK,
   now += 20;
@@ -159,7 +159,7 @@ TEST_F(AcknowledgementNotification, AcknowledgementNotification) {
   _service->set_last_check(now);
   // Then a recovery notification is sent.
   _service->notify(notifier::RECOVERY, "admin", "Test comment");
-  ASSERT_TRUE(_service->get_last_notification() >= now);
+  ASSERT_GE(_service->get_last_notification(), now);
 }
 
 // Given a notifier in state 0. Let's assume notification is enabled on
