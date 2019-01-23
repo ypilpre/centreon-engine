@@ -1,7 +1,7 @@
 /*
 ** Copyright 1999-2009           Ethan Galstad
 ** Copyright 2009-2010           Nagios Core Development Team and Community Contributors
-** Copyright 2011-2013,2017-2018 Centreon
+** Copyright 2011-2013,2017-2019 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -318,13 +318,11 @@ void loop::_dispatching() {
                 && (temp_service->get_current_state() != STATE_OK))
               temp_service->set_next_check(
                 (time_t)(temp_service->get_next_check()
-                         + (temp_service->get_retry_check_interval()
-                            * config->interval_length())));
+                         + temp_service->get_retry_check_interval()));
             else
               temp_service->set_next_check(
                 (time_t)(temp_service->get_next_check()
-                         + (temp_service->get_normal_check_interval()
-                            * config->interval_length())));
+                         + temp_service->get_normal_check_interval()));
           }
           temp_event->run_time = temp_service->get_next_check();
           reschedule_event(temp_event, &event_list_low, &event_list_low_tail);
@@ -368,13 +366,11 @@ void loop::_dispatching() {
               && (temp_host->get_current_state() != STATE_OK))
             temp_host->set_next_check(
               (time_t)(temp_host->get_next_check()
-                       + (temp_host->get_retry_check_interval()
-                          * config->interval_length())));
+                       + temp_host->get_retry_check_interval()));
           else
             temp_host->set_next_check(
               (time_t)(temp_host->get_next_check()
-                       + (temp_host->get_normal_check_interval()
-                          * config->interval_length())));
+                       + temp_host->get_normal_check_interval()));
           temp_event->run_time = temp_host->get_next_check();
           reschedule_event(temp_event, &event_list_low, &event_list_low_tail);
           broker_host_status(temp_host);

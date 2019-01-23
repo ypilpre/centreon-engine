@@ -1,6 +1,6 @@
 /*
 ** Copyright 1999-2010           Ethan Galstad
-** Copyright 2011-2014,2017-2018 Centreon
+** Copyright 2011-2014,2017-2019 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -576,9 +576,7 @@ void checker::run(
   // Service check was cancel by NEB module. reschedule check later.
   if (NEBERROR_CALLBACKCANCEL == res) {
     if (preferred_time != NULL)
-      *preferred_time += static_cast<time_t>(
-                           svc->get_normal_check_interval()
-                           * config->interval_length());
+      *preferred_time += static_cast<time_t>(svc->get_normal_check_interval());
     throw (engine_error()
            << "Some broker module cancelled check of service '"
            << svc->get_description() << "' on host '"

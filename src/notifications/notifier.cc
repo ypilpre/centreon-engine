@@ -1623,7 +1623,6 @@ bool notifier::_is_notification_viable(int type, int options) {
   //            : service_other_props[std::make_pair(
   //                svc->host_ptr->name,
   //                svc->description)].recovery_notification_delay)
-  //       * config->interval_length();
 
   //   if (current_time
   //       < (time_t)(initial_notif_time

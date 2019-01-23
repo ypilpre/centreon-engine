@@ -1,6 +1,6 @@
 /*
 ** Copyright 2001-2009           Ethan Galstad
-** Copyright 2011-2013,2017-2018 Centreon
+** Copyright 2011-2013,2017-2019 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -201,13 +201,10 @@ void check_for_host_flapping(
 
   /* period to wait for updating archived state info if we have no state change */
   if (hst->get_services().empty())
-    wait_threshold
-      = static_cast<unsigned long>(hst->get_notification_interval()
-                                   * config->interval_length());
+    wait_threshold = static_cast<unsigned long>(hst->get_notification_interval());
   else
     wait_threshold
-      = static_cast<unsigned long>((hst->get_total_service_check_interval()
-                                    * config->interval_length())
+      = static_cast<unsigned long>(hst->get_total_service_check_interval()
                                    / hst->get_services().size());
 
   /* should we update state history for this state? */
