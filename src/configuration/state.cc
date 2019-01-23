@@ -330,11 +330,11 @@ state::state()
     _enable_event_handlers(default_enable_event_handlers),
     _enable_flap_detection(default_enable_flap_detection),
     _enable_macros_filter(default_enable_macros_filter),
-    _event_broker_to_log(default_event_broker_to_log),
     _enable_notifications(default_enable_notifications),
     _enable_predictive_host_dependency_checks(default_enable_predictive_host_dependency_checks),
     _enable_predictive_service_dependency_checks(default_enable_predictive_service_dependency_checks),
     _event_broker_options(default_event_broker_options),
+    _event_broker_to_log(default_event_broker_to_log),
     _event_handler_timeout(default_event_handler_timeout),
     _execute_host_checks(default_execute_host_checks),
     _execute_service_checks(default_execute_service_checks),
@@ -473,6 +473,7 @@ state& state::operator=(state const& right) {
     _enable_predictive_host_dependency_checks = right._enable_predictive_host_dependency_checks;
     _enable_predictive_service_dependency_checks = right._enable_predictive_service_dependency_checks;
     _event_broker_options = right._event_broker_options;
+    _event_broker_to_log = right._event_broker_to_log;
     _event_handler_timeout = right._event_handler_timeout;
     _execute_host_checks = right._execute_host_checks;
     _execute_service_checks = right._execute_service_checks;
@@ -616,6 +617,7 @@ bool state::operator==(state const& right) const throw () {
           && _enable_predictive_host_dependency_checks == right._enable_predictive_host_dependency_checks
           && _enable_predictive_service_dependency_checks == right._enable_predictive_service_dependency_checks
           && _event_broker_options == right._event_broker_options
+          && _event_broker_to_log == right._event_broker_to_log
           && _event_handler_timeout == right._event_handler_timeout
           && _execute_host_checks == right._execute_host_checks
           && _execute_service_checks == right._execute_service_checks
@@ -1642,6 +1644,24 @@ unsigned long state::event_broker_options() const throw () {
  */
 void state::event_broker_options(unsigned long value) {
   _event_broker_options = value;
+}
+
+/**
+ *  Get event_broker_to_log value.
+ *
+ *  @return The event_broker_to_log value.
+ */
+unsigned long state::event_broker_to_log() const throw () {
+  return (_event_broker_to_log);
+}
+
+/**
+ *  Set event_broker_to_log value.
+ *
+ *  @param[in] value The new event_broker_to_log value.
+ */
+void state::event_broker_to_log(unsigned long value) {
+  _event_broker_to_log = value;
 }
 
 /**
@@ -3861,6 +3881,18 @@ void state::_set_event_broker_options(std::string const& value) {
     setter<unsigned long, &state::event_broker_options>::generic(*this, value.c_str());
   else
     _event_broker_options = BROKER_EVERYTHING;
+}
+
+/**
+ *  Set event_broker_to_log.
+ *
+ *  @param[in] value The new event_broker_to_log value.
+ */
+void state::_set_event_broker_to_log(std::string const& value) {
+  if (value != "-1")
+    setter<unsigned long, &state::event_broker_to_log>::generic(*this, value.c_str());
+  else
+    _event_broker_to_log = BROKER_EVERYTHING;
 }
 
 /**
