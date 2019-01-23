@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2013,2015,2018 Centreon
+** Copyright 2011-2013,2015,2018-2019 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -154,9 +154,7 @@ void applier::globals::unload() {
 /**
  *  Default constructor.
  */
-applier::globals::globals() {
-
-}
+applier::globals::globals() {}
 
 /**
  *  Destructor.
@@ -178,13 +176,19 @@ applier::globals::~globals() throw() {
   ::command_file = NULL;
   ::debug_file = NULL;
   ::global_host_event_handler = NULL;
+  ::global_host_event_handler_ptr = NULL;
   ::global_service_event_handler = NULL;
+  ::global_service_event_handler_ptr = NULL;
   ::illegal_object_chars = NULL;
   ::illegal_output_chars = NULL;
   ::log_file = NULL;
   ::ochp_command = NULL;
+  ::ochp_command_ptr = NULL;
   ::ocsp_command = NULL;
+  ::ocsp_command_ptr = NULL;
   ::use_timezone = NULL;
+
+  ::comment_list.clear();
 }
 
 void applier::globals::_set_global(
