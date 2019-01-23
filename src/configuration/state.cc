@@ -81,6 +81,7 @@ state::setters const state::_setters[] = {
   { "enable_predictive_host_dependency_checks",    SETTER(bool, enable_predictive_host_dependency_checks) },
   { "enable_predictive_service_dependency_checks", SETTER(bool, enable_predictive_service_dependency_checks) },
   { "event_broker_options",                        SETTER(std::string const&, _set_event_broker_options) },
+  { "event_broker_to_log",                         SETTER(std::string const&, _set_event_broker_to_log) },
   { "event_handler_timeout",                       SETTER(unsigned int, event_handler_timeout) },
   { "execute_host_checks",                         SETTER(bool, execute_host_checks) },
   { "execute_service_checks",                      SETTER(bool, execute_service_checks) },
@@ -219,6 +220,7 @@ static bool const                      default_enable_notifications(true);
 static bool const                      default_enable_predictive_host_dependency_checks(true);
 static bool const                      default_enable_predictive_service_dependency_checks(true);
 static unsigned long const             default_event_broker_options(std::numeric_limits<unsigned long>::max());
+static unsigned long const             default_event_broker_to_log(std::numeric_limits<unsigned long>::max());
 static unsigned int const              default_event_handler_timeout(30);
 static bool const                      default_execute_host_checks(true);
 static bool const                      default_execute_service_checks(true);
@@ -328,6 +330,7 @@ state::state()
     _enable_event_handlers(default_enable_event_handlers),
     _enable_flap_detection(default_enable_flap_detection),
     _enable_macros_filter(default_enable_macros_filter),
+    _event_broker_to_log(default_event_broker_to_log),
     _enable_notifications(default_enable_notifications),
     _enable_predictive_host_dependency_checks(default_enable_predictive_host_dependency_checks),
     _enable_predictive_service_dependency_checks(default_enable_predictive_service_dependency_checks),
@@ -465,6 +468,7 @@ state& state::operator=(state const& right) {
     _enable_event_handlers = right._enable_event_handlers;
     _enable_flap_detection = right._enable_flap_detection;
     _enable_macros_filter = right._enable_macros_filter;
+    _event_broker_to_log = right._event_broker_to_log;
     _enable_notifications = right._enable_notifications;
     _enable_predictive_host_dependency_checks = right._enable_predictive_host_dependency_checks;
     _enable_predictive_service_dependency_checks = right._enable_predictive_service_dependency_checks;
@@ -607,6 +611,7 @@ bool state::operator==(state const& right) const throw () {
           && _enable_event_handlers == right._enable_event_handlers
           && _enable_flap_detection == right._enable_flap_detection
           && _enable_macros_filter == right._enable_macros_filter
+          && _event_broker_to_log == right._event_broker_to_log
           && _enable_notifications == right._enable_notifications
           && _enable_predictive_host_dependency_checks == right._enable_predictive_host_dependency_checks
           && _enable_predictive_service_dependency_checks == right._enable_predictive_service_dependency_checks
@@ -3854,9 +3859,8 @@ void state::_set_enable_failure_prediction(std::string const& value) {
 void state::_set_event_broker_options(std::string const& value) {
   if (value != "-1")
     setter<unsigned long, &state::event_broker_options>::generic(*this, value.c_str());
-  else {
+  else
     _event_broker_options = BROKER_EVERYTHING;
-    }
 }
 
 /**

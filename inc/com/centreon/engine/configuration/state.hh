@@ -196,6 +196,8 @@ namespace               configuration {
     void                enable_flap_detection(bool value);
     bool                enable_macros_filter() const throw ();
     void                enable_macros_filter(bool value);
+    unsigned long       event_broker_to_log() const throw ();
+    void                event_broker_to_log(unsigned long value);
     bool                enable_notifications() const throw ();
     void                enable_notifications(bool value);
     bool                enable_predictive_host_dependency_checks() const throw ();
@@ -450,6 +452,7 @@ namespace               configuration {
     void                _set_enable_embedded_perl(std::string const& value);
     void                _set_enable_failure_prediction(std::string const& value);
     void                _set_event_broker_options(std::string const& value);
+    void                _set_event_broker_to_log(std::string const& value);
     void                _set_free_child_process_memory(std::string const& value);
     void                _set_host_inter_check_delay_method(std::string const& value);
     void                _set_host_perfdata_file_mode(std::string const& value);
@@ -550,6 +553,7 @@ namespace               configuration {
     bool                _enable_predictive_host_dependency_checks;
     bool                _enable_predictive_service_dependency_checks;
     unsigned long       _event_broker_options;
+    unsigned long       _event_broker_to_log;
     unsigned int        _event_handler_timeout;
     bool                _execute_host_checks;
     bool                _execute_service_checks;
