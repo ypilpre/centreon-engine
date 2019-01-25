@@ -1651,8 +1651,8 @@ void state::event_broker_options(unsigned long value) {
  *
  *  @return The event_broker_to_log value.
  */
-unsigned long state::event_broker_to_log() const throw () {
-  return (_event_broker_to_log);
+unsigned long state::event_broker_to_log() {
+  return _event_broker_to_log;
 }
 
 /**
