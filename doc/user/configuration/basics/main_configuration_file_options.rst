@@ -2247,13 +2247,92 @@ values are shown below.
 
   * 0 = Broker nothing
   * -1 = Broker everything
-  * # = See BROKER_* definitions in source code (include/broker.h) for
+  * # = See below definitions for
       other values that can be OR'ed together
+
++---------------------+----------------------+
+| Data to process     | Value                |
++=====================+======================+
+| nothing             | 0                    |
++---------------------+----------------------+
+| program state       | (1 << 0) = 1         |
++---------------------+----------------------+
+| timed events        | (1 << 1) = 2         |
++---------------------+----------------------+
+| service checks      | (1 << 2) = 4         |
++---------------------+----------------------+
+| host checks         | (1 << 3) = 8         |
++---------------------+----------------------+
+| event handlers      | (1 << 4) = 16        |
++---------------------+----------------------+
+| logged data         | (1 << 5) = 32        |
++---------------------+----------------------+
+| notifications       | (1 << 6) = 64        |
++---------------------+----------------------+
+| flapping data       | (1 << 7) = 128       |
++---------------------+----------------------+
+| comment data        | (1 << 8) = 256       |
++---------------------+----------------------+
+| downtime data       | (1 << 9) = 512       |
++---------------------+----------------------+
+| system commands     | (1 << 10) = 1024     |
++---------------------+----------------------+
+| ocp data unused     | (1 << 11) = 2048     |
++---------------------+----------------------+
+| status data         | (1 << 12) = 4096     |
++---------------------+----------------------+
+| adaptive data       | (1 << 13) = 8192     |
++---------------------+----------------------+
+| externalcommand data| (1 << 14) = 16384    |
++---------------------+----------------------+
+| retention data      | (1 << 15) = 32768    |
++---------------------+----------------------+
+| acknowledgement data| (1 << 16) = 65536    |
++---------------------+----------------------+
+| statechange data    | (1 << 17) = 131072   |
++---------------------+----------------------+
+| reserved18          | (1 << 18) = 262144   |
++---------------------+----------------------+
+| reserved19          | (1 << 19) = 524288   |
++---------------------+----------------------+
+| customvariable data | (1 << 20) = 1048576  |
++---------------------+----------------------+
+| group data          | (1 << 21) = 2097152  |
++---------------------+----------------------+
+| group member data   | (1 << 22) = 4194304  |
++---------------------+----------------------+
+| module data         | (1 << 23) = 8388608  |
++---------------------+----------------------+
+| relation data       | (1 << 24) = 16777216 |
++---------------------+----------------------+
+| command data        | (1 << 25) = 33554432 |
++---------------------+----------------------+
+| everything          | (~0) = -1            |
++---------------------+----------------------+
+
+If we only want hosts and services checks, we have
+to set event_broker_options= (4 bitwise or 8) = 12
+
+And if we want everything, we get the following example:
 
 =========== ========================
 **Format**  event_broker_options=<#>
 **Example** event_broker_options=-1
 =========== ========================
+
+Event Broker to log
+-------------------
+
+This option comes to complete the previous one. By default, all logs produced
+from data matching the event_broker_options option will be logged by Centreon
+Engine in a file and also will be sent to Centreon Broker to be stored in the
+centreon-storage database. Thanks to this option, it is possible to filter
+which log's types will be sent to this database. In several cases, it is not
+necessary to send all of them in the database's logs table and moreover it is
+resource intensive for Centreon Broker and the database.
+
+The option to fill is event_broker_to_log and it works like
+event_broker_options.
 
 Event Broker Modules
 --------------------
