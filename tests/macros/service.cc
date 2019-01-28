@@ -290,8 +290,6 @@ TEST_F(MacrosService, GrabNotes) {
 TEST_F(MacrosService, GrabGroupNames) {
   _expected = "Group1,Group2,Group3";
   servicegroup sg[3];
-  for (int i(0); i < sizeof(sg) / sizeof(*sg); ++i)
-    memset(sg + i, 0, sizeof(*sg));
   sg[0].set_name("Group1");
   _service.add_group(sg + 0);
   sg[1].set_name("Group2");
