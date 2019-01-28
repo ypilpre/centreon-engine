@@ -473,7 +473,6 @@ state& state::operator=(state const& right) {
     _enable_predictive_host_dependency_checks = right._enable_predictive_host_dependency_checks;
     _enable_predictive_service_dependency_checks = right._enable_predictive_service_dependency_checks;
     _event_broker_options = right._event_broker_options;
-    _event_broker_to_log = right._event_broker_to_log;
     _event_handler_timeout = right._event_handler_timeout;
     _execute_host_checks = right._execute_host_checks;
     _execute_service_checks = right._execute_service_checks;
@@ -617,7 +616,6 @@ bool state::operator==(state const& right) const throw () {
           && _enable_predictive_host_dependency_checks == right._enable_predictive_host_dependency_checks
           && _enable_predictive_service_dependency_checks == right._enable_predictive_service_dependency_checks
           && _event_broker_options == right._event_broker_options
-          && _event_broker_to_log == right._event_broker_to_log
           && _event_handler_timeout == right._event_handler_timeout
           && _execute_host_checks == right._execute_host_checks
           && _execute_service_checks == right._execute_service_checks
@@ -1651,7 +1649,7 @@ void state::event_broker_options(unsigned long value) {
  *
  *  @return The event_broker_to_log value.
  */
-unsigned long state::event_broker_to_log() {
+unsigned long state::event_broker_to_log() const {
   return _event_broker_to_log;
 }
 

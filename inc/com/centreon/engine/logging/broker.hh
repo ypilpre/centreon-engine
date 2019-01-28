@@ -53,6 +53,9 @@ namespace                      logging {
     void                        show_thread_id(bool enable);
 
   private:
+    bool                       _event_to_log(
+                                 unsigned long long types,
+                                 char const* message) const;
     bool                       _enable;
     concurrency::thread_id     _thread;
   };

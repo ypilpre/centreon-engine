@@ -510,13 +510,10 @@ int neb_make_callbacks(int callback_type, void* data) {
 
     total_callbacks++;
 
-    // To avoid to make pollution in centreon_storage::logs table.
-    if (config->event_broker_to_log() & callback_type) {
-      logger(dbg_eventbroker, most)
-        << "Callback #" << total_callbacks
-        << " (type " << callback_type
-        << ") return (code = " << cbresult << ")";
-    }
+    logger(dbg_eventbroker, most)
+      << "Callback #" << total_callbacks
+      << " (type " << callback_type
+      << ") return (code = " << cbresult << ")";
 
     /* module wants to cancel callbacks to other modules (and potentially cancel the default handling of an event) */
     if (cbresult == NEBERROR_CALLBACKCANCEL)

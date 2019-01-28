@@ -20,6 +20,7 @@
 #include <cstring>
 #include "com/centreon/concurrency/locker.hh"
 #include "com/centreon/engine/broker.hh"
+#include "com/centreon/engine/globals.hh"
 #include "com/centreon/engine/logging/broker.hh"
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/exceptions/basic.hh"
@@ -89,6 +90,38 @@ void broker::close() throw () {
 }
 
 /**
+ *  Check if the event log should be sent to Broker.
+ *
+ *  @param message the Message to log.
+ *
+ *  @return true if the message should be sent, false otherwise.
+ */
+bool broker::_event_to_log(unsigned long long types, char const* message) const {
+  if ((types & log_runtime_warning) || (types & log_runtime_error))
+    return config->event_broker_to_log() & BROKER_RUNTIME;
+  else if (strncmp(message, "HOST ALERT:", strlen("HOST ALERT:")) == 0)
+    return config->event_broker_to_log() & BROKER_HOST_ALERT;
+  else if (strncmp(message, "SERVICE ALERT:", strlen("SERVICE ALERT:")) == 0)
+    return config->event_broker_to_log() & BROKER_SERVICE_ALERT;
+  else if (strncmp(message, "HOST NOTIFICATION:", strlen("HOST NOTIFICATION:")) == 0)
+    return config->event_broker_to_log() & BROKER_HOST_NOTIFICATION;
+  else if (strncmp(message, "SERVICE NOTIFICATION:", strlen("SERVICE NOTIFICATION:")) == 0)
+    return config->event_broker_to_log() & BROKER_SERVICE_NOTIFICATION;
+  else if (strncmp(message, "INITIAL HOST STATE:", strlen("INITIAL HOST STATE:")) == 0)
+    return config->event_broker_to_log() & BROKER_INITIAL_HOST_STATE;
+  else if (strncmp(message, "INITIAL SERVICE STATE:", strlen("INITIAL SERVICE STATE:")) == 0)
+    return config->event_broker_to_log() & BROKER_INITIAL_SERVICE_STATE;
+  else if (strncmp(message, "EXTERNAL COMMAND:", strlen("EXTERNAL COMMAND:")) == 0)
+    return config->event_broker_to_log() & BROKER_EXTERNAL_COMMAND;
+  else if (strncmp(message, "PASSIVE HOST CHECK:", strlen("PASSIVE HOST CHECK:")) == 0)
+    return config->event_broker_to_log() & BROKER_PASSIVE_HOST_CHECK;
+  else if (strncmp(message, "PASSIVE SERVICE CHECK:", strlen("PASSIVE SERVICE CHECK:")) == 0)
+    return config->event_broker_to_log() & BROKER_PASSIVE_SERVICE_CHECK;
+  else
+    return config->event_broker_to_log();
+}
+
+/**
  *  Send message to broker.
  *
  *  @param[in] type     Logging types.
@@ -104,7 +137,7 @@ void broker::log(
   (void)verbose;
 
   // Broker is only notified of non-debug log messages.
-  if (message && _enable) {
+  if (message && _enable && _event_to_log(types, message)) {
     concurrency::locker lock(&_lock);
     if (_thread != concurrency::thread::get_current_id()) {
       _thread = concurrency::thread::get_current_id();

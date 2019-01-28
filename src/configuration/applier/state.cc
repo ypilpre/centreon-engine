@@ -1062,6 +1062,7 @@ void applier::state::_apply(configuration::state const& new_cfg) {
   config->enable_predictive_host_dependency_checks(new_cfg.enable_predictive_host_dependency_checks());
   config->enable_predictive_service_dependency_checks(new_cfg.enable_predictive_service_dependency_checks());
   config->event_broker_options(new_cfg.event_broker_options());
+  config->event_broker_to_log(new_cfg.event_broker_to_log());
   config->event_handler_timeout(new_cfg.event_handler_timeout());
   config->execute_host_checks(new_cfg.execute_host_checks());
   config->execute_service_checks(new_cfg.execute_service_checks());

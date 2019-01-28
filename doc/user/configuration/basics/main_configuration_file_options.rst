@@ -2326,13 +2326,56 @@ Event Broker to log
 This option comes to complete the previous one. By default, all logs produced
 from data matching the event_broker_options option will be logged by Centreon
 Engine in a file and also will be sent to Centreon Broker to be stored in the
-centreon-storage database. Thanks to this option, it is possible to filter
-which log's types will be sent to this database. In several cases, it is not
-necessary to send all of them in the database's logs table and moreover it is
+logs table of the centreon-storage database. Thanks to this option, it is
+possible to filter which log types will be sent to this table. In several
+cases, it is not necessary to send all of them and moreover it is
 resource intensive for Centreon Broker and the database.
 
-The option to fill is event_broker_to_log and it works like
-event_broker_options.
+The option to fill is *event_broker_to_log* and it works like
+*event_broker_options*. Possible values are shown below.
+
+  * 0 = send nothing
+  * -1 = send everything
+  * # = See below definitions for
+      other values that can be OR'ed together
+
++-----------------------+----------------+----------------------------------------+
+| Data to process       | Value          | Description                            |
++=======================+================+========================================+
+| nothing               | 0              |                                        |
++-----------------------+----------------+----------------------------------------+
+| host alert            | (1 << 0) = 1   | Beginning with *HOST ALERT*            |
++-----------------------+----------------+----------------------------------------+
+| service alert         | (1 << 1) = 2   | Beginning with *SERVICE ALERT*         |
++-----------------------+----------------+----------------------------------------+
+| host notification     | (1 << 2) = 4   | Beginning with *HOST NOTIFICATION*     |
++-----------------------+----------------+----------------------------------------+
+| service notification  | (1 << 3) = 8   | Beginning with *SERVICE NOTIFICATION*  |
++-----------------------+----------------+----------------------------------------+
+| initial host state    | (1 << 4) = 16  | Beginning with *INITIAL HOST STATE*    |
++-----------------------+----------------+----------------------------------------+
+| initial service state | (1 << 5) = 32  | Beginning with *INITIAL SERVICE STATE* |
++-----------------------+----------------+----------------------------------------+
+| external command      | (1 << 6) = 64  | Beginning with *EXTERNAL COMMAND*      |
++-----------------------+----------------+----------------------------------------+
+| passive host check    | (1 << 7) = 128 | Beginning with *PASSIVE HOST CHECK*    |
++-----------------------+----------------+----------------------------------------+
+| passive service check | (1 << 8) = 256 | Beginning with *PASSIVE SERVICE CHECK* |
++-----------------------+----------------+----------------------------------------+
+| runtime error/warning | (1 << 9) = 512 | Runtime errors/warnings                |
++-----------------------+----------------+----------------------------------------+
+
+If we do not want to see *external commands*, *initial host state* nor
+*initial service state*, we have to set event_broker_to_log to 911.
+
+
+We get the following example:
+
+=========== =======================
+**Format**  event_broker_to_log=<#>
+**Example** event_broker_to_log=911
+=========== =======================
+
 
 Event Broker Modules
 --------------------

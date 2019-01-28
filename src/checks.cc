@@ -444,7 +444,7 @@ int handle_async_service_check_result(
 
   /* log passive checks - we need to do this here, as some my bypass external commands by getting dropped in checkresults dir */
   if (temp_service->check_type == SERVICE_CHECK_PASSIVE) {
-    if (config->log_passive_checks() == true)
+    if (config->log_passive_checks())
       logger(log_passive_check, basic)
         << "PASSIVE SERVICE CHECK: " << temp_service->host_name << ";"
         << temp_service->description << ";" << temp_service->current_state
@@ -458,7 +458,7 @@ int handle_async_service_check_result(
   if (temp_service->current_state == STATE_OK) {
     /* if the host has never been checked before, verify its status */
     /* only do this if 1) the initial state was set to non-UP or 2) the host is not scheduled to be checked soon (next 5 minutes) */
-    if (temp_host->has_been_checked == false
+    if (!temp_host->has_been_checked
         && (temp_host->initial_state != HOST_UP
             || (unsigned long)temp_host->next_check == 0L
             || (unsigned long)(temp_host->next_check - current_time) >
@@ -470,7 +470,7 @@ int handle_async_service_check_result(
       /* 08/04/07 EG launch an async (parallel) host check unless aggressive host checking is enabled */
       /* previous logic was to simply run a sync (serial) host check */
       /* do NOT allow cached check results to happen here - we need the host to be checked for real... */
-      if (config->use_aggressive_host_checking() == true)
+      if (config->use_aggressive_host_checking())
         perform_on_demand_host_check(
           temp_host,
           NULL,

@@ -196,7 +196,7 @@ namespace               configuration {
     void                enable_flap_detection(bool value);
     bool                enable_macros_filter() const throw ();
     void                enable_macros_filter(bool value);
-    unsigned long       event_broker_to_log();
+    unsigned long       event_broker_to_log() const;
     void                event_broker_to_log(unsigned long value);
     bool                enable_notifications() const throw ();
     void                enable_notifications(bool value);

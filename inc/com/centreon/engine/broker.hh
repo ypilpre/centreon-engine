@@ -56,6 +56,18 @@
 #  define BROKER_COMMAND_DATA                      (1 << 25)
 #  define BROKER_EVERYTHING                        (~0)
 
+/* Event broker to log. */
+#  define BROKER_HOST_ALERT                        (1 << 0)
+#  define BROKER_SERVICE_ALERT                     (1 << 1)
+#  define BROKER_HOST_NOTIFICATION                 (1 << 2)
+#  define BROKER_SERVICE_NOTIFICATION              (1 << 3)
+#  define BROKER_INITIAL_HOST_STATE                (1 << 4)
+#  define BROKER_INITIAL_SERVICE_STATE             (1 << 5)
+#  define BROKER_EXTERNAL_COMMAND                  (1 << 6)
+#  define BROKER_PASSIVE_HOST_CHECK                (1 << 7)
+#  define BROKER_PASSIVE_SERVICE_CHECK             (1 << 8)
+#  define BROKER_RUNTIME                           (1 << 9)
+
 /*
 ** Event types.
 */
