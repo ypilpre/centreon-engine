@@ -170,7 +170,7 @@ TEST_F(FlappingNotification, StartStopFlappingWithRecovery) {
   ASSERT_GT(current_notification, last_notification);
   _service->set_flapping(false);
   _service->set_current_state(0);
-  time_t now = last_notification + 10;
+  time_t now = time(NULL) + 10;
   set_time(now);
   _service->notify(notifier::FLAPPINGSTOP, "admin", "Test stop flapping");
   last_notification = _service->get_last_notification();
