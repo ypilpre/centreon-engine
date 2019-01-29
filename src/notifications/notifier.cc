@@ -588,33 +588,6 @@ void notifier::notify(
           // Update the last notification time for this notifier
           // (this is needed for rescheduling later notifications).
           set_last_notification(now);
-
-          // Update notifications flags.
-          if (is_host()) {
-            host* hst(static_cast<host*>(this));
-            switch (get_current_state()) {
-             case HOST_UNREACHABLE:
-              hst->set_notify_on(ON_UNREACHABLE, true);
-              break ;
-             case HOST_DOWN:
-               hst->set_notify_on(ON_DOWN, true);
-              break ;
-            }
-          }
-          else {
-            service* svc(static_cast<service*>(this));
-            switch (get_current_state()) {
-             case STATE_UNKNOWN:
-              svc->set_notify_on(ON_UNKNOWN, true);
-              break ;
-             case STATE_WARNING:
-              svc->set_notify_on(ON_WARNING, true);
-              break ;
-             case STATE_CRITICAL:
-              svc->set_notify_on(ON_CRITICAL, true);
-              break ;
-            }
-          }
         }
         // We didn't end up notifying anyone.
         else if (incremented_notification_number) {
@@ -631,7 +604,7 @@ void notifier::notify(
           << contacts_notified << " contacts were notified.";
       }
       // There were no contacts, so no notification really occurred...
-      else {
+      else if (contacts_notified <= 0) {
         // Readjust current notification number, since one didn't go out.
         if (incremented_notification_number)
           --_current_notification_number;
@@ -1601,8 +1574,25 @@ bool notifier::_is_notification_viable(int type, int options) {
   }
 
   // See if enough time has elapsed for first notification.
+  if ((type == PROBLEM)
+      && (get_current_notification_number() == 0)
+      && (get_last_hard_state_change() + get_first_notification_delay() > now)) {
+    logger(logging::dbg_notifications, logging::more)
+      << "First notification delay (" << get_first_notification_delay()
+      << "s) is not yet elapsed for this service.";
+    return (false);
+  }
+
+  // See if enough time has elapsed for recovery notification.
+  if ((type == RECOVERY)
+      && (get_first_notification() + get_recovery_notification_delay() > now)) {
+    logger(logging::dbg_notifications, logging::more)
+      << "Recovery notification delay (" << get_recovery_notification_delay()
+      << "s) is not elapsed for this service.";
+    return (false);
+  }
+
   // if (((type == PROBLEM) || (type == RECOVERY))
-  //     && (get_current_notification_number() == 0
   //         || (get_current_state() == STATE_OK
   //               && !service_other_props[std::make_pair(
   //                   svc->host_ptr->name,
