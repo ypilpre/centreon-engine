@@ -53,7 +53,6 @@ notifier::notifier()
     _current_acknowledgement(ACKNOWLEDGEMENT_NONE),
     _current_notification_id(0),
     _current_notification_number(0),
-    _current_notifications(0),
     _escalate_notification(false),
     _first_notification(0),
     _first_notification_delay(0),
@@ -434,10 +433,6 @@ void notifier::notify(
         || (neb_result == NEBERROR_CALLBACKOVERRIDE))
       return ;
 
-  // if (get_notifications_enabled()) {
-  //   notifier_filter should_notify = _get_filter(type);
-  //   if ((this->*should_notify)()) {
-
     // Set initial notification time if not already set.
     if ((type == PROBLEM) && !_first_notification)
       _first_notification = time(NULL);
@@ -641,27 +636,6 @@ void notifier::notify(
 
       // Clear volatile macros.
       clear_volatile_macros_r(&mac);
-    }
-
-    // Post treatment
-    _current_notifications |= (1 << type);
-    switch (type) {
-     case PROBLEM:
-      _current_notifications &= ~(1 << RECOVERY);
-      break;
-     case RECOVERY:
-      _current_notifications &= ~(1 << PROBLEM);
-      _first_notification = 0;
-      break;
-     case FLAPPINGSTART:
-      _current_notifications &= ~((1 << FLAPPINGSTOP) | (1 << FLAPPINGDISABLED));
-      break;
-     case FLAPPINGSTOP:
-     case FLAPPINGDISABLED:
-      _current_notifications &= ~(1 << FLAPPINGSTART);
-      break;
-     default:
-      break ;
     }
     time(&_last_notification);
   }
@@ -982,35 +956,11 @@ void notifier::delete_acknowledgement_comments() {
   }
 }
 
-/**
- * Get the filter method associated to the given type.
- *
- * @param type The notification's type.
- *
- * @return A filter method
- */
-notifier::notifier_filter notifier::_get_filter(notification_type type) const {
-  return _filter[type];
-}
-
 /**************************************
 *                                     *
 *           Static Objects            *
 *                                     *
 **************************************/
-
-notifier::notifier_filter const notifier::_filter[] = {
-  &notifier::_problem_filter,
-  &notifier::_recovery_filter,
-  &notifier::_acknowledgement_filter,
-  &notifier::_flappingstart_filter,
-  &notifier::_flappingstopdisabled_filter,
-  &notifier::_flappingstopdisabled_filter,
-  &notifier::_downtimestart_filter,
-  &notifier::_downtimestopcancelled_filter,
-  &notifier::_downtimestopcancelled_filter,
-  &notifier::_custom_filter
-};
 
 std::string const notifier::_notification_string[] = {
   "PROBLEM",
@@ -1030,141 +980,6 @@ std::string const notifier::_notification_string[] = {
 *           Private Methods           *
 *                                     *
 **************************************/
-
-/**
- * Filter method on problem notifications
- *
- * @return a boolean
- */
-bool notifier::_problem_filter() {
-  time_t now;
-  time(&now);
-  /* No notification sent if:
-   *  * notifier is acknowledged
-   *  * notifier in downtime
-   *  * notifier is flapping
-   *  * notifier is not configured to send notification on the current state
-   *  * state is not hard
-   *  * first notification delay is not elapsed
-   */
-  if (is_acknowledged()
-      || get_scheduled_downtime_depth()
-      || get_flapping()
-      || !is_state_notification_enabled(get_current_state())
-      || get_current_state_type() == SOFT_STATE
-      || (get_last_hard_state_change() + _first_notification_delay) > now)
-    return (false);
-
-  int notif_number = get_current_notification_number();
-
-  /* A PROBLEM notification has already been sent */
-  if (notif_number >= 1
-      && (get_current_notifications_flag() & (1 << PROBLEM))
-      && get_last_state() == get_current_state()) {
-    /* No notification if the delay between previous notification and now
-       is less than notification_interval */
-    if (now - get_last_notification() < get_notification_interval())
-      return false;
-
-  }
-  return true;
-}
-
-/**
- *  Returns current notifications in a bits field.
- *
- *  @return an unsigned integer.
- */
-unsigned int notifier::get_current_notifications_flag() const {
-  return _current_notifications;
-}
-
-/**
- * Filter method on recovery notifications
- *
- * @return a boolean
- */
-bool notifier::_recovery_filter() {
-  if (get_scheduled_downtime_depth()
-      || (get_current_notifications_flag() & (1 << PROBLEM)) == 0
-      || get_current_state() != 0
-      || get_flapping())
-    return false;
-  return true;
-}
-
-/**
- * Filter method on acknowledgement notifications
- *
- * @return a boolean
- */
-bool notifier::_acknowledgement_filter() {
-  if (get_scheduled_downtime_depth()
-      || (get_current_notifications_flag() & (1 << PROBLEM)) == 0
-      || get_current_state() == 0)
-    return false;
-  return true;
-}
-
-/**
- * Filter method on flappingstart notifications
- *
- * @return a boolean
- */
-bool notifier::_flappingstart_filter() {
-  if (get_scheduled_downtime_depth()
-      || (get_current_notifications_flag() & (1 << FLAPPINGSTART)))
-    return false;
-  return true;
-}
-
-/**
- * Filter method on flapping stop/disabled notifications
- *
- * @return a boolean
- */
-bool notifier::_flappingstopdisabled_filter() {
-  if (get_scheduled_downtime_depth()
-      || (get_current_notifications_flag() & (1 << FLAPPINGSTART)) == 0)
-    return false;
-  return true;
-}
-
-/**
- * Filter method on downtime start notifications
- *
- * @return a boolean
- */
-bool notifier::_downtimestart_filter() {
-  if (get_scheduled_downtime_depth())
-    return false;
-  return true;
-}
-
-/**
- * Filter method on downtime stop/cancelled notifications
- *
- * @return a boolean
- */
-bool notifier::_downtimestopcancelled_filter() {
-  if (!get_scheduled_downtime_depth())
-    return false;
-  return true;
-}
-
-/**
- * Filter method on custom notifications
- *
- * @return a boolean
- */
-bool notifier::_custom_filter() {
-  if (get_scheduled_downtime_depth())
-    return false;
-  return true;
-}
-
-
-
 
 time_t notifier::get_first_notification() const {
   return (_first_notification);
@@ -1287,7 +1102,6 @@ void notifier::_internal_copy(notifier const& other) {
   _current_acknowledgement = other._current_acknowledgement;
   _current_notification_id = other._current_notification_id;
   _current_notification_number = other._current_notification_number;
-  _current_notifications = other._current_notifications;
   _escalate_notification = other._escalate_notification;
   _first_notification = other._first_notification;
   _first_notification_delay = other._first_notification_delay;
@@ -1702,26 +1516,6 @@ bool notifier::_is_notification_viable(int type, int options) {
   }
 
   return (true);
-}
-
-/**
- *  Adds a notification flag to the notifications bit field
- *
- *  @param type The notification type to add.
- */
-void notifier::add_notification_flag(notifier::notification_type type) {
-  _current_notifications |= (1 << type);
-}
-
-/**
- *  Tells if the notification type is active
- *
- *  @param type The notification type to check
- *
- *  @return a boolean.
- */
-bool notifier::_notification_is_active(notification_type type) const {
-  return (_current_notifications & (1 << type));
 }
 
 /**

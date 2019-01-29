@@ -98,7 +98,6 @@ TEST_F(RecoveryNotification, SimpleRecovery) {
   _service->set_current_state(2);
   _service->set_last_hard_state(2);
   _service->set_current_notification_number(1);
-  _service->add_notification_flag(notifier::PROBLEM);
   _service->set_last_notification(10);
 
   long last_notification = _service->get_last_notification();
@@ -120,7 +119,6 @@ TEST_F(RecoveryNotification, SimpleRecovery) {
 // Then the filter method returns false and the notification is not sent.
 TEST_F(RecoveryNotification, RecoveryDuringDowntime) {
   _service->set_current_state(2);
-  _service->add_notification_flag(notifier::PROBLEM);
   _service->set_last_notification(10);
 
   _service->inc_scheduled_downtime_depth();
@@ -139,7 +137,6 @@ TEST_F(RecoveryNotification, RecoveryDuringDowntime) {
 // Then the filter method returns false and the notification is not sent.
 TEST_F(RecoveryNotification, RecoveryWithNonOkState) {
   _service->set_current_state(2);
-  _service->add_notification_flag(notifier::PROBLEM);
   _service->set_last_notification(10);
 
   _service->inc_scheduled_downtime_depth();

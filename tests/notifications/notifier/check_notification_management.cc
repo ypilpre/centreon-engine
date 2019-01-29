@@ -1,5 +1,5 @@
 /*
-** Copyright 2017-2018 Centreon
+** Copyright 2017-2019 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -188,7 +188,6 @@ TEST_F(CheckNotificationManagement, TooEarlyNewNotification) {
   _service->set_last_hard_state(1);
   _service->set_last_state_change(time(NULL));
   _service->set_last_hard_state_change(time(NULL));
-  _service->add_notification_flag(notifier::PROBLEM);
   _service->set_current_notification_number(1);
   _service->set_notify_on(notifier::ON_WARNING, true);
   time_t last_notification = 20;

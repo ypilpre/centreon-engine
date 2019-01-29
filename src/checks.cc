@@ -709,9 +709,6 @@ int handle_async_service_check_result(
     temp_service->set_next_notification((time_t)0);
     if (temp_service->get_recovery_been_sent()) {
       temp_service->set_current_notification_number(0);
-      temp_service->set_notify_on(service::ON_UNKNOWN, false);
-      temp_service->set_notify_on(service::ON_WARNING, false);
-      temp_service->set_notify_on(service::ON_CRITICAL, false);
       temp_service->set_first_notification(0);
     }
     temp_service->set_acknowledged(notifier::ACKNOWLEDGEMENT_NONE);

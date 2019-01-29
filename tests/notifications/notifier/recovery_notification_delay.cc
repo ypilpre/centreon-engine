@@ -120,7 +120,6 @@ TEST_F(RecoveryNotificationDelay, NotElapsed) {
   // Given
   _service->set_current_state_type(HARD_STATE);
   _service->set_current_state(2);
-  _service->add_notification_flag(notifier::PROBLEM);
   _service->set_current_notification_number(1);
   _service->set_first_notification(15);
   _service->set_last_notification(15);
@@ -143,7 +142,6 @@ TEST_F(RecoveryNotificationDelay, Elapsed) {
   // Given
   _service->set_current_state_type(HARD_STATE);
   _service->set_current_state(2);
-  _service->add_notification_flag(notifier::PROBLEM);
   _service->set_current_notification_number(1);
   _service->set_first_notification(10);
   _service->set_last_notification(15);
