@@ -1,5 +1,5 @@
 /*
-** Copyright 2016,2018 Centreon
+** Copyright 2016,2018-2019 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -17,6 +17,7 @@
 ** <http://www.gnu.org/licenses/>.
 */
 
+#include <algorithm>
 #include <cstring>
 #include <gtest/gtest.h>
 #include "com/centreon/engine/commands/command.hh"
@@ -93,7 +94,10 @@ class DowntimeFinderFindMatchingAllTest : public ::testing::Test {
     umap<std::string, shared_ptr<engine::host> >::iterator hit(
       configuration::applier::state::instance().hosts().begin());
     engine::host* host1 = hit->second.get();
-    ++hit;
+    if (host1->get_name() == "other_host") {
+      ++hit;
+      host1 = hit->second.get();
+    }
     set_time(123456789);
     new_scheduled_downtime(
       service1,
@@ -255,6 +259,7 @@ TEST_F(DowntimeFinderFindMatchingAllTest, NullCommentFound) {
 TEST_F(DowntimeFinderFindMatchingAllTest, MultipleHosts) {
   criterias.push_back(downtime_finder::criteria("host", "test_host"));
   result = _dtf->find_matching_all(criterias);
+  std::sort(result.begin(), result.end());
   ASSERT_EQ(result.size(), 3ul);
   ASSERT_EQ(result[0], 1ul);
   ASSERT_EQ(result[1], 2ul);
@@ -267,6 +272,7 @@ TEST_F(DowntimeFinderFindMatchingAllTest, MultipleHosts) {
 TEST_F(DowntimeFinderFindMatchingAllTest, MultipleServices) {
   criterias.push_back(downtime_finder::criteria("service", "test_service"));
   result = _dtf->find_matching_all(criterias);
+  std::sort(result.begin(), result.end());
   ASSERT_EQ(result.size(), 2ul);
   ASSERT_EQ(result[0], 1ul);
   ASSERT_EQ(result[1], 4ul);
@@ -278,6 +284,7 @@ TEST_F(DowntimeFinderFindMatchingAllTest, MultipleServices) {
 TEST_F(DowntimeFinderFindMatchingAllTest, MultipleStart) {
   criterias.push_back(downtime_finder::criteria("start", "123456789"));
   result = _dtf->find_matching_all(criterias);
+  std::sort(result.begin(), result.end());
   ASSERT_EQ(result.size(), 2ul);
   ASSERT_EQ(result[0], 1ul);
   ASSERT_EQ(result[1], 3ul);
@@ -289,6 +296,7 @@ TEST_F(DowntimeFinderFindMatchingAllTest, MultipleStart) {
 TEST_F(DowntimeFinderFindMatchingAllTest, MultipleEnd) {
   criterias.push_back(downtime_finder::criteria("end", "345678921"));
   result = _dtf->find_matching_all(criterias);
+  std::sort(result.begin(), result.end());
   ASSERT_EQ(result.size(), 2ul);
   ASSERT_EQ(result[0], 3ul);
   ASSERT_EQ(result[1], 4ul);
@@ -300,6 +308,7 @@ TEST_F(DowntimeFinderFindMatchingAllTest, MultipleEnd) {
 TEST_F(DowntimeFinderFindMatchingAllTest, MultipleFixed) {
   criterias.push_back(downtime_finder::criteria("fixed", "0"));
   result = _dtf->find_matching_all(criterias);
+  std::sort(result.begin(), result.end());
   ASSERT_EQ(result.size(), 2ul);
   ASSERT_EQ(result[0], 3ul);
   ASSERT_EQ(result[1], 4ul);
@@ -321,6 +330,7 @@ TEST_F(DowntimeFinderFindMatchingAllTest, MultipleTriggeredBy) {
 TEST_F(DowntimeFinderFindMatchingAllTest, MultipleDuration) {
   criterias.push_back(downtime_finder::criteria("duration", "42"));
   result = _dtf->find_matching_all(criterias);
+  std::sort(result.begin(), result.end());
   ASSERT_EQ(result.size(), 2ul);
   ASSERT_EQ(result[0], 1ul);
   ASSERT_EQ(result[1], 3ul);
@@ -332,6 +342,7 @@ TEST_F(DowntimeFinderFindMatchingAllTest, MultipleDuration) {
 TEST_F(DowntimeFinderFindMatchingAllTest, MultipleAuthor) {
   criterias.push_back(downtime_finder::criteria("author", "test_author"));
   result = _dtf->find_matching_all(criterias);
+  std::sort(result.begin(), result.end());
   ASSERT_EQ(result.size(), 2ul);
   ASSERT_EQ(result[0], 1ul);
   ASSERT_EQ(result[1], 4ul);
@@ -343,6 +354,7 @@ TEST_F(DowntimeFinderFindMatchingAllTest, MultipleAuthor) {
 TEST_F(DowntimeFinderFindMatchingAllTest, MultipleComment) {
   criterias.push_back(downtime_finder::criteria("comment", "test_comment"));
   result = _dtf->find_matching_all(criterias);
+  std::sort(result.begin(), result.end());
   ASSERT_EQ(result.size(), 2ul);
   ASSERT_EQ(result[0], 2ul);
   ASSERT_EQ(result[1], 3ul);
