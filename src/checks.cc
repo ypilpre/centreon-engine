@@ -650,10 +650,6 @@ int handle_async_service_check_result(
       log_service_event(temp_service);
       state_was_logged = true;
 
-      /* Set the recovery been sent parameter. */
-      temp_service->set_first_notification(0);
-      temp_service->set_recovery_been_sent(false);
-
       /* 10/04/07 check to see if the service and/or associate host is flapping */
       /* this should be done before a notification is sent out to ensure the host didn't just start flapping */
       check_for_service_flapping(temp_service, true);
@@ -662,6 +658,10 @@ int handle_async_service_check_result(
 
       /* notify contacts about the service recovery */
       temp_service->notify(notifier::RECOVERY, "", "", NOTIFICATION_OPTION_NONE);
+
+      /* Set the recovery been sent parameter. */
+      temp_service->set_first_notification(0);
+      temp_service->set_recovery_been_sent(false);
 
       /* run the service event handler to handle the hard state change */
       handle_service_event(temp_service);
