@@ -661,7 +661,7 @@ int handle_async_service_check_result(
       flapping_check_done = true;
 
       /* notify contacts about the service recovery */
-      temp_service->notify(notifier::PROBLEM, "", "", NOTIFICATION_OPTION_NONE);
+      temp_service->notify(notifier::RECOVERY, "", "", NOTIFICATION_OPTION_NONE);
 
       /* run the service event handler to handle the hard state change */
       handle_service_event(temp_service);
