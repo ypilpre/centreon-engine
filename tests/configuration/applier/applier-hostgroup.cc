@@ -26,7 +26,7 @@
 #include "com/centreon/engine/configuration/host.hh"
 #include "com/centreon/engine/configuration/state.hh"
 #include "com/centreon/engine/hostgroup.hh"
-#include "com/centreon/engine/notifications/notifier.hh"
+#include "com/centreon/engine/notifications/notifiable.hh"
 #include "com/centreon/shared_ptr.hh"
 
 using namespace com::centreon;

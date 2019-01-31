@@ -127,7 +127,7 @@ void applier::host::add_object(
          it != end;
          ++it)
       h->set_customvar(customvar(it->first, it->second));
-    // Inherited from notifier.
+    // Inherited from notifiable.
     h->set_acknowledgement_timeout(
       obj.get_acknowledgement_timeout() * interval_length);
     h->set_notifications_enabled(obj.notifications_enabled());

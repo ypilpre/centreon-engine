@@ -40,7 +40,7 @@
 #include "com/centreon/engine/modules/external_commands/processing.hh"
 #include "com/centreon/engine/modules/external_commands/utils.hh"
 #include "com/centreon/engine/not_found.hh"
-#include "com/centreon/engine/notifications/notifier.hh"
+#include "com/centreon/engine/notifications/notifiable.hh"
 #include "com/centreon/engine/comment.hh"
 #include "com/centreon/engine/statusdata.hh"
 #include "com/centreon/engine/string.hh"
@@ -242,7 +242,7 @@ int cmd_add_comment(int cmd, time_t entry_time, char* args) {
   char* temp_ptr(NULL);
   shared_ptr<host> temp_host;
   shared_ptr<service> temp_service;
-  notifications::notifier* notif(NULL);
+  notifications::notifiable* notif(NULL);
   char* host_name(NULL);
   char* svc_description(NULL);
   char* user(NULL);
@@ -265,13 +265,13 @@ int cmd_add_comment(int cmd, time_t entry_time, char* args) {
     /* verify that the service is valid */
     if ((temp_service = find_service(host_name, svc_description)) == NULL)
       return (ERROR);
-    notif = static_cast<notifications::notifier*>(temp_service.get());
+    notif = static_cast<notifications::notifiable*>(temp_service.get());
   }
   else {
     /* else verify that the host is valid */
     try {
       temp_host = configuration::applier::state::instance().hosts_find(host_name);
-      notif = static_cast<notifications::notifier*>(temp_host.get());
+      notif = static_cast<notifications::notifiable*>(temp_host.get());
     }
     catch (not_found const& e) {
       (void) e;
@@ -331,7 +331,7 @@ int cmd_delete_comment(int cmd, char* args) {
 int cmd_delete_all_comments(int cmd, char* args) {
   shared_ptr<service> temp_service;
   shared_ptr<host> temp_host;
-  notifications::notifier* notif(NULL);
+  notifications::notifiable* notif(NULL);
   char* host_name(NULL);
   char* svc_description(NULL);
 
@@ -349,7 +349,7 @@ int cmd_delete_all_comments(int cmd, char* args) {
     /* verify that the service is valid */
     if ((temp_service = find_service(host_name, svc_description)) == NULL)
       return (ERROR);
-    notif = static_cast<notifications::notifier*>(temp_service.get());
+    notif = static_cast<notifications::notifiable*>(temp_service.get());
   }
   else {
     /* else verify that the host is valid */
@@ -360,7 +360,7 @@ int cmd_delete_all_comments(int cmd, char* args) {
       (void)e;
       return (ERROR);
     }
-    notif = static_cast<notifications::notifier*>(temp_host.get());
+    notif = static_cast<notifications::notifiable*>(temp_host.get());
   }
 
   /* delete comments */
@@ -870,7 +870,7 @@ int cmd_acknowledge_problem(int cmd, char* args) {
   char* ack_author(NULL);
   char* ack_data(NULL);
   char* temp_ptr(NULL);
-  int type(notifier::ACKNOWLEDGEMENT_NORMAL);
+  int type(notifiable::ACKNOWLEDGEMENT_NORMAL);
   int notify(true);
   int persistent(true);
 
@@ -2746,8 +2746,8 @@ void acknowledge_host_problem(
     return;
 
   /* set the acknowledgement type */
-  hst->set_acknowledged((type == notifier::ACKNOWLEDGEMENT_STICKY)
-         ? notifier::ACKNOWLEDGEMENT_STICKY : notifier::ACKNOWLEDGEMENT_NORMAL);
+  hst->set_acknowledged((type == notifiable::ACKNOWLEDGEMENT_STICKY)
+         ? notifiable::ACKNOWLEDGEMENT_STICKY : notifiable::ACKNOWLEDGEMENT_NORMAL);
 
   /* schedule acknowledgement expiration */
   time_t current_time(time(NULL));
@@ -2775,7 +2775,7 @@ void acknowledge_host_problem(
     ///////////////
   if (notify)
     hst->notify(
-      notifier::ACKNOWLEDGEMENT,
+      notifiable::ACKNOWLEDGEMENT,
       ack_author,
       ack_data,
       NOTIFICATION_OPTION_NONE);
@@ -2810,8 +2810,8 @@ void acknowledge_service_problem(
     return;
 
   /* set the acknowledgement type */
-  svc->set_acknowledged((type == notifier::ACKNOWLEDGEMENT_STICKY)
-    ? notifier::ACKNOWLEDGEMENT_STICKY : notifier::ACKNOWLEDGEMENT_NORMAL);
+  svc->set_acknowledged((type == notifiable::ACKNOWLEDGEMENT_STICKY)
+    ? notifiable::ACKNOWLEDGEMENT_STICKY : notifiable::ACKNOWLEDGEMENT_NORMAL);
 
   /* schedule acknowledgement expiration */
   time_t current_time(time(NULL));
@@ -2839,7 +2839,7 @@ void acknowledge_service_problem(
     ///////////////
   if (notify)
     svc->notify(
-      notifier::ACKNOWLEDGEMENT,
+      notifiable::ACKNOWLEDGEMENT,
       ack_author,
       ack_data,
       NOTIFICATION_OPTION_NONE);
@@ -2864,7 +2864,7 @@ void acknowledge_service_problem(
 /* removes a host acknowledgement */
 void remove_host_acknowledgement(host* hst) {
   /* set the acknowledgement flag */
-  hst->set_acknowledged(notifier::ACKNOWLEDGEMENT_NONE);
+  hst->set_acknowledged(notifiable::ACKNOWLEDGEMENT_NONE);
 
   /* update the status log with the host info */
   broker_host_status(hst);
@@ -2876,7 +2876,7 @@ void remove_host_acknowledgement(host* hst) {
 /* removes a service acknowledgement */
 void remove_service_acknowledgement(service* svc) {
   /* set the acknowledgement flag */
-  svc->set_acknowledged(notifier::ACKNOWLEDGEMENT_NONE);
+  svc->set_acknowledged(notifiable::ACKNOWLEDGEMENT_NONE);
 
   /* update the status log with the service info */
   broker_service_status(svc);

@@ -30,7 +30,7 @@
 #include "com/centreon/engine/macros/grab_host.hh"
 #include "com/centreon/engine/macros/grab_service.hh"
 #include "com/centreon/engine/neberrors.hh"
-#include "com/centreon/engine/notifications/notifier.hh"
+#include "com/centreon/engine/notifications/notifiable.hh"
 #include "com/centreon/engine/timeperiod.hh"
 #include "com/centreon/engine/timezone_locker.hh"
 
@@ -48,7 +48,7 @@ using namespace com::centreon::engine::notifications;
 /**
  *  Default constructor.
  */
-notifier::notifier()
+notifiable::notifiable()
   : _acknowledgement_timeout(0),
     _current_acknowledgement(ACKNOWLEDGEMENT_NONE),
     _current_notification_id(0),
@@ -72,15 +72,15 @@ notifier::notifier()
  *
  *  @param[in] other  Object to copy.
  */
-notifier::notifier(notifier const& other) : checks::checkable(other) {
+notifiable::notifiable(notifiable const& other) : checks::checkable(other) {
   _internal_copy(other);
 }
 
 /**
  * Destructor.
  */
-notifier::~notifier() {
-  logger(dbg_functions, basic) << "notifier: destructor";
+notifiable::~notifiable() {
+  logger(dbg_functions, basic) << "notifiable: destructor";
 }
 
 /**
@@ -90,7 +90,7 @@ notifier::~notifier() {
  *
  *  @return This object
  */
-notifier& notifier::operator=(notifier const& other) {
+notifiable& notifiable::operator=(notifiable const& other) {
   if (this != &other) {
     checks::checkable::operator=(other);
     _internal_copy(other);
@@ -109,7 +109,7 @@ notifier& notifier::operator=(notifier const& other) {
  *
  *  @return First notification delay in seconds.
  */
-int notifier::get_first_notification_delay() const {
+int notifiable::get_first_notification_delay() const {
   return (_first_notification_delay);
 }
 
@@ -118,7 +118,7 @@ int notifier::get_first_notification_delay() const {
  *
  *  @param[in] delay  Delay in seconds.
  */
-void notifier::set_first_notification_delay(int delay) {
+void notifiable::set_first_notification_delay(int delay) {
   _first_notification_delay = delay;
   return ;
 }
@@ -128,16 +128,16 @@ void notifier::set_first_notification_delay(int delay) {
  *
  *  @return Pointer to the notification period object.
  */
-timeperiod* notifier::get_notification_period() const {
+timeperiod* notifiable::get_notification_period() const {
   return (_notification_period);
 }
 
 /**
- *  Set notification period of this notifier.
+ *  Set notification period of this notifiable.
  *
  *  @param[in] tperiod  Pointer to timeperiod.
  */
-void notifier::set_notification_period(timeperiod* tperiod) {
+void notifiable::set_notification_period(timeperiod* tperiod) {
   _notification_period = tperiod;
   return ;
 }
@@ -147,7 +147,7 @@ void notifier::set_notification_period(timeperiod* tperiod) {
  *
  *  @return Notification interval in seconds.
  */
-long notifier::get_notification_interval() const {
+long notifiable::get_notification_interval() const {
   return (_notification_interval);
 }
 
@@ -156,26 +156,26 @@ long notifier::get_notification_interval() const {
  *
  *  @param[in] interval  New notification interval in seconds.
  */
-void notifier::set_notification_interval(long interval) {
+void notifiable::set_notification_interval(long interval) {
   _notification_interval = interval;
   return ;
 }
 
 /**
- *  Check if notifications are enabled for this notifier.
+ *  Check if notifications are enabled for this notifiable.
  *
- *  @return True if this notifier has notifications enabled.
+ *  @return True if this notifiable has notifications enabled.
  */
-bool notifier::get_notifications_enabled() const {
+bool notifiable::get_notifications_enabled() const {
   return (_notifications_enabled);
 }
 
 /**
- *  Enable or disable notifications for this notifier.
+ *  Enable or disable notifications for this notifiable.
  *
  *  @param[in] enable  True to enable.
  */
-void notifier::set_notifications_enabled(bool enable) {
+void notifiable::set_notifications_enabled(bool enable) {
   _notifications_enabled = enable;
   return ;
 }
@@ -187,7 +187,7 @@ void notifier::set_notifications_enabled(bool enable) {
  *
  *  @return True if notification is enabled for the specified state.
  */
-bool notifier::get_notify_on(action_on state) const {
+bool notifiable::get_notify_on(action_on state) const {
   return (_notified_states & state);
 }
 
@@ -197,7 +197,7 @@ bool notifier::get_notify_on(action_on state) const {
  *  @param[in] state   State.
  *  @param[in] enable  True to enable.
  */
-void notifier::set_notify_on(action_on state, bool enable) {
+void notifiable::set_notify_on(action_on state, bool enable) {
   if (enable)
     _notified_states |= state;
   else
@@ -206,14 +206,14 @@ void notifier::set_notify_on(action_on state, bool enable) {
 }
 
 /**
- *  This method tells if the notifier should notify for a specific
+ *  This method tells if the notifiable should notify for a specific
  *  state.
  *
  *  @param[in] state  Target state.
  *
  *  @return True if notifications are enabled for state.
  */
-bool notifier::is_state_notification_enabled(int state) const {
+bool notifiable::is_state_notification_enabled(int state) const {
   return (_notified_states & (1 << state));
 }
 
@@ -222,7 +222,7 @@ bool notifier::is_state_notification_enabled(int state) const {
  *
  *  @return Recovery notification delay in seconds.
  */
-int notifier::get_recovery_notification_delay() const {
+int notifiable::get_recovery_notification_delay() const {
   return (_recovery_notification_delay);
 }
 
@@ -231,7 +231,7 @@ int notifier::get_recovery_notification_delay() const {
  *
  *  @param[in] delay  New recovery notification delay in seconds.
  */
-void notifier::set_recovery_notification_delay(int delay) {
+void notifiable::set_recovery_notification_delay(int delay) {
   _recovery_notification_delay = delay;
   return ;
 }
@@ -247,7 +247,7 @@ void notifier::set_recovery_notification_delay(int delay) {
  *
  *  @return An integer identifying uniquely the current notification.
  */
-int notifier::get_current_notification_id() const {
+int notifiable::get_current_notification_id() const {
   return (_current_notification_id);
 }
 
@@ -256,7 +256,7 @@ int notifier::get_current_notification_id() const {
  *
  *  @param[in] id  New notification ID.
  */
-void notifier::set_current_notification_id(int id) {
+void notifiable::set_current_notification_id(int id) {
   _current_notification_id = id;
   return ;
 }
@@ -266,7 +266,7 @@ void notifier::set_current_notification_id(int id) {
  *
  *  @return The number of the current notification.
  */
-int notifier::get_current_notification_number() const {
+int notifiable::get_current_notification_number() const {
   return _current_notification_number;
 }
 
@@ -275,7 +275,7 @@ int notifier::get_current_notification_number() const {
  *
  *  @param[in] number  New notification number.
  */
-void notifier::set_current_notification_number(int number) {
+void notifiable::set_current_notification_number(int number) {
   _current_notification_number = number;
   return ;
 }
@@ -285,7 +285,7 @@ void notifier::set_current_notification_number(int number) {
  *
  *  @return Timestamp.
  */
-time_t notifier::get_last_notification() const {
+time_t notifiable::get_last_notification() const {
   return _last_notification;
 }
 
@@ -294,7 +294,7 @@ time_t notifier::get_last_notification() const {
  *
  *  @param[in] last_notification  Timestamp.
  */
-void notifier::set_last_notification(time_t last_notification) {
+void notifiable::set_last_notification(time_t last_notification) {
   _last_notification = last_notification;
   return ;
 }
@@ -304,7 +304,7 @@ void notifier::set_last_notification(time_t last_notification) {
  *
  *  @return Timestamp.
  */
-time_t notifier::get_next_notification() const {
+time_t notifiable::get_next_notification() const {
   return (_next_notification);
 }
 
@@ -313,7 +313,7 @@ time_t notifier::get_next_notification() const {
  *
  *  @param[in] next_notification  Timestamp.
  */
-void notifier::set_next_notification(time_t next_notification) {
+void notifiable::set_next_notification(time_t next_notification) {
   _next_notification = next_notification;
   return ;
 }
@@ -326,7 +326,7 @@ void notifier::set_next_notification(time_t next_notification) {
  *  @param[in] comment  Comment.
  *  @param[in] options  Options.
  */
-void notifier::notify(
+void notifiable::notify(
                  notification_type type,
                  std::string const& author,
                  std::string const& comment,
@@ -580,7 +580,7 @@ void notifier::notify(
               << my_ctime(&next_notification);
           }
 
-          // Update the last notification time for this notifier
+          // Update the last notification time for this notifiable
           // (this is needed for rescheduling later notifications).
           set_last_notification(now);
         }
@@ -648,24 +648,24 @@ void notifier::notify(
 **************************************/
 
 /**
- *  Add a contact to this notifier.
+ *  Add a contact to this notifiable.
  *
  *  @param[in,out] user  Pointer to a contact that will receive
  *                       notifications from this object.
  */
-void notifier::add_contact(engine::contact* user) {
+void notifiable::add_contact(engine::contact* user) {
   if (user)
     _contacts[user->get_name()] = user;
   return ;
 }
 
 /**
- *  Add a contact group to this notifier.
+ *  Add a contact group to this notifiable.
  *
  *  @param[in,out] cg  Pointer to a contact group that will receive
  *                     notifications from this object.
  */
-void notifier::add_contactgroup(engine::contactgroup* cg) {
+void notifiable::add_contactgroup(engine::contactgroup* cg) {
   if (cg)
     _contact_groups[cg->get_name()] = cg;
   return ;
@@ -674,7 +674,7 @@ void notifier::add_contactgroup(engine::contactgroup* cg) {
 /**
  *  Clear contact list.
  */
-void notifier::clear_contacts() {
+void notifiable::clear_contacts() {
   _contacts.clear();
   return ;
 }
@@ -682,7 +682,7 @@ void notifier::clear_contacts() {
 /**
  *  Clear contact group list.
  */
-void notifier::clear_contactgroups() {
+void notifiable::clear_contactgroups() {
   _contact_groups.clear();
   return ;
 }
@@ -694,7 +694,7 @@ void notifier::clear_contactgroups() {
  *
  *  @return True if user is notified by this object.
  */
-bool notifier::contains_contact(std::string const& username) const {
+bool notifiable::contains_contact(std::string const& username) const {
   // Check in contact list.
   umap<std::string, contact*>::const_iterator it(
     get_contacts().find(username));
@@ -718,7 +718,7 @@ bool notifier::contains_contact(std::string const& username) const {
  *
  *  @return Reference to the contact container.
  */
-umap<std::string, engine::contact*> const& notifier::get_contacts() const {
+umap<std::string, engine::contact*> const& notifiable::get_contacts() const {
   return _contacts;
 }
 
@@ -727,7 +727,7 @@ umap<std::string, engine::contact*> const& notifier::get_contacts() const {
  *
  *  @return Reference to the contact group container.
  */
-umap<std::string, engine::contactgroup*> const& notifier::get_contactgroups() const {
+umap<std::string, engine::contactgroup*> const& notifiable::get_contactgroups() const {
   return _contact_groups;
 }
 
@@ -742,7 +742,7 @@ umap<std::string, engine::contactgroup*> const& notifier::get_contactgroups() co
  *
  *  @return Acknowledgement timeout in seconds.
  */
-int notifier::get_acknowledgement_timeout() const {
+int notifiable::get_acknowledgement_timeout() const {
   return (_acknowledgement_timeout);
 }
 
@@ -751,7 +751,7 @@ int notifier::get_acknowledgement_timeout() const {
  *
  *  @param[in] timeout  Acknowledgement timeout in seconds.
  */
-void notifier::set_acknowledgement_timeout(int timeout) {
+void notifiable::set_acknowledgement_timeout(int timeout) {
   _acknowledgement_timeout = timeout;
   return ;
 }
@@ -761,16 +761,16 @@ void notifier::set_acknowledgement_timeout(int timeout) {
  *
  *  @return Acknowledgement type.
  */
-notifier::acknowledgement_type notifier::get_acknowledgement_type() const {
+notifiable::acknowledgement_type notifiable::get_acknowledgement_type() const {
   return (_current_acknowledgement);
 }
 
 /**
- *  Check if notifier is acknowledged.
+ *  Check if notifiable is acknowledged.
  *
  *  @return True if acknowledged.
  */
-bool notifier::is_acknowledged() const {
+bool notifiable::is_acknowledged() const {
   return (_current_acknowledgement != ACKNOWLEDGEMENT_NONE);
 }
 
@@ -779,26 +779,26 @@ bool notifier::is_acknowledged() const {
  *
  *  @param[in] type  Acknowledgement type.
  */
-void notifier::set_acknowledged(acknowledgement_type type) {
+void notifiable::set_acknowledged(acknowledgement_type type) {
   _current_acknowledgement = type;
   return ;
 }
 
 /**
- *  Get last time notifier was acknowledged.
+ *  Get last time notifiable was acknowledged.
  *
  *  @return Timestamp.
  */
-time_t notifier::get_last_acknowledgement() const {
+time_t notifiable::get_last_acknowledgement() const {
   return (_last_acknowledgement);
 }
 
 /**
- *  Set last time notifier was acknowledged.
+ *  Set last time notifiable was acknowledged.
  *
  *  @param[in] last_acknowledgement  Timestamp.
  */
-void notifier::set_last_acknowledgement(time_t last_acknowledgement) {
+void notifiable::set_last_acknowledgement(time_t last_acknowledgement) {
   _last_acknowledgement = last_acknowledgement;
   return ;
 }
@@ -806,7 +806,7 @@ void notifier::set_last_acknowledgement(time_t last_acknowledgement) {
 /**
  *  Schedule acknowledgement expiration.
  */
-void notifier::schedule_acknowledgement_expiration() {
+void notifiable::schedule_acknowledgement_expiration() {
   int ack_timeout(get_acknowledgement_timeout());
   int last_ack(get_last_acknowledgement());
   if (ack_timeout > 0 && last_ack != (time_t)0) {
@@ -832,7 +832,7 @@ void notifier::schedule_acknowledgement_expiration() {
 /**
  *  Update acknowledgement on state change.
  */
-void notifier::update_acknowledgement_on_state_change() {
+void notifiable::update_acknowledgement_on_state_change() {
   // Normal acknowledgements will be removed on any state change.
   if (((get_acknowledgement_type() == ACKNOWLEDGEMENT_NORMAL)
        && (get_current_state() != get_last_state()))
@@ -856,7 +856,7 @@ void notifier::update_acknowledgement_on_state_change() {
  *
  *  @return An integer.
  */
-int notifier::get_pending_flex_downtime() const {
+int notifiable::get_pending_flex_downtime() const {
   return (_pending_flex_downtime);
 }
 
@@ -864,7 +864,7 @@ int notifier::get_pending_flex_downtime() const {
  *  Increment the number of pending flexible downtimes targeting this
  *  object.
  */
-void notifier::inc_pending_flex_downtime() {
+void notifiable::inc_pending_flex_downtime() {
   ++_pending_flex_downtime;
   return ;
 }
@@ -873,7 +873,7 @@ void notifier::inc_pending_flex_downtime() {
  *  Decrement the number of pending flexible downtimes targeting this
  *  object.
  */
-void notifier::dec_pending_flex_downtime() {
+void notifiable::dec_pending_flex_downtime() {
   --_pending_flex_downtime;
   return ;
 }
@@ -883,14 +883,14 @@ void notifier::dec_pending_flex_downtime() {
  *
  *  @return An integer.
  */
-int notifier::get_scheduled_downtime_depth() const {
+int notifiable::get_scheduled_downtime_depth() const {
   return (_scheduled_downtime_depth);
 }
 
 /**
  *  Increment the number of active downtimes targeting this object.
  */
-void notifier::inc_scheduled_downtime_depth() {
+void notifiable::inc_scheduled_downtime_depth() {
   ++_scheduled_downtime_depth;
   return ;
 }
@@ -898,7 +898,7 @@ void notifier::inc_scheduled_downtime_depth() {
 /**
  *  Decrement the number of active downtimes targeting this object.
  */
-void notifier::dec_scheduled_downtime_depth() {
+void notifiable::dec_scheduled_downtime_depth() {
   --_scheduled_downtime_depth;
   return ;
 }
@@ -908,16 +908,16 @@ void notifier::dec_scheduled_downtime_depth() {
  *
  *  @return a boolean
  */
-bool notifier::should_be_escalated() const {
+bool notifiable::should_be_escalated() const {
 
   logger(dbg_functions, basic)
-    << "notifier: should_be_escalated()";
+    << "notifiable: should_be_escalated()";
 
   // FIXME DBR: not implemented
   return false;
 }
 
-void notifier::delete_all_comments() {
+void notifiable::delete_all_comments() {
   for (std::map<unsigned long, comment*>::iterator
          it(comment_list.begin()),
          next_it(comment_list.begin()),
@@ -934,9 +934,9 @@ void notifier::delete_all_comments() {
 
 /**
  *  Deletes all non-persistent acknowledgement comments for a particular
- *  notifier
+ *  notifiable
  */
-void notifier::delete_acknowledgement_comments() {
+void notifiable::delete_acknowledgement_comments() {
   /* delete comments from memory */
   for (std::map<unsigned long, comment*>::iterator
          it(comment_list.begin()),
@@ -962,7 +962,7 @@ void notifier::delete_acknowledgement_comments() {
 *                                     *
 **************************************/
 
-std::string const notifier::_notification_string[] = {
+std::string const notifiable::_notification_string[] = {
   "PROBLEM",
   "RECOVERY",
   "ACKNOWLEDGEMENT",
@@ -981,20 +981,20 @@ std::string const notifier::_notification_string[] = {
 *                                     *
 **************************************/
 
-time_t notifier::get_first_notification() const {
+time_t notifiable::get_first_notification() const {
   return (_first_notification);
 }
 
-void notifier::set_first_notification(time_t first_notification) {
+void notifiable::set_first_notification(time_t first_notification) {
   _first_notification = first_notification;
   return ;
 }
 
-void notifier::set_recovery_been_sent(bool sent) {
+void notifiable::set_recovery_been_sent(bool sent) {
   _recovery_been_sent = sent;
 }
 
-bool notifier::get_recovery_been_sent() const {
+bool notifiable::get_recovery_been_sent() const {
   return _recovery_been_sent;
 }
 
@@ -1047,13 +1047,13 @@ bool notifier::get_recovery_been_sent() const {
 /////////////////////////////////////////////////////////
 
 /**
- *  Checks for flexible (non-fixed) notifier downtime that should start now.
+ *  Checks for flexible (non-fixed) notifiable downtime that should start now.
  */
-void notifier::check_pending_flex_downtime() {
+void notifiable::check_pending_flex_downtime() {
   logger(dbg_functions, basic)
     << "check_pending_flex_downtime()";
 
-  // If notifier is currently ok, nothing to do.
+  // If notifiable is currently ok, nothing to do.
   if (get_current_state() == STATE_OK)
     return ;
 
@@ -1070,7 +1070,7 @@ void notifier::check_pending_flex_downtime() {
         || temp_downtime.get_triggered_by() != 0)
       continue ;
 
-    // This entry matches our notifier and the time boundaries
+    // This entry matches our notifiable and the time boundaries
     // are ok, start this scheduled downtime.
     time_t current_time(0L);
     time(&current_time);
@@ -1079,13 +1079,13 @@ void notifier::check_pending_flex_downtime() {
         && (current_time <= temp_downtime.get_end_time())) {
       logger(dbg_downtime, basic)
         << "Flexible downtime (id=" << temp_downtime.get_id()
-        << ") for notifier '" << get_info() << "' starting now...";
+        << ") for notifiable '" << get_info() << "' starting now...";
       downtime_manager::instance().start(temp_downtime.get_id());
     }
   }
 }
 
-bool notifier::get_no_more_notifications() const {
+bool notifiable::get_no_more_notifications() const {
   // FIXME DBR: to implement...
   return (false);
 }
@@ -1095,7 +1095,7 @@ bool notifier::get_no_more_notifications() const {
  *
  *  @param[in] other  Object to copy.
  */
-void notifier::_internal_copy(notifier const& other) {
+void notifiable::_internal_copy(notifiable const& other) {
   _acknowledgement_timeout = other._acknowledgement_timeout;
   _contacts = other._contacts;
   _contact_groups = other._contact_groups;
@@ -1126,7 +1126,7 @@ void notifier::_internal_copy(notifier const& other) {
  *
  *  @return True if notification is viable.
  */
-bool notifier::_is_notification_viable(int type, int options) {
+bool notifiable::_is_notification_viable(int type, int options) {
   // Forced notification.
   if (options & NOTIFICATION_OPTION_FORCED) {
     logger(logging::dbg_notifications, logging::more)
@@ -1519,20 +1519,20 @@ bool notifier::_is_notification_viable(int type, int options) {
 }
 
 /**
- *  Stores the id of the flapping comment associated to the notifier.
+ *  Stores the id of the flapping comment associated to the notifiable.
  *
  *  @param id The flapping comment id.
  */
-void notifier::set_flapping_comment_id(unsigned int id) {
+void notifiable::set_flapping_comment_id(unsigned int id) {
   _flapping_comment_id = id;
 }
 
 /**
- *  Gets the id of the flapping comment associated to the notifier or 0 if
+ *  Gets the id of the flapping comment associated to the notifiable or 0 if
  *  there is no comment.
  *
  *  @return an unsigned integer.
  */
-unsigned int notifier::get_flapping_comment_id() const {
+unsigned int notifiable::get_flapping_comment_id() const {
   return _flapping_comment_id;
 }

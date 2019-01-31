@@ -25,7 +25,7 @@
 #include "com/centreon/engine/retention/applier/host.hh"
 #include "com/centreon/engine/retention/applier/utils.hh"
 #include "com/centreon/engine/not_found.hh"
-#include "com/centreon/engine/notifications/notifier.hh"
+#include "com/centreon/engine/notifications/notifiable.hh"
 #include "com/centreon/engine/string.hh"
 
 using namespace com::centreon::engine;
@@ -157,7 +157,7 @@ void applier::host::_update(
   if (obj.get_retain_nonstate_info()) {
     if (state.problem_has_been_acknowledged().is_set()
         && state.acknowledgement_type().is_set())
-      obj.set_acknowledged(static_cast<notifier::acknowledgement_type>(*state.acknowledgement_type()));
+      obj.set_acknowledged(static_cast<notifiable::acknowledgement_type>(*state.acknowledgement_type()));
     if (state.notifications_enabled().is_set()
         && (obj.get_modified_attributes() & MODATTR_NOTIFICATIONS_ENABLED))
       obj.set_notifications_enabled(*state.notifications_enabled());

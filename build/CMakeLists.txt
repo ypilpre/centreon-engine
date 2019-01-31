@@ -726,7 +726,7 @@ set(
   "${INC_DIR}/com/centreon/engine/nebmodules.hh"
   "${INC_DIR}/com/centreon/engine/nebstructs.hh"
   "${INC_DIR}/com/centreon/engine/not_found.hh"
-  "${INC_DIR}/com/centreon/engine/notifications/notifier.hh"
+  "${INC_DIR}/com/centreon/engine/notifications/notifiable.hh"
   "${INC_DIR}/com/centreon/engine/opt.hh"
   "${INC_DIR}/com/centreon/engine/perfdata.hh"
   "${INC_DIR}/com/centreon/engine/sehandlers.hh"

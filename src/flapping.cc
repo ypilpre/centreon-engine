@@ -25,7 +25,7 @@
 #include "com/centreon/engine/flapping.hh"
 #include "com/centreon/engine/globals.hh"
 #include "com/centreon/engine/logging/logger.hh"
-#include "com/centreon/engine/notifications/notifier.hh"
+#include "com/centreon/engine/notifications/notifiable.hh"
 #include "com/centreon/engine/comment.hh"
 #include "com/centreon/engine/statusdata.hh"
 
@@ -383,7 +383,7 @@ void set_service_flap(
     NULL);
 
   /* send a notification */
-  svc->notify(notifier::FLAPPINGSTART, "", "", NOTIFICATION_OPTION_NONE);
+  svc->notify(notifiable::FLAPPINGSTART, "", "", NOTIFICATION_OPTION_NONE);
 }
 
 /* handles a service that has stopped flapping */
@@ -434,11 +434,11 @@ void clear_service_flap(
     NULL);
 
   /* send a notification */
-  svc->notify(notifier::FLAPPINGSTOP, "", "", NOTIFICATION_OPTION_NONE);
+  svc->notify(notifiable::FLAPPINGSTOP, "", "", NOTIFICATION_OPTION_NONE);
 
   /* should we send a recovery notification? the notification filter
    * does the job. */
-  svc->notify(notifier::RECOVERY, "", "", NOTIFICATION_OPTION_NONE);
+  svc->notify(notifiable::RECOVERY, "", "", NOTIFICATION_OPTION_NONE);
 
   return;
 }
@@ -504,7 +504,7 @@ void set_host_flap(
     NULL);
 
   /* send a notification */
-  hst->notify(notifier::FLAPPINGSTART, "", "", NOTIFICATION_OPTION_NONE);
+  hst->notify(notifiable::FLAPPINGSTART, "", "", NOTIFICATION_OPTION_NONE);
 }
 
 /* handles a host that has stopped flapping */
@@ -553,11 +553,11 @@ void clear_host_flap(
     NULL);
 
   /* send a notification */
-  hst->notify(notifier::FLAPPINGSTOP, "", "", NOTIFICATION_OPTION_NONE);
+  hst->notify(notifiable::FLAPPINGSTOP, "", "", NOTIFICATION_OPTION_NONE);
 
   /* should we send a recovery notification? : The check is done directly
    * by the notify method. */
-  hst->notify(notifier::RECOVERY, "", "", NOTIFICATION_OPTION_NONE);
+  hst->notify(notifiable::RECOVERY, "", "", NOTIFICATION_OPTION_NONE);
 }
 
 /******************************************************************/
@@ -777,11 +777,11 @@ void handle_host_flap_detection_disabled(host* hst) {
       NULL);
 
     /* send a notification */
-    hst->notify(notifier::FLAPPINGDISABLED, "", "", NOTIFICATION_OPTION_NONE);
+    hst->notify(notifiable::FLAPPINGDISABLED, "", "", NOTIFICATION_OPTION_NONE);
 
     /* should we send a recovery notification? The notification filter tells
      * the answer. */
-    hst->notify(notifier::RECOVERY, "", "", NOTIFICATION_OPTION_NONE);
+    hst->notify(notifiable::RECOVERY, "", "", NOTIFICATION_OPTION_NONE);
   }
 
   /* update host status */
@@ -909,11 +909,11 @@ void handle_service_flap_detection_disabled(service* svc) {
       NULL);
 
     /* send a notification */
-    svc->notify(notifier::FLAPPINGDISABLED, "", "", NOTIFICATION_OPTION_NONE);
+    svc->notify(notifiable::FLAPPINGDISABLED, "", "", NOTIFICATION_OPTION_NONE);
 
     /* should we send a recovery notification? The notification filter
      * tells the answer. */
-    svc->notify(notifier::RECOVERY, "", "", NOTIFICATION_OPTION_NONE);
+    svc->notify(notifiable::RECOVERY, "", "", NOTIFICATION_OPTION_NONE);
   }
 
   /* update service status */

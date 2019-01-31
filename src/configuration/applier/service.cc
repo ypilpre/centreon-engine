@@ -138,7 +138,7 @@ void applier::service::add_object(
          it != end;
          ++it)
       svc->set_customvar(customvar(it->first, it->second));
-    // Inherited from notifier.
+    // Inherited from notifiable.
     svc->set_acknowledgement_timeout(
       obj.get_acknowledgement_timeout() * interval_length);
     svc->set_notifications_enabled(obj.notifications_enabled());

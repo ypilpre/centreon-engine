@@ -95,39 +95,39 @@ void applier::contact::add_object(configuration::contact const& obj) {
     // Host notification properties.
     c->set_host_notifications_enabled(obj.host_notifications_enabled());
     c->set_host_notify_on(
-      ::notifications::notifier::ON_RECOVERY,
+      ::notifications::notifiable::ON_RECOVERY,
       obj.host_notification_options() & configuration::host::up);
     c->set_host_notify_on(
-      ::notifications::notifier::ON_DOWN,
+      ::notifications::notifiable::ON_DOWN,
       obj.host_notification_options() & configuration::host::down);
     c->set_host_notify_on(
-      ::notifications::notifier::ON_UNREACHABLE,
+      ::notifications::notifiable::ON_UNREACHABLE,
       obj.host_notification_options() & configuration::host::unreachable);
     c->set_host_notify_on(
-      ::notifications::notifier::ON_FLAPPING,
+      ::notifications::notifiable::ON_FLAPPING,
       obj.host_notification_options() & configuration::host::flapping);
     c->set_host_notify_on(
-      ::notifications::notifier::ON_DOWNTIME,
+      ::notifications::notifiable::ON_DOWNTIME,
       obj.host_notification_options() & configuration::host::downtime);
     // Service notification properties.
     c->set_service_notifications_enabled(obj.service_notifications_enabled());
     c->set_service_notify_on(
-      ::notifications::notifier::ON_RECOVERY,
+      ::notifications::notifiable::ON_RECOVERY,
       obj.service_notification_options() & configuration::service::ok);
     c->set_service_notify_on(
-      ::notifications::notifier::ON_WARNING,
+      ::notifications::notifiable::ON_WARNING,
       obj.service_notification_options() & configuration::service::warning);
     c->set_service_notify_on(
-      ::notifications::notifier::ON_CRITICAL,
+      ::notifications::notifiable::ON_CRITICAL,
       obj.service_notification_options() & configuration::service::critical);
     c->set_service_notify_on(
-      ::notifications::notifier::ON_UNKNOWN,
+      ::notifications::notifiable::ON_UNKNOWN,
       obj.service_notification_options() & configuration::service::unknown);
     c->set_service_notify_on(
-      ::notifications::notifier::ON_FLAPPING,
+      ::notifications::notifiable::ON_FLAPPING,
       obj.service_notification_options() & configuration::service::flapping);
     c->set_service_notify_on(
-      ::notifications::notifier::ON_DOWNTIME,
+      ::notifications::notifiable::ON_DOWNTIME,
       obj.service_notification_options() & configuration::service::downtime);
     // Custom variables.
     for (map_customvar::const_iterator
@@ -264,37 +264,37 @@ void applier::contact::modify_object(
   modify_if_different(*c, email, obj.email());
   modify_if_different(*c, pager, obj.pager());
   c->set_host_notify_on(
-    ::notifications::notifier::ON_RECOVERY,
+    ::notifications::notifiable::ON_RECOVERY,
     obj.host_notification_options() & configuration::host::up);
   c->set_host_notify_on(
-    ::notifications::notifier::ON_DOWN,
+    ::notifications::notifiable::ON_DOWN,
     obj.host_notification_options() & configuration::host::down);
   c->set_host_notify_on(
-    ::notifications::notifier::ON_UNREACHABLE,
+    ::notifications::notifiable::ON_UNREACHABLE,
     obj.host_notification_options() & configuration::host::unreachable);
   c->set_host_notify_on(
-    ::notifications::notifier::ON_FLAPPING,
+    ::notifications::notifiable::ON_FLAPPING,
     obj.host_notification_options() & configuration::host::flapping);
   c->set_host_notify_on(
-    ::notifications::notifier::ON_DOWNTIME,
+    ::notifications::notifiable::ON_DOWNTIME,
     obj.host_notification_options() & configuration::host::downtime);
   c->set_service_notify_on(
-    ::notifications::notifier::ON_RECOVERY,
+    ::notifications::notifiable::ON_RECOVERY,
     obj.service_notification_options() & configuration::service::ok);
   c->set_service_notify_on(
-    ::notifications::notifier::ON_WARNING,
+    ::notifications::notifiable::ON_WARNING,
     obj.service_notification_options() & configuration::service::warning);
   c->set_service_notify_on(
-    ::notifications::notifier::ON_CRITICAL,
+    ::notifications::notifiable::ON_CRITICAL,
     obj.service_notification_options() & configuration::service::critical);
   c->set_service_notify_on(
-    ::notifications::notifier::ON_UNKNOWN,
+    ::notifications::notifiable::ON_UNKNOWN,
     obj.service_notification_options() & configuration::service::unknown);
   c->set_service_notify_on(
-    ::notifications::notifier::ON_FLAPPING,
+    ::notifications::notifiable::ON_FLAPPING,
     obj.service_notification_options() & configuration::service::flapping);
   c->set_service_notify_on(
-    ::notifications::notifier::ON_DOWNTIME,
+    ::notifications::notifiable::ON_DOWNTIME,
     obj.service_notification_options() & configuration::service::downtime);
   modify_if_different(
     *c,
@@ -567,9 +567,9 @@ void applier::contact::resolve_object(
     }
 
     // Check for sane host recovery options.
-    if (cntct.get_host_notify_on(notifications::notifier::ON_RECOVERY)
-        && !cntct.get_host_notify_on(notifications::notifier::ON_DOWN)
-        && !cntct.get_host_notify_on(notifications::notifier::ON_UNREACHABLE)) {
+    if (cntct.get_host_notify_on(notifications::notifiable::ON_RECOVERY)
+        && !cntct.get_host_notify_on(notifications::notifiable::ON_DOWN)
+        && !cntct.get_host_notify_on(notifications::notifiable::ON_UNREACHABLE)) {
       logger(logging::log_verification_error, logging::basic)
         << "Warning: Host recovery notification option for contact '"
         << cntct.get_name() << "' doesn't make any sense - specify down"
@@ -578,9 +578,9 @@ void applier::contact::resolve_object(
     }
 
     // Check for sane service recovery options.
-    if (cntct.get_service_notify_on(notifications::notifier::ON_RECOVERY)
-        && !cntct.get_service_notify_on(notifications::notifier::ON_CRITICAL)
-        && !cntct.get_service_notify_on(notifications::notifier::ON_WARNING)) {
+    if (cntct.get_service_notify_on(notifications::notifiable::ON_RECOVERY)
+        && !cntct.get_service_notify_on(notifications::notifiable::ON_CRITICAL)
+        && !cntct.get_service_notify_on(notifications::notifiable::ON_WARNING)) {
       logger(logging::log_verification_error, logging::basic)
         << "Warning: Service recovery notification option for contact '"
         << cntct.get_name() << "' doesn't make any sense - "

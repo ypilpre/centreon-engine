@@ -319,17 +319,17 @@ static void _exec_event_expire_comment(timed_event* event) {
 static void _exec_event_expire_ack(timed_event* event) {
   logger(dbg_events, basic)
     << "** Expire Acknowledgement Event";
-  notifications::notifier*
-    ntfr(static_cast<notifications::notifier*>(event->event_data));
+  notifications::notifiable*
+    ntfr(static_cast<notifications::notifiable*>(event->event_data));
   time_t last_ack(ntfr->get_last_acknowledgement());
   int ack_timeout(ntfr->get_acknowledgement_timeout());
   time_t now(time(NULL));
   if ((ntfr->get_acknowledgement_type()
-       != notifications::notifier::ACKNOWLEDGEMENT_NONE)
+       != notifications::notifiable::ACKNOWLEDGEMENT_NONE)
       && (ack_timeout > 0)
       && ((last_ack + ack_timeout) <= now))
     ntfr->set_acknowledged(
-            notifications::notifier::ACKNOWLEDGEMENT_NONE);
+            notifications::notifiable::ACKNOWLEDGEMENT_NONE);
   return ;
 }
 

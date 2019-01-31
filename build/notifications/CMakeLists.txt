@@ -1,5 +1,5 @@
 ##
-## Copyright 2017 Merethis
+## Copyright 2017,2019 Merethis
 ##
 ## This file is part of Centreon Engine.
 ##
@@ -27,11 +27,10 @@ set(
   ${FILES}
 
   # Sources.
-  "${SRC_DIR}/notifier.cc"
+  "${SRC_DIR}/notifiable.cc"
 
   # Headers.
-  "${INC_DIR}/notifier.hh"
+  "${INC_DIR}/notifiable.hh"
 
   PARENT_SCOPE
 )
-

@@ -39,7 +39,7 @@
 #include "com/centreon/engine/logging.hh"
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/neberrors.hh"
-#include "com/centreon/engine/notifications/notifier.hh"
+#include "com/centreon/engine/notifications/notifiable.hh"
 #include "com/centreon/engine/objects/objectlist.hh"
 #include "com/centreon/engine/perfdata.hh"
 #include "com/centreon/engine/sehandlers.hh"
@@ -591,7 +591,7 @@ int handle_async_service_check_result(
       << "Service is OK.";
 
     /* reset the acknowledgement flag (this should already have been done, but just in case...) */
-    temp_service->set_acknowledged(notifier::ACKNOWLEDGEMENT_NONE);
+    temp_service->set_acknowledged(notifiable::ACKNOWLEDGEMENT_NONE);
 
     /* verify the route to the host and send out host recovery notifications */
     if (temp_host->get_current_state() != HOST_UP) {
@@ -657,7 +657,7 @@ int handle_async_service_check_result(
       flapping_check_done = true;
 
       /* notify contacts about the service recovery */
-      temp_service->notify(notifier::RECOVERY, "", "", NOTIFICATION_OPTION_NONE);
+      temp_service->notify(notifiable::RECOVERY, "", "", NOTIFICATION_OPTION_NONE);
 
       /* Set the recovery been sent parameter. */
       temp_service->set_first_notification(0);
@@ -691,7 +691,7 @@ int handle_async_service_check_result(
     /* Check if we need to send a recovery notification */
     if (!temp_service->get_recovery_been_sent() && !hard_state_change) {
       temp_service->notify(
-        notifier::RECOVERY,
+        notifiable::RECOVERY,
         "", "",
         NOTIFICATION_OPTION_NONE);
     }
@@ -711,7 +711,7 @@ int handle_async_service_check_result(
       temp_service->set_current_notification_number(0);
       temp_service->set_first_notification(0);
     }
-    temp_service->set_acknowledged(notifier::ACKNOWLEDGEMENT_NONE);
+    temp_service->set_acknowledged(notifiable::ACKNOWLEDGEMENT_NONE);
 
     if (reschedule_check == true)
       next_service_check
@@ -850,12 +850,12 @@ int handle_async_service_check_result(
 	  /* possibly re-send host notifications... */
           if (route_result == 0)
             temp_host->notify(
-              notifier::RECOVERY,
+              notifiable::RECOVERY,
               "", "",
               NOTIFICATION_OPTION_NONE);
           else
             temp_host->notify(
-              notifier::PROBLEM,
+              notifiable::PROBLEM,
               "", "",
               NOTIFICATION_OPTION_NONE);
 	}
@@ -1027,12 +1027,12 @@ int handle_async_service_check_result(
       /* (re)send notifications out about this service problem if the host is up (and was at last check also) and the dependencies were okay... */
       if (temp_service->get_current_state() == 0)
         temp_service->notify(
-          notifier::RECOVERY,
+          notifiable::RECOVERY,
           "", "",
           NOTIFICATION_OPTION_NONE);
       else
         temp_service->notify(
-          notifier::PROBLEM,
+          notifiable::PROBLEM,
           "", "",
           NOTIFICATION_OPTION_NONE);
 

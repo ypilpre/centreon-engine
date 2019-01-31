@@ -107,7 +107,7 @@ void downtime_manager::set_next_downtime_id(unsigned long id) {
  *  @return New downtime ID.
  */
 unsigned long downtime_manager::schedule(
-                                  notifications::notifier* target,
+                                  notifications::notifiable* target,
                                   time_t entry_time,
                                   std::string const& author,
                                   std::string const& comment,
@@ -363,7 +363,7 @@ void downtime_manager::unschedule(unsigned long id) {
     dt_it(_downtimes.find(id));
   if (dt_it != _downtimes.end()) {
     downtime& dt(dt_it->second);
-    notifications::notifier* parent(dt.get_parent());
+    notifications::notifiable* parent(dt.get_parent());
     union {
       host* hst;
       service* svc;
@@ -431,7 +431,7 @@ void downtime_manager::unschedule(unsigned long id) {
 
           // Send a notification.
           parent->notify(
-            notifications::notifier::DOWNTIMECANCELLED,
+            notifications::notifiable::DOWNTIMECANCELLED,
             "",
             "",
             NOTIFICATION_OPTION_NONE);
@@ -448,7 +448,7 @@ void downtime_manager::unschedule(unsigned long id) {
 
           // Send a notification.
           parent->notify(
-            notifications::notifier::DOWNTIMECANCELLED,
+            notifications::notifiable::DOWNTIMECANCELLED,
             "",
             "",
             NOTIFICATION_OPTION_NONE);

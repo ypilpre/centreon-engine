@@ -25,7 +25,7 @@
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/macros.hh"
 #include "com/centreon/engine/neberrors.hh"
-#include "com/centreon/engine/notifications/notifier.hh"
+#include "com/centreon/engine/notifications/notifiable.hh"
 #include "com/centreon/engine/comment.hh"
 #include "com/centreon/engine/perfdata.hh"
 #include "com/centreon/engine/sehandlers.hh"
@@ -1063,17 +1063,17 @@ int handle_host_state(host* hst) {
     }
 
     /* reset the acknowledgement flag if necessary */
-    if (hst->get_acknowledgement_type() == notifier::ACKNOWLEDGEMENT_NORMAL) {
+    if (hst->get_acknowledgement_type() == notifiable::ACKNOWLEDGEMENT_NORMAL) {
 
-      hst->set_acknowledged(notifier::ACKNOWLEDGEMENT_NONE);
+      hst->set_acknowledged(notifiable::ACKNOWLEDGEMENT_NONE);
 
       /* remove any non-persistant comments associated with the ack */
       hst->delete_acknowledgement_comments();
     }
-    else if (hst->get_acknowledgement_type() == notifier::ACKNOWLEDGEMENT_STICKY
+    else if (hst->get_acknowledgement_type() == notifiable::ACKNOWLEDGEMENT_STICKY
              && hst->get_current_state() == HOST_UP) {
 
-      hst->set_acknowledged(notifier::ACKNOWLEDGEMENT_NONE);
+      hst->set_acknowledged(notifiable::ACKNOWLEDGEMENT_NONE);
 
       /* remove any non-persistant comments associated with the ack */
       hst->delete_acknowledgement_comments();
@@ -1084,7 +1084,7 @@ int handle_host_state(host* hst) {
     hst->set_next_notification((time_t)0);
 
     /* reset notification suppression option */
-    // FIXME DBR: this should be managed by notifier.
+    // FIXME DBR: this should be managed by notifiable.
     //hst->set_no_more_notifications(false);
 
     /* write the host state change to the main log file */
@@ -1108,7 +1108,7 @@ int handle_host_state(host* hst) {
           ////////////////
           // FIXME DBR  //
           ////////////////
-      hst->notify(notifier::PROBLEM, "", "", NOTIFICATION_OPTION_NONE);
+      hst->notify(notifiable::PROBLEM, "", "", NOTIFICATION_OPTION_NONE);
     }
     /* handle the host state change */
     handle_host_event(hst);
@@ -1134,7 +1134,7 @@ int handle_host_state(host* hst) {
          (hst->get_current_state() == HOST_UP
           && !hst->get_recovery_been_sent()))
         && hst->get_current_state_type() == HARD_STATE) {
-      hst->notify(notifier::PROBLEM, "", "", NOTIFICATION_OPTION_NONE);
+      hst->notify(notifiable::PROBLEM, "", "", NOTIFICATION_OPTION_NONE);
     }
 
     /* the host recovered, so reset the current notification number and state flags (after the recovery notification has gone out) */

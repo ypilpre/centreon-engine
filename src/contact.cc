@@ -24,7 +24,7 @@
 #include "com/centreon/engine/error.hh"
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/not_found.hh"
-#include "com/centreon/engine/notifications/notifier.hh"
+#include "com/centreon/engine/notifications/notifiable.hh"
 #include "com/centreon/engine/objects/timeperiod.hh"
 
 using namespace com::centreon;
@@ -320,7 +320,7 @@ void contact::set_host_notifications_enabled(bool enable) {
  *  @return True if notification is enabled for state.
  */
 bool contact::get_host_notify_on(
-                notifications::notifier::action_on state) const {
+                notifications::notifiable::action_on state) const {
   return (_host_notified_states & state);
 }
 
@@ -331,7 +331,7 @@ bool contact::get_host_notify_on(
  *  @param[in] enable  True to enable.
  */
 void contact::set_host_notify_on(
-                notifications::notifier::action_on state,
+                notifications::notifiable::action_on state,
                 bool enable) {
   if (enable)
     _host_notified_states |= state;
@@ -461,7 +461,7 @@ void contact::set_service_notifications_enabled(bool enable) {
  *  @return True if notification is enabled for state.
  */
 bool contact::get_service_notify_on(
-                notifications::notifier::action_on state) const {
+                notifications::notifiable::action_on state) const {
   return (_service_notified_states & state);
 }
 
@@ -472,7 +472,7 @@ bool contact::get_service_notify_on(
  *  @param[in] enable  True to enable.
  */
 void contact::set_service_notify_on(
-                notifications::notifier::action_on state,
+                notifications::notifiable::action_on state,
                 bool enable) {
   if (enable)
     _service_notified_states |= state;

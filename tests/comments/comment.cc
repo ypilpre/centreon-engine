@@ -25,7 +25,7 @@
 #include "com/centreon/engine/configuration/applier/state.hh"
 #include "com/centreon/engine/configuration/contact.hh"
 #include "com/centreon/engine/contact.hh"
-#include "com/centreon/engine/notifications/notifier.hh"
+#include "com/centreon/engine/notifications/notifiable.hh"
 
 using namespace com::centreon;
 using namespace com::centreon::engine;
@@ -72,8 +72,8 @@ class CommentTest : public ::testing::Test {
     cm["test"]->set_name("test");
     _service->add_contact(
       configuration::applier::state::instance().contacts_find("test").get());
-    _service->set_notify_on(notifier::ON_RECOVERY, true);
-    _service->set_notify_on(notifier::ON_FLAPPING, true);
+    _service->set_notify_on(notifiable::ON_RECOVERY, true);
+    _service->set_notify_on(notifiable::ON_FLAPPING, true);
   }
 
   void TearDown() {

@@ -33,13 +33,13 @@ class contact;
 namespace                  notifications {
 
   /**
-   *  @class notifier notifier.hh "com/centreon/engine/notifications/notifier.hh"
+   *  @class notifiable notifiable.hh "com/centreon/engine/notifications/notifiable.hh"
    *  @brief Object validating notifications and sending them if needed.
    *
    */
-  class                    notifier : public checks::checkable {
+  class                    notifiable : public checks::checkable {
    public:
-    typedef void (notifier::* macro_builder)(struct nagios_macros&);
+    typedef void (notifiable::* macro_builder)(struct nagios_macros&);
     enum                   acknowledgement_type {
       ACKNOWLEDGEMENT_NONE,
       ACKNOWLEDGEMENT_NORMAL,
@@ -70,15 +70,15 @@ namespace                  notifications {
       DOWNTIMECANCELLED = 8,
       CUSTOM = 9
     };
-    enum                   notifier_type {
+    enum                   notifiable_type {
       HOST_NOTIFICATION,
       SERVICE_NOTIFICATION
     };
 
-                           notifier();
-                           notifier(notifier const& other);
-    virtual                ~notifier();
-    notifier&              operator=(notifier const& other);
+                           notifiable();
+                           notifiable(notifiable const& other);
+    virtual                ~notifiable();
+    notifiable&              operator=(notifiable const& other);
 
     // Configuration.
     int                    get_first_notification_delay() const;
@@ -165,7 +165,7 @@ namespace                  notifications {
                              nagios_macros& mac) = 0;
 
    private:
-    void                   _internal_copy(notifier const& other);
+    void                   _internal_copy(notifiable const& other);
     bool                   _is_notification_viable(int type, int options);
 
     macro_builder          _get_macro_builder(

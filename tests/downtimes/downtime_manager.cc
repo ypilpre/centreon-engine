@@ -96,7 +96,7 @@ class DowntimeManager : public ::testing::Test {
               std::make_pair("test_host", "test description")));
   }
 
-  unsigned long schedule_test_downtime(notifications::notifier* target) {
+  unsigned long schedule_test_downtime(notifications::notifiable* target) {
     return (downtime_manager::instance().schedule(
               target,
               _entry_time,

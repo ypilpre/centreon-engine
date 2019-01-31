@@ -23,7 +23,7 @@
 #include "com/centreon/engine/flapping.hh"
 #include "com/centreon/engine/globals.hh"
 #include "com/centreon/engine/not_found.hh"
-#include "com/centreon/engine/notifications/notifier.hh"
+#include "com/centreon/engine/notifications/notifiable.hh"
 #include "com/centreon/engine/objects/timeperiod.hh"
 #include "com/centreon/engine/retention/applier/service.hh"
 #include "com/centreon/engine/retention/applier/utils.hh"
@@ -162,7 +162,7 @@ void applier::service::_update(
   if (obj.get_retain_nonstate_info()) {
     if (state.problem_has_been_acknowledged().is_set()
         && state.acknowledgement_type().is_set())
-      obj.set_acknowledged(static_cast<notifier::acknowledgement_type>(*state.acknowledgement_type()));
+      obj.set_acknowledged(static_cast<notifiable::acknowledgement_type>(*state.acknowledgement_type()));
     if (state.notifications_enabled().is_set()
         && (obj.get_modified_attributes() & MODATTR_NOTIFICATIONS_ENABLED))
       obj.set_notifications_enabled(*state.notifications_enabled());

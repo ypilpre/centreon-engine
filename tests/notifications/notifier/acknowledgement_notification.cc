@@ -27,7 +27,7 @@
 #include "com/centreon/engine/configuration/contact.hh"
 #include "com/centreon/engine/configuration/state.hh"
 #include "com/centreon/engine/contact.hh"
-#include "com/centreon/engine/notifications/notifier.hh"
+#include "com/centreon/engine/notifications/notifiable.hh"
 #include "com/centreon/shared_ptr.hh"
 
 using namespace com::centreon;
@@ -85,7 +85,7 @@ class AcknowledgementNotification : public ::testing::Test {
   service*  _service;
 };
 
-// Given a notifier in state 0. Let's assume notification is enabled on
+// Given a notifiable in state 0. Let's assume notification is enabled on
 // states 1, 2 and on recovery.
 // When the service is set in hard WARNING,
 // Then a notification is sent.
@@ -100,29 +100,29 @@ TEST_F(AcknowledgementNotification, AcknowledgementNotification) {
   _service->set_last_state_change(time(NULL));
   _service->set_notifications_enabled(true);
   time_t last_notification = _service->get_last_notification();
-  _service->set_notify_on(notifier::ON_RECOVERY, true);
-  _service->set_notify_on(notifier::ON_WARNING, true);
-  _service->set_notify_on(notifier::ON_CRITICAL, true);
+  _service->set_notify_on(notifiable::ON_RECOVERY, true);
+  _service->set_notify_on(notifiable::ON_WARNING, true);
+  _service->set_notify_on(notifiable::ON_CRITICAL, true);
   // When the service is set in hard WARNING
   time_t now = time(NULL) + 20;
   set_time(now);
   _service->set_current_state(1);
   _service->set_current_state_type(HARD_STATE);
-  _service->notify(notifier::PROBLEM, "admin", "Test comment");
+  _service->notify(notifiable::PROBLEM, "admin", "Test comment");
   // Then a notification is sent
   ASSERT_GE(_service->get_last_notification(), now);
 
   // When the service is acknowledged (normally)
   now += 20;
   set_time(now);
-  _service->set_acknowledged(notifier::ACKNOWLEDGEMENT_NORMAL);
+  _service->set_acknowledged(notifiable::ACKNOWLEDGEMENT_NORMAL);
   _service->set_last_acknowledgement(now);
   // Then no more notification is sent while the state is WARNING
-  _service->notify(notifier::ACKNOWLEDGEMENT, "admin", "Test comment");
+  _service->notify(notifiable::ACKNOWLEDGEMENT, "admin", "Test comment");
   ASSERT_GE(_service->get_last_notification(), now);
   now += 20;
   set_time(now);
-  _service->notify(notifier::PROBLEM, "admin", "Test comment");
+  _service->notify(notifiable::PROBLEM, "admin", "Test comment");
   ASSERT_FALSE(_service->get_last_notification() >= now);
 
   // When the service is set to hard CRITICAL
@@ -134,7 +134,7 @@ TEST_F(AcknowledgementNotification, AcknowledgementNotification) {
   _service->set_last_state_change(now);
   _service->set_last_hard_state_change(now);
   _service->set_last_check(now);
-  _service->notify(notifier::PROBLEM, "admin", "Test comment");
+  _service->notify(notifiable::PROBLEM, "admin", "Test comment");
   ASSERT_LT(_service->get_last_notification(), now);
 
   // When the service is set to hard CRITICAL
@@ -147,7 +147,7 @@ TEST_F(AcknowledgementNotification, AcknowledgementNotification) {
   _service->set_last_check(now);
   _service->update_acknowledgement_on_state_change();
   // Then the acknowledgement is removed and a notification is sent.
-  _service->notify(notifier::PROBLEM, "admin", "Test comment");
+  _service->notify(notifiable::PROBLEM, "admin", "Test comment");
   ASSERT_FALSE(_service->is_acknowledged());
   ASSERT_GE(_service->get_last_notification(), now);
 
@@ -158,11 +158,11 @@ TEST_F(AcknowledgementNotification, AcknowledgementNotification) {
   _service->set_last_state_change(now);
   _service->set_last_check(now);
   // Then a recovery notification is sent.
-  _service->notify(notifier::RECOVERY, "admin", "Test comment");
+  _service->notify(notifiable::RECOVERY, "admin", "Test comment");
   ASSERT_GE(_service->get_last_notification(), now);
 }
 
-// Given a notifier in state 0. Let's assume notification is enabled on
+// Given a notifiable in state 0. Let's assume notification is enabled on
 // states 1, 2 and on recovery.
 // When the service is set in hard WARNING,
 // Then a notification is sent.
@@ -177,25 +177,25 @@ TEST_F(AcknowledgementNotification, StickyAcknowledgementNotification) {
   _service->set_last_state_change(time(NULL));
   _service->set_notifications_enabled(true);
   time_t last_notification = _service->get_last_notification();
-  _service->set_notify_on(notifier::ON_RECOVERY, true);
-  _service->set_notify_on(notifier::ON_WARNING, true);
-  _service->set_notify_on(notifier::ON_CRITICAL, true);
+  _service->set_notify_on(notifiable::ON_RECOVERY, true);
+  _service->set_notify_on(notifiable::ON_WARNING, true);
+  _service->set_notify_on(notifiable::ON_CRITICAL, true);
   // When the service is set in hard WARNING
   time_t now = time(NULL) + 20;
   set_time(now);
   _service->set_current_state(1);
   _service->set_current_state_type(HARD_STATE);
-  _service->notify(notifier::PROBLEM, "admin", "Test comment");
+  _service->notify(notifiable::PROBLEM, "admin", "Test comment");
   // Then a notification is sent
   ASSERT_GE(_service->get_last_notification(), now);
 
   // When the service is acknowledged (normally)
   now += 20;
   set_time(now);
-  _service->set_acknowledged(notifier::ACKNOWLEDGEMENT_STICKY);
+  _service->set_acknowledged(notifiable::ACKNOWLEDGEMENT_STICKY);
   _service->set_last_acknowledgement(now);
   // Then no more notification is sent while the state is WARNING
-  _service->notify(notifier::PROBLEM, "admin", "Test comment");
+  _service->notify(notifiable::PROBLEM, "admin", "Test comment");
   ASSERT_FALSE(_service->get_last_notification() >= now);
 
   now += _service->get_notification_interval() + 1;
@@ -206,7 +206,7 @@ TEST_F(AcknowledgementNotification, StickyAcknowledgementNotification) {
   _service->set_last_state_change(now);
   _service->set_last_hard_state_change(now);
   _service->set_last_check(now);
-  _service->notify(notifier::PROBLEM, "admin", "Test comment");
+  _service->notify(notifiable::PROBLEM, "admin", "Test comment");
   ASSERT_FALSE(_service->get_last_notification() >= now);
 
   // When the service is set to hard CRITICAL
@@ -218,7 +218,7 @@ TEST_F(AcknowledgementNotification, StickyAcknowledgementNotification) {
   _service->set_last_hard_state_change(now);
   _service->set_last_check(now);
   // Then no more notification is sent while the state is WARNING
-  _service->notify(notifier::PROBLEM, "admin", "Test comment");
+  _service->notify(notifiable::PROBLEM, "admin", "Test comment");
   ASSERT_FALSE(_service->get_last_notification() >= now);
 
   // When the service is set to OK,
@@ -229,7 +229,7 @@ TEST_F(AcknowledgementNotification, StickyAcknowledgementNotification) {
   _service->set_last_check(now);
   _service->update_acknowledgement_on_state_change();
   // Then the acknowledgement is removed and a recovery notification is sent.
-  _service->notify(notifier::RECOVERY, "admin", "Test comment");
+  _service->notify(notifiable::RECOVERY, "admin", "Test comment");
   ASSERT_FALSE(_service->is_acknowledged());
   ASSERT_TRUE(_service->get_last_notification() >= now);
 }

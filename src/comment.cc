@@ -62,7 +62,7 @@ void comment::delete_comment(unsigned long comment_id) {
 comment* comment::add_new_comment(
       comment::comment_type type,
       comment::entry_type ent_type,
-      notifications::notifier* parent,
+      notifications::notifiable* parent,
       time_t entry_time,
       std::string const& author_name,
       std::string const& comment_data,
@@ -136,7 +136,7 @@ void comment::check_for_expired_comment(unsigned long comment_id) {
 comment::comment(
            comment::comment_type cmt_type,
            comment::entry_type ent_type,
-           notifications::notifier* parent,
+           notifications::notifiable* parent,
            time_t entry_time,
            std::string const& author,
            std::string const& comment_data,
@@ -230,7 +230,7 @@ void comment::set_entry_type(entry_type ent_type) {
   _entry_type = ent_type;
 }
 
-notifications::notifier* comment::get_parent() const {
+notifications::notifiable* comment::get_parent() const {
   return _parent;
 }
 

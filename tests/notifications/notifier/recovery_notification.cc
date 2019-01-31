@@ -27,7 +27,7 @@
 #include "com/centreon/engine/configuration/contact.hh"
 #include "com/centreon/engine/configuration/state.hh"
 #include "com/centreon/engine/contact.hh"
-#include "com/centreon/engine/notifications/notifier.hh"
+#include "com/centreon/engine/notifications/notifiable.hh"
 #include "com/centreon/shared_ptr.hh"
 
 using namespace com::centreon;
@@ -88,7 +88,7 @@ class RecoveryNotification : public ::testing::Test {
   engine::service*  _service;
 };
 
-// Given a notifier that was in state 2 with a current notification already
+// Given a notifiable that was in state 2 with a current notification already
 // sent 10 seconds ago.
 // When the notify method is called with RECOVERY type
 // Then the filter method returns true and the notification is sent.
@@ -107,14 +107,14 @@ TEST_F(RecoveryNotification, SimpleRecovery) {
   _service->set_last_state(2);
   _service->set_last_state_change(time(NULL));
   _service->set_current_state(0);
-  _service->notify(notifier::RECOVERY, "admin", "Test comment");
+  _service->notify(notifiable::RECOVERY, "admin", "Test comment");
   long current_notification = _service->get_last_notification();
   ASSERT_GT(current_notification, last_notification);
 }
 
-// Given a notifier that was in state 2 with a current notification already
+// Given a notifiable that was in state 2 with a current notification already
 // sent 10 seconds ago.
-// When the new state is OK but the notifier is in downtime
+// When the new state is OK but the notifiable is in downtime
 // When the notify method is called with RECOVERY type
 // Then the filter method returns false and the notification is not sent.
 TEST_F(RecoveryNotification, RecoveryDuringDowntime) {
@@ -125,12 +125,12 @@ TEST_F(RecoveryNotification, RecoveryDuringDowntime) {
   long last_notification = _service->get_last_notification();
   // When
   _service->set_current_state(0);
-  _service->notify(notifier::RECOVERY, "admin", "Test comment");
+  _service->notify(notifiable::RECOVERY, "admin", "Test comment");
   long current_notification = _service->get_last_notification();
   ASSERT_EQ(current_notification, last_notification);
 }
 
-// Given a notifier that was in state 2 with a current notification already
+// Given a notifiable that was in state 2 with a current notification already
 // sent 10 seconds ago.
 // When the new state has changed but is not OK
 // When the notify method is called with RECOVERY type
@@ -143,7 +143,7 @@ TEST_F(RecoveryNotification, RecoveryWithNonOkState) {
   long last_notification = _service->get_last_notification();
   // When
   _service->set_current_state(1);
-  _service->notify(notifier::RECOVERY, "admin", "Test comment");
+  _service->notify(notifiable::RECOVERY, "admin", "Test comment");
   long current_notification = _service->get_last_notification();
   ASSERT_EQ(current_notification, last_notification);
 }

@@ -23,7 +23,7 @@
 #include "com/centreon/engine/error.hh"
 #include "com/centreon/engine/events/defines.hh"
 #include "com/centreon/engine/host.hh"
-#include "com/centreon/engine/notifications/notifier.hh"
+#include "com/centreon/engine/notifications/notifiable.hh"
 #include "com/centreon/engine/logging/logger.hh"
 #include "com/centreon/engine/service.hh"
 #include "com/centreon/engine/statusdata.hh"
@@ -37,7 +37,7 @@ using namespace com::centreon::engine::notifications;
  */
 downtime::downtime(
             unsigned long id,
-            notifications::notifier* parent,
+            notifications::notifiable* parent,
             time_t entry_time,
             std::string const& author,
             std::string const& comment_data,
@@ -182,7 +182,7 @@ void downtime::set_in_effect(bool in_effect) {
   _in_effect = in_effect;
 }
 
-notifications::notifier* downtime::get_parent() const {
+notifications::notifiable* downtime::get_parent() const {
   return (_parent);
 }
 
@@ -263,7 +263,7 @@ void downtime::start() {
 
   // Send a notification.
   _parent->notify(
-    notifier::DOWNTIMESTART,
+    notifiable::DOWNTIMESTART,
     get_author(),
     get_comment(),
     NOTIFICATION_OPTION_NONE);
@@ -390,7 +390,7 @@ void downtime::stop() {
              "downtime";
       }
       _parent->notify(
-        notifier::DOWNTIMESTOP,
+        notifiable::DOWNTIMESTOP,
         get_author(),
         get_comment(),
         NOTIFICATION_OPTION_NONE);

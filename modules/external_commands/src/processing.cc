@@ -773,7 +773,7 @@ void processing::_wrapper_send_custom_host_notification(
   if ((buf[0] = my_strtok(args, ";"))
       && (buf[1] = my_strtok(NULL, ";"))
       && (buf[2] = my_strtok(NULL, ";"))) {
-    hst->notify(notifier::CUSTOM, buf[1], buf[2], atoi(buf[0]));
+    hst->notify(notifiable::CUSTOM, buf[1], buf[2], atoi(buf[0]));
   }
 }
 
@@ -846,6 +846,6 @@ void processing::_wrapper_send_custom_service_notification(
   if ((buf[0] = my_strtok(args, ";"))
       && (buf[1] = my_strtok(NULL, ";"))
       && (buf[2] = my_strtok(NULL, ";"))) {
-    svc->notify(notifier::CUSTOM, buf[1], buf[2], atoi(buf[0]));
+    svc->notify(notifiable::CUSTOM, buf[1], buf[2], atoi(buf[0]));
   }
 }

@@ -147,7 +147,7 @@ class DowntimeFinderFindMatchingAllTest : public ::testing::Test {
   }
 
   unsigned long new_scheduled_downtime(
-                  notifications::notifier* parent,
+                  notifications::notifiable* parent,
                   time_t start,
                   time_t end,
                   int fixed,

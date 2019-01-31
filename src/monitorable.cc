@@ -36,7 +36,7 @@ monitorable::monitorable()
  *  @param[in] other  Object to copy.
  */
 monitorable::monitorable(monitorable const& other)
-  : notifications::notifier(other) {
+  : notifications::notifiable(other) {
   _internal_copy(other);
 }
 
@@ -54,7 +54,7 @@ monitorable::~monitorable() {}
  */
 monitorable& monitorable::operator=(monitorable const& other) {
   if (this != &other) {
-    notifications::notifier::operator=(other);
+    notifications::notifiable::operator=(other);
     _internal_copy(other);
   }
   return (*this);

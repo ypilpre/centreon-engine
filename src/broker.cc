@@ -24,7 +24,7 @@
 #include "com/centreon/engine/flapping.hh"
 #include "com/centreon/engine/nebmods.hh"
 #include "com/centreon/engine/nebstructs.hh"
-#include "com/centreon/engine/notifications/notifier.hh"
+#include "com/centreon/engine/notifications/notifiable.hh"
 #include "com/centreon/engine/sehandlers.hh"
 #include "com/centreon/engine/string.hh"
 
@@ -53,7 +53,7 @@ void broker_acknowledgement_data(
        int flags,
        int attr,
        int acknowledgement_type,
-       notifications::notifier* target,
+       notifications::notifiable* target,
        char* ack_author,
        char* ack_data,
        int subtype,
@@ -88,7 +88,7 @@ void broker_acknowledgement_data(
   ds.object_ptr = target;
   ds.author_name = ack_author;
   ds.comment_data = ack_data;
-  ds.is_sticky = (subtype == notifier::ACKNOWLEDGEMENT_STICKY) ? true : false;
+  ds.is_sticky = (subtype == notifiable::ACKNOWLEDGEMENT_STICKY) ? true : false;
   ds.notify_contacts = notify_contacts;
   ds.persistent_comment = persistent_comment;
 
@@ -461,7 +461,7 @@ void broker_comment_data(
        int attr,
        int comment_type,
        int entry_type,
-       notifications::notifier* target,
+       notifications::notifiable* target,
        time_t entry_time,
        std::string const& author_name,
        std::string const& comment_data,
@@ -556,7 +556,7 @@ int broker_contact_notification_data(
   ds.end_time = end_time;
   ds.reason_type = reason_type;
   ds.contact_name = const_cast<char*>(cntct->get_name().c_str());
-  if (notification_type == notifier::SERVICE_NOTIFICATION) {
+  if (notification_type == notifiable::SERVICE_NOTIFICATION) {
     temp_service = (service*)data;
     ds.host_name = temp_service->get_host_name().c_str();
     ds.service_description = temp_service->get_description().c_str();
@@ -646,7 +646,7 @@ int broker_contact_notification_method_data(
   ds.contact_name = const_cast<char*>(cntct->get_name().c_str());
   ds.command_name = command_name;
   ds.command_args = command_args;
-  if (notification_type == notifier::SERVICE_NOTIFICATION) {
+  if (notification_type == notifiable::SERVICE_NOTIFICATION) {
     temp_service = (service*)data;
     ds.host_name = temp_service->get_host_name().c_str();
     ds.service_description = temp_service->get_description().c_str();
@@ -1325,7 +1325,7 @@ int broker_notification_data(
   ds.start_time = start_time;
   ds.end_time = end_time;
   ds.reason_type = reason_type;
-  if (notification_type == notifier::SERVICE_NOTIFICATION) {
+  if (notification_type == notifiable::SERVICE_NOTIFICATION) {
     temp_service = (service*)data;
     ds.host_name = temp_service->get_host_name().c_str();
     ds.service_description = temp_service->get_description().c_str();

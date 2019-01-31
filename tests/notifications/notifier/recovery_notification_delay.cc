@@ -28,7 +28,7 @@
 #include "com/centreon/engine/configuration/contact.hh"
 #include "com/centreon/engine/configuration/state.hh"
 #include "com/centreon/engine/contact.hh"
-#include "com/centreon/engine/notifications/notifier.hh"
+#include "com/centreon/engine/notifications/notifiable.hh"
 #include "com/centreon/process_manager.hh"
 #include "com/centreon/shared_ptr.hh"
 
@@ -127,7 +127,7 @@ TEST_F(RecoveryNotificationDelay, NotElapsed) {
 
   // When
   _service->set_current_state(0);
-  _service->notify(notifier::RECOVERY, "admin", "Test comment");
+  _service->notify(notifiable::RECOVERY, "admin", "Test comment");
 
   // Then
   std::ifstream ifs(_file.c_str());
@@ -149,7 +149,7 @@ TEST_F(RecoveryNotificationDelay, Elapsed) {
 
   // When
   _service->set_current_state(0);
-  _service->notify(notifier::RECOVERY, "admin", "Test comment");
+  _service->notify(notifiable::RECOVERY, "admin", "Test comment");
 
   // Then
   std::ifstream ifs(_file.c_str());
