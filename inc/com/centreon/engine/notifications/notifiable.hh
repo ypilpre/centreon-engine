@@ -17,8 +17,8 @@
 ** <http://www.gnu.org/licenses/>.
 */
 
-#ifndef CCE_NOTIFICATIONS_NOTIFIER_HH
-#  define CCE_NOTIFICATIONS_NOTIFIER_HH
+#ifndef CCE_NOTIFICATIONS_NOTIFIABLE_HH
+#  define CCE_NOTIFICATIONS_NOTIFIABLE_HH
 
 #  include <ctime>
 #  include <list>
@@ -31,10 +31,9 @@ CCE_BEGIN()
 class contact;
 
 namespace                  notifications {
-
   /**
    *  @class notifiable notifiable.hh "com/centreon/engine/notifications/notifiable.hh"
-   *  @brief Object validating notifications and sending them if needed.
+   *  @brief Hold the current state of an object that can trigger notifications.
    *
    */
   class                    notifiable : public checks::checkable {
@@ -206,4 +205,4 @@ namespace                  notifications {
 
 CCE_END()
 
-#endif // !CCE_NOTIFICATIONS_NOTIFIER_HH
+#endif // !CCE_NOTIFICATIONS_NOTIFIABLE_HH
