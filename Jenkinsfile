@@ -25,7 +25,7 @@ try {
           ],
           tools: [[$class: 'GoogleTestType', pattern: 'ut.xml']]
         ])
-        if (env.BRANCH_NAME == 'master') {
+        if (env.BRANCH_NAME == '18.10.x') {
           withSonarQubeEnv('SonarQube') {
             sh './centreon-build/jobs/engine/18.10/mon-engine-analysis.sh'
           }
@@ -95,13 +95,13 @@ try {
     }
   }
 
-  if (env.BRANCH_NAME == 'master') {
-    build job: 'centreon-web/master', wait: false
+  if (env.BRANCH_NAME == '18.10.x') {
+    build job: 'centreon-web/18.10.x', wait: false
   }
 }
 finally {
   buildStatus = currentBuild.result ?: 'SUCCESS';
-  if ((buildStatus != 'SUCCESS') && (env.BRANCH_NAME == 'master')) {
+  if ((buildStatus != 'SUCCESS') && (env.BRANCH_NAME == '18.10.x')) {
     slackSend channel: '#monitoring-metrology', message: "@channel Centreon Engine build ${env.BUILD_NUMBER} of branch ${env.BRANCH_NAME} was broken by ${source.COMMITTER}. Please fix it ASAP."
   }
 }
