@@ -132,6 +132,9 @@ void applier::host::add_object(
       obj.get_acknowledgement_timeout() * interval_length);
     h->set_notifications_enabled(obj.notifications_enabled());
     h->set_notify_on(
+      ::host::ON_DOWN,
+      obj.notification_options() & configuration::host::down);
+    h->set_notify_on(
       ::host::ON_DOWNTIME,
       obj.notification_options() & configuration::host::downtime);
     h->set_notify_on(
