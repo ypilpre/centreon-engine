@@ -39,6 +39,33 @@ using namespace com::centreon::engine;
 using namespace com::centreon::engine::logging;
 using namespace com::centreon::engine::notifications;
 
+static char const* notification_types_strings[] = {
+  "NORMAL",
+  "NORMAL",
+  "ACKNOWLEDGEMENT",
+  "FLAPPINGSTART",
+  "FLAPPINGSTOP",
+  "FLAPPINGDISABLED",
+  "DOWNTIMESTART",
+  "DOWNTIMEEND",
+  "DOWNTIMECANCELLED",
+  "CUSTOM"
+};
+
+static char const* host_states_strings[] = {
+  "UP",
+  "DOWN",
+  "UNREACHABLE",
+  "UNKNOWN"
+};
+
+static char const* service_states_strings[] = {
+  "OK",
+  "WARNING",
+  "CRITICAL",
+  "UNKNOWN"
+};
+
 /**************************************
 *                                     *
 *           Public Methods            *
@@ -544,6 +571,62 @@ void notifiable::notify(
                end_cmd(cmds.end());
              it_cmd != end_cmd;
              ++it_cmd) {
+          // Log attempt.
+          if (config->log_notifications()) {
+            // Get string of the current state.
+            char const* state_string;
+            if (is_host())
+              state_string = host_states_strings[get_current_state()];
+            else
+              state_string = service_states_strings[get_current_state()];
+
+            // Get string of the notification type.
+            char const* type_string;
+            type_string = notification_types_strings[type];
+
+            // Get additional info based on notification type.
+            std::string info;
+            switch (type) {
+             case ACKNOWLEDGEMENT:
+             case CUSTOM:
+              info.append(";").append(author).append(";").append(comment);
+              break;
+             default:
+               ;
+            }
+
+            // Generate notification string.
+            std::string notification_string;
+            if ((type == PROBLEM) || (type == RECOVERY))
+              notification_string = state_string;
+            else
+              notification_string
+                .append(type_string)
+                .append(" (")
+                .append(state_string)
+                .append(")");
+
+            if (is_host()) {
+              host* hst(static_cast<host*>(this));
+              logger(log_service_notification, basic)
+                << "HOST NOTIFICATION: " << it_cntct->second->get_name()
+                << ';' << hst->get_name() << ';' << notification_string
+                << ';' << it_cmd->first->get_name() << ';'
+                << get_output() << info;
+            }
+            else {
+              service* svc(static_cast<service*>(this));
+              logger(log_service_notification, basic)
+                << "SERVICE NOTIFICATION: "
+                << it_cntct->second->get_name() << ';'
+                << svc->get_host_name() << ';' << svc->get_description()
+                << ';' << notification_string << ';'
+                << it_cmd->first->get_name() << ';'
+                << get_output() << info;
+            }
+          }
+
+          // Run notification command.
           commands::result res;
           try {
             std::string processed_cmd(it_cmd->first->process_cmd(&mac));
@@ -1326,21 +1409,21 @@ bool notifiable::_is_notification_viable(int type, int options) {
      case HOST_UNREACHABLE:
       if (!hst->get_notify_on(ON_UNREACHABLE)) {
         logger(logging::dbg_notifications, logging::more)
-          << "We shouldn't notify about DOWN states for this host.";
+          << "We shouldn't notify about UNREACHABLE states for this host.";
         return (false);
       }
       break ;
      case STATE_UNKNOWN:
       if (!hst->get_notify_on(ON_UNKNOWN)) {
         logger(logging::dbg_notifications, logging::more)
-          << "We shouldn't notify about DOWN states for this host.";
+          << "We shouldn't notify about UNKNOWN states for this host.";
         return (false);
       }
       break ;
      case HOST_UP:
-      if (!hst->get_notify_on(ON_UP)) {
+      if (!hst->get_notify_on(ON_RECOVERY)) {
         logger(logging::dbg_notifications, logging::more)
-          << "We shouldn't notify about DOWN states for this host.";
+          << "We shouldn't notify about UP states for this host.";
         return (false);
       }
       break ;
