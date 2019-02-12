@@ -715,7 +715,10 @@ void notifiable::notify(
       }
 
       // Update the status log with the service information.
-      // XXX update_service_status(svc, false);
+      if (is_host())
+        broker_host_status(static_cast<host*>(this));
+      else
+        broker_service_status(static_cast<service*>(this));
 
       // Clear volatile macros.
       clear_volatile_macros_r(&mac);
@@ -1265,8 +1268,9 @@ bool notifiable::_is_notification_viable(int type, int options) {
   // Are notifications temporarily disabled for this object?
   if (!get_notifications_enabled()) {
     logger(logging::dbg_notifications, logging::more)
-      << "Notifications are temporarily disabled for "
-         "this service, so we won't send one out.";
+      << "Notifications are temporarily disabled for this "
+      << (is_host() ? "host" : "service")
+      << ", so we won't send one out.";
     return (false);
   }
 
