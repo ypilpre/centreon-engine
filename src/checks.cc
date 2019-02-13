@@ -661,7 +661,6 @@ int handle_async_service_check_result(
 
       /* Set the recovery been sent parameter. */
       temp_service->set_first_notification(0);
-      temp_service->set_recovery_been_sent(false);
 
       /* run the service event handler to handle the hard state change */
       handle_service_event(temp_service);
@@ -688,14 +687,6 @@ int handle_async_service_check_result(
       logger(dbg_checks, more)
         << "Service did not change state.";
 
-    /* Check if we need to send a recovery notification */
-    if (!temp_service->get_recovery_been_sent() && !hard_state_change) {
-      temp_service->notify(
-        notifiable::RECOVERY,
-        "", "",
-        NOTIFICATION_OPTION_NONE);
-    }
-
     /* should we obsessive over service checks? */
     if (config->obsess_over_services() == true)
       obsessive_compulsive_service_check_processor(temp_service);
@@ -707,10 +698,8 @@ int handle_async_service_check_result(
     temp_service->set_last_hard_state(STATE_OK);
     temp_service->set_last_notification((time_t)0);
     temp_service->set_next_notification((time_t)0);
-    if (temp_service->get_recovery_been_sent()) {
-      temp_service->set_current_notification_number(0);
-      temp_service->set_first_notification(0);
-    }
+    temp_service->set_current_notification_number(0);
+    temp_service->set_first_notification(0);
     temp_service->set_acknowledged(notifiable::ACKNOWLEDGEMENT_NONE);
 
     if (reschedule_check == true)

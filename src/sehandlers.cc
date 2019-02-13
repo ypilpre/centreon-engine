@@ -1098,50 +1098,34 @@ int handle_host_state(host* hst) {
     /*if(hst->state_type==HARD_STATE) */
     hst->check_pending_flex_downtime();
 
-    if (hst->get_current_state() == HOST_UP) {
-      hst->set_recovery_been_sent(false);
-      hst->set_first_notification(0);
-    }
-
     /* notify contacts about the recovery or problem if its a "hard" state */
     if (hst->get_current_state_type() == HARD_STATE) {
-          ////////////////
-          // FIXME DBR  //
-          ////////////////
-      hst->notify(notifiable::PROBLEM, "", "", NOTIFICATION_OPTION_NONE);
+      hst->notify(
+        (hst->get_current_state() == HOST_UP
+         ? notifiable::RECOVERY
+         : notifiable::PROBLEM),
+        "",
+        "",
+        NOTIFICATION_OPTION_NONE);
     }
+
     /* handle the host state change */
     handle_host_event(hst);
 
-    /* the host just recovered, so reset the current host attempt */
-    if (hst->get_current_state() == HOST_UP)
-      hst->set_current_attempt(1);
-
     /* the host recovered, so reset the current notification number and state flags (after the recovery notification has gone out) */
-    if (hst->get_current_state() == HOST_UP
-        && hst->get_recovery_been_sent()) {
+    if (hst->get_current_state() == HOST_UP) {
+      hst->set_current_attempt(1);
       hst->set_current_notification_number(0);
+      hst->set_first_notification(0);
     }
   }
 
   /* else the host state has not changed */
   else {
-
-    bool old_recovery_been_sent(hst->get_recovery_been_sent());
-
     /* notify contacts if needed */
-    if ((hst->get_current_state() != HOST_UP ||
-         (hst->get_current_state() == HOST_UP
-          && !hst->get_recovery_been_sent()))
+    if (hst->get_current_state() != HOST_UP
         && hst->get_current_state_type() == HARD_STATE) {
       hst->notify(notifiable::PROBLEM, "", "", NOTIFICATION_OPTION_NONE);
-    }
-
-    /* the host recovered, so reset the current notification number and state flags (after the recovery notification has gone out) */
-    if (!old_recovery_been_sent
-        && hst->get_recovery_been_sent()
-        && hst->get_current_state() == HOST_UP) {
-      hst->set_current_notification_number(0);
     }
 
     /* if we're in a soft state and we should log host retries, do so now... */

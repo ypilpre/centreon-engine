@@ -325,10 +325,6 @@ void applier::host::_update(
   if (!obj.get_last_hard_state_change())
     obj.set_last_hard_state_change(obj.get_last_state_change());
 
-  // Handle recovery been sent
-  if (state.recovery_been_sent().is_set())
-    obj.set_recovery_been_sent(*state.recovery_been_sent());
-
   // Update host status.
   broker_host_status(&obj);
 }

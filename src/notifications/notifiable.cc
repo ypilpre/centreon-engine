@@ -308,6 +308,26 @@ void notifiable::set_current_notification_number(int number) {
 }
 
 /**
+ *  Get the first time a notification serie was sent.
+ *
+ *  @return Timestamp.
+ */
+time_t notifiable::get_first_notification() const {
+  return (_first_notification);
+}
+
+/**
+ *  Set the first time a notification was supposed to be sent in the
+ *  current notification serie.
+ *
+ *  @param[in] first_notification  Timestamp.
+ */
+void notifiable::set_first_notification(time_t first_notification) {
+  _first_notification = first_notification;
+  return ;
+}
+
+/**
  *  Get the last time a notification was sent.
  *
  *  @return Timestamp.
@@ -1066,23 +1086,6 @@ std::string const notifiable::_notification_string[] = {
 *           Private Methods           *
 *                                     *
 **************************************/
-
-time_t notifiable::get_first_notification() const {
-  return (_first_notification);
-}
-
-void notifiable::set_first_notification(time_t first_notification) {
-  _first_notification = first_notification;
-  return ;
-}
-
-void notifiable::set_recovery_been_sent(bool sent) {
-  _recovery_been_sent = sent;
-}
-
-bool notifiable::get_recovery_been_sent() const {
-  return _recovery_been_sent;
-}
 
 /////////////////////////////////////////////////////////
 ///* checks for flexible (non-fixed) host downtime that should start now */

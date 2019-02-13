@@ -271,8 +271,7 @@ std::ostream& dump::host(std::ostream& os, ::host const& obj) {
     "problem_has_been_acknowledged=" << obj.is_acknowledged() << "\n"
     "process_performance_data=" << obj.get_process_perfdata() << "\n"
     "retry_check_interval=" << obj.get_normal_check_interval() / config->interval_length() << "\n"
-    "state_type=" << obj.get_current_state_type() << "\n"
-    "recovery_been_sent=" << obj.get_recovery_been_sent() << "\n";
+    "state_type=" << obj.get_current_state_type() << "\n";
 
   os << "state_history=";
   os << obj.get_historical_state(0);
@@ -465,8 +464,7 @@ std::ostream& dump::service(std::ostream& os, ::service const& obj) {
     "problem_has_been_acknowledged=" << obj.is_acknowledged() << "\n"
     "process_performance_data=" << obj.get_process_perfdata() << "\n"
     "retry_check_interval=" << obj.get_retry_check_interval() / config->interval_length() << "\n"
-    "state_type=" << obj.get_current_state_type() << "\n"
-    "recovery_been_sent=" << obj.get_recovery_been_sent() << "\n";
+    "state_type=" << obj.get_current_state_type() << "\n";
 
   os << "state_history=";
   os << obj.get_historical_state(0);

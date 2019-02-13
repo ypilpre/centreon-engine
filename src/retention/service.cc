@@ -1,5 +1,5 @@
 /*
-** Copyright 2011-2013,2015-2016,2018 Centreon
+** Copyright 2011-2013,2015-2016,2018-2019 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -171,7 +171,6 @@ service& service::operator=(service const& right) {
     _plugin_output = right._plugin_output;
     _problem_has_been_acknowledged = right._problem_has_been_acknowledged;
     _process_performance_data = right._process_performance_data;
-    _recovery_been_sent = right._recovery_been_sent;
     _retry_check_interval = right._retry_check_interval;
     _service_description = right._service_description;
     _state_history = right._state_history;
@@ -242,7 +241,6 @@ bool service::operator==(service const& right) const throw () {
           && _plugin_output == right._plugin_output
           && _problem_has_been_acknowledged == right._problem_has_been_acknowledged
           && _process_performance_data == right._process_performance_data
-          && _recovery_been_sent == right._recovery_been_sent
           && _retry_check_interval == right._retry_check_interval
           && _service_description == right._service_description
           && _state_history == right._state_history
@@ -778,15 +776,6 @@ opt<bool> const& service::problem_has_been_acknowledged() const throw () {
  */
 opt<int> const& service::process_performance_data() const throw () {
   return (_process_performance_data);
-}
-
-/**
- *  Get recovery_been_sent.
- *
- *  @return The recovery_been_sent.
- */
-opt<bool> const& service::recovery_been_sent() const throw () {
-  return (_recovery_been_sent);
 }
 
 /**
@@ -1361,12 +1350,12 @@ bool service::_set_process_performance_data(int value) {
 }
 
 /**
- *  Set _set_recovery_been_sent.
+ *  Deprecated.
  *
- *  @param[in] value The new _set_recovery_been_sent.
+ *  @param[in] value  Unused.
  */
 bool service::_set_recovery_been_sent(bool value) {
-  _recovery_been_sent = value;
+  (void)value;
   return (true);
 }
 
