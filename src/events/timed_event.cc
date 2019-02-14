@@ -2,7 +2,7 @@
 ** Copyright 2007-2008           Ethan Galstad
 ** Copyright 2007,2010           Andreas Ericsson
 ** Copyright 2010                Max Schubert
-** Copyright 2011-2013,2016-2018 Centreon
+** Copyright 2011-2013,2016-2019 Centreon
 **
 ** This file is part of Centreon Engine.
 **
@@ -22,6 +22,7 @@
 
 #include "com/centreon/engine/broker.hh"
 #include "com/centreon/engine/configuration/applier/state.hh"
+#include "com/centreon/engine/downtime_manager.hh"
 #include "com/centreon/engine/error.hh"
 #include "com/centreon/engine/events/defines.hh"
 #include "com/centreon/engine/events/timed_event.hh"
@@ -204,9 +205,8 @@ static void _exec_event_scheduled_downtime(timed_event* event) {
 
   // process scheduled downtime info.
   if (event->event_data) {
-    //FIXME DBR: handle_scheduled_downtime_by_id does not exist anymore
-    //handle_scheduled_downtime_by_id(*(unsigned long*)event->event_data);
-    delete static_cast<unsigned long*>(event->event_data);
+    downtime_manager::instance().start(
+      *static_cast<unsigned long*>(event->event_data));
     event->event_data = NULL;
   }
   return;
