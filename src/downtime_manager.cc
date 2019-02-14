@@ -262,6 +262,44 @@ unsigned long downtime_manager::schedule(
     0);
   id_ptr = NULL;
 
+  // Notify event brokers.
+  if (target->is_host())
+    broker_downtime_data(
+      NEBTYPE_DOWNTIME_ADD,
+      NEBFLAG_NONE,
+      NEBATTR_NONE,
+      downtime::HOST_DOWNTIME,
+      static_cast<host*>(target)->get_name(),
+      "",
+      entry_time,
+      author,
+      comment,
+      start_time,
+      end_time,
+      fixed,
+      triggered_by,
+      duration,
+      dt.get_id(),
+      NULL);
+  else
+    broker_downtime_data(
+      NEBTYPE_DOWNTIME_ADD,
+      NEBFLAG_NONE,
+      NEBATTR_NONE,
+      downtime::SERVICE_DOWNTIME,
+      static_cast<service*>(target)->get_host_name(),
+      static_cast<service*>(target)->get_description(),
+      entry_time,
+      author,
+      comment,
+      start_time,
+      end_time,
+      fixed,
+      triggered_by,
+      duration,
+      dt.get_id(),
+      NULL);
+
   // Propagate downtime.
   if (target->is_host()) {
     host* temp_host(static_cast<host*>(target));
