@@ -237,9 +237,12 @@ static void _exec_event_expire_downtime(timed_event* event) {
   logger(dbg_events, basic)
     << "** Expire Downtime Event";
 
-  // check for expired scheduled downtime entries.
-  //FIXME DBR: this function does not exist anymore
-  //check_for_expired_downtime();
+  // check for expired scheduled downtime.
+  if (event->event_data) {
+    downtime_manager::instance().unschedule(
+      *static_cast<unsigned long*>(event->event_data));
+    event->event_data = NULL;
+  }
   return;
 }
 
