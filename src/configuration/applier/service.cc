@@ -143,7 +143,7 @@ void applier::service::add_object(
       obj.get_acknowledgement_timeout() * interval_length);
     svc->set_notifications_enabled(obj.notifications_enabled());
     svc->set_notify_on(
-      ::service::ON_FLAPPING,
+      ::service::ON_DOWNTIME,
       obj.notification_options() & configuration::service::downtime);
     svc->set_notify_on(
       ::service::ON_FLAPPING,
