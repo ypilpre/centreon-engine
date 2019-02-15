@@ -239,6 +239,8 @@ static void _exec_event_expire_downtime(timed_event* event) {
 
   // check for expired scheduled downtime.
   if (event->event_data) {
+    downtime_manager::instance().stop(
+      *static_cast<unsigned long*>(event->event_data));
     downtime_manager::instance().unschedule(
       *static_cast<unsigned long*>(event->event_data));
     event->event_data = NULL;
