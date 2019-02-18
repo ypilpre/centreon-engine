@@ -1087,54 +1087,6 @@ std::string const notifiable::_notification_string[] = {
 *                                     *
 **************************************/
 
-/////////////////////////////////////////////////////////
-///* checks for flexible (non-fixed) host downtime that should start now */
-//int check_pending_flex_host_downtime(host* hst) {
-//  scheduled_downtime* temp_downtime(NULL);
-//  time_t current_time(0L);
-//
-//  logger(dbg_functions, basic)
-//    << "check_pending_flex_host_downtime()";
-//
-//  if (hst == NULL)
-//    return (ERROR);
-//
-//  time(&current_time);
-//
-//  /* if host is currently up, nothing to do */
-//  if (hst->current_state == HOST_UP)
-//    return (OK);
-//
-//  /* check all downtime entries */
-//  for (temp_downtime = scheduled_downtime_list;
-//       temp_downtime != NULL;
-//       temp_downtime = temp_downtime->next) {
-//    if (temp_downtime->type != HOST_DOWNTIME
-//        || temp_downtime->fixed == true
-//        || temp_downtime->is_in_effect == true
-//        || temp_downtime->triggered_by != 0)
-//      continue;
-//
-//    /* this entry matches our host! */
-//    if (find_host(temp_downtime->host_name) == hst) {
-//      /* if the time boundaries are okay, start this scheduled downtime */
-//      if (temp_downtime->start_time <= current_time
-//          && current_time <= temp_downtime->end_time) {
-//
-//        logger(dbg_downtime, basic)
-//          << "Flexible downtime (id=" << temp_downtime->downtime_id
-//          << ") for host '" << hst->name << "' starting now...";
-//
-//        temp_downtime->start_flex_downtime = true;
-//        handle_scheduled_downtime(temp_downtime);
-//      }
-//    }
-//  }
-//  return (OK);
-//}
-//
-/////////////////////////////////////////////////////////
-
 /**
  *  Checks for flexible (non-fixed) notifiable downtime that should start now.
  */
@@ -1153,8 +1105,7 @@ void notifiable::check_pending_flex_downtime() {
        it != end;
        ++it) {
     downtime const& temp_downtime(it->second);
-    if (temp_downtime.get_parent()->is_host()
-        || temp_downtime.get_fixed()
+    if (temp_downtime.get_fixed()
         || temp_downtime.get_in_effect()
         || temp_downtime.get_triggered_by() != 0)
       continue ;
