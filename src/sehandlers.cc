@@ -1117,6 +1117,7 @@ int handle_host_state(host* hst) {
       hst->set_current_attempt(1);
       hst->set_current_notification_number(0);
       hst->set_first_notification(0);
+      hst->set_no_more_notifications(false);
     }
   }
 

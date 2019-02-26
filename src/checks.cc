@@ -661,6 +661,7 @@ int handle_async_service_check_result(
 
       /* Set the recovery been sent parameter. */
       temp_service->set_first_notification(0);
+      temp_service->set_no_more_notifications(false);
 
       /* run the service event handler to handle the hard state change */
       handle_service_event(temp_service);

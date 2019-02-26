@@ -86,6 +86,7 @@ notifiable::notifiable()
     _last_acknowledgement(0),
     _last_notification(0),
     _next_notification(0),
+    _no_more_notifications(false),
     _notification_interval(5 * 60),
     _notification_period(NULL),
     _notifications_enabled(true),
@@ -362,6 +363,25 @@ time_t notifiable::get_next_notification() const {
  */
 void notifiable::set_next_notification(time_t next_notification) {
   _next_notification = next_notification;
+  return ;
+}
+
+/**
+ *  Check if notifications should be sent again.
+ *
+ *  @return True if no more notifications should be sent.
+ */
+bool notifiable::get_no_more_notifications() const {
+  return (_no_more_notifications);
+}
+
+/**
+ *  Set the *no more notifications* flag.
+ *
+ *  @param[in] no_more  True to disable further notifications.
+ */
+void notifiable::set_no_more_notifications(bool no_more) {
+  _no_more_notifications = no_more;
   return ;
 }
 
@@ -669,23 +689,34 @@ void notifiable::notify(
         // Adjust last/next notification time and notification flags if
         // we notified someone.
         if (contacts_notified > 0) {
-          // Calculate the next acceptable re-notification time.
-          time_t next_notification(now + _notification_interval);
-          get_next_valid_time(
-            next_notification,
-            &next_notification,
-            get_notification_period());
-          set_next_notification(next_notification);
-          {
+          // If notification interval is 0, no more notification should occur.
+          if (!_notification_interval) {
+            set_no_more_notifications(true);
             logger(logging::dbg_notifications, logging::basic)
-              << contacts_notified << " contacts were notified.  "
-                 "Next possible notification time: "
-              << my_ctime(&next_notification);
+              << (is_host() ? "Host" : "Service") << " has no "
+                 "notification interval. Disabling further "
+                 "notifications until recovery.";
           }
+          // Calculate the next acceptable re-notification time.
+          else {
+            set_no_more_notifications(false);
+            time_t next_notification(now + _notification_interval);
+            get_next_valid_time(
+              next_notification,
+              &next_notification,
+              get_notification_period());
+            set_next_notification(next_notification);
+            {
+              logger(logging::dbg_notifications, logging::basic)
+                << contacts_notified << " contacts were notified.  "
+                   "Next possible notification time: "
+                << my_ctime(&next_notification);
+            }
 
-          // Update the last notification time for this notifiable
-          // (this is needed for rescheduling later notifications).
-          set_last_notification(now);
+            // Update the last notification time for this notifiable
+            // (this is needed for rescheduling later notifications).
+            set_last_notification(now);
+          }
         }
         // We didn't end up notifying anyone.
         else if (incremented_notification_number) {
@@ -1125,11 +1156,6 @@ void notifiable::check_pending_flex_downtime() {
   }
 }
 
-bool notifiable::get_no_more_notifications() const {
-  // FIXME DBR: to implement...
-  return (false);
-}
-
 /**
  *  Copy internal data members.
  *
@@ -1527,7 +1553,8 @@ bool notifiable::_is_notification_viable(int type, int options) {
   // notification interval is set to 0.
   if (get_no_more_notifications()) {
     logger(logging::dbg_notifications, logging::more)
-      << "We shouldn't re-notify contacts about this service problem.";
+      << "We shouldn't re-notify contacts about this "
+      << (is_host() ? "host" : "service") << " problem.";
     return (false);
   }
 
