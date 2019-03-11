@@ -739,6 +739,11 @@ int grab_standard_contact_macro_r(
       *output = string::dup(temp_contact->pager);
     break;
 
+  case MACRO_CONTACTTOKEN:
+    if (temp_contact->token)
+      *output = string::dup(temp_contact->token);
+    break;
+
   case MACRO_CONTACTGROUPNAMES: {
     std::string buf;
     /* get the contactgroup names */
@@ -1027,6 +1032,7 @@ int init_macrox_names() {
   add_macrox_name(CONTACTALIAS);
   add_macrox_name(CONTACTEMAIL);
   add_macrox_name(CONTACTPAGER);
+  add_macrox_name(CONTACTTOKEN);
   add_macrox_name(ADMINEMAIL);
   add_macrox_name(ADMINPAGER);
   add_macrox_name(HOSTSTATE);
@@ -1331,6 +1337,7 @@ int clear_contact_macros_r(nagios_macros* mac) {
     case MACRO_CONTACTALIAS:
     case MACRO_CONTACTEMAIL:
     case MACRO_CONTACTPAGER:
+    case MACRO_CONTACTTOKEN:
     case MACRO_CONTACTGROUPNAMES:
       delete[] mac->x[x];
       mac->x[x] = NULL;

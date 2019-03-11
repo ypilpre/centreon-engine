@@ -68,6 +68,7 @@ namespace                  configuration {
     bool                   retain_nonstatus_information() const throw ();
     bool                   retain_status_information() const throw ();
     std::string const&     pager() const throw ();
+    std::string const&     token() const throw ();
     list_string const&     service_notification_commands() const throw ();
     unsigned int           service_notification_options() const throw ();
     std::string const&     service_notification_period() const throw ();
@@ -95,6 +96,7 @@ namespace                  configuration {
     bool                   _set_retain_nonstatus_information(bool value);
     bool                   _set_retain_status_information(bool value);
     bool                   _set_pager(std::string const& value);
+    bool                   _set_token(std::string const& value);
     bool                   _set_service_notification_commands(std::string const& value);
     bool                   _set_service_notification_options(std::string const& value);
     bool                   _set_service_notification_period(std::string const& value);
@@ -115,6 +117,7 @@ namespace                  configuration {
     opt<bool>              _retain_nonstatus_information;
     opt<bool>              _retain_status_information;
     std::string            _pager;
+    std::string            _token;
     group<list_string>     _service_notification_commands;
     opt<unsigned int>      _service_notification_options;
     std::string            _service_notification_period;

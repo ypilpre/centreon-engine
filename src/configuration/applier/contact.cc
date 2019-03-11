@@ -118,6 +118,7 @@ void applier::contact::add_object(configuration::contact const& obj) {
         NULL_IF_EMPTY(obj.alias()),
         NULL_IF_EMPTY(obj.email()),
         NULL_IF_EMPTY(obj.pager()),
+        NULL_IF_EMPTY(obj.token()),
         addresses,
         NULL_IF_EMPTY(obj.service_notification_period()),
         NULL_IF_EMPTY(obj.host_notification_period()),
@@ -276,6 +277,7 @@ void applier::contact::modify_object(
     (obj.alias().empty() ? obj.contact_name() : obj.alias()).c_str());
   modify_if_different(c->email, NULL_IF_EMPTY(obj.email()));
   modify_if_different(c->pager, NULL_IF_EMPTY(obj.pager()));
+  modify_if_different(c->token, NULL_IF_EMPTY(obj.token()));
   modify_if_different(
     c->address,
     obj.address(),

@@ -37,6 +37,7 @@ typedef struct                  contact_struct {
   char*                         alias;
   char*                         email;
   char*                         pager;
+  char*                         token;
   char*                         address[MAX_CONTACT_ADDRESSES];
   commandsmember_struct*        host_notification_commands;
   commandsmember_struct*        service_notification_commands;
@@ -86,6 +87,7 @@ contact* add_contact(
            char const* alias,
            char const* email,
            char const* pager,
+           char const* token,
            char const* const* addresses,
            char const* svc_notification_period,
            char const* host_notification_period,

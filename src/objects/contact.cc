@@ -52,6 +52,7 @@ bool operator==(
           && is_equal(obj1.alias, obj2.alias)
           && is_equal(obj1.email, obj2.email)
           && is_equal(obj1.pager, obj2.pager)
+          && is_equal(obj1.token, obj2.token)
           && is_equal(obj1.address, obj2.address, MAX_CONTACT_ADDRESSES)
           && is_equal(obj1.host_notification_commands, obj2.host_notification_commands)
           && is_equal(obj1.service_notification_commands, obj2.service_notification_commands)
@@ -119,6 +120,7 @@ std::ostream& operator<<(std::ostream& os, contact const& obj) {
     "  alias:                           " << chkstr(obj.alias) << "\n"
     "  email:                           " << chkstr(obj.email) << "\n"
     "  pager:                           " << chkstr(obj.pager) << "\n"
+    "  token:                           " << chkstr(obj.token) << "\n"
     "  address:                         ";
   for (unsigned int i(0); i < MAX_CONTACT_ADDRESSES && obj.address[i]; ++i)
     os << chkstr(obj.address[i])
@@ -164,6 +166,8 @@ std::ostream& operator<<(std::ostream& os, contact const& obj) {
  *  @param[in] alias                         Contact alias.
  *  @param[in] email                         Email.
  *  @param[in] pager                         Pager.
+ *  @param[in] token                         Centreon Autologin 
+ *                                           Token.
  *  @param[in] addresses                     Contact addresses.
  *  @param[in] svc_notification_period       Service notification
  *                                           period.
@@ -208,6 +212,7 @@ contact* add_contact(
            char const* alias,
            char const* email,
            char const* pager,
+           char const* token,
            char const* const* addresses,
            char const* svc_notification_period,
            char const* host_notification_period,
@@ -256,6 +261,8 @@ contact* add_contact(
       obj->host_notification_period = string::dup(host_notification_period);
     if (pager)
       obj->pager = string::dup(pager);
+    if (token)
+      obj->token = string::dup(token);
     if (svc_notification_period)
       obj->service_notification_period = string::dup(svc_notification_period);
     if (addresses) {
