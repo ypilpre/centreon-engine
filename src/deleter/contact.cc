@@ -57,6 +57,8 @@ void deleter::contact(void* ptr) throw () {
   obj->email = NULL;
   delete[] obj->pager;
   obj->pager = NULL;
+  delete[] obj->token;
+  obj->token = NULL;
   for (unsigned int i(0); i < MAX_CONTACT_ADDRESSES; ++i) {
     delete[] obj->address[i];
     obj->address[i] = NULL;

@@ -38,6 +38,7 @@ contact::setters const contact::_setters[] = {
   { "contactgroups",                 SETTER(std::string const&, _set_contactgroups) },
   { "email",                         SETTER(std::string const&, _set_email) },
   { "pager",                         SETTER(std::string const&, _set_pager) },
+  { "token",                         SETTER(std::string const&, _set_token) },
   { "host_notification_period",      SETTER(std::string const&, _set_host_notification_period) },
   { "host_notification_commands",    SETTER(std::string const&, _set_host_notification_commands) },
   { "service_notification_period",   SETTER(std::string const&, _set_service_notification_period) },
@@ -119,6 +120,7 @@ contact& contact::operator=(contact const& other) {
     _retain_nonstatus_information = other._retain_nonstatus_information;
     _retain_status_information = other._retain_status_information;
     _pager = other._pager;
+    _token = other._token;
     _service_notification_commands = other._service_notification_commands;
     _service_notification_options = other._service_notification_options;
     _service_notification_period = other._service_notification_period;
@@ -151,6 +153,7 @@ bool contact::operator==(contact const& other) const throw () {
           && _retain_nonstatus_information == other._retain_nonstatus_information
           && _retain_status_information == other._retain_status_information
           && _pager == other._pager
+          && _token == other._token
           && _service_notification_commands == other._service_notification_commands
           && _service_notification_options == other._service_notification_options
           && _service_notification_period == other._service_notification_period
@@ -217,6 +220,8 @@ bool contact::operator<(contact const& other) const throw () {
             < other._retain_status_information);
   else if (_pager != other._pager)
     return (_pager < other._pager);
+  else if (_token != other._token)
+    return (_token < other._token);
   else if (_service_notification_commands
            != other._service_notification_commands)
     return (_service_notification_commands
@@ -282,6 +287,7 @@ void contact::merge(object const& obj) {
   MRG_OPTION(_retain_nonstatus_information);
   MRG_OPTION(_retain_status_information);
   MRG_DEFAULT(_pager);
+  MRG_DEFAULT(_token);
   MRG_INHERIT(_service_notification_commands);
   MRG_OPTION(_service_notification_options);
   MRG_DEFAULT(_service_notification_period);
@@ -445,6 +451,15 @@ bool contact::retain_status_information() const throw () {
  */
 std::string const& contact::pager() const throw () {
   return (_pager);
+}
+
+/**
+ *  Get token.
+ *
+ *  @return The Autologin Token.
+ */
+std::string const& contact::token() const throw () {
+  return (_token);
 }
 
 /**
@@ -680,6 +695,18 @@ bool contact::_set_retain_status_information(bool value) {
  */
 bool contact::_set_pager(std::string const& value) {
   _pager = value;
+  return (true);
+}
+
+/**
+ *  Set token value.
+ *
+ *  @param[in] value The new autologin token value.
+ *
+ *  @return True on success, otherwise false.
+ */
+bool contact::_set_token(std::string const& value) {
+  _token = value;
   return (true);
 }
 
